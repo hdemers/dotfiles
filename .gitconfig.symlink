@@ -1,0 +1,52 @@
+[user]
+    name = Hugues Demers
+    email = hdemers@gmail.com
+
+
+[color]
+    ui = auto
+[color "branch"]
+    current = yellow reverse
+    local = yellow
+    remote = green
+[color "diff"]
+    meta = yellow bold
+    frag = magenta bold
+    old = red bold
+    new = green bold
+[color "status"]
+    added = yellow
+    changed = green
+    untracked = cyan
+
+
+[alias]
+    st = status
+    ci = commit
+    br = branch
+    co = checkout
+    df = diff
+    dc = diff --cached
+    dm = diff master --stat
+    dmm = diff master... --stat
+    lg = log --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset %C(bold blue)[%an]%Creset%n' --abbrev-commit --date=relative --stat
+    hist = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)[%an]%Creset' --abbrev-commit --date=relative
+    ls = ls-files
+    lsp = diff --stat
+    lcp = log master..HEAD
+    prm = log master..HEAD --pretty=format:' - %s\n    %b'
+    uncommit = reset --soft HEAD~1
+
+[core]
+    excludesfile = /home/hdemers/.gitignore
+    ;autocrlf = true
+
+[branch]
+    autosetupmerge = true
+
+[push]
+    default = nothing
+[github]
+    user = hdemers
+[gist]
+    private = yes

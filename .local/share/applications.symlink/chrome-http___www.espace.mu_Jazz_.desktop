@@ -1,0 +1,28 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=Jazz
+Exec=/opt/google/chrome/google-chrome --app=http://www.espace.mu/Jazz/
+Terminal=false
+Icon=/home/hdemers/.icons/espacemu.jpg
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=www.espace.mu__Jazz
+StartupNotify=true
+X-Ayatana-Desktop-Shortcuts=Monde;Classique;Chanson-Pop
+
+[Monde Shortcut Group]
+Name=Monde
+Exec=/opt/google/chrome/google-chrome --app=http://www.espace.mu/Monde/
+TargetEnvironment=Unity
+
+[Classique Shortcut Group]
+Name=Classique
+Exec=/opt/google/chrome/google-chrome --app=http://www.espace.mu/Classique/
+TargetEnvironment=Unity
+
+[Chanson-Pop Shortcut Group]
+Name=Chanson Pop
+Exec=/opt/google/chrome/google-chrome --app=http://www.espace.mu/Chanson-Pop/
+TargetEnvironment=Unity

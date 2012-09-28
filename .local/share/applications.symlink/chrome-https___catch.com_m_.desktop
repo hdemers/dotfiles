@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=Catch
+Exec=/opt/google/chrome/google-chrome --app=https://catch.com/m/
+Terminal=false
+Icon=/home/hdemers/.icons/catch.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=catch.com__m

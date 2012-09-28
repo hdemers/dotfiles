@@ -1,0 +1,12 @@
+
+[Desktop Entry]
+Version=1.0
+Name=AWS Management Console
+Exec=/opt/google/chrome/google-chrome "--app=https://console.aws.amazon.com/ec2/home"
+Terminal=false
+Icon=/home/hdemers/.icons/awsconsole.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=console.aws.amazon.com__s3_home
+Name[en_CA]=AWS Console
+StartupNotify=true

@@ -1,0 +1,80 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=BullBear
+Exec=/opt/google/chrome/google-chrome --app=http://www.bullbear.ca/
+Terminal=false
+Icon=/home/hdemers/.icons/bullbear_128.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=www.bullbear.ca
+StartupNotify=true
+X-Ayatana-Desktop-Shortcuts=Email;Logs;State;CouchDB;Docs;Calendar;Sites;Capsule;MailChimp;GetSatisfaction;Facebook;Logbook;Apps Dashboard
+
+Name[en_CA]=BullBear
+
+[Logs Shortcut Group]
+Name=Logs
+Exec=/opt/google/chrome/google-chrome --app='http://status.bullbear.ca:8998/'
+TargetEnvironment=Unity
+
+[State Shortcut Group]
+Name=State
+Exec=/opt/google/chrome/google-chrome --app='http://status.bullbear.ca:3011/'
+TargetEnvironment=Unity
+
+[CouchDB Shortcut Group]
+Name=CouchDB
+Exec=/opt/google/chrome/google-chrome --app='http://api.bullbear.ca:5984/_utils/index.html'
+TargetEnvironment=Unity
+
+[Email Shortcut Group]
+Name=Email
+Exec=/opt/google/chrome/google-chrome --app='http://mail.bullbear.ca'
+TargetEnvironment=Unity
+
+[Docs Shortcut Group]
+Name=Docs
+Exec=/opt/google/chrome/google-chrome --app='http://docs.bullbear.ca'
+TargetEnvironment=Unity
+
+[Calendar Shortcut Group]
+Name=Calendar
+Exec=/opt/google/chrome/google-chrome --app='http://calendar.bullbear.ca'
+TargetEnvironment=Unity
+
+[Sites Shortcut Group]
+Name=Sites
+Exec=/opt/google/chrome/google-chrome --app='http://sites.bullbear.ca'
+TargetEnvironment=Unity
+
+[Capsule Shortcut Group]
+Name=Capsule CRM
+Exec=/opt/google/chrome/google-chrome --app='https://app.capsulecrm.com/?extdomain=bullbear.ca'
+TargetEnvironment=Unity
+
+[MailChimp Shortcut Group]
+Name=MailChimp
+Exec=/opt/google/chrome/google-chrome --app='https://login.mailchimp.com/google-apps?domain=bullbear.ca'
+TargetEnvironment=Unity
+
+[GetSatisfaction Shortcut Group]
+Name=Get Satisfaction
+Exec=/opt/google/chrome/google-chrome --app='https://getsatisfaction.com/gam/login?domain=bullbear.ca'
+TargetEnvironment=Unity
+
+[Facebook Shortcut Group]
+Name=Facebook
+Exec=/opt/google/chrome/google-chrome --app='http://www.facebook.com/pages/BullBear/116532275024328'
+TargetEnvironment=Unity
+
+[Logbook Shortcut Group]
+Name=Logbook
+Exec=/opt/google/chrome/google-chrome --app='https://sites.google.com/a/bullbear.ca/dev/logbooks/hugues'
+TargetEnvironment=Unity
+
+[Apps Dashboard Shortcut Group]
+Name=Apps Dashboard
+Exec=/opt/google/chrome/google-chrome --app='https://www.google.com/a/cpanel/bullbear.ca/Dashboard'
+TargetEnvironment=Unity

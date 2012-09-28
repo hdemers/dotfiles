@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=OODA Technologies CRM | Markit
+Exec=/opt/google/chrome/google-chrome --app=https://ooda.capsulecrm.com/
+Terminal=false
+Icon=/home/hdemers/.icons/capsule.jpg
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=ooda.capsulecrm.com__crm_party_home.seam
+Name[en_CA]=OODA Capsule CRM

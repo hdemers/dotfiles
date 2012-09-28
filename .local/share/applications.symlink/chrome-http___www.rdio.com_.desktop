@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Name=Rdio
+Exec=/opt/google/chrome/google-chrome --app=http://www.rdio.com/
+Terminal=false
+Icon=/home/hdemers/.icons/rdio.jpg
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=www.rdio.com

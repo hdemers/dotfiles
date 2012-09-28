@@ -1,0 +1,48 @@
+[submodule ".vim.symlink/bundle/command-t"]
+	path = .vim.symlink/bundle/command-t
+	url = git://git.wincent.com/command-t.git
+[submodule ".vim.symlink/bundle/closetag"]
+	path = .vim.symlink/bundle/closetag
+	url = https://github.com/docunext/closetag.vim
+[submodule ".vim.symlink/bundle/delimitmate"]
+	path = .vim.symlink/bundle/delimitmate
+	url = git://github.com/Raimondi/delimitMate.git
+[submodule ".vim.symlink/bundle/fugitive"]
+	path = .vim.symlink/bundle/fugitive
+	url = git://github.com/tpope/vim-fugitive.git
+[submodule ".vim.symlink/bundle/gist"]
+	path = .vim.symlink/bundle/gist
+	url = https://github.com/mattn/gist-vim.git
+[submodule ".vim.symlink/bundle/gundo"]
+	path = .vim.symlink/bundle/gundo
+	url = http://github.com/sjl/gundo.vim.git
+[submodule ".vim.symlink/bundle/nerdcommenter"]
+	path = .vim.symlink/bundle/nerdcommenter
+	url = git://github.com/scrooloose/nerdcommenter.git
+[submodule ".vim.symlink/bundle/pyflakes"]
+	path = .vim.symlink/bundle/pyflakes
+	url = https://github.com/kevinw/pyflakes-vim.git
+[submodule ".vim.symlink/bundle/supertab"]
+	path = .vim.symlink/bundle/supertab
+	url = git://github.com/ervandew/supertab.git
+[submodule ".vim.symlink/bundle/syntastic"]
+	path = .vim.symlink/bundle/syntastic
+	url = https://github.com/scrooloose/syntastic.git
+[submodule ".vim.symlink/bundle/tagbar"]
+	path = .vim.symlink/bundle/tagbar
+	url = git://github.com/majutsushi/tagbar.git
+[submodule ".vim.symlink/bundle/unimpaired"]
+	path = .vim.symlink/bundle/unimpaired
+	url = https://github.com/tpope/vim-unimpaired.git
+[submodule ".vim.symlink/bundle/vim-colors-solarized"]
+	path = .vim.symlink/bundle/vim-colors-solarized
+	url = git://github.com/altercation/vim-colors-solarized.git
+[submodule ".vim.symlink/bundle/vim-less"]
+	path = .vim.symlink/bundle/vim-less
+	url = https://github.com/groenewege/vim-less
+[submodule ".vim.symlink/bundle/webapi"]
+	path = .vim.symlink/bundle/webapi
+	url = https://github.com/mattn/webapi-vim.git
+[submodule ".vim.symlink/bundle/xmledit"]
+	path = .vim.symlink/bundle/xmledit
+	url = https://github.com/sukima/xmledit.git

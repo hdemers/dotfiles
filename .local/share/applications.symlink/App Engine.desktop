@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=App Engine
+Exec=/opt/google/chrome/google-chrome "--app=https://appengine.google.com/dashboard?&app_id=bullbear-webapp"
+Terminal=false
+Icon=/home/hdemers/.icons/appengine.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=appengine.google.com__dashboard

@@ -1,0 +1,23 @@
+export EDITOR=/usr/bin/vim
+export PATH=$PATH:/opt/vagrant/bin
+
+# Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
+export WORKON_HOME=$HOME/.virtualenvs
+VIRTUALENVWRAPPER=/usr/local/bin/virtualenvwrapper.sh
+if [ -f $VIRTUALENVWRAPPER ]; then
+    source $VIRTUALENVWRAPPER
+fi
+
+# Autoenv, cf. https://github.com/kennethreitz/autoenv.
+AUTOENV=$HOME/.autoenv/activate.sh
+if [ -f $AUTOENV ]; then
+    source $AUTOENV
+fi
+
+# Default AWS environment.
+export AWS_DIR=$HOME/Private/aws/ooda
+if [ -f $AWS_DIR/aws.sh ]; then
+    . $AWS_DIR/aws.sh
+else
+  echo "WARNING: could not read AWS config file."
+fi

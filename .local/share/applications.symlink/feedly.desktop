@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=f | latest
+Exec=/opt/google/chrome/google-chrome "--app=http://www.feedly.com/home#latest"
+Terminal=false
+Icon=/home/hdemers/.icons/feedly.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=www.feedly.com__home
+Name[en_CA]=feedly

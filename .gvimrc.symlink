@@ -1,0 +1,5 @@
+" Use a nice font
+"set guifont=-adobe-courier-medium-r-normal-*-*-140-*-*-m-*-iso8859-1
+
+" Set syntax color
+syntax on

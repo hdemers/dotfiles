@@ -1,0 +1,11 @@
+
+[Desktop Entry]
+Version=1.0
+Name=GitHub
+Exec=/opt/google/chrome/google-chrome --app=https://github.com
+Terminal=false
+Icon=/home/hdemers/.icons/github_128.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=github.com__hdemers_bullbear-service_pull_9
+StartupNotify=true

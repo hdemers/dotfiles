@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=Pivotal Tracker
+Exec=/opt/google/chrome/google-chrome --app=https://www.pivotaltracker.com/google_domain_openid/redirect_for_auth?domain=bullbear.ca
+Terminal=false
+Icon=/home/hdemers/.icons/pivotal_tracker.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=www.pivotaltracker.com__projects_303275
+StartupNotify=true

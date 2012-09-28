@@ -1,0 +1,1 @@
+alias devenv='export BULLBEAR_VIRTUALENV=$BULLBEAR_HOME/../dev-env'

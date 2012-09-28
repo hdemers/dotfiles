@@ -1,0 +1,33 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=Gmail
+Exec=/opt/google/chrome/google-chrome --app=https://mail.google.com/mail/ca/u/0
+Terminal=false
+Icon=/home/hdemers/.icons/google.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=mail.google.com__mail_ca_u_0
+StartupNotify=true
+X-Ayatana-Desktop-Shortcuts=Calendar;Calendar OODA;Docs;Docs OODA
+
+[Calendar Shortcut Group]
+Name=Calendar
+Exec=/opt/google/chrome/google-chrome --app='http://calendar.google.com'
+TargetEnvironment=Unity
+
+[Calendar OODA Shortcut Group]
+Name=Calendar OODA
+Exec=/opt/google/chrome/google-chrome --app='http://calendar.ooda.ca'
+TargetEnvironment=Unity
+
+[Docs Shortcut Group]
+Name=Docs
+Exec=/opt/google/chrome/google-chrome --app='http://docs.google.com'
+TargetEnvironment=Unity
+
+[Docs OODA Shortcut Group]
+Name=Docs OODA
+Exec=/opt/google/chrome/google-chrome --app='http://docs.ooda.ca'
+TargetEnvironment=Unity

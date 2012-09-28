@@ -1,0 +1,147 @@
+
+"=====================================================================
+" File: .vimrc
+" Author: Hugues Demers
+" Last modification: Sat Nov 17 18:57:35 EST 2007 
+"=====================================================================
+
+call pathogen#infect()
+
+set guifont=Ubuntu\ Mono\ 12
+
+"=====================================================================
+" Color stuff (for highlighting see ~/.vim/after/syntax/syncolor.vim
+"=====================================================================
+
+let python_highlight_all = 1
+
+syntax enable
+set background=dark
+colorscheme solarized
+call togglebg#map("<F5>")
+
+"if &t_Co > 1    
+"  syntax on
+"  syntax enable
+"endif
+
+"=====================================================================
+" Various settings
+"=====================================================================
+filetype on
+filetype plugin indent on
+
+" Terminal xterm-color strangeness
+"if &term == "xterm-color"
+  "set t_kb=
+  "fixdel
+"endif
+
+"set mousemodel=popup
+
+" Be smart about it
+set smarttab
+" Set the number of space to indent
+set shiftwidth=4
+" Like a modern text editor and not like old vi
+set backspace=indent,eol,start
+" Behave thyself
+behave xterm
+" Like a modern text editor
+set mouse=a
+set guioptions=agimrtb
+set nomousefocus
+" Set the text width
+set textwidth=79
+" Do backup before writing files
+set writebackup
+" Show the ruler at bottom of screen
+set ruler
+" Do no bother me with beeps or visual beeps
+set visualbell t_vb=
+" Do not wrap lines
+set nowrap
+" To highlight the searched words
+set hlsearch
+" Show the matched pattern as it is typed
+set incsearch
+" Insert spaces instead of tabstop
+set expandtab
+"Output format of grep
+"set grepformat=%f:%l:%m
+set grepprg=grep
+" The sign at the beginning of the line when wrapping a line
+set showbreak=>>>
+"Don't ignore case when there is an upper case character in the pattern. For
+"smartcase to take effect, ignorecase must be on.
+set ignorecase
+set smartcase
+" Set wrapping of cursor movement
+set ww=b,s,<,>,[,]
+
+let g:SuperTabDefaultCompletionType = "context"
+
+"set errorformat=\ %#[%.%#]\ %#%f:%l:%v:%*\\d:%*\\d:\ %t%[%^:]%#:%m,
+    "\%A\ %#[%.%#]\ %f:%l:\ %m,%-Z\ %#[%.%#]\ %p^,%C\ %#[%.%#]\ %#%m
+
+" Print stuff
+set printoptions=paper:letter,duplex:off
+
+"Diff stuff
+"set diffopt=filler,iwhite
+"if &diff
+  "set foldcolumn=2
+"else
+  "set foldcolumn=0
+"endif
+
+" File Explorer settings
+let g:explHideFiles='^\.,\.gz$,\.exe$,\.zip$,\.o,\..*~$'
+
+" Files with this suffixe will get a lower priority
+set suffixes='.bak,~,.o,.info,.swp,.obj,.pyc'
+
+" statusline
+" cf the default statusline: %<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
+" format markers:
+"   %< truncation point
+"   %n buffer number
+"   %f relative path to file
+"   %m modified flag [+] (modified), [-] (unmodifiable) or nothing
+"   %r readonly flag [RO]
+"   %y filetype [ruby]
+"   %= split point for left and right justification
+"   %-35. width specification
+"   %l current line number
+"   %L number of lines in buffer
+"   %c current column number
+"   %V current virtual column number (-n), if different from %c
+"   %P percentage through buffer
+"   %) end of width specification
+"set statusline=%<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
+set statusline=%<%f\ %h%m%r%{fugitive#statusline()}%=%-14.(%l,%c%V%)\ %P
+" Always show a status line.
+set laststatus=2 
+
+" PyFlakes messes up the quickfix window for other to use (like fugitive).
+" Disable it
+let g:pyflakes_use_quickfix = 0
+
+" Syntastic options
+let g:syntastic_enable_signs=0
+let g:syntastic_auto_loc_list=1
+let g:syntastic_enable_highlighting = 1
+
+" Ignore certain files from listings.
+set wildignore+=*.pyc,*.*~,build
+
+"=====================================================================
+" Autocommands
+"=====================================================================
+
+" Save session upon dying unexpectedly
+autocmd VimLeave  *  if v:dying | :mksession! | endif
+
+" Commands for CloseTag plugin
+autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
+autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim

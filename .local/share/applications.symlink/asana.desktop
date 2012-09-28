@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=Asana
+Exec=/opt/google/chrome/google-chrome "--app=https://app.asana.com"
+Terminal=false
+Icon=/home/hdemers/.icons/asana.jpg
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=app.asana.com
+Name[en_CA]=Asana
+StartupNotify=true
+

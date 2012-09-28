@@ -1,0 +1,25 @@
+
+[Added Associations]
+text/csv=gvim.desktop;
+x-scheme-handler/http=google-chrome.desktop;
+x-scheme-handler/https=google-chrome.desktop;
+application/octet-stream=gvim.desktop;
+audio/x-scpls=gvim.desktop;
+text/html=google-chrome.desktop;
+application/javascript=gvim.desktop;
+text/plain=gvim.desktop;
+application/x-perl=gedit.desktop;
+application/xml=google-chrome.desktop;
+image/png=eog.desktop;
+text/css=gvim.desktop;
+
+[Default Applications]
+x-scheme-handler/http=google-chrome.desktop
+x-scheme-handler/https=google-chrome.desktop
+text/html=google-chrome.desktop
+x-scheme-handler/about=google-chrome.desktop
+x-scheme-handler/unknown=google-chrome.desktop
+x-scheme-handler/mailto=google-chrome.desktop
+
+[Removed Associations]
+text/html=firefox.desktop;

@@ -26,8 +26,9 @@ def get_symlinks():
 
 @task
 def symlink():
-    overwrite = overwrite_all = backup = backup_all = skip_all = False
+    overwrite_all = backup_all = skip_all = False
     for source, link_name in get_symlinks():
+        overwrite = backup = False
         if path.lexists(link_name):
             if not (overwrite_all or backup_all or skip_all):
                 if path.islink(link_name):

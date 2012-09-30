@@ -8,5 +8,5 @@ Terminal=false
 Icon=/home/hdemers/.icons/pivotal_tracker.png
 Type=Application
 Categories=Network;WebBrowser;
-StartupWMClass=www.pivotaltracker.com__projects_303275
+StartupWMClass=www.pivotaltracker.com__google_domain_openid_redirect_for_auth
 StartupNotify=true

@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Name=Music Concierge - Songza
+Exec=/opt/google/chrome/google-chrome --app=http://songza.com/
+Terminal=false
+Icon=/home/hdemers/.icons/songza.png
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=songza.com
+Name[en_CA]=Songza

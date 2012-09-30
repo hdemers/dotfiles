@@ -8,5 +8,5 @@ Terminal=false
 Icon=/home/hdemers/.icons/pinboard.jpg
 Type=Application
 Categories=Network;WebBrowser;
-StartupWMClass=pinboard
+StartupWMClass=pinboard.in__u_hdemers
 Name[en_CA]=pinboard

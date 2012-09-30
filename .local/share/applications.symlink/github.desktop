@@ -1,3 +1,4 @@
+#!/usr/bin/env xdg-open
 
 [Desktop Entry]
 Version=1.0
@@ -7,5 +8,5 @@ Terminal=false
 Icon=/home/hdemers/.icons/github_128.png
 Type=Application
 Categories=Network;WebBrowser;
-StartupWMClass=github.com__hdemers_bullbear-service_pull_9
+StartupWMClass=github.com
 StartupNotify=true

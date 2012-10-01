@@ -46,3 +46,6 @@
 [submodule ".vim.symlink/bundle/xmledit"]
 	path = .vim.symlink/bundle/xmledit
 	url = https://github.com/sukima/xmledit.git
+[submodule ".vim.symlink/bundle/vcscommand"]
+	path = .vim.symlink/bundle/vcscommand
+	url = git://repo.or.cz/vcscommand

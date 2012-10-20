@@ -19,9 +19,6 @@
 [submodule ".vim.symlink/bundle/nerdcommenter"]
 	path = .vim.symlink/bundle/nerdcommenter
 	url = git://github.com/scrooloose/nerdcommenter.git
-[submodule ".vim.symlink/bundle/pyflakes"]
-	path = .vim.symlink/bundle/pyflakes
-	url = https://github.com/kevinw/pyflakes-vim.git
 [submodule ".vim.symlink/bundle/supertab"]
 	path = .vim.symlink/bundle/supertab
 	url = git://github.com/ervandew/supertab.git

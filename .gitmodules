@@ -46,3 +46,9 @@
 [submodule ".vim.symlink/bundle/vcscommand"]
 	path = .vim.symlink/bundle/vcscommand
 	url = git://repo.or.cz/vcscommand
+[submodule ".vim.symlink/bundle/snipmate"]
+	path = .vim.symlink/bundle/snipmate
+	url = git://github.com/msanders/snipmate.vim.git
+[submodule ".vim.symlink/bundle/surround"]
+	path = .vim.symlink/bundle/surround
+	url = git://github.com/tpope/vim-surround.git

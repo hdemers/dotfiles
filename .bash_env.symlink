@@ -21,3 +21,6 @@ if [ -f $AWS_DIR/aws.sh ]; then
 else
   echo "WARNING: could not read AWS config file."
 fi
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"

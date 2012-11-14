@@ -10,7 +10,7 @@
 map <Leader>z :b #<CR>
 map <Leader>q :bd<CR>
 map <C-s> :write<CR>
-map <Leader>h :noh<CR>
+nnoremap <Leader>/ :nohlsearch<CR>
 map <Leader>w :set wrap<CR>
 map <Leader>W :set nowrap<CR>
 map <Leader>d :vertical diffsplit 

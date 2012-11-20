@@ -2,7 +2,7 @@
 
 [Desktop Entry]
 Version=1.0
-Name=Gmail
+Name=Google
 Exec=/opt/google/chrome/google-chrome --app=https://mail.google.com/mail/ca/u/0
 Terminal=false
 Icon=/home/hdemers/.icons/google.png
@@ -10,24 +10,30 @@ Type=Application
 Categories=Network;WebBrowser;
 StartupWMClass=mail.google.com__mail_ca_u_0
 StartupNotify=true
-X-Ayatana-Desktop-Shortcuts=Calendar;Calendar OODA;Docs;Docs OODA
+Actions=Calendar;Docs;Calendar OODA;Docs OODA;Google+ OODA
 
-[Calendar Shortcut Group]
+[Desktop Action Calendar]
 Name=Calendar
 Exec=/opt/google/chrome/google-chrome --app='http://calendar.google.com'
 TargetEnvironment=Unity
 
-[Calendar OODA Shortcut Group]
+[Desktop Action Calendar OODA]
 Name=Calendar OODA
 Exec=/opt/google/chrome/google-chrome --app='http://calendar.ooda.ca'
 TargetEnvironment=Unity
 
-[Docs Shortcut Group]
+[Desktop Action Docs]
 Name=Docs
 Exec=/opt/google/chrome/google-chrome --app='http://docs.google.com'
 TargetEnvironment=Unity
 
-[Docs OODA Shortcut Group]
+[Desktop Action Docs OODA]
 Name=Docs OODA
 Exec=/opt/google/chrome/google-chrome --app='http://docs.ooda.ca'
 TargetEnvironment=Unity
+
+[Desktop Action Google+ OODA]
+Name=Google+ OODA
+Exec=/opt/google/chrome/google-chrome --app='https://plus.google.com/u/2/'
+TargetEnvironment=Unity
+

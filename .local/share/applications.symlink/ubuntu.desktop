@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Name=Ubuntu 10.04
+Exec=/usr/bin/virtualbox --startvm "Ubuntu 10.04 32bits"
+Terminal=false
+Icon=/home/hdemers/.icons/ubuntu.png
+Type=Application
+Categories=Office;
+StartupWMClass=ubuntu
+TargetEnvironment=Unity

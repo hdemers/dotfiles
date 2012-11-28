@@ -4,6 +4,9 @@ import shutil
 
 from fabric.api import task
 from fabric.operations import prompt
+from fabric.utils import error
+from fabric.colors import yellow, blue, red
+from fabric.contrib.console import confirm
 
 BASE_DIR = "."
 
@@ -29,18 +32,20 @@ def symlink():
     overwrite_all = backup_all = skip_all = False
     for source, link_name in get_symlinks():
         overwrite = backup = False
+        dirname = path.dirname(link_name)
+
         if path.lexists(link_name):
             if not (overwrite_all or backup_all or skip_all):
                 if path.islink(link_name):
-                    answer = prompt("Symbolic link %r already exists.\n"
+                    answer = prompt(blue("Symbolic link %r already exists.\n"
                                     "What do you want to do? "
                                     "[s]kip, [S]kip all, [o]verwrite, "
-                                    "[O]verwrite all: " % link_name)
+                                    "[O]verwrite all: " % link_name))
                 else:
-                    answer = prompt("File %r already exists.\n"
+                    answer = prompt(blue("File %r already exists.\n"
                                     "What do you want to do? "
                                     "[s]kip, [S]kip all, [o]verwrite, [O]verwrite all,"
-                                    " [b]ackup, [B]ackup all: " % link_name)
+                                    " [b]ackup, [B]ackup all: " % link_name))
                 if answer == 'O':
                     overwrite_all = True
                 elif answer == 'o':
@@ -64,5 +69,19 @@ def symlink():
                 except OSError:
                     shutil.rmtree(link_name)
 
+        elif not path.exists(dirname):
+            if confirm(blue("Path {!r} does not exists. Create?".format(
+                dirname))):
+                os.makedirs(dirname)
+            else:
+                print(yellow("Skipping {!r}".format(link_name)))
+                continue
+
         if not skip_all:
-            os.symlink(source, link_name)
+            try:
+                os.symlink(source, link_name)
+            except Exception, exception:
+                print(red("Exception {} for {!r}".format(exception,
+                                                         link_name)))
+                error(red("An error occured while symlinking {!r}".format(
+                    link_name)))

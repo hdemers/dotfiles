@@ -1,9 +1,6 @@
 [submodule ".vim.symlink/bundle/closetag"]
 	path = .vim.symlink/bundle/closetag
 	url = https://github.com/docunext/closetag.vim
-[submodule ".vim.symlink/bundle/command-t"]
-	path = .vim.symlink/bundle/command-t
-	url = git://git.wincent.com/command-t.git
 [submodule ".vim.symlink/bundle/delimitmate"]
 	path = .vim.symlink/bundle/delimitmate
 	url = git://github.com/Raimondi/delimitMate.git

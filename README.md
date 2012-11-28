@@ -23,7 +23,7 @@ Nothing will be overwritten without permission. You will be asked:
 On a brand new machine, one without `pip`, `virtualenv`, `virtualenvwrapper`
 and `fabric` installed in the `default` virtualenv, simply do:
 
-    sudo apt-get install pip python-dev
+    sudo apt-get install python-pip python-dev
     sudo pip install virtualenvwrapper
     export WORKON_HOME=$HOME/.virtualenvs
     mkdir $HOME/.virtualenvs

@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Name=Windows 7
+Exec=/usr/bin/virtualbox --startvm "Windows 7"
+Terminal=false
+Icon=/home/hdemers/.icons/windows.png
+Type=Application
+Categories=Office;
+StartupWMClass=microsoft.com
+TargetEnvironment=Unity

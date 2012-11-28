@@ -135,6 +135,9 @@ let g:syntastic_enable_highlighting = 1
 " Ignore certain files from listings.
 set wildignore+=*.pyc,*.*~,build
 
+" For ctrlp
+set runtimepath^=~/.vim/bundle/ctrlp
+
 "=====================================================================
 " Autocommands
 "=====================================================================

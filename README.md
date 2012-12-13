@@ -34,4 +34,16 @@ and `fabric` installed in the `default` virtualenv, simply do:
 
 Why all this? I like having a default virtualenv to play around with and a
 minimal system python installation. Thus, I install `fabric` in the _default_
-virtualenv right away.
+virtualenv.
+
+Adding a new vim plugin
+-----------------------
+
+Instructions to add a new vim plugin:
+
+    cd .dotfiles
+    git submodule add git://github.com/tpope/vim-fugitive.git .vim.symlink/bundle/fugitive
+    git submodule init && git submodule update
+
+To remove a plugin that was added as a git submodule, see this StackOverflow
+[answer](http://stackoverflow.com/a/1260982).

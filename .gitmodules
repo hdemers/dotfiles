@@ -55,3 +55,6 @@
 [submodule ".vim.symlink/bundle/flake8"]
 	path = .vim.symlink/bundle/flake8
 	url = git://github.com/nvie/vim-flake8.git
+[submodule ".vim.symlink/bundle/jedi"]
+	path = .vim.symlink/bundle/jedi
+	url = git://github.com/davidhalter/jedi-vim.git

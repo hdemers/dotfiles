@@ -41,8 +41,11 @@ map! <M-z> <ESC>:A<CR>
 map <Leader>s :set spell<CR>
 map <Leader>S :set nospell<CR>
 
-" Searching
+" Searching using Git
 map <Leader>g :Ggrep <cword><CR>
+
+" Syntastic mapping
+map <Leader>y :SyntasticToggleMode<CR>
 
 " Mapping of function keys
 map <F1> :Explore<CR>

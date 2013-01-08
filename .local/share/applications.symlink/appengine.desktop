@@ -3,7 +3,7 @@
 [Desktop Entry]
 Version=1.0
 Name=App Engine
-Exec=/opt/google/chrome/google-chrome "--app=https://appengine.google.com/dashboard?&app_id=bullbear-webapp"
+Exec=/opt/google/chrome/google-chrome "--app=https://appengine.google.com/dashboard?&app_id=bullbear-webapp-hrd"
 Terminal=false
 Icon=/home/hdemers/.icons/appengine.png
 Type=Application

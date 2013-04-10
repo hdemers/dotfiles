@@ -21,20 +21,10 @@ Nothing will be overwritten without permission. You will be asked:
     What do you want to do? [s]kip, [S]kip all, [o]verwrite, [O]verwrite all.
 
 On a brand new machine, one without `pip`, `virtualenv`, `virtualenvwrapper`
-and `fabric` installed in the `default` virtualenv, simply do:
-
-    sudo apt-get install python-pip python-dev
-    sudo pip install virtualenvwrapper
-    export WORKON_HOME=$HOME/.virtualenvs
-    mkdir $HOME/.virtualenvs
-    source /usr/local/bin/virtualenvwrapper.sh
-    mkvirtualenv default
-    pip install fabric
-    fab symlink
-
-Why all this? I like having a default virtualenv to play around with and a
-minimal system python installation. Thus, I install `fabric` in the _default_
-virtualenv.
+and `fabric` installed in a `default` virtualenv, simply execute *install.sh*.
+Why do all what's in _install.sh_? I like having a default virtualenv to play
+around with and a minimal system python installation. Thus, I install `fabric`
+in a virtualenv called _default_.
 
 Adding a new vim plugin
 -----------------------

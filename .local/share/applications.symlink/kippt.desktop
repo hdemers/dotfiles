@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Name=Kippt
+Exec=/opt/google/chrome/google-chrome --app=https://kippt.com/feed
+Terminal=false
+Icon=/home/hdemers/.icons/kippt.jpg
+Type=Application
+Categories=Network;WebBrowser;
+StartupWMClass=kippt.com__feed

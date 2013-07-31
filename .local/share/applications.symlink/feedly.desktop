@@ -3,7 +3,7 @@
 [Desktop Entry]
 Version=1.0
 Name=f | latest
-Exec=/opt/google/chrome/google-chrome "--app=http://www.feedly.com/home#latest"
+Exec=/opt/google/chrome/google-chrome "--app=http://cloud.feedly.com/"
 Terminal=false
 Icon=/home/hdemers/.icons/feedly.png
 Type=Application

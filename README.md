@@ -20,11 +20,14 @@ Nothing will be overwritten without permission. You will be asked:
 
     What do you want to do? [s]kip, [S]kip all, [o]verwrite, [O]verwrite all.
 
-On a brand new machine, one without `pip`, `virtualenv`, `virtualenvwrapper`
-and `fabric` installed in a `default` virtualenv, simply execute *install.sh*.
-Why do all what's in _install.sh_? I like having a default virtualenv to play
-around with and a minimal system python installation. Thus, I install `fabric`
-in a virtualenv called _default_.
+On a brand new Ubuntu machine, one without `pip`, `virtualenv`,
+`virtualenvwrapper` and `fabric` installed in a `default` virtualenv, simply
+execute *install.sh* like so:
+
+    wget https://raw.github.com/hdemers/dotfiles/master/install.sh ; source install.sh
+
+The install script will update all packages, install pip and git, create a
+*default* virtualenv, install fabric and clone this repository. 
 
 Adding a new vim plugin
 -----------------------

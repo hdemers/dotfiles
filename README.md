@@ -12,22 +12,20 @@ be a symlink, but not its two parents.
 Installation instructions
 -------------------------
 
-You need fabric to run the symlinker script. In the _dotfile_ directory do: 
+In the _dotfile_ directory do: 
 
-    fab symlink
+    ./symlink
     
 Nothing will be overwritten without permission. You will be asked:
 
     What do you want to do? [s]kip, [S]kip all, [o]verwrite, [O]verwrite all.
 
-On a brand new Ubuntu machine, one without `pip`, `virtualenv`,
-`virtualenvwrapper` and `fabric` installed in a `default` virtualenv, simply
-execute *install.sh* like so:
+On a brand new Ubuntu machine, simply source *install.sh* like so:
 
     wget https://raw.github.com/hdemers/dotfiles/master/install.sh ; source install.sh
 
-The install script will update all packages, install pip and git, create a
-*default* virtualenv, install fabric and clone this repository. 
+The install script will install git, clone this repository and run `symlink` with
+*overwrite-all* and *create-paths* options.
 
 Adding a new vim plugin
 -----------------------

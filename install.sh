@@ -1,17 +1,9 @@
 #!/bin/bash
 
-sudo apt-get update
-sudo apt-get --yes install python-pip python-dev git
+sudo apt-get --yes install git
 
-sudo pip install virtualenvwrapper
-export WORKON_HOME=$HOME/.virtualenvs
-mkdir -p $WORKON_HOME
-source /usr/local/bin/virtualenvwrapper.sh
-
-mkvirtualenv default
-pip install fabric
 git clone https://github.com/hdemers/dotfiles.git $HOME/.dotfiles
 
 cd $HOME/.dotfiles
-fab symlink
+./symlink -create-paths --overwrite-all
 git submodule init && git submodule update

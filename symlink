@@ -1,0 +1,117 @@
+#!/usr/bin/env python
+
+import os
+import os.path as path
+import shutil
+import argparse
+
+BASE_DIR = "."
+
+
+def parse():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--overwrite-all",
+                        help="Overwrite everything.",
+                        action='store_true')
+    parser.add_argument("-b", "--backup-all",
+                        help="Backup everything.",
+                        action='store_true')
+    parser.add_argument("-c", "--create-paths",
+                        help="Create non-existent paths.",
+                        action='store_true')
+
+    return parser.parse_args()
+
+
+def confirm(question):
+    while True:
+        response = raw_input("%s [Y/n] " % (question)).lower()
+        if not response:
+            return True
+        if response in ['y', 'yes']:
+            return True
+        if response in ['n', 'no']:
+            return False
+        print("Please specify '(y)es' or '(n)o'.")
+
+
+def get_symlinks():
+    symlinks = []
+    for dirpath, dirnames, filenames in os.walk(BASE_DIR):
+        link_name = path.normpath(path.expanduser(path.join("~", dirpath)))
+        source = path.abspath(dirpath)
+
+        if ".git" in dirnames:
+            del dirnames[dirnames.index(".git")]
+
+        for name in filenames + dirnames:
+            root, ext = path.splitext(name)
+            if ext == ".symlink":
+                symlinks.append((path.join(source, name),
+                                 path.join(link_name, root)))
+    return symlinks
+
+
+def symlink(overwrite_all=False, backup_all=False, create_paths=False):
+    skip_all = False
+    for source, link_name in get_symlinks():
+        overwrite = backup = False
+        dirname = path.dirname(link_name)
+
+        if path.lexists(link_name):
+            if not (overwrite_all or backup_all or skip_all):
+                if path.islink(link_name):
+                    answer = raw_input(
+                        "Symbolic link %r already exists.\n"
+                        "What do you want to do? "
+                        "[s]kip, [S]kip all, [o]verwrite, "
+                        "[O]verwrite all: " % link_name)
+                else:
+                    answer = raw_input(
+                        "File %r already exists.\n"
+                        "What do you want to do? "
+                        "[s]kip, [S]kip all, [o]verwrite, [O]verwrite all,"
+                        " [b]ackup, [B]ackup all: " % link_name)
+                if answer == 'O':
+                    overwrite_all = True
+                elif answer == 'o':
+                    overwrite = True
+                elif answer == 'B':
+                    backup_all = True
+                elif answer == 'b':
+                    backup = True
+                elif answer == 'S':
+                    skip_all = True
+                elif answer == 's':
+                    continue
+                else:
+                    return
+
+            if backup or backup_all:
+                os.rename(link_name, "%s.backup" % link_name)
+            if overwrite or overwrite_all:
+                try:
+                    os.remove(link_name)
+                except OSError:
+                    shutil.rmtree(link_name)
+
+        elif not path.exists(dirname):
+            if (confirm("Path {!r} does not exists. Create?".format(dirname))
+                    or create_paths):
+                os.makedirs(dirname)
+            else:
+                print("Skipping {!r}".format(link_name))
+                continue
+
+        if not skip_all:
+            try:
+                os.symlink(source, link_name)
+            except Exception, exception:
+                print("Exception {} for {!r}".format(exception, link_name))
+                print("An error occured while symlinking {!r}".format(
+                    link_name))
+
+
+if __name__ == '__main__':
+    args = parse()
+    symlink(args.overwrite_all, args.backup_all, args.create_paths)

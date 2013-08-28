@@ -1,1 +1,2 @@
 alias devenv='export BULLBEAR_VIRTUALENV=$BULLBEAR_HOME/../dev-env'
+alias beep='paplay ~/Music/Sounds/phone-incoming-call.ogg'

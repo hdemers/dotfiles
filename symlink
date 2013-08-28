@@ -9,15 +9,16 @@ BASE_DIR = "."
 
 
 def parse():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        description="Symlinks all files having extension '.symlink'.")
     parser.add_argument("-o", "--overwrite-all",
-                        help="Overwrite everything.",
+                        help="Overwrite everything by default.",
                         action='store_true')
     parser.add_argument("-b", "--backup-all",
-                        help="Backup everything.",
+                        help="Backup everything by default.",
                         action='store_true')
     parser.add_argument("-c", "--create-paths",
-                        help="Create non-existent paths.",
+                        help="Automatically ceate non-existent paths.",
                         action='store_true')
 
     return parser.parse_args()

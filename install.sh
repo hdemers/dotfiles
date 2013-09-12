@@ -1,6 +1,11 @@
 #!/bin/bash
 
-sudo apt-get --yes install git
+which git > /dev/null
+if [ $? -ne 0 ]; then
+    echo "ERROR: Need git to clone the repository. Install git first."
+    exit
+fi
+
 
 git clone https://github.com/hdemers/dotfiles.git $HOME/.dotfiles
 

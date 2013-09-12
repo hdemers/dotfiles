@@ -97,8 +97,8 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
                     shutil.rmtree(link_name)
 
         elif not path.exists(dirname):
-            if (confirm("Path {!r} does not exists. Create?".format(dirname))
-                    or create_paths):
+            if (create_paths or confirm(
+                    "Path {!r} does not exists. Create?".format(dirname))):
                 os.makedirs(dirname)
             else:
                 print("Skipping {!r}".format(link_name))

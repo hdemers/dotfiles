@@ -20,9 +20,9 @@ Nothing will be overwritten without permission. You will be asked:
 
     What do you want to do? [s]kip, [S]kip all, [o]verwrite, [O]verwrite all.
 
-On a brand new Ubuntu machine, simply source *install.sh* like so:
+On a brand new Ubuntu machine, simply execute *install.sh* like so:
 
-    wget https://raw.github.com/hdemers/dotfiles/master/install.sh ; source install.sh
+    wget https://raw.github.com/hdemers/dotfiles/master/install.sh ; bash install.sh
 
 The install script will install git, clone this repository and run `symlink` with
 *overwrite-all* and *create-paths* options.

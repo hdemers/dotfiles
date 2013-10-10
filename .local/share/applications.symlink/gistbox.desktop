@@ -4,6 +4,8 @@ Version=1.0
 Terminal=false
 Type=Application
 Name=GistBox
-Exec=/opt/google/chrome/chrome --app=https://app.gistboxapp.com/library/my-gists
+Exec=/opt/google/chrome/google-chrome --app-id=caoihfibgoiiakncomhccbflmlgjaohf --profile-directory=Default
 Icon=/home/hdemers/.icons/gistbox.png
-StartupWMClass=app.gistboxapp.com__library_my-gists
+StartupWMClass=crx_caoihfibgoiiakncomhccbflmlgjaohf
+
+

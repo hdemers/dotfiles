@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Name=Cloudant Data Layer as a Service
+Exec=/opt/google/chrome/google-chrome "--app=https://cloudant.com/dashboard/#!/dashboard"
+Icon=/home/hdemers/.icons/cloudant.png
+StartupWMClass=cloudant.com__dashboard
+Name[en_CA]=Cloudant

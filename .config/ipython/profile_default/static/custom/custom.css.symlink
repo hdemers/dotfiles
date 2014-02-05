@@ -3,7 +3,7 @@
   src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunss.otf');
 }
 
-div.cell{
+div.cell {
   width:98%;
   margin-left:auto;
   margin-right:auto;
@@ -13,25 +13,27 @@ h1 {
   font-family: Helvetica, serif;
 }
 
-h4{
+h4 {
   margin-top:12px;
   margin-bottom: 3px;
 }
 
-div.text_cell_render{
+div.text_cell_render {
   font-family: "Computer Modern", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
   line-height: 145%;
   font-size: 130%;
-  /*width:800px;*/
-  /*margin-left:auto;*/
-  /*margin-right:auto;*/
 }
 
-.CodeMirror{
+
+div.text_cell_render li {
+  line-height: 130%;
+}
+
+.CodeMirror {
   font-family: "Source Code Pro", source-code-pro, Consolas, monospace;
 }
 
-.prompt{
+.prompt {
   /*display: None;*/
 }
 
@@ -45,7 +47,7 @@ div.text_cell_render{
   display: block;
 }
 
-.warning{
+.warning {
   color: rgb( 240, 20, 20 )
 }  
 

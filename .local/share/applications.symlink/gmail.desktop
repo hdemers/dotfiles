@@ -2,38 +2,28 @@
 
 [Desktop Entry]
 Version=1.0
-Name=Google
-Exec=/opt/google/chrome/google-chrome --app=https://mail.google.com/mail/ca/u/0
+Name=GMail
+Exec=/opt/google/chrome/google-chrome --app=https://mail.google.com
 Terminal=false
 Icon=/home/hdemers/.icons/google.png
 Type=Application
-Categories=Network;WebBrowser;
-StartupWMClass=mail.google.com__mail_ca_u_0
+Categories=Network;Mail;
+StartupWMClass=mail.google.com
 StartupNotify=true
-Actions=Calendar;Docs;Calendar OODA;Docs OODA;Google+ OODA
+Actions=Calendar;Drive;Google+
 
 [Desktop Action Calendar]
 Name=Calendar
-Exec=/opt/google/chrome/google-chrome --app='http://calendar.google.com'
+Exec=/opt/google/chrome/google-chrome --app='https://calendar.google.com'
 TargetEnvironment=Unity
 
-[Desktop Action Calendar OODA]
-Name=Calendar OODA
-Exec=/opt/google/chrome/google-chrome --app='http://calendar.ooda.ca'
+[Desktop Action Drive]
+Name=Drive
+Exec=/opt/google/chrome/google-chrome --app='https://drive.google.com'
 TargetEnvironment=Unity
 
-[Desktop Action Docs]
-Name=Docs
-Exec=/opt/google/chrome/google-chrome --app='http://docs.google.com'
-TargetEnvironment=Unity
-
-[Desktop Action Docs OODA]
-Name=Docs OODA
-Exec=/opt/google/chrome/google-chrome --app='http://docs.ooda.ca'
-TargetEnvironment=Unity
-
-[Desktop Action Google+ OODA]
-Name=Google+ OODA
-Exec=/opt/google/chrome/google-chrome --app='https://plus.google.com/u/2/'
+[Desktop Action Google+]
+Name=Google+
+Exec=/opt/google/chrome/google-chrome --app='https://plus.google.com'
 TargetEnvironment=Unity
 

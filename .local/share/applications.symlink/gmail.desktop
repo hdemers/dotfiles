@@ -1,15 +1,12 @@
 #!/usr/bin/env xdg-open
-
 [Desktop Entry]
 Version=1.0
-Name=GMail
-Exec=/opt/google/chrome/google-chrome --app=https://mail.google.com
 Terminal=false
-Icon=/home/hdemers/.icons/google.png
 Type=Application
-Categories=Network;Mail;
-StartupWMClass=mail.google.com
-StartupNotify=true
+Name=Gmail
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=pjkljhegncpnkpknbcohdijeoejaedia
+Icon=chrome-pjkljhegncpnkpknbcohdijeoejaedia-Default
+StartupWMClass=crx_pjkljhegncpnkpknbcohdijeoejaedia
 Actions=Calendar;Drive;Google+
 
 [Desktop Action Calendar]
@@ -19,7 +16,8 @@ TargetEnvironment=Unity
 
 [Desktop Action Drive]
 Name=Drive
-Exec=/opt/google/chrome/google-chrome --app='https://drive.google.com'
+#Exec=/opt/google/chrome/google-chrome --app='https://drive.google.com'
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=apdfllckaahabafndbhieahigkjlhalf
 TargetEnvironment=Unity
 
 [Desktop Action Google+]

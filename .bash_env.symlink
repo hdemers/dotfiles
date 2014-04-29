@@ -14,13 +14,5 @@ if [ -f $AUTOENV ]; then
     source $AUTOENV
 fi
 
-# Default AWS environment.
-export AWS_DIR=$HOME/Private/aws/ooda
-if [ -f $AWS_DIR/aws.sh ]; then
-    . $AWS_DIR/aws.sh
-else
-  echo "WARNING: could not read AWS config file."
-fi
-
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"

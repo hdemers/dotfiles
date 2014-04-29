@@ -1,3 +1,2 @@
-alias devenv='export BULLBEAR_VIRTUALENV=$BULLBEAR_HOME/../dev-env'
 alias beep='paplay ~/Music/Sounds/phone-incoming-call.ogg'
-alias ecds='minion launch -p datascience -g datascience -t m1.xlarge -s data-science'
+alias ecds='minion launch -p datascience -t m1.xlarge -s data-science && beep'

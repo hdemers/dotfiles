@@ -1,10 +1,9 @@
-
+#!/usr/bin/env xdg-open
 [Desktop Entry]
 Version=1.0
-Name=Keep
-Exec=/opt/google/chrome/google-chrome --app=https://drive.google.com/keep
 Terminal=false
-Icon=/home/hdemers/.icons/google-keep.png
 Type=Application
-Categories=Network;WebBrowser;
-StartupWMClass=drive.google.com__keep_u_0
+Name=Google Keep
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=hmjkmjkepdijhoojdojkdfohbdgmmhki
+Icon=chrome-hmjkmjkepdijhoojdojkdfohbdgmmhki-Default
+StartupWMClass=crx_hmjkmjkepdijhoojdojkdfohbdgmmhki

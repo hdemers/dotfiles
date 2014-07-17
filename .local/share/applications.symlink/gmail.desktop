@@ -11,17 +11,19 @@ Actions=Calendar;Drive;Google+
 
 [Desktop Action Calendar]
 Name=Calendar
-Exec=/opt/google/chrome/google-chrome --app='https://calendar.google.com'
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ejjicmeblgpmajnghnpcppodonldlgfn
+Icon=chrome-ejjicmeblgpmajnghnpcppodonldlgfn-Default
 TargetEnvironment=Unity
 
 [Desktop Action Drive]
 Name=Drive
-#Exec=/opt/google/chrome/google-chrome --app='https://drive.google.com'
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=apdfllckaahabafndbhieahigkjlhalf
+Icon=chrome-apdfllckaahabafndbhieahigkjlhalf-Default
 TargetEnvironment=Unity
 
 [Desktop Action Google+]
 Name=Google+
-Exec=/opt/google/chrome/google-chrome --app='https://plus.google.com'
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dlppkpafhbajpcmmoheippocdidnckmm
+Icon=chrome-dlppkpafhbajpcmmoheippocdidnckmm-Default
 TargetEnvironment=Unity
 

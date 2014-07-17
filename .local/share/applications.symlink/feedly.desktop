@@ -2,11 +2,10 @@
 
 [Desktop Entry]
 Version=1.0
-Name=f | latest
+Name=Feedly
 Exec=/opt/google/chrome/google-chrome "--app=http://cloud.feedly.com/"
 Terminal=false
 Icon=/home/hdemers/.icons/feedly.png
 Type=Application
 Categories=Network;WebBrowser;
 StartupWMClass=www.feedly.com__home
-Name[en_CA]=feedly

@@ -3,6 +3,10 @@
   src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunss.otf');
 }
 
+/* comment out this line to bring the toolbar back */
+div#maintoolbar, div#header {display: none !important;}
+div#notebook {border-top: none;}
+
 div.cell {
   width:98%;
   margin-left:auto;
@@ -10,7 +14,7 @@ div.cell {
 }
 
 h1 {
-  font-family: Helvetica, serif;
+  font-family: "Computer Modern", Helvetica, serif;
 }
 
 h4 {

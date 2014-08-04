@@ -86,7 +86,7 @@ let g:SuperTabDefaultCompletionType = "context"
 set printoptions=paper:letter,duplex:off
 
 "Diff stuff
-"set diffopt=filler,iwhite
+set diffopt=filler,vertical
 "if &diff
   "set foldcolumn=2
 "else

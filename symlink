@@ -20,6 +20,9 @@ def parse():
     parser.add_argument("-c", "--create-paths",
                         help="Automatically ceate non-existent paths.",
                         action='store_true')
+    parser.add_argument("-n", "--no-op",
+                        help="Print what will be done",
+                        action='store_true')
 
     return parser.parse_args()
 
@@ -115,4 +118,8 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
 
 if __name__ == '__main__':
     args = parse()
-    symlink(args.overwrite_all, args.backup_all, args.create_paths)
+    if args.no_op:
+        for source, link_name in get_symlinks():
+            print "{} --> {}".format(source, link_name)
+    else:
+        symlink(args.overwrite_all, args.backup_all, args.create_paths)

@@ -24,3 +24,9 @@ if [ -d "$RBENV_ROOT" ]; then
   export PATH="$RBENV_ROOT/bin:${PATH}"
   eval "$(rbenv init -)"
 fi
+
+if [ -d $HOME/Private/aws/hdemers ]; then
+  source $HOME/Private/aws/hdemers/aws.sh
+fi
+
+export EC2_AMI=ami-08389d60

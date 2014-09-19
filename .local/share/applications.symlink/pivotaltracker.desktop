@@ -3,7 +3,7 @@
 [Desktop Entry]
 Version=1.0
 Name=Pivotal Tracker
-Exec=/opt/google/chrome/google-chrome --app=https://www.pivotaltracker.com/google_domain_openid/redirect_for_auth?domain=ooda.ca
+Exec=/opt/google/chrome/google-chrome --app=https://www.pivotaltracker.com/n/projects/1160698
 Terminal=false
 Icon=/home/hdemers/.icons/pivotal_tracker.png
 Type=Application

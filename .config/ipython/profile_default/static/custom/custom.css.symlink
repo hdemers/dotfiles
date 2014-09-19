@@ -1,3 +1,5 @@
+@import url('http://fonts.googleapis.com/css?family=Source+Code+Pro');
+
 @font-face {
   font-family: "Computer Modern";
   src: url('http://mirrors.ctan.org/fonts/cm-unicode/fonts/otf/cmunss.otf');
@@ -8,10 +10,19 @@ div#maintoolbar, div#header {display: none !important;}
 div#notebook {border-top: none;}
 
 div.cell {
-  width:98%;
+  width:66em;
   margin-left:auto;
   margin-right:auto;
 }
+
+div.code_cell {
+  width:57em;
+}
+
+.text_cell code {
+  font-size: 80%;
+}
+
 
 h1 {
   font-family: "Computer Modern", Helvetica, serif;
@@ -25,7 +36,7 @@ h4 {
 div.text_cell_render {
   font-family: "Computer Modern", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
   line-height: 145%;
-  font-size: 130%;
+  font-size: 120%;
 }
 
 
@@ -33,15 +44,7 @@ div.text_cell_render li {
   line-height: 130%;
 }
 
-.CodeMirror {
-  font-family: "Source Code Pro", source-code-pro, Consolas, monospace;
-}
-
-.prompt {
-  /*display: None;*/
-}
-
-.text_cell_render h5 {
+div.text_cell_render h5 {
   font-weight: 300;
   font-size: 16pt;
   color: #4057A1;
@@ -55,9 +58,75 @@ div.text_cell_render li {
   color: rgb( 240, 20, 20 )
 }  
 
-.text_cell code {
-  font-size: 80%;
+.prompt.output_prompt,
+.prompt.input_prompt {
+    color: rgba(0,0,0,0.5);
 }
+
+
+div.input_area {
+  /*background: #fdf6e3;*/
+  background: #fefbf5;
+}
+
+.CodeMirror {
+  font-family: "Source Code Pro", Consolas, monospace;
+}
+
+
+/*
+ *
+ *  color: #002b36;  // base03
+ *  color: #073642;  // base02
+ *  color: #586e75;  // base01
+ *  color: #657b83;  // base00
+ *  color: #839496;  // base0
+ *  color: #93a1a1;  // base1
+ *  color: #eee8d5;  // base2
+ *  color: #fdf6e3;  // base3
+ *  color: #b58900;  // yellow
+ *  color: #cb4b16;  // orange
+ *  color: #dc322f;  // red
+ *  color: #d33682;  // magenta
+ *  color: #6c71c4;  // violet
+ *  color: #268bd2;  // blue
+ *  color: #2aa198;  // cyan
+ *  color: #859900;  // green
+ */
+.cm-s-ipython span.cm-keyword {
+    color: #859900;
+    font-weight: bold;
+}
+.cm-s-ipython span.cm-number {
+    color: #2aa198;
+}
+.cm-s-ipython span.cm-operator {
+    color: #b58900;
+    font-weight: bold;
+}
+.cm-s-ipython span.cm-meta {
+    color: #cb4b16;
+}
+.cm-s-ipython span.cm-comment {
+    color: #839496; 
+    font-style: italic;
+}
+.cm-s-ipython span.cm-string {
+    color: #2aa198;
+}
+.cm-s-ipython span.cm-error {
+    color: #dc322f;
+}
+.cm-s-ipython span.cm-builtin {
+    color: #cb4b16;
+}
+.cm-s-ipython span.cm-variable{
+    color: #586e75;
+}
+.cm-s-ipython span.cm-def{
+    color: #268bd2;
+}
+
 
 MathJax.Hub.Config({
   TeX: {

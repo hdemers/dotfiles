@@ -1,0 +1,11 @@
+#!/usr/bin/env xdg-open
+
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Name=Inbox – hdemers@gmail.com
+Exec=/opt/google/chrome/google-chrome --app=https://inbox.google.com/u/0/
+Icon=chrome-https___inbox.google.com_u_0_
+StartupWMClass=inbox.google.com__u_0
+Name[en_CA]=Inbox

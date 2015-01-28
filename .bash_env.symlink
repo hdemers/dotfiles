@@ -29,4 +29,4 @@ if [ -d $HOME/Private/aws/hdemers ]; then
   source $HOME/Private/aws/hdemers/aws.sh
 fi
 
-export EC2_AMI=ami-08389d60
+export EC2_AMI=ami-8caa1ce4

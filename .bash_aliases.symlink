@@ -1,2 +1,2 @@
 alias beep='paplay ~/Music/Sounds/phone-incoming-call.ogg'
-alias ecds='minion launch -p datascience -t m1.xlarge -s data-science && beep'
+alias docker_cleanup='docker rm $(docker ps -qa -f status=exited)'

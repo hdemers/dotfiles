@@ -6,32 +6,40 @@
 }
 
 /* comment out this line to bring the toolbar back */
-div#maintoolbar, div#header {display: none !important;}
-div#notebook {border-top: none;}
+div#maintoolbar, div#header-container {display: none !important;}
+/*div#notebook {border-top: none;}*/
 
-div.cell {
-  width:66em;
-  margin-left:auto;
-  margin-right:auto;
+div.code_cell div.input_area {
+  width: 48em;
 }
 
-div.code_cell {
-  width:57em;
+.edit_mode div.cell.selected {
+  border-color: #b58900;
 }
 
-.text_cell code {
-  font-size: 80%;
-}
+/*div.cell {*/
+  /*width:66em;*/
+  /*margin-left:auto;*/
+  /*margin-right:auto;*/
+/*}*/
+
+/*div.code_cell {*/
+  /*width:57em;*/
+/*}*/
+
+/*.text_cell code {*/
+  /*font-size: 80%;*/
+/*}*/
 
 
 h1 {
   font-family: "Computer Modern", Helvetica, serif;
 }
 
-h4 {
-  margin-top:12px;
-  margin-bottom: 3px;
-}
+/*h4 {*/
+  /*margin-top:12px;*/
+  /*margin-bottom: 3px;*/
+/*}*/
 
 div.text_cell_render {
   font-family: "Computer Modern", "Helvetica Neue", Arial, Helvetica, Geneva, sans-serif;
@@ -40,19 +48,19 @@ div.text_cell_render {
 }
 
 
-div.text_cell_render li {
-  line-height: 130%;
-}
+/*div.text_cell_render li {*/
+  /*line-height: 130%;*/
+/*}*/
 
-div.text_cell_render h5 {
-  font-weight: 300;
-  font-size: 16pt;
-  color: #4057A1;
-  font-style: italic;
-  margin-bottom: .5em;
-  margin-top: 0.5em;
-  display: block;
-}
+/*div.text_cell_render h5 {*/
+  /*font-weight: 300;*/
+  /*font-size: 16pt;*/
+  /*color: #4057A1;*/
+  /*font-style: italic;*/
+  /*margin-bottom: .5em;*/
+  /*margin-top: 0.5em;*/
+  /*display: block;*/
+/*}*/
 
 .warning {
   color: rgb( 240, 20, 20 )

@@ -27,9 +27,9 @@ div.code_cell div.input_area {
   /*width:57em;*/
 /*}*/
 
-/*.text_cell code {*/
-  /*font-size: 80%;*/
-/*}*/
+.text_cell code {
+  font-size: 90%;
+}
 
 
 h1 {

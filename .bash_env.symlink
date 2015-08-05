@@ -3,6 +3,7 @@ export PATH=$PATH:/opt/vagrant/bin
 
 # Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
 export WORKON_HOME=$HOME/.virtualenvs
+export PROJECT_HOME=$HOME/Projets
 VIRTUALENVWRAPPER=/usr/local/bin/virtualenvwrapper.sh
 if [ -f $VIRTUALENVWRAPPER ]; then
     source $VIRTUALENVWRAPPER

@@ -8,3 +8,7 @@
 
 # Notebook checkpoints directories
 .ipynb_checkpoints
+
+# R stuff
+.RData
+.Rhistory

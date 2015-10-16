@@ -55,3 +55,6 @@
 [submodule ".vim.symlink/bundle/vim-ruby"]
 	path = .vim.symlink/bundle/vim-ruby
 	url = git@github.com:vim-ruby/vim-ruby.git
+[submodule ".vim.symlink/bundle/vim-airline"]
+	path = .vim.symlink/bundle/vim-airline
+	url = git@github.com:bling/vim-airline.git

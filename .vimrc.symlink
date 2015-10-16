@@ -19,7 +19,7 @@ let g:solarized_termtrans=1
 colorscheme solarized
 call togglebg#map("<F5>")
 
-"set t_Co=16
+set t_Co=256
 
 "=====================================================================
 " Various settings

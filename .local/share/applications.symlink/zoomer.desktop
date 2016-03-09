@@ -1,0 +1,50 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Name=Hangouts
+Exec=/opt/google/chrome/google-chrome "--app=https://plus.google.com/hangouts/_/zoomer.io?authuser=1"
+Icon=/home/hdemers/.icons/zoomer-logo.png
+StartupWMClass=plus.google.com__hangouts___zoomer.io
+Actions=Trello;Heroku;Logentries;Salesforce;Drive;Sheets;Docs;Slides
+
+[Desktop Action Sheets]
+Name=Sheets
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dnmjbhpodcclmhbnjoflkkfcnahllmgd
+TargetEnvironment=Unity
+
+[Desktop Action Docs]
+Name=Docs
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dkjfibbapamijbcbofniiippjndegano
+TargetEnvironment=Unity
+
+[Desktop Action Trello]
+Name=Trello
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ebmciceepcipmfoegnjkacgamjocbpba
+TargetEnvironment=Unity
+
+[Desktop Action Heroku]
+Name=Heroku
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=bflfhfdcaelpdphgoihcgofbhejkpefa
+TargetEnvironment=Unity
+
+[Desktop Action Logentries]
+Name=Logentries
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dknihciignnlocodkaegjjkcljoaedim
+TargetEnvironment=Unity
+
+[Desktop Action Slides]
+Name=Slides
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=cdbokiilicdidpkcmkhdhjjcmcjapebg
+TargetEnvironment=Unity
+
+[Desktop Action Drive]
+Name=Drive
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=kjcfecngklkcahbpmgkmopndfhdjbhfo
+TargetEnvironment=Unity
+
+[Desktop Action Salesforce]
+Name=Salesforce
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=fmkkjlchjgdnadhflgpjnfobcghheldh
+TargetEnvironment=Unity

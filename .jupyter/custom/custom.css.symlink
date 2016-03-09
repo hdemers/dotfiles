@@ -14,7 +14,13 @@ div.code_cell div.input_area {
 }
 
 .edit_mode div.cell.selected {
-  border-color: #b58900;
+  border-color: #859900;
+  background: linear-gradient(to right, #859900 -40px, #859900 5px, transparent 5px, transparent 100%)
+}
+
+div.cell.selected {
+  border-color: #268bd2;
+  background: linear-gradient(to right, #268bd2 -40px, #268bd2 5px, transparent 5px, transparent 100%)
 }
 
 /*div.cell {*/

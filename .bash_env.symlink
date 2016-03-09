@@ -33,3 +33,5 @@ fi
 export EC2_AMI=ami-8caa1ce4
 
 export R_LIBS_USER=~/.R/library
+
+export PIP_REQUIRE_VIRTUALENV=true

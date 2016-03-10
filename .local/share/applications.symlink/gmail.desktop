@@ -7,7 +7,7 @@ Name=Gmail
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=pjkljhegncpnkpknbcohdijeoejaedia
 Icon=chrome-pjkljhegncpnkpknbcohdijeoejaedia-Default
 StartupWMClass=crx_pjkljhegncpnkpknbcohdijeoejaedia
-Actions=Calendar;Drive;Google+
+Actions=Photos;Drive;Docs;Sheets;Slides;Calendar;Contacts
 
 [Desktop Action Calendar]
 Name=Calendar
@@ -17,13 +17,35 @@ TargetEnvironment=Unity
 
 [Desktop Action Drive]
 Name=Drive
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=apdfllckaahabafndbhieahigkjlhalf
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=iijlnfogmdegfceilhmkfmodclpomkge
 Icon=chrome-apdfllckaahabafndbhieahigkjlhalf-Default
 TargetEnvironment=Unity
 
-[Desktop Action Google+]
-Name=Google+
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dlppkpafhbajpcmmoheippocdidnckmm
-Icon=chrome-dlppkpafhbajpcmmoheippocdidnckmm-Default
+[Desktop Action Sheets]
+Name=Sheets
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=felcaaldnbdncclmgdcncolpebgiejap
 TargetEnvironment=Unity
 
+[Desktop Action Docs]
+Name=Docs
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=aohghmighlieiainnegkcijnfilokake
+Icon=chrome-aohghmighlieiainnegkcijnfilokake-Default
+TargetEnvironment=Unity
+
+[Desktop Action Slides]
+Name=Slides
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=aapocclcgogkmnckokdopfmhonfmgoek
+Icon=chrome-aapocclcgogkmnckokdopfmhonfmgoek-Default
+TargetEnvironment=Unity
+
+[Desktop Action Photos]
+Name=Photos
+Exec=/opt/google/chrome/google-chrome --app=https://photos.google.com
+Icon=chrome-https___photos.google.com_settings
+TargetEnvironment=Unity
+
+[Desktop Action Contacts]
+Name=Contacts
+Exec=/opt/google/chrome/google-chrome --app=https://contacts.google.com/u/0/preview/all
+Icon=chrome-https___contacts.google.com_u_0_preview_all
+TargetEnvironment=Unity

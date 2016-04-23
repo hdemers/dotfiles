@@ -2,8 +2,8 @@
 
 which git > /dev/null
 if [ $? -ne 0 ]; then
-    echo "ERROR: Need git to clone the repository. Install git first."
-    exit
+    echo "Installing git..."
+    sudo apt-get install git
 fi
 
 

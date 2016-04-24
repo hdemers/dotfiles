@@ -10,10 +10,7 @@ if [ -f $VIRTUALENVWRAPPER ]; then
 fi
 
 # Autoenv, cf. https://github.com/kennethreitz/autoenv.
-AUTOENV=$HOME/.autoenv/activate.sh
-if [ -f $AUTOENV ]; then
-    source $AUTOENV
-fi
+source `which activate.sh`
 
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"

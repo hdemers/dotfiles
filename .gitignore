@@ -1,0 +1,3 @@
+.vim.symlink/plugged
+.local/share/applications.symlink/chrome-*-Default.desktop
+.local/share/applications.symlink/mimeapps.list

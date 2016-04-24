@@ -3,9 +3,27 @@
 " Author: Hugues Demers
 "=====================================================================
 
-call pathogen#infect()
-
 set guifont=Ubuntu\ Mono\ 12
+
+
+"=====================================================================
+" Load plugins
+"=====================================================================
+call plug#begin('~/.vim/plugged')
+
+Plug 'jlanzarotta/bufexplorer'
+Plug 'kien/ctrlp.vim'
+Plug 'tpope/vim-fugitive'
+Plug 'sjl/gundo.vim'
+Plug 'scrooloose/nerdcommenter'
+Plug 'ervandew/supertab'
+Plug 'tpope/vim-surround'
+Plug 'scrooloose/syntastic'
+Plug 'majutsushi/tagbar'
+Plug 'tpope/vim-unimpaired'
+Plug 'altercation/vim-colors-solarized'
+
+call plug#end()
 
 "=====================================================================
 " Color stuff (for highlighting see ~/.vim/after/syntax/syncolor.vim

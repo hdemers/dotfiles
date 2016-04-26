@@ -1,6 +1,7 @@
 # Change prefix key to `
 unbind C-b
-set-option -g prefix `
+set -g prefix C-a
+bind C-a send-prefix
 
 # 0 is too far from ` ;)
 set -g base-index 1

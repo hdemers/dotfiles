@@ -10,7 +10,10 @@ if [ -f $VIRTUALENVWRAPPER ]; then
 fi
 
 # Autoenv, cf. https://github.com/kennethreitz/autoenv.
-source `which activate.sh`
+AUTOENV=`which activate.sh`
+if [ -f $AUTOENV ]; then
+    source $AUTOENV
+fi
 
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
@@ -27,7 +30,10 @@ if [ -d $HOME/Private/aws/hdemers ]; then
   source $HOME/Private/aws/hdemers/aws.sh
 fi
 
-export EC2_AMI=ami-8caa1ce4
+# ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20160406
+export EC2_AMI=ami-2b594f41
+export EC2_INSTANCE_TYPE=t2.nano
+export EC2_SECURITY_GROUP_IDS=sg-f909ec90
 
 export R_LIBS_USER=~/.R/library
 

@@ -7,10 +7,9 @@ set guifont=Ubuntu\ Mono\ 12
 
 
 "=====================================================================
-" Load plugins
+" Load plugins using plug.vim (https://github.com/junegunn/vim-plug)
 "=====================================================================
 call plug#begin('~/.vim/plugged')
-
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
 Plug 'tpope/vim-fugitive'
@@ -22,7 +21,6 @@ Plug 'scrooloose/syntastic'
 Plug 'majutsushi/tagbar'
 Plug 'tpope/vim-unimpaired'
 Plug 'altercation/vim-colors-solarized'
-
 call plug#end()
 
 "=====================================================================

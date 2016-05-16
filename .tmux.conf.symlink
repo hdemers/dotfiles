@@ -41,11 +41,11 @@ set -sg escape-time 0
 bind r source-file ~/.tmux.conf
 
 # THEME
-set -g status-bg black
-set -g status-fg cyan
-set -g window-status-current-bg cyan
-set -g window-status-current-fg black
-set -g window-status-current-attr bold
+set -g status-bg colour0
+set -g status-fg colour6
+set -g window-status-current-bg colour8
+set -g window-status-current-fg colour6
+#set -g window-status-current-attr bold
 set -g status-interval 60
 set -g status-left-length 30
 set -g status-left '#[fg=green](#S) #(whoami)@#H  '

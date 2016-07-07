@@ -132,6 +132,7 @@ let g:syntastic_auto_loc_list = 1
 let g:syntastic_enable_highlighting = 1
 let g:syntastic_java_javac_config_file_enabled = 1
 let g:syntastic_ruby_checkers = ['mri', 'rubocop']
+let g:syntastic_python_python_exec = '/usr/bin/python3'
 
 " SuperTab
 let g:SuperTabDefaultCompletionType = "context"
@@ -139,12 +140,6 @@ let g:SuperTabDefaultCompletionType = "context"
 " Tagbar
 let g:tagbar_autoclose = 1
 let g:tagbar_compact = 1
-
-" Airline
-let g:airline_left_sep = ''
-let g:airline_right_sep = ''
-let g:airline#extensions#tagbar#enabled = 0
-let g:airline_section_x = ''
 
 "=====================================================================
 " Autocommands
@@ -154,8 +149,8 @@ let g:airline_section_x = ''
 autocmd VimLeave  *  if v:dying | :mksession! | endif
 
 " Commands for CloseTag plugin
-autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
-autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim
+"autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
+"autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim
 
 "=====================================================================
 " Mappings and Abbreviations

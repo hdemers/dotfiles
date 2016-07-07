@@ -31,7 +31,7 @@ TargetEnvironment=Unity
 
 [Desktop Action Logentries]
 Name=Logentries
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dknihciignnlocodkaegjjkcljoaedim
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=bkkleenlbjphnihoihdcnaloihnkfppe
 TargetEnvironment=Unity
 
 [Desktop Action Slides]

@@ -141,6 +141,9 @@ let g:SuperTabDefaultCompletionType = "context"
 let g:tagbar_autoclose = 1
 let g:tagbar_compact = 1
 
+" Gundo
+let g:gundo_prefer_python3 = 1
+
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -191,7 +194,7 @@ map <Leader>s :set spell<CR>
 map <Leader>S :set nospell<CR>
 
 " Searching using Git
-map <Leader>G :Ggrep <cword><CR>
+map <Leader>g :Ggrep <cword><CR><CR> :cl<CR>
 
 " Syntastic mapping
 map <Leader>y :SyntasticToggleMode<CR>

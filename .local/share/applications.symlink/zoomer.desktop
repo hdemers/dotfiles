@@ -7,7 +7,7 @@ Name=Hangouts
 Exec=/opt/google/chrome/google-chrome "--app=https://plus.google.com/hangouts/_/zoomer.io?authuser=1"
 Icon=/home/hdemers/.icons/zoomer-logo.png
 StartupWMClass=plus.google.com__hangouts___zoomer.io
-Actions=Trello;Heroku;Logentries;Salesforce;Drive;Sheets;Docs;Slides
+Actions=Trello;Heroku;Logentries;Salesforce;Drive;Sheets;Docs;Slides;Zoom
 
 [Desktop Action Sheets]
 Name=Sheets
@@ -47,4 +47,9 @@ TargetEnvironment=Unity
 [Desktop Action Salesforce]
 Name=Salesforce
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=fmkkjlchjgdnadhflgpjnfobcghheldh
+TargetEnvironment=Unity
+
+[Desktop Action Zoom]
+Name=Zoom
+Exec=/usr/bin/zoom
 TargetEnvironment=Unity

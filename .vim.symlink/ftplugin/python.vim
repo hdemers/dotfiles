@@ -5,4 +5,3 @@ setlocal textwidth=79
 setlocal smarttab
 setlocal expandtab
 setlocal nosmartindent
-setlocal omnifunc=pythoncomplete#Complete

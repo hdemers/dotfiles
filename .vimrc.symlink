@@ -186,10 +186,6 @@ map! <C-Up> <C-y>
 map! <C-Down> <C-e>
 map! <M-z> <ESC>:A<CR>
 
-" Mapping to enable/disable spell checking.
-map <Leader>s :set spell<CR>
-map <Leader>S :set nospell<CR>
-
 " Searching using Git
 map <Leader>g :Ggrep <cword><CR><CR> :cl<CR>
 

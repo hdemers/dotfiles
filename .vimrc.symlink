@@ -13,7 +13,7 @@ call plug#begin('~/.vim/plugged')
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
 Plug 'tpope/vim-fugitive'
-Plug 'sjl/gundo.vim'
+Plug 'mbbill/undotree'
 Plug 'scrooloose/nerdcommenter'
 Plug 'ervandew/supertab'
 Plug 'tpope/vim-surround'
@@ -141,9 +141,6 @@ let g:SuperTabDefaultCompletionType = "context"
 let g:tagbar_autoclose = 1
 let g:tagbar_compact = 1
 
-" Gundo
-let g:gundo_prefer_python3 = 1
-
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -206,7 +203,7 @@ map <F3> :TagbarToggle<CR>
 map <F6> :Gstatus<CR>
 map <F7> :Gdiff<CR>
 map <F8> :Gcommit<CR>
-map <F9> :GundoToggle<CR>
+map <F9> :UndotreeToggle<CR>
 
 inoremap <C-E> <C-X><C-E>
 inoremap <C-Y> <C-X><C-Y>

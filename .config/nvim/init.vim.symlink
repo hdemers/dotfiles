@@ -1,113 +1,56 @@
 "=====================================================================
-" File: .vimrc
-" Author: Hugues Demers
-"=====================================================================
-
-set guifont=Ubuntu\ Mono\ 12
-
-
-"=====================================================================
 " Load plugins using plug.vim (https://github.com/junegunn/vim-plug)
 "=====================================================================
-call plug#begin('~/.vim/plugged')
+call plug#begin('~/.config/nvim/plugged')
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'mbbill/undotree'
 Plug 'scrooloose/nerdcommenter'
-Plug 'ervandew/supertab'
 Plug 'tpope/vim-surround'
 Plug 'scrooloose/syntastic'
 Plug 'majutsushi/tagbar'
 Plug 'tpope/vim-unimpaired'
 Plug 'altercation/vim-colors-solarized'
 Plug 'sudar/vim-arduino-syntax'
-Plug 'davidhalter/jedi-vim'
+Plug 'Shougo/deoplete.nvim'
+Plug 'zchee/deoplete-jedi'
 call plug#end()
 
 "=====================================================================
-" Color stuff (for highlighting see ~/.vim/after/syntax/syncolor.vim
+" Color stuff 
 "=====================================================================
 
 let python_highlight_all = 1
 
-syntax enable
 set background=dark
 "let g:solarized_termtrans=1
 colorscheme solarized
 call togglebg#map("<F5>")
 
-"set t_Co=256
-
 "=====================================================================
 " Various settings
 "=====================================================================
-filetype on
-filetype plugin indent on
 
-" Terminal xterm-color strangeness
-"if &term == "xterm-color"
-  "set t_kb=
-  "fixdel
-"endif
-
-"set mousemodel=popup
-
-" Be smart about it
-set smarttab
 " Set the number of space to indent
 set shiftwidth=4
-" Like a modern text editor and not like old vi
-set backspace=indent,eol,start
-" Behave thyself
-behave xterm
-" Like a modern text editor
-set mouse=a
-set guioptions=agimrtb
-set nomousefocus
 " Set the text width
 set textwidth=79
-" Do backup before writing files
-set writebackup
-" Show the ruler at bottom of screen
-set ruler
-" Do no bother me with beeps or visual beeps
-set visualbell t_vb=
 " Do not wrap lines
 set nowrap
-" To highlight the searched words
-set hlsearch
-" Show the matched pattern as it is typed
-set incsearch
 " Insert spaces instead of tabstop
 set expandtab
-"Output format of grep
-"set grepformat=%f:%l:%m
-set grepprg=grep
 " The sign at the beginning of the line when wrapping a line
 set showbreak=>>>
 "Don't ignore case when there is an upper case character in the pattern. For
 "smartcase to take effect, ignorecase must be on.
 set ignorecase
 set smartcase
-" Set wrapping of cursor movement
-set ww=b,s,<,>,[,]
-" Print
-set printoptions=paper:letter,duplex:off
 " Vertical split shows no |
 set fillchars=fold:-
 
-" Diff
-set diffopt=filler,vertical
-"if &diff
-  "set foldcolumn=2
-"else
-  "set foldcolumn=0
-"endif
-
 " File Explorer settings
 let g:explHideFiles='^\.,\.gz$,\.exe$,\.zip$,\.o,\..*~$'
-
 " Files with this suffixe will get a lower priority
 set suffixes='.bak,~,.o,.info,.swp,.obj,.pyc'
 
@@ -119,9 +62,7 @@ set laststatus=2
 " Ignore certain files from listings.
 set wildignore+=*.pyc,*.*~,build
 
-" Persist undo history in $HOME/.vimundo
-set undofile
-set undodir=~/.vimundo
+set clipboard+=unnamedplus
 
 "=====================================================================
 " Plugins
@@ -145,19 +86,27 @@ let g:SuperTabDefaultCompletionType = "context"
 let g:tagbar_autoclose = 1
 let g:tagbar_compact = 1
 
-" Jedi
-let g:jedi#use_splits_not_buffers = "winwidth"
+" Deoplete
+let g:deoplete#enable_at_startup = 1
+if !exists('g:deoplete#omni#input_patterns')
+  let g:deoplete#omni#input_patterns = {}
+endif
+let g:deoplete#disable_auto_complete = 1
 
-"=====================================================================
+" =====================================================================
 " Autocommands
 "=====================================================================
 
-" Save session upon dying unexpectedly
-autocmd VimLeave  *  if v:dying | :mksession! | endif
+autocmd InsertLeave,CompleteDone * if pumvisible() == 0 | pclose | endif
 
-" Commands for CloseTag plugin
-"autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
-"autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim
+augroup omnifuncs
+  autocmd!
+  autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+  autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+  autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+  autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+  autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+augroup end
 
 "=====================================================================
 " Mappings and Abbreviations
@@ -210,3 +159,11 @@ nmap <F9> :UndotreeToggle<CR>
 
 inoremap <C-E> <C-X><C-E>
 inoremap <C-Y> <C-X><C-Y>
+
+" Deoplete tab-complete
+"inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"
+" Let <Tab> also do completion
+inoremap <silent><expr> <Tab>
+\ pumvisible() ? "\<C-n>" :
+\ deoplete#mappings#manual_complete()
+

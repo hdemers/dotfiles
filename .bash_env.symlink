@@ -11,7 +11,7 @@ fi
 
 # Autoenv, cf. https://github.com/kennethreitz/autoenv.
 AUTOENV=`which activate.sh`
-if [ -f $AUTOENV ]; then
+if [ -f "$AUTOENV" ]; then
     source $AUTOENV
 fi
 

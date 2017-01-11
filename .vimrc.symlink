@@ -147,6 +147,7 @@ let g:tagbar_compact = 1
 
 " Jedi
 let g:jedi#use_splits_not_buffers = "winwidth"
+let g:jedi#popup_on_dot = 0
 
 "=====================================================================
 " Autocommands

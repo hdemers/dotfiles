@@ -38,3 +38,6 @@ export EC2_SECURITY_GROUP_IDS=sg-f909ec90
 export R_LIBS_USER=~/.R/library
 
 export PIP_REQUIRE_VIRTUALENV=true
+
+# For the functions defined in .bash_aliases
+export SLACK_API_URL=https://slack.com/api

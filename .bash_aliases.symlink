@@ -1,2 +1,32 @@
 alias beep='paplay ~/Music/Sounds/phone-incoming-call.ogg'
 alias docker_cleanup='docker rm $(docker ps -qa -f status=exited)'
+
+
+slack_remind_me() {
+    if [ -z "$MY_SLACK_USER_ID" ]; then
+        echo "ERROR: environment variable MY_SLACK_USER_ID not set"
+        return
+    fi
+    text=$1
+    time=$2
+    json=`wget -q -O - "$SLACK_API_URL/reminders.add?token=$SLACK_TOKEN&text=$text&time=$time&user=$MY_SLACK_USER_ID"`
+    ok=`echo $json | python -c "import sys, json; print json.load(sys.stdin)['ok']"`
+    if [ $ok != 'True' ]; then
+        echo 'Error while setting reminder'
+    fi
+}
+
+slack_me() {
+    if [ -z "$MY_SLACK_USER_ID" ]; then
+        echo "ERROR: environment variable MY_SLACK_USER_ID not set"
+        return
+    fi
+
+    text=$1
+    json=`wget -q -O - "$SLACK_API_URL/chat.postMessage?token=$SLACK_TOKEN&text=$text&channel=$MY_SLACK_USER_ID&username=you"`
+    ok=`echo $json | python -c "import sys, json; print json.load(sys.stdin)['ok']"`
+    if [ $ok != 'True' ]; then
+        echo 'Error while slacking you'
+    fi
+}
+

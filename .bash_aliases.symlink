@@ -27,6 +27,7 @@ slack_me() {
     ok=`echo $json | python -c "import sys, json; print json.load(sys.stdin)['ok']"`
     if [ $ok != 'True' ]; then
         echo 'Error while slacking you'
+        echo $json
     fi
 }
 

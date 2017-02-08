@@ -1,0 +1,25 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Name=BlueJeans
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ddejmaonnchllclglpklofbcfckmdidi
+Icon=/home/hdemers/.icons/grubhub.jpg
+StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
+Actions=Sheets;Docs;Slides
+
+[Desktop Action Sheets]
+Name=Sheets
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=pcipgnbplldoclalpponbbbkadnnnkon
+TargetEnvironment=Unity
+
+[Desktop Action Docs]
+Name=Docs
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=mgedciechelgjnnfkjclekacffalkedj
+TargetEnvironment=Unity
+
+[Desktop Action Slides]
+Name=Slides
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=hhcoobcpnljdmbnpiphgalfmdbalnphn
+TargetEnvironment=Unity

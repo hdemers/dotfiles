@@ -7,19 +7,29 @@ Name=BlueJeans
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ddejmaonnchllclglpklofbcfckmdidi
 Icon=/home/hdemers/.icons/grubhub.jpg
 StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
-Actions=Sheets;Docs;Slides
+Actions=Sheets;Docs;Slides;Wiki;Jira
 
 [Desktop Action Sheets]
 Name=Sheets
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=pcipgnbplldoclalpponbbbkadnnnkon
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=cingpcahfggmkgfflmpfdplipjjibgof
 TargetEnvironment=Unity
 
 [Desktop Action Docs]
 Name=Docs
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=mgedciechelgjnnfkjclekacffalkedj
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=aefilpanflgphbdiiadngmbojddjenlp
 TargetEnvironment=Unity
 
 [Desktop Action Slides]
 Name=Slides
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=hhcoobcpnljdmbnpiphgalfmdbalnphn
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=hkiecneldfenceehalaplmekpdhjened
+TargetEnvironment=Unity
+
+[Desktop Action Wiki]
+Name=Wiki
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ggdoeplnojkjepjadefkmcdnjnmgnmpl
+TargetEnvironment=Unity
+
+[Desktop Action Jira]
+Name=JIRA
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=deaccnfjfdbpalcpkpbgdiccoohiknpk
 TargetEnvironment=Unity

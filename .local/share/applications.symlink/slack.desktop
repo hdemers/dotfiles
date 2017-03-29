@@ -5,6 +5,6 @@ Version=1.0
 Terminal=false
 Type=Application
 Name=Slack
-Exec=/opt/google/chrome/google-chrome --app=https://zoomer.slack.com/messages/general/
+Exec=/opt/google/chrome/google-chrome --app=https://cephee.slack.com/messages/general/
 Icon=/home/hdemers/.icons/slack.jpg
 StartupWMClass=zoomer.slack.com__messages_general

@@ -4,13 +4,13 @@ export PATH=$PATH:/opt/vagrant/bin
 # Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
 export WORKON_HOME=$HOME/.virtualenvs
 export PROJECT_HOME=$HOME/Projets
-VIRTUALENVWRAPPER=/usr/local/bin/virtualenvwrapper.sh
+VIRTUALENVWRAPPER=`find $HOME/.local/bin /usr/local/bin -name virtualenvwrapper.sh 2> /dev/null`
 if [ -f $VIRTUALENVWRAPPER ]; then
     source $VIRTUALENVWRAPPER
 fi
 
 # Autoenv, cf. https://github.com/kennethreitz/autoenv.
-AUTOENV=`which activate.sh`
+AUTOENV=`which activate.sh 2> /dev/null`
 if [ -f "$AUTOENV" ]; then
     source $AUTOENV
 fi
@@ -20,20 +20,20 @@ export PATH="/usr/local/heroku/bin:$PATH"
 
 ### rbenv path
 export RBENV_ROOT="$HOME/.rbenv"
-
 if [ -d "$RBENV_ROOT" ]; then
   export PATH="$RBENV_ROOT/bin:${PATH}"
   eval "$(rbenv init -)"
 fi
 
+# Set AWS access keys
 if [ -d $HOME/Private/aws/hdemers ]; then
   source $HOME/Private/aws/hdemers/aws.sh
 fi
 
-# ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-20160406
-export EC2_AMI=ami-2b594f41
+# Default AMI in canada central region
+export EC2_AMI=ami-7e57ea1a
 export EC2_INSTANCE_TYPE=t2.nano
-export EC2_SECURITY_GROUP_IDS=sg-f909ec90
+#export EC2_SECURITY_GROUP_IDS=sg-f909ec90
 
 export R_LIBS_USER=~/.R/library
 

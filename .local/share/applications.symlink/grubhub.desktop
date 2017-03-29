@@ -4,7 +4,7 @@ Version=1.0
 Terminal=false
 Type=Application
 Name=BlueJeans
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ddejmaonnchllclglpklofbcfckmdidi
+Exec=/opt/google/chrome/google-chrome --app=https://grubhub.okta.com/home/bluejeans/0oa10c5xkoOGrioZd0x7/3313?fromHome=true
 Icon=/home/hdemers/.icons/grubhub.jpg
 StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
 Actions=Sheets;Docs;Slides;Wiki;Jira

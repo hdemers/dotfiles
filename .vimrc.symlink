@@ -168,31 +168,12 @@ map <Leader>z :b #<CR>
 map <Leader>q :bd<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
-map <Leader>w :set wrap<CR>
-map <Leader>W :set nowrap<CR>
-map <Leader>d :vertical diffsplit 
-map <Leader>D :set nodiff \| set foldcolumn=0 \| set noscb<CR>
-map <Tab> %
 
-" Moving around mappings
-map <M-Up> <C-W><Up>
-map <M-Down> <C-W><Down>
-map <M-Left> <C-W><Left>
-map <M-Right> <C-W><Right>
-map <C-Up> <C-y>
-map <C-Down> <C-e>
+" Increasing/decreasing window size
 map <S-Up> <C-W>+
 map <S-Down> <C-W>-
 map <S-Left> <C-W><
 map <S-Right> <C-W>>
-map <C-Right> w
-map <C-Left> b
-
-" Mapping that work in insert mode
-map! <C-s> <ESC>:write<CR>
-map! <C-Up> <C-y>
-map! <C-Down> <C-e>
-map! <M-z> <ESC>:A<CR>
 
 " Searching using Git
 map <Leader>g :Ggrep <cword><CR><CR> :cl<CR>
@@ -208,6 +189,3 @@ nmap <F6> :Gstatus<CR>
 nmap <F7> :Gdiff<CR>
 nmap <F8> :Gcommit<CR>
 nmap <F9> :UndotreeToggle<CR>
-
-inoremap <C-E> <C-X><C-E>
-inoremap <C-Y> <C-X><C-Y>

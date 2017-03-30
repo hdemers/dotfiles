@@ -4,14 +4,16 @@ export PATH=$PATH:/opt/vagrant/bin
 # Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
 export WORKON_HOME=$HOME/.virtualenvs
 export PROJECT_HOME=$HOME/Projets
+# Virtualenvwrapper can be installed globally or locally. Look into both to find
+# it.
 VIRTUALENVWRAPPER=`find $HOME/.local/bin /usr/local/bin -name virtualenvwrapper.sh 2> /dev/null`
-if [ -f $VIRTUALENVWRAPPER ]; then
+if [ "$VIRTUALENVWRAPPER" ] && [ -f $VIRTUALENVWRAPPER ]; then
     source $VIRTUALENVWRAPPER
 fi
 
 # Autoenv, cf. https://github.com/kennethreitz/autoenv.
 AUTOENV=`which activate.sh 2> /dev/null`
-if [ -f "$AUTOENV" ]; then
+if [ "$AUTOENV" ] && [ -f "$AUTOENV" ]; then
     source $AUTOENV
 fi
 

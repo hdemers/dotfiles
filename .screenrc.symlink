@@ -1,0 +1,16 @@
+# mouse tracking allows to switch region focus by clicking
+#mousetrack on
+
+term screen-256color
+
+# window numbering starts at 1 not 0
+bind c screen 1
+bind ^c screen 1
+bind 0 select 10                                                            
+screen 1
+
+# Move from region to region
+bind j focus down
+bind k focus up
+bind t focus top
+bind b focus bottom

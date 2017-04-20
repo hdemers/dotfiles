@@ -1,12 +1,13 @@
-# Configure colors for Git. If colors are available.
+# Configure colors, if available.
 if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
 	c_reset='\[\e[0m\]'
-	c_user='\[\e[01;32m\]'
-	c_path='\[\e[01;34m\]'
+        c_user='\[\e[0;34m\]'
+        c_path='\[\e[0;93m\]'
 	c_git_clean='\[\e[0;36m\]'
 	c_git_dirty='\[\e[0;35m\]'
 	c_git_master_clean='\[\e[0;33m\]'
 	c_git_master_dirty='\[\e[0;31m\]'
+        c_virtualenv='\[\e[0;95m\]'
 else
 	c_reset=
 	c_user=
@@ -47,7 +48,7 @@ virtualenv_prompt ()
 {
     if [ x$VIRTUAL_ENV != x ]; then
         # Using color codes directly here messes-up the line when its too long.
-        echo "($c_git_clean`basename "${VIRTUAL_ENV}"`$c_reset) "
+        echo "($c_virtualenv`basename "${VIRTUAL_ENV}"`$c_reset) "
     fi
 }
 

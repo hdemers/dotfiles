@@ -75,3 +75,25 @@ start_ec2() {
     aws ec2 start-instances --instance-ids $ec2_instance_id
     #slack_remind_me 'to stop the EC2 machine' 'today at 17:00'
 }
+
+
+remote_setup() {
+    # Minimal installation of a remote host
+    ssh $1 << EOF
+    # Download and install dotfiles
+    wget https://raw.github.com/hdemers/dotfiles/master/install.sh
+    bash install.sh
+
+    # Create a virtualenv with virtualenvwrapper
+    pip install --user virtualenvwrapper
+    source $HOME/.local/bin/virtualenvwrapper.sh
+    mkvirtualenv venv
+
+    # Upgrade pip and install some python libraries
+    pip install -U pip
+    pip install ipython
+    pip install jupyter
+    pip install pandas
+    pip install flake8
+EOF
+}

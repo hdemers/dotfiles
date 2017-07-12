@@ -24,7 +24,8 @@ bind-key v split-window -h
 bind-key s split-window -v
 
 # Copy to xclip
-bind -t vi-copy y copy-pipe 'xclip -in -selection clipboard'
+if 'which xclip' \
+    "bind -t vi-copy y copy-pipe 'xclip -in -selection clipboard'"
 
 # Vim-like pane switching bindings
 bind-key j select-pane -D
@@ -35,6 +36,8 @@ bind-key l select-pane -R
 # Shift arrow to switch windows
 bind -n S-Left  previous-window
 bind -n S-Right next-window
+bind -n S-Up select-pane -U
+bind -n S-Down select-pane -D
 
 # No delay for escape key press
 set -sg escape-time 0

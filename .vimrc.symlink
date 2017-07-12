@@ -35,7 +35,6 @@ syntax enable
 set background=dark
 "let g:solarized_termtrans=1
 colorscheme solarized
-call togglebg#map("<F5>")
 
 "set t_Co=256
 
@@ -169,14 +168,14 @@ map <Leader>q :bd<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
 
-" Increasing/decreasing window size
-map <S-Up> <C-W>+
-map <S-Down> <C-W>-
-map <S-Left> <C-W><
-map <S-Right> <C-W>>
+" Moving around windows
+map <C-k> <C-W>k
+map <C-j> <C-W>j
+map <C-l> <C-W>l
+map <C-h> <C-W>h
 
 " Searching using Git
-map <Leader>g :Ggrep <cword><CR><CR> :cl<CR>
+map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
 
 " Syntastic mapping
 map <Leader>y :SyntasticToggleMode<CR>

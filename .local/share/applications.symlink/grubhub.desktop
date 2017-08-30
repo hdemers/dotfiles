@@ -7,7 +7,7 @@ Name=BlueJeans
 Exec=/opt/google/chrome/google-chrome --app=https://grubhub.okta.com/home/bluejeans/0oa10c5xkoOGrioZd0x7/3313?fromHome=true
 Icon=/home/hdemers/.icons/grubhub.jpg
 StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
-Actions=Sheets;Docs;Slides;Wiki;Jira;Hangout
+Actions=Sheets;Docs;Slides;Wiki;Jira;Hangout;Azkaban Dev;Azkaban Prod
 
 [Desktop Action Sheets]
 Name=Sheets
@@ -31,10 +31,20 @@ TargetEnvironment=Unity
 
 [Desktop Action Jira]
 Name=JIRA
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=deaccnfjfdbpalcpkpbgdiccoohiknpk
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=bpahbffdpfhoilkjkmcojdoidmbghhmn
 TargetEnvironment=Unity
 
 [Desktop Action Hangout]
 Name=Hangout
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=hdljpcpecmggmplbdeppeaajhaocipbc
+TargetEnvironment=Unity
+
+[Desktop Action Azkaban Prod]
+Name=Azkaban Prod
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=hiccdmobpncbnpphpofhbfagiaakceah
+TargetEnvironment=Unity
+
+[Desktop Action Azkaban Dev]
+Name=Azkaban Dev
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=obbnjbogmmlofkaijapdnhficicghbod
 TargetEnvironment=Unity

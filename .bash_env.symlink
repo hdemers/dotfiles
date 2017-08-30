@@ -1,5 +1,6 @@
 export EDITOR=/usr/bin/vim
 export PATH=$PATH:/opt/vagrant/bin
+export PATH=$PATH:$HOME/local/bin
 
 # Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
 export WORKON_HOME=$HOME/.virtualenvs

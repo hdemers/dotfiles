@@ -14,7 +14,6 @@ Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
 Plug 'tpope/vim-fugitive'
 Plug 'mbbill/undotree'
-Plug 'scrooloose/nerdcommenter'
 Plug 'ervandew/supertab'
 Plug 'tpope/vim-surround'
 Plug 'scrooloose/syntastic'
@@ -23,6 +22,8 @@ Plug 'tpope/vim-unimpaired'
 Plug 'altercation/vim-colors-solarized'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'davidhalter/jedi-vim'
+Plug 'wellle/targets.vim'
+Plug 'tpope/vim-commentary'
 call plug#end()
 
 "=====================================================================

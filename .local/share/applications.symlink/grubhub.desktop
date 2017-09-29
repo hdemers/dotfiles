@@ -7,7 +7,7 @@ Name=BlueJeans
 Exec=/opt/google/chrome/google-chrome --app=https://grubhub.okta.com/home/bluejeans/0oa10c5xkoOGrioZd0x7/3313?fromHome=true
 Icon=/home/hdemers/.icons/grubhub.jpg
 StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
-Actions=Sheets;Docs;Slides;Wiki;Jira;Hangout;Azkaban Dev;Azkaban Prod
+Actions=Drive;Sheets;Docs;Slides;Wiki;Jira;Hangout;Azkaban Dev;Azkaban Prod;Splunk
 
 [Desktop Action Sheets]
 Name=Sheets
@@ -48,3 +48,15 @@ TargetEnvironment=Unity
 Name=Azkaban Dev
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=obbnjbogmmlofkaijapdnhficicghbod
 TargetEnvironment=Unity
+
+
+[Desktop Action Splunk]
+Name=Splunk
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=fijccilkifkpnahlinfomgnenlkkpkdk
+Icon=chrome-fijccilkifkpnahlinfomgnenlkkpkdk-Default
+
+[Desktop Action Drive]
+Name=Drive
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=aghbiahbpaijignceidepookljebhfak
+Icon=chrome-aghbiahbpaijignceidepookljebhfak-Default
+

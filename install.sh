@@ -13,6 +13,3 @@ cd $HOME/.dotfiles
 ./symlink --create-paths --overwrite-all
 
 cd
-
-# Install all vim plugins
-vim +PlugInstall +qall

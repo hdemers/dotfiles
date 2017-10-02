@@ -84,8 +84,10 @@ remote_setup() {
     sshnohost $1 << EOF
     # Download and install dotfiles
     wget https://raw.github.com/hdemers/dotfiles/master/install.sh
-    bash install.sh
-    #vim -c "PlugInstall|q|q"
+    source install.sh
+
+    # Install all vim plugins
+    vim +PlugInstall +qall
 
     # Create a virtualenv with virtualenvwrapper
     pip install --user virtualenvwrapper

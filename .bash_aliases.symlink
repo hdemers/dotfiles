@@ -83,11 +83,12 @@ remote_setup() {
     # Minimal installation of a remote host
     sshnohost $1 << EOF
     # Download and install dotfiles
-    wget https://raw.github.com/hdemers/dotfiles/master/install.sh
+    wget https://raw.githubusercontent.com/hdemers/dotfiles/master/install.sh
     source install.sh
 
-    # Install all vim plugins
-    vim +PlugInstall +qall
+    # I'm unable to execute this vim command here without interrupting this
+    # script. Very weird. I'm aliasing a command to it instead.
+    echo 'alias vs="vim +PlugInstall +qall"' >> \$HOME/.bashrc
 
     # Create a virtualenv with virtualenvwrapper
     pip install --user virtualenvwrapper

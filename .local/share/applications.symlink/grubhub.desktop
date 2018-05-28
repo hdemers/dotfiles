@@ -31,12 +31,12 @@ TargetEnvironment=Unity
 
 [Desktop Action Jira]
 Name=JIRA
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=bpahbffdpfhoilkjkmcojdoidmbghhmn
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=gccanddkhndhpppblebkpilmpjhkmkma
 TargetEnvironment=Unity
 
 [Desktop Action Hangout]
 Name=Hangout
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=hdljpcpecmggmplbdeppeaajhaocipbc
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dfeienpjpjpkbbpaejgcpkmmbohohipk
 TargetEnvironment=Unity
 
 [Desktop Action Azkaban Prod]
@@ -46,7 +46,7 @@ TargetEnvironment=Unity
 
 [Desktop Action Azkaban Dev]
 Name=Azkaban Dev
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=obbnjbogmmlofkaijapdnhficicghbod
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=cfplhgblneeebclgglnbfmifgefpkock
 TargetEnvironment=Unity
 
 

@@ -24,6 +24,7 @@ Plug 'sudar/vim-arduino-syntax'
 Plug 'davidhalter/jedi-vim'
 Plug 'wellle/targets.vim'
 Plug 'tpope/vim-commentary'
+Plug 'airblade/vim-gitgutter'
 call plug#end()
 
 "=====================================================================
@@ -123,6 +124,10 @@ set wildignore+=*.pyc,*.*~,build
 set undofile
 set undodir=~/.vimundo
 
+" Set vim update time to 250ms (default 4sec)
+set updatetime=250
+
+set modeline
 "=====================================================================
 " Plugins
 "=====================================================================
@@ -149,6 +154,9 @@ let g:tagbar_compact = 1
 let g:jedi#use_splits_not_buffers = "winwidth"
 let g:jedi#popup_on_dot = 0
 
+" gitgutter off by default
+let g:gitgutter_enabled = 0
+
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -168,6 +176,7 @@ map <Leader>z :b #<CR>
 map <Leader>q :bd<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
+nmap <Leader>t :GitGutterToggle<CR>
 
 " Moving around windows
 map <C-k> <C-W>k

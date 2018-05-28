@@ -125,12 +125,12 @@ tmux_install() {
     # Compile and install libevent
     cd \$HOME/src/libevent-2.1.8-stable
     ./configure --prefix=\$DIR --disable-shared
-    make install
+    make -j install
 
     # Compile and install tmux
     cd \$HOME/src/tmux-2.5
     ./configure --prefix=\$DIR CFLAGS="-I\$DIR/include" LDFLAGS="-L\$DIR/lib"
-    make install
+    make -j install
 
     echo 'export PATH=\$PATH:\$HOME/local/bin' >> \$HOME/.bashrc
 EOF

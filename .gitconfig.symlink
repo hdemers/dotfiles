@@ -36,6 +36,7 @@
     lcp = log master..HEAD
     prm = log master..HEAD --pretty=format:' - %s\n    %b'
     uncommit = reset --soft HEAD~1
+    unmerge = reset --merge ORIG_HEAD
 
 [core]
     excludesfile = /home/hdemers/.gitignore

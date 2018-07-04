@@ -68,6 +68,10 @@ esac
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+
+    # New dircolors for Solarized from https://github.com/seebi/dircolors-solarized
+    eval `dircolors $HOME/.dir_colors/dircolors`
+
     alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
@@ -105,3 +109,8 @@ fi
 # Source additional files.
 . $HOME/.bash_prompt
 . $HOME/.bash_env
+
+# Some stuff needs to be done after .bash_prompt
+
+# Activate direnv
+eval "$(direnv hook bash)"

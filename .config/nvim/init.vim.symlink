@@ -2,18 +2,18 @@
 " Load plugins using plug.vim (https://github.com/junegunn/vim-plug)
 "=====================================================================
 call plug#begin('~/.config/nvim/plugged')
+Plug 'altercation/vim-colors-solarized'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
-Plug 'tpope/vim-fugitive'
-Plug 'mbbill/undotree'
-Plug 'scrooloose/nerdcommenter'
-Plug 'tpope/vim-surround'
-Plug 'scrooloose/syntastic'
 Plug 'majutsushi/tagbar'
-Plug 'tpope/vim-unimpaired'
-Plug 'altercation/vim-colors-solarized'
-Plug 'sudar/vim-arduino-syntax'
+Plug 'mbbill/undotree'
+Plug 'scrooloose/syntastic'
 Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'sudar/vim-arduino-syntax'
+Plug 'tpope/vim-commentary'
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-unimpaired'
 Plug 'zchee/deoplete-jedi'
 call plug#end()
 
@@ -36,6 +36,8 @@ call togglebg#map("<F5>")
 set shiftwidth=4
 " Set the text width
 set textwidth=79
+" Like a modern text editor
+set mouse=a
 " Do not wrap lines
 set nowrap
 " Insert spaces instead of tabstop
@@ -64,6 +66,12 @@ set wildignore+=*.pyc,*.*~,build
 
 set clipboard+=unnamedplus
 
+" Persist undo history in $HOME/.vimundo
+set undofile
+set undodir=~/.vimundo
+
+" Set vim update time to 250ms (default 4sec)
+set updatetime=250
 "=====================================================================
 " Plugins
 "=====================================================================
@@ -116,34 +124,16 @@ map <Leader>z :b #<CR>
 map <Leader>q :bd<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
-map <Leader>w :set wrap<CR>
-map <Leader>W :set nowrap<CR>
-map <Leader>d :vertical diffsplit 
-map <Leader>D :set nodiff \| set foldcolumn=0 \| set noscb<CR>
-map <Tab> %
+nmap <Leader>t :GitGutterToggle<CR>
 
-" Moving around mappings
-map <M-Up> <C-W><Up>
-map <M-Down> <C-W><Down>
-map <M-Left> <C-W><Left>
-map <M-Right> <C-W><Right>
-map <C-Up> <C-y>
-map <C-Down> <C-e>
-map <S-Up> <C-W>+
-map <S-Down> <C-W>-
-map <S-Left> <C-W><
-map <S-Right> <C-W>>
-map <C-Right> w
-map <C-Left> b
-
-" Mapping that work in insert mode
-map! <C-s> <ESC>:write<CR>
-map! <C-Up> <C-y>
-map! <C-Down> <C-e>
-map! <M-z> <ESC>:A<CR>
+" Moving around windows
+map <C-k> <C-W>k
+map <C-j> <C-W>j
+map <C-l> <C-W>l
+map <C-h> <C-W>h
 
 " Searching using Git
-map <Leader>g :Ggrep <cword><CR><CR> :cl<CR>
+map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
 
 " Syntastic mapping
 map <Leader>y :SyntasticToggleMode<CR>
@@ -156,9 +146,6 @@ nmap <F6> :Gstatus<CR>
 nmap <F7> :Gdiff<CR>
 nmap <F8> :Gcommit<CR>
 nmap <F9> :UndotreeToggle<CR>
-
-inoremap <C-E> <C-X><C-E>
-inoremap <C-Y> <C-X><C-Y>
 
 " Deoplete tab-complete
 "inoremap <expr><tab> pumvisible() ? "\<c-n>" : "\<tab>"

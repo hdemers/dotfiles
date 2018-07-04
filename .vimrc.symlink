@@ -10,21 +10,21 @@ set guifont=Ubuntu\ Mono\ 12
 " Load plugins using plug.vim (https://github.com/junegunn/vim-plug)
 "=====================================================================
 call plug#begin('~/.vim/plugged')
+Plug 'airblade/vim-gitgutter'
+Plug 'altercation/vim-colors-solarized'
+Plug 'davidhalter/jedi-vim'
+Plug 'ervandew/supertab'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
-Plug 'tpope/vim-fugitive'
-Plug 'mbbill/undotree'
-Plug 'ervandew/supertab'
-Plug 'tpope/vim-surround'
-Plug 'scrooloose/syntastic'
 Plug 'majutsushi/tagbar'
-Plug 'tpope/vim-unimpaired'
-Plug 'altercation/vim-colors-solarized'
+Plug 'mbbill/undotree'
+Plug 'scrooloose/syntastic'
 Plug 'sudar/vim-arduino-syntax'
-Plug 'davidhalter/jedi-vim'
-Plug 'wellle/targets.vim'
 Plug 'tpope/vim-commentary'
-Plug 'airblade/vim-gitgutter'
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-surround'
+Plug 'tpope/vim-unimpaired'
+Plug 'wellle/targets.vim'
 call plug#end()
 
 "=====================================================================

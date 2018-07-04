@@ -110,7 +110,7 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
         if not skip_all:
             try:
                 os.symlink(source, link_name)
-            except Exception, exception:
+            except Exception as exception:
                 print("Exception {} for {!r}".format(exception, link_name))
                 print("An error occured while symlinking {!r}".format(
                     link_name))
@@ -120,6 +120,6 @@ if __name__ == '__main__':
     args = parse()
     if args.no_op:
         for source, link_name in get_symlinks():
-            print "{} --> {}".format(source, link_name)
+            print('{} --> {}').format(source, link_name)
     else:
         symlink(args.overwrite_all, args.backup_all, args.create_paths)

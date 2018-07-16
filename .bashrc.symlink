@@ -65,12 +65,12 @@ xterm*|rxvt*)
     ;;
 esac
 
-# enable color support of ls and also add handy aliases
+# Install a Solarized dircolors scheme from
+# https://github.com/Anthony25/gnome-terminal-colors-solarized enable color
+
+# support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-
-    # New dircolors for Solarized from https://github.com/seebi/dircolors-solarized
-    eval `dircolors $HOME/.dir_colors/dircolors`
 
     alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
@@ -113,4 +113,6 @@ fi
 # Some stuff needs to be done after .bash_prompt
 
 # Activate direnv
-eval "$(direnv hook bash)"
+if [ -x /usr/bin/direnv ]; then
+    eval "$(direnv hook bash)"
+fi

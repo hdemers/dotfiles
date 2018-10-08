@@ -2,7 +2,9 @@
 " Load plugins using plug.vim (https://github.com/junegunn/vim-plug)
 "=====================================================================
 call plug#begin('~/.config/nvim/plugged')
+" Plug 'airblade/vim-gitgutter'
 Plug 'altercation/vim-colors-solarized'
+" Plug 'chrisbra/csv.vim'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
 Plug 'majutsushi/tagbar'
@@ -15,6 +17,7 @@ Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
 Plug 'zchee/deoplete-jedi'
+" Plug 'wellle/targets.vim'
 call plug#end()
 
 "=====================================================================
@@ -93,6 +96,9 @@ let g:SuperTabDefaultCompletionType = "context"
 " Tagbar
 let g:tagbar_autoclose = 1
 let g:tagbar_compact = 1
+
+" gitgutter off by default
+let g:gitgutter_enabled = 0
 
 " Deoplete
 let g:deoplete#enable_at_startup = 1

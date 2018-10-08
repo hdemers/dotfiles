@@ -12,6 +12,7 @@ set guifont=Ubuntu\ Mono\ 12
 call plug#begin('~/.vim/plugged')
 Plug 'airblade/vim-gitgutter'
 Plug 'altercation/vim-colors-solarized'
+Plug 'chrisbra/csv.vim'
 Plug 'davidhalter/jedi-vim'
 Plug 'ervandew/supertab'
 Plug 'jlanzarotta/bufexplorer'

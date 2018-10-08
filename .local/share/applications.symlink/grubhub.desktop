@@ -8,7 +8,7 @@ Name=BlueJeans
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ddejmaonnchllclglpklofbcfckmdidi
 Icon=/home/hdemers/.icons/grubhub.jpg
 StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
-Actions=Drive;Sheets;Docs;Slides;Wiki;Jira;Hangout;Azkaban Dev;Azkaban Prod;Splunk
+Actions=Drive;Sheets;Docs;Slides;Wiki;Jira;Meet;Azkaban Dev;Azkaban Prod;Splunk
 
 [Desktop Action Sheets]
 Name=Sheets
@@ -35,8 +35,8 @@ Name=JIRA
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=gccanddkhndhpppblebkpilmpjhkmkma
 TargetEnvironment=Unity
 
-[Desktop Action Hangout]
-Name=Hangout
+[Desktop Action Meet]
+Name=Meet
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dfeienpjpjpkbbpaejgcpkmmbohohipk
 TargetEnvironment=Unity
 
@@ -58,6 +58,5 @@ Icon=chrome-fijccilkifkpnahlinfomgnenlkkpkdk-Default
 
 [Desktop Action Drive]
 Name=Drive
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=aghbiahbpaijignceidepookljebhfak
-Icon=chrome-aghbiahbpaijignceidepookljebhfak-Default
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app=https://drive.google.com/drive/u/1/my-drive
 

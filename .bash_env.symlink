@@ -1,7 +1,6 @@
 export EDITOR=/usr/bin/vim
-export PATH=$PATH:/opt/vagrant/bin
-export PATH=$PATH:$HOME/local/bin
-export PATH=$PATH:$HOME/.local/bin
+export PATH=$HOME/.local/bin:$PATH
+export PATH=$HOME/local/bin:$PATH
 
 # Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
 export WORKON_HOME=$HOME/.virtualenvs
@@ -18,9 +17,6 @@ AUTOENV=`which activate.sh 2> /dev/null`
 if [ "$AUTOENV" ] && [ -f "$AUTOENV" ]; then
     source $AUTOENV
 fi
-
-### Added by the Heroku Toolbelt
-export PATH="/usr/local/heroku/bin:$PATH"
 
 ### rbenv path
 export RBENV_ROOT="$HOME/.rbenv"

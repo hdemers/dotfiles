@@ -5,6 +5,6 @@ Version=1.0
 Terminal=false
 Type=Application
 Name=FreshBooks
-Exec=/opt/google/chrome/google-chrome --app=https://my.freshbooks.com/home
+Exec=/opt/google/chrome/google-chrome --app=https://my.freshbooks.com
 Icon=/home/hdemers/.icons/freshbooks.png
 StartupWMClass=huguesdemers.freshbooks.com__home

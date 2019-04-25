@@ -8,7 +8,7 @@ Name=BlueJeans
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ddejmaonnchllclglpklofbcfckmdidi
 Icon=/home/hdemers/.icons/grubhub.jpg
 StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
-Actions=Drive;Sheets;Docs;Slides;Wiki;Jira;Meet;Azkaban Dev;Azkaban Prod;Splunk
+Actions=Drive;Sheets;Docs;Slides;Wiki;Jira;Meet;Azkaban Dev;Azkaban Prod;Splunk;Jenkins Prod;Jenkins Dev;Azkaban Dev DR;Azkaban Prod DR;
 
 [Desktop Action Sheets]
 Name=Sheets
@@ -32,7 +32,7 @@ TargetEnvironment=Unity
 
 [Desktop Action Jira]
 Name=JIRA
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=gccanddkhndhpppblebkpilmpjhkmkma
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=miegpmdebodcanmeoooobccdffnebglm
 TargetEnvironment=Unity
 
 [Desktop Action Meet]
@@ -50,7 +50,6 @@ Name=Azkaban Dev
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=cfplhgblneeebclgglnbfmifgefpkock
 TargetEnvironment=Unity
 
-
 [Desktop Action Splunk]
 Name=Splunk
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=fijccilkifkpnahlinfomgnenlkkpkdk
@@ -60,3 +59,22 @@ Icon=chrome-fijccilkifkpnahlinfomgnenlkkpkdk-Default
 Name=Drive
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app=https://drive.google.com/drive/u/1/my-drive
 
+[Desktop Action Jenkins Prod]
+Name=Jenkins Prod
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dfagidhihdklkmbpmflbmbkcdmchhllj
+Icon=chrome-dfagidhihdklkmbpmflbmbkcdmchhllj-Default
+
+[Desktop Action Jenkins Dev]
+Name=Jenkins Dev
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=njhadgabbflkbblkmnojfnjbckeejhfm
+Icon=chrome-njhadgabbflkbblkmnojfnjbckeejhfm-Default
+
+[Desktop Action Azkaban Dev DR]
+Name=Azkaban Dev DR
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=langjgejgapmoofamoefeohdjfahaadm
+Icon=chrome-langjgejgapmoofamoefeohdjfahaadm-Default
+
+[Desktop Action Azkaban Prod DR]
+Name=Azkaban Prod DR
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=nfklpchkocckdmgnnciigndjnhlpgnih
+Icon=chrome-nfklpchkocckdmgnnciigndjnhlpgnih-Default

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Terminal=false
+Type=Application
+Comment=F5 Networks Inc. network access application
+Name=F5 VPN
+Icon=f5vpn
+Exec=/opt/f5/vpn/f5vpn %u
+DBusActivatable=true
+Categories=Network;
+MimeType=x-scheme-handler/f5-vpn;
+NoDisplay=false

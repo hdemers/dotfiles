@@ -3,23 +3,24 @@
 " Author: Hugues Demers
 "=====================================================================
 
-set guifont=Ubuntu\ Mono\ 12
+" set guifont=Ubuntu\ Mono\ 12
+set guifont=Cousine\ Regular\ 9
 
 
 "=====================================================================
 " Load plugins using plug.vim (https://github.com/junegunn/vim-plug)
 "=====================================================================
 call plug#begin('~/.vim/plugged')
+Plug 'Glench/Vim-Jinja2-Syntax'
 Plug 'airblade/vim-gitgutter'
-Plug 'altercation/vim-colors-solarized'
 Plug 'chrisbra/csv.vim'
 Plug 'davidhalter/jedi-vim'
 Plug 'ervandew/supertab'
-Plug 'Glench/Vim-Jinja2-Syntax'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
+Plug 'morhetz/gruvbox'
 Plug 'scrooloose/syntastic'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'tpope/vim-commentary'
@@ -27,7 +28,7 @@ Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
 Plug 'wellle/targets.vim'
-" Plug 'itchyny/lightline.vim'
+Plug 'lifepillar/vim-solarized8'
 call plug#end()
 
 "=====================================================================
@@ -39,7 +40,8 @@ let python_highlight_all = 1
 syntax enable
 set background=dark
 "let g:solarized_termtrans=1
-silent! colorscheme solarized
+let g:solarized_use16 = 1
+silent! colorscheme solarized8
 
 "set t_Co=256
 

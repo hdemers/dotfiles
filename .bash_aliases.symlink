@@ -142,3 +142,4 @@ alias gl="glances -2 --process-short-name"
 
 alias ncal="ncal -My"
 alias cal="ncal -Myb"
+alias pytest="pytest --tb=short"

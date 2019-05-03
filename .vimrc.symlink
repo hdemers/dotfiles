@@ -27,8 +27,7 @@ Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
 Plug 'wellle/targets.vim'
-Plug 'arcticicestudio/nord-vim'
-Plug 'itchyny/lightline.vim'
+" Plug 'itchyny/lightline.vim'
 call plug#end()
 
 "=====================================================================
@@ -78,6 +77,7 @@ set writebackup
 set ruler
 " Do no bother me with beeps or visual beeps
 set visualbell t_vb=
+set belloff=all
 " Do not wrap lines
 set nowrap
 " To highlight the searched words
@@ -162,27 +162,6 @@ let g:jedi#popup_on_dot = 0
 " gitgutter off by default
 let g:gitgutter_enabled = 0
 
-" nord colorscheme settings
-let g:nord_bold_vertical_split_line = 1
-let g:nord_italic = 1
-let g:nord_underline = 1
-let g:nord_italic_comments = 1
-
-" lightline settings
-let g:lightline = {
-      \ 'colorscheme': 'solarized',
-      \ 'active': {
-      \   'left': [ [ 'mode', 'paste' ],
-      \             [ 'gitbranch', 'readonly', 'filename', 'modified' ] ],
-      \   'right': [ [ 'lineinfo' ],
-      \              [ 'percent' ],
-      \              [] ]
-      \ },
-      \ 'component_function': {
-      \   'gitbranch': 'fugitive#head'
-      \ },
-      \ }
-
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -192,25 +171,6 @@ autocmd VimLeave  *  if v:dying | :mksession! | endif
 " Commands for CloseTag plugin
 "autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
 "autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim
-
-augroup LightLineColorscheme
-  autocmd!
-  autocmd ColorScheme * call s:lightline_update()
-augroup END
-function! s:lightline_update()
-  if !exists('g:loaded_lightline')
-    return
-  endif
-  try
-    if g:colors_name =~# 'solarized\|nord'
-      let g:lightline.colorscheme = g:colors_name
-      call lightline#init()
-      call lightline#colorscheme()
-      call lightline#update()
-    endif
-  catch
-  endtry
-endfunction
 
 "=====================================================================
 " Mappings and Abbreviations

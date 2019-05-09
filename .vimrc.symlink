@@ -3,8 +3,8 @@
 " Author: Hugues Demers
 "=====================================================================
 
-" set guifont=Ubuntu\ Mono\ 12
-set guifont=Cousine\ Regular\ 9
+set guifont=Ubuntu\ Mono\ 12
+" set guifont=Cousine\ Regular\ 10
 
 
 "=====================================================================
@@ -14,14 +14,14 @@ call plug#begin('~/.vim/plugged')
 Plug 'Glench/Vim-Jinja2-Syntax'
 Plug 'airblade/vim-gitgutter'
 Plug 'chrisbra/csv.vim'
-Plug 'davidhalter/jedi-vim'
 Plug 'ervandew/supertab'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'kien/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'morhetz/gruvbox'
-Plug 'scrooloose/syntastic'
+" Plug 'scrooloose/syntastic'
+Plug 'w0rp/ale'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
@@ -29,6 +29,13 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
 Plug 'wellle/targets.vim'
 Plug 'lifepillar/vim-solarized8'
+" Plug 'altercation/vim-colors-solarized'
+Plug 'mhinz/vim-startify'
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+Plug 'Shougo/deoplete.nvim'
+Plug 'roxma/nvim-yarp'
+Plug 'roxma/vim-hug-neovim-rpc'
 call plug#end()
 
 "=====================================================================
@@ -134,6 +141,8 @@ set undodir=~/.vimundo
 set updatetime=250
 
 set modeline
+
+set signcolumn=yes
 "=====================================================================
 " Plugins
 "=====================================================================
@@ -142,28 +151,39 @@ set modeline
 let g:bufExplorerShowRelativePath=1
 
 " Syntastic
-let g:syntastic_enable_signs = 0
+let g:syntastic_enable_signs = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_enable_highlighting = 1
 let g:syntastic_java_javac_config_file_enabled = 1
 let g:syntastic_ruby_checkers = ['mri', 'rubocop']
 let g:syntastic_python_python_exec = '/usr/bin/python2'
 let g:syntastic_python_checkers = ['flake8']
+highlight SyntasticErrorSign guifg=red guibg=#073642
 
 " SuperTab
 let g:SuperTabDefaultCompletionType = "context"
 
 " Tagbar
-let g:tagbar_autoclose = 1
+let g:tagbar_autoclose = 0
 let g:tagbar_compact = 1
+let g:tagbar_show_visibility = 0
+let g:tagbar_iconchars = ['▸', '▾']
+let g:tagbar_left = 1
 
 " Jedi
-let g:jedi#use_splits_not_buffers = "winwidth"
-let g:jedi#popup_on_dot = 0
+" let g:jedi#use_splits_not_buffers = "winwidth"
+" let g:jedi#popup_on_dot = 0
 
 " gitgutter off by default
-let g:gitgutter_enabled = 0
+let g:gitgutter_enabled = 1
 
+" gruvbox colorscheme settings
+let g:gruvbox_vert_split = 'bg1'
+let g:gruvbox_invert_selection = 0
+let g:gruvbox_contrast_dark = 'soft'
+
+" Deoplete
+let g:deoplete#enable_at_startup = 1
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -183,6 +203,7 @@ map <Leader>q :bd<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
 nmap <Leader>t :GitGutterToggle<CR>
+nnoremap <C-T> :TagbarOpen<CR>
 
 " Moving around windows
 map <C-k> <C-W>k

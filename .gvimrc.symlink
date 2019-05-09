@@ -3,3 +3,5 @@
 
 " Set syntax color
 syntax on
+
+set lines=56 columns=163

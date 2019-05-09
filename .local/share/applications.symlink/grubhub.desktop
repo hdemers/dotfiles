@@ -37,7 +37,7 @@ TargetEnvironment=Unity
 
 [Desktop Action Meet]
 Name=Meet
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=dfeienpjpjpkbbpaejgcpkmmbohohipk
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=bldajjbmhblnephhndmgblhgeempeain
 TargetEnvironment=Unity
 
 [Desktop Action Splunk]

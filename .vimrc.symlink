@@ -16,11 +16,10 @@ Plug 'airblade/vim-gitgutter'
 Plug 'chrisbra/csv.vim'
 Plug 'ervandew/supertab'
 Plug 'jlanzarotta/bufexplorer'
-Plug 'kien/ctrlp.vim'
+Plug 'ctrlpvim/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'morhetz/gruvbox'
-" Plug 'scrooloose/syntastic'
 Plug 'w0rp/ale'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'tpope/vim-commentary'
@@ -149,16 +148,6 @@ set signcolumn=yes
 
 " BufExplorer
 let g:bufExplorerShowRelativePath=1
-
-" Syntastic
-let g:syntastic_enable_signs = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_enable_highlighting = 1
-let g:syntastic_java_javac_config_file_enabled = 1
-let g:syntastic_ruby_checkers = ['mri', 'rubocop']
-let g:syntastic_python_python_exec = '/usr/bin/python2'
-let g:syntastic_python_checkers = ['flake8']
-highlight SyntasticErrorSign guifg=red guibg=#073642
 
 " SuperTab
 let g:SuperTabDefaultCompletionType = "context"

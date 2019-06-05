@@ -35,6 +35,7 @@ Plug 'vim-airline/vim-airline-themes'
 Plug 'Shougo/deoplete.nvim'
 Plug 'roxma/nvim-yarp'
 Plug 'roxma/vim-hug-neovim-rpc'
+Plug 'nathanaelkane/vim-indent-guides'
 call plug#end()
 
 "=====================================================================
@@ -128,7 +129,7 @@ set suffixes='.bak,~,.o,.info,.swp,.obj,.pyc'
 " cf the default statusline: %<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
 set statusline=%<%f\ %h%m%r%{fugitive#statusline()}%=%-14.(%l,%c%V%)\ %P
 " Always show a status line.
-set laststatus=2 
+set laststatus=2
 " Ignore certain files from listings.
 set wildignore+=*.pyc,*.*~,build
 
@@ -142,6 +143,7 @@ set updatetime=250
 set modeline
 
 set signcolumn=yes
+
 "=====================================================================
 " Plugins
 "=====================================================================
@@ -159,10 +161,6 @@ let g:tagbar_show_visibility = 0
 let g:tagbar_iconchars = ['▸', '▾']
 let g:tagbar_left = 1
 
-" Jedi
-" let g:jedi#use_splits_not_buffers = "winwidth"
-" let g:jedi#popup_on_dot = 0
-
 " gitgutter off by default
 let g:gitgutter_enabled = 1
 
@@ -173,12 +171,26 @@ let g:gruvbox_contrast_dark = 'soft'
 
 " Deoplete
 let g:deoplete#enable_at_startup = 1
+
+" Airline
+if !exists('g:airline_symbols')
+    let g:airline_symbols = {}
+endif
+let g:airline_symbols.linenr = ''
+let g:airline_symbols.maxlinenr = ''
+" Only show the file encoding if it differs from utf-9[unix]
+let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
+let g:airline#extensions#virtualenv#enabled = 1
+
+" Indent guides
+let g:indent_guides_guide_size = 1
+
 "=====================================================================
 " Autocommands
 "=====================================================================
 
 " Save session upon dying unexpectedly
-autocmd VimLeave  *  if v:dying | :mksession! | endif 
+autocmd VimLeave  *  if v:dying | :mksession! | endif
 " Commands for CloseTag plugin
 "autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
 "autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim
@@ -207,10 +219,12 @@ map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
 map <Leader>y :SyntasticToggleMode<CR>
 
 " Mapping of function keys
-nmap <F1> :Explore<CR>
+nmap <S-F2> :Explore<CR>
 nmap <F2> :BufExplorer<CR>
+" nmap <F2> :BufExplorer<CR>
 nmap <F3> :TagbarToggle<CR>
 nmap <F6> :Gstatus<CR>
 nmap <F7> :Gdiff<CR>
 nmap <F8> :Gcommit<CR>
+nmap <S-F8> :Gwrite<CR>
 nmap <F9> :UndotreeToggle<CR>

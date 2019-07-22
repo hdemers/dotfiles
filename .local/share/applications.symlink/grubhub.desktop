@@ -8,7 +8,7 @@ Name=BlueJeans
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=ddejmaonnchllclglpklofbcfckmdidi
 Icon=/home/hdemers/.icons/grubhub.jpg
 StartupWMClass=crx_ddejmaonnchllclglpklofbcfckmdidi
-Actions=Drive;Sheets;Docs;Slides;Wiki;Jira;Meet;Splunk;Jenkins Prod;Jenkins Dev;Azkaban Dev DR;Azkaban Prod DR;Redash Prod
+Actions=Calendar;Drive;Sheets;Docs;Slides;Wiki;Jira;Meet;Splunk;Jenkins Prod;Jenkins Dev;Azkaban Dev DR;Azkaban Prod DR;Redash Prod
 
 [Desktop Action Sheets]
 Name=Sheets
@@ -73,3 +73,9 @@ Icon=chrome-nfklpchkocckdmgnnciigndjnhlpgnih-Default
 Name=Redash Prod
 Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=jdgjkafoaiemlbcnhikminlkmcccbpgd
 Icon=chrome-jdgjkafoaiemlbcnhikminlkmcccbpgd-Default
+
+[Desktop Action Calendar]
+Name=Calendar
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=aeffeiilnlffckfepcaaipcgomjobojb
+Icon=chrome-aeffeiilnlffckfepcaaipcgomjobojb-Default
+StartupWMClass=crx_aeffeiilnlffckfepcaaipcgomjobojb

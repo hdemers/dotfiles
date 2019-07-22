@@ -30,13 +30,14 @@ Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
 Plug 'wellle/targets.vim'
 Plug 'lifepillar/vim-solarized8'
-" Plug 'altercation/vim-colors-solarized'
 Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
-Plug 'Shougo/deoplete.nvim'
-Plug 'roxma/nvim-yarp'
-Plug 'roxma/vim-hug-neovim-rpc'
+if has('python3')
+    Plug 'Shougo/deoplete.nvim'
+    Plug 'roxma/nvim-yarp'
+    Plug 'roxma/vim-hug-neovim-rpc'
+endif
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'davidhalter/jedi-vim'
 call plug#end()
@@ -78,7 +79,7 @@ set backspace=indent,eol,start
 behave xterm
 " Like a modern text editor
 set mouse=a
-set guioptions=agimrtb
+set guioptions=agimt
 set nomousefocus
 " Set the text width
 set textwidth=79
@@ -228,8 +229,10 @@ nmap <S-F2> :Explore<CR>
 nmap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
 nmap <F3> :TagbarToggle<CR>
+nmap <F5> :GV<CR>
+nmap <S-F5> :Twiggy<CR>
 nmap <F6> :Gstatus<CR>
-nmap <F7> :Gdiff<CR>
+nmap <F7> :Gdiffsplit!<CR>
 nmap <F8> :Gcommit<CR>
-nmap <S-F8> :Gwrite<CR>
+nmap <S-F8> :w <CR> :Gwrite<CR>
 nmap <F9> :UndotreeToggle<CR>

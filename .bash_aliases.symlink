@@ -138,7 +138,7 @@ EOF
 
 alias pspark="PYSPARK_DRIVER_PYTHON=ipython pyspark"
 
-alias gl="glances -2 --process-short-name"
+alias gl="glances --process-short-name"
 
 alias ncal="ncal -My"
 alias cal="ncal -Myb"

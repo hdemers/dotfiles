@@ -40,6 +40,8 @@ if has('python3')
 endif
 Plug 'nathanaelkane/vim-indent-guides'
 Plug 'davidhalter/jedi-vim'
+Plug 'junegunn/fzf', { 'dir': '~/src/fzf', 'do': './install --bin' }
+Plug 'junegunn/fzf.vim'
 call plug#end()
 
 "=====================================================================
@@ -191,6 +193,22 @@ let g:indent_guides_guide_size = 1
 " Jedi is used only for jumping to definition, not for completion.
 let g:jedi#completions_enabled = 0
 
+" fzf colorscheme matching
+let g:fzf_colors =
+\ { 'fg':      ['fg', 'Normal'],
+  \ 'bg':      ['bg', 'Normal'],
+  \ 'hl':      ['fg', 'Comment'],
+  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+  \ 'hl+':     ['fg', 'Statement'],
+  \ 'info':    ['fg', 'PreProc'],
+  \ 'border':  ['fg', 'Ignore'],
+  \ 'prompt':  ['fg', 'Conditional'],
+  \ 'pointer': ['fg', 'Exception'],
+  \ 'marker':  ['fg', 'Keyword'],
+  \ 'spinner': ['fg', 'Label'],
+  \ 'header':  ['fg', 'Comment'] }
+
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -201,6 +219,10 @@ autocmd VimLeave  *  if v:dying | :mksession! | endif
 "autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
 "autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim
 
+command! -bang -nargs=* GGrep
+  \ call fzf#vim#grep(
+  \   'git grep --line-number '.shellescape(<q-args>), 0,
+  \   { 'dir': systemlist('git rev-parse --show-toplevel')[0] }, <bang>0)
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -209,8 +231,12 @@ map <Leader>z :b #<CR>
 map <Leader>q :bd<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
-nmap <Leader>t :GitGutterToggle<CR>
+nmap <Leader>i :GitGutterToggle<CR>
 nnoremap <C-T> :TagbarOpen<CR>
+
+" fzf.vim mappings
+nnoremap <Leader>o :GGrep<CR>
+nnoremap <Leader>t :Tags<CR>
 
 " Moving around windows
 map <C-k> <C-W>k
@@ -220,9 +246,6 @@ map <C-h> <C-W>h
 
 " Searching using Git
 map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
-
-" Syntastic mapping
-map <Leader>y :SyntasticToggleMode<CR>
 
 " Mapping of function keys
 nmap <S-F2> :Explore<CR>

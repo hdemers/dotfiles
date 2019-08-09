@@ -17,12 +17,6 @@ if [ "$VIRTUALENVWRAPPER" ] && [ -f $VIRTUALENVWRAPPER ]; then
     source $VIRTUALENVWRAPPER
 fi
 
-# Autoenv, cf. https://github.com/kennethreitz/autoenv.
-AUTOENV=`which activate.sh 2> /dev/null`
-if [ "$AUTOENV" ] && [ -f "$AUTOENV" ]; then
-    source $AUTOENV
-fi
-
 ### rbenv path
 export RBENV_ROOT="$HOME/.rbenv"
 if [ -d "$RBENV_ROOT" ]; then

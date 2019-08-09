@@ -249,7 +249,7 @@ map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
 
 " Mapping of function keys
 nmap <S-F2> :Explore<CR>
-nmap <F2> :BufExplorer<CR>
+noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
 nmap <F3> :TagbarToggle<CR>
 nmap <F5> :GV<CR>

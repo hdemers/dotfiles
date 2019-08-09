@@ -1,0 +1,15 @@
+[global]
+# Does Glances should check if a newer version is available on PyPI?
+check_update=true
+
+[fs]
+# Define the list of hidden file system (comma-separated regexp)
+hide=/boot.*,/snap.*
+
+[diskio]
+# Define the list of hidden disks (comma-separated regexp)
+#hide=sda2,sda5,loop.*
+hide=loop.*,/dev/loop*
+
+[network]
+hide=lo

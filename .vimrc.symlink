@@ -38,7 +38,6 @@ if has('python3')
     Plug 'roxma/nvim-yarp'
     Plug 'roxma/vim-hug-neovim-rpc'
 endif
-Plug 'nathanaelkane/vim-indent-guides'
 Plug 'davidhalter/jedi-vim'
 Plug 'junegunn/fzf', { 'dir': '~/src/fzf', 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
@@ -228,11 +227,10 @@ command! -bang -nargs=* GGrep
 "=====================================================================
 
 map <Leader>z :b #<CR>
-map <Leader>q :bd<CR>
+map <Leader>q :close<CR>
+map <Leader>w :tabclose<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
-nmap <Leader>i :GitGutterToggle<CR>
-nnoremap <C-T> :TagbarOpen<CR>
 
 " fzf.vim mappings
 nnoremap <Leader>o :GGrep<CR>
@@ -254,7 +252,7 @@ noremap <F2> :BufExplorer<CR>
 nmap <F3> :TagbarToggle<CR>
 nmap <F5> :GV<CR>
 nmap <S-F5> :Twiggy<CR>
-nmap <F6> :Gstatus<CR>
+nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 nmap <F7> :Gdiffsplit!<CR>
 nmap <F8> :Gcommit<CR>
 nmap <S-F8> :w <CR> :Gwrite<CR>

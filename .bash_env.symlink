@@ -40,3 +40,6 @@ export PIP_REQUIRE_VIRTUALENV=true
 
 # For the functions defined in .bash_aliases
 export SLACK_API_URL=https://slack.com/api
+
+# GrubHub project directory
+export GRUBHUB_DIR=$HOME/Projets/grubhub

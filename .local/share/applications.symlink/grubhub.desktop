@@ -32,7 +32,7 @@ TargetEnvironment=Unity
 
 [Desktop Action Jira]
 Name=JIRA
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=miegpmdebodcanmeoooobccdffnebglm
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=gccanddkhndhpppblebkpilmpjhkmkma
 TargetEnvironment=Unity
 
 [Desktop Action Meet]

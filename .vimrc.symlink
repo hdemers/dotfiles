@@ -20,7 +20,7 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'morhetz/gruvbox'
-Plug 'w0rp/ale'
+Plug 'dense-analysis/ale'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
@@ -41,6 +41,9 @@ endif
 Plug 'davidhalter/jedi-vim'
 Plug 'junegunn/fzf', { 'dir': '~/src/fzf', 'do': './install --bin' }
 Plug 'junegunn/fzf.vim'
+Plug 'raimon49/requirements.txt.vim'
+Plug 'psf/black'
+Plug 'jmcantrell/vim-virtualenv'
 call plug#end()
 
 "=====================================================================
@@ -49,16 +52,24 @@ call plug#end()
 
 let python_highlight_all = 1
 
+set termguicolors
 syntax enable
 set background=dark
-set termguicolors
 silent! colorscheme solarized8
 
-"set t_Co=256
+" set t_Co=256
+
+" if &term =~# '256color' && ( &term =~# '^screen'  || &term =~# '^tmux' )
+"     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+"     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+"     set termguicolors
+" endif
 
 "=====================================================================
 " Various settings
 "=====================================================================
+let mapleader = ' '
+
 filetype on
 filetype plugin indent on
 
@@ -208,6 +219,11 @@ let g:fzf_colors =
   \ 'spinner': ['fg', 'Label'],
   \ 'header':  ['fg', 'Comment'] }
 
+" ALE Python fixers
+let g:ale_fixers = {'python': ['isort', 'black', 'remove_trailing_lines', 'trim_whitespace']}
+" Set this variable to 1 to fix files when you save them.
+let g:ale_fix_on_save = 1
+
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -251,7 +267,8 @@ noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
 nmap <F3> :TagbarToggle<CR>
 nmap <F5> :GV<CR>
-nmap <S-F5> :Twiggy<CR>
+nmap <S-F5> :GV!<CR>
+nmap <C-F5> :Twiggy<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 nmap <F7> :Gdiffsplit!<CR>
 nmap <F8> :Gcommit<CR>

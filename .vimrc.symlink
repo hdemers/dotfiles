@@ -176,10 +176,10 @@ let g:tagbar_show_visibility = 0
 let g:tagbar_iconchars = ['▸', '▾']
 let g:tagbar_left = 1
 
-" gitgutter off by default
+" Gitgutter off by default
 let g:gitgutter_enabled = 1
 
-" gruvbox colorscheme settings
+" Gruvbox colorscheme settings
 let g:gruvbox_vert_split = 'bg1'
 let g:gruvbox_invert_selection = 0
 let g:gruvbox_contrast_dark = 'soft'
@@ -224,6 +224,8 @@ let g:ale_fixers = {'python': ['isort', 'black', 'remove_trailing_lines', 'trim_
 " Set this variable to 1 to fix files when you save them.
 let g:ale_fix_on_save = 1
 
+" Virtualenv.vim auto activation
+let g:virtualenv_auto_activate = 1
 "=====================================================================
 " Autocommands
 "=====================================================================

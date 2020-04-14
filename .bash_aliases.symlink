@@ -1,6 +1,7 @@
 alias beep='paplay ~/Music/Sounds/phone-incoming-call.ogg'
 alias docker_cleanup='docker rm $(docker ps -qa -f status=exited)'
 
+alias gentags="ctags --exclude=build --languages=python -R"
 
 slack_remind_me() {
     if [ -z "$MY_SLACK_USER_ID" ]; then
@@ -118,9 +119,9 @@ tmux_install() {
     # Download libevent and tmux
     cd \$HOME/src
     wget https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz
-    wget https://github.com/tmux/tmux/releases/download/2.5/tmux-2.5.tar.gz
+    wget https://github.com/tmux/tmux/releases/download/3.0a/tmux-3.0a.tar.gz
     tar xfz libevent-2.1.8-stable.tar.gz
-    tar xfz tmux-2.5.tar.gz
+    tar xfz tmux-3.0a.tar.gz
 
     # Compile and install libevent
     cd \$HOME/src/libevent-2.1.8-stable
@@ -128,7 +129,7 @@ tmux_install() {
     make -j install
 
     # Compile and install tmux
-    cd \$HOME/src/tmux-2.5
+    cd \$HOME/src/tmux-3.0a
     ./configure --prefix=\$DIR CFLAGS="-I\$DIR/include" LDFLAGS="-L\$DIR/lib"
     make -j install
 

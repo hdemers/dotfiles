@@ -49,21 +49,25 @@ call plug#end()
 "=====================================================================
 " Color stuff (for highlighting see ~/.vim/after/syntax/syncolor.vim
 "=====================================================================
-
-let python_highlight_all = 1
-
-set termguicolors
-syntax enable
-set background=dark
-silent! colorscheme solarized8
-
-" set t_Co=256
-
 " if &term =~# '256color' && ( &term =~# '^screen'  || &term =~# '^tmux' )
 "     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
 "     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-"     set termguicolors
+"     set background=dark
+"     set t_Co=256
 " endif
+
+" set termguicolors
+
+if exists('+termguicolors')
+  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
+  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
+  set termguicolors
+endif
+
+let python_highlight_all = 1
+syntax enable
+set background=dark
+silent! colorscheme solarized8
 
 "=====================================================================
 " Various settings
@@ -72,14 +76,6 @@ let mapleader = ' '
 
 filetype on
 filetype plugin indent on
-
-" Terminal xterm-color strangeness
-"if &term == "xterm-color"
-  "set t_kb=
-  "fixdel
-"endif
-
-"set mousemodel=popup
 
 " Be smart about it
 set smarttab
@@ -175,6 +171,7 @@ let g:tagbar_compact = 1
 let g:tagbar_show_visibility = 0
 let g:tagbar_iconchars = ['▸', '▾']
 let g:tagbar_left = 1
+let g:tagbar_show_balloon = 0
 
 " Gitgutter off by default
 let g:gitgutter_enabled = 1
@@ -267,7 +264,7 @@ map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
 nmap <S-F2> :Explore<CR>
 noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
-nmap <F3> :TagbarToggle<CR>
+nmap <F3> :TagbarOpen j<CR>
 nmap <F5> :GV<CR>
 nmap <S-F5> :GV!<CR>
 nmap <C-F5> :Twiggy<CR>

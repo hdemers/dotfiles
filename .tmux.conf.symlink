@@ -7,6 +7,7 @@ bind C-a send-prefix
 set -g base-index 1
 
 set -g default-terminal screen-256color
+set -ga terminal-overrides ",*256col*:Tc"
 
 # Automatically set window title
 set-window-option -g automatic-rename on
@@ -25,7 +26,7 @@ bind-key s split-window -v
 
 # Copy to xclip
 if 'which xclip' \
-    "bind -t vi-copy y copy-pipe 'xclip -in -selection clipboard'"
+    "bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'xclip -in -selection clipboard'"
 
 # Vim-like pane switching bindings
 bind-key j select-pane -D

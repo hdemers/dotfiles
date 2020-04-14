@@ -85,6 +85,8 @@ set shiftwidth=4
 set backspace=indent,eol,start
 " Behave thyself
 behave xterm
+" Setting ttymouse ensure it works properly inside tmux
+set ttymouse=xterm2
 " Like a modern text editor
 set mouse=a
 set guioptions=agimt

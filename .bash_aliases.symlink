@@ -111,29 +111,39 @@ alias statit="/usr/bin/time -f '\n%M max rss\n%K avg total\n%E real\n%U user\n%S
 tmux_install() {
     ssh -A -o StrictHostKeyChecking=no $1 << EOF
     cd \$HOME
-    mkdir \$HOME/local
-    mkdir \$HOME/src
     # Create the installation directory
-    export DIR=\$HOME/local
+    export DIR=\$HOME/.local
+    export SRC=\$HOME/src
+    mkdir -p \$DIR
+    mkdir -p \$SRC
 
-    # Download libevent and tmux
-    cd \$HOME/src
+    # Download libevent, ncurses and tmux
+    cd \$SRC
     wget https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz
     wget https://github.com/tmux/tmux/releases/download/3.0a/tmux-3.0a.tar.gz
+    wget https://invisible-mirror.net/archives/ncurses/ncurses-6.2.tar.gz
+
+    # Untar archives
     tar xfz libevent-2.1.8-stable.tar.gz
     tar xfz tmux-3.0a.tar.gz
+    tar xfz ncurses-6.2.tar.gz
 
     # Compile and install libevent
-    cd \$HOME/src/libevent-2.1.8-stable
+    cd \$SRC/libevent-2.1.8-stable
+    ./configure --prefix=\$DIR --disable-shared
+    make -j install
+
+    # Compile and install ncurses
+    cd \$SRC/ncurses-6.2
     ./configure --prefix=\$DIR --disable-shared
     make -j install
 
     # Compile and install tmux
-    cd \$HOME/src/tmux-3.0a
-    ./configure --prefix=\$DIR CFLAGS="-I\$DIR/include" LDFLAGS="-L\$DIR/lib"
+    cd \$SRC/tmux-3.0a
+    ./configure --prefix=\$DIR CFLAGS="-I\$DIR/include -I\$DIR/include/ncurses" LDFLAGS="-L\$DIR/lib"
     make -j install
 
-    echo 'export PATH=\$PATH:\$HOME/local/bin' >> \$HOME/.bashrc
+    echo 'export PATH=\$PATH:\$HOME/.local/bin' >> \$HOME/.bashrc
 EOF
 }
 

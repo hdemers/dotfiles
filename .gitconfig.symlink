@@ -34,7 +34,7 @@
     ls = ls-files
     lsp = diff --stat
     lcp = log master..HEAD
-    prm = log master..HEAD --pretty=format:'"##" %s (%h)%n%b' --reverse
+    prm = log master..HEAD --pretty=format:'"####" %s (%h)%n%b' --reverse
     uncommit = reset --soft HEAD~1
     unmerge = reset --merge ORIG_HEAD
 

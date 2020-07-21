@@ -176,7 +176,7 @@ let g:tagbar_left = 1
 let g:tagbar_show_balloon = 0
 
 " Gitgutter off by default
-let g:gitgutter_enabled = 1
+" let g:gitgutter_enabled = 1
 
 " Gruvbox colorscheme settings
 let g:gruvbox_vert_split = 'bg1'
@@ -239,6 +239,9 @@ command! -bang -nargs=* GGrep
   \ call fzf#vim#grep(
   \   'git grep --line-number '.shellescape(<q-args>), 0,
   \   { 'dir': systemlist('git rev-parse --show-toplevel')[0] }, <bang>0)
+
+" Set syntax sync fromstart for all Python files
+autocmd BufEnter *.py :syntax sync fromstart
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -271,7 +274,8 @@ nmap <F5> :GV<CR>
 nmap <S-F5> :GV!<CR>
 nmap <C-F5> :Twiggy<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
+nmap <S-F6> :GitGutterFold<CR>
 nmap <F7> :Gdiffsplit!<CR>
-nmap <F8> :Gcommit<CR>
-nmap <S-F8> :w <CR> :Gwrite<CR>
+nmap <F8> :Git commit<CR>
+nmap <S-F8> :w <CR> :close<CR>
 nmap <F9> :UndotreeToggle<CR>

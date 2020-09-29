@@ -20,7 +20,6 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'morhetz/gruvbox'
-Plug 'dense-analysis/ale'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
@@ -33,6 +32,7 @@ Plug 'lifepillar/vim-solarized8'
 Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
+Plug 'dense-analysis/ale'
 if has('python3')
     Plug 'Shougo/deoplete.nvim'
     Plug 'roxma/nvim-yarp'
@@ -67,7 +67,7 @@ endif
 let python_highlight_all = 1
 syntax enable
 set background=dark
-silent! colorscheme solarized8
+colorscheme solarized8
 
 "=====================================================================
 " Various settings
@@ -175,9 +175,6 @@ let g:tagbar_iconchars = ['▸', '▾']
 let g:tagbar_left = 1
 let g:tagbar_show_balloon = 0
 
-" Gitgutter off by default
-" let g:gitgutter_enabled = 1
-
 " Gruvbox colorscheme settings
 let g:gruvbox_vert_split = 'bg1'
 let g:gruvbox_invert_selection = 0
@@ -195,9 +192,6 @@ let g:airline_symbols.maxlinenr = ''
 " Only show the file encoding if it differs from utf-9[unix]
 let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
 let g:airline#extensions#virtualenv#enabled = 1
-
-" Indent guides
-let g:indent_guides_guide_size = 1
 
 " Jedi is used only for jumping to definition, not for completion.
 let g:jedi#completions_enabled = 0
@@ -220,11 +214,19 @@ let g:fzf_colors =
 
 " ALE Python fixers
 let g:ale_fixers = {'python': ['isort', 'black', 'remove_trailing_lines', 'trim_whitespace']}
+" ALE Python linters
+let g:ale_linters = {'python': ['flake8']}
 " Set this variable to 1 to fix files when you save them.
 let g:ale_fix_on_save = 1
 
 " Virtualenv.vim auto activation
 let g:virtualenv_auto_activate = 1
+
+" GitGutter fix. Properly sets the background of the gutter signs.
+highlight GitGutterAdd term=bold ctermbg=1 guifg=#859900 guibg=NONE guisp=#859900
+highlight GitGutterChange term=bold ctermbg=5 guifg=#b58900 guibg=NONE guisp=#b58900
+highlight GitGutterDelete term=bold cterm=bold ctermfg=9 ctermbg=3 gui=bold guifg=#dc322f guibg=NONE
+
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -275,7 +277,7 @@ nmap <S-F5> :GV!<CR>
 nmap <C-F5> :Twiggy<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 nmap <S-F6> :GitGutterFold<CR>
-nmap <F7> :Gdiffsplit!<CR>
+nmap <F7> :Git rebase -i master<CR>
 nmap <F8> :Git commit<CR>
 nmap <S-F8> :w <CR> :close<CR>
 nmap <F9> :UndotreeToggle<CR>

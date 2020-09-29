@@ -42,8 +42,8 @@ TargetEnvironment=Unity
 
 [Desktop Action Splunk]
 Name=Splunk
-Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=fijccilkifkpnahlinfomgnenlkkpkdk
-Icon=chrome-fijccilkifkpnahlinfomgnenlkkpkdk-Default
+Exec=/opt/google/chrome/google-chrome --profile-directory=Default --app-id=beghlpifdnagmcbfobladpabfjmdhgkm
+Icon=chrome-beghlpifdnagmcbfobladpabfjmdhgkm-Default
 
 [Desktop Action Drive]
 Name=Drive

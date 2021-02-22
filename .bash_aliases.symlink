@@ -154,3 +154,5 @@ alias gl="glances --process-short-name"
 alias ncal="ncal -My"
 alias cal="ncal -Myb"
 alias pytest="pytest --tb=short"
+
+alias ssh_socks="ssh -D 8157"

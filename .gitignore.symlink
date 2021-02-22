@@ -12,3 +12,5 @@
 # R stuff
 .RData
 .Rhistory
+
+dask-worker-space

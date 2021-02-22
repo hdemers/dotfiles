@@ -12,8 +12,8 @@ set guifont=Ubuntu\ Mono\ 12
 "=====================================================================
 call plug#begin('~/.vim/plugged')
 Plug 'Glench/Vim-Jinja2-Syntax'
-Plug 'airblade/vim-gitgutter'
 Plug 'chrisbra/csv.vim'
+Plug 'airblade/vim-gitgutter'
 Plug 'ervandew/supertab'
 Plug 'jlanzarotta/bufexplorer'
 Plug 'ctrlpvim/ctrlp.vim'
@@ -23,10 +23,11 @@ Plug 'morhetz/gruvbox'
 Plug 'sudar/vim-arduino-syntax'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
-Plug 'sodapopcan/vim-twiggy'
-Plug 'junegunn/gv.vim'
+Plug 'tpope/vim-vinegar'
+Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
+Plug 'rbong/vim-flog'
 Plug 'wellle/targets.vim'
 Plug 'lifepillar/vim-solarized8'
 Plug 'mhinz/vim-startify'
@@ -39,8 +40,9 @@ if has('python3')
     Plug 'roxma/vim-hug-neovim-rpc'
 endif
 Plug 'davidhalter/jedi-vim'
-Plug 'junegunn/fzf', { 'dir': '~/src/fzf', 'do': './install --bin' }
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+Plug 'junegunn/vim-easy-align'
 Plug 'raimon49/requirements.txt.vim'
 Plug 'psf/black'
 Plug 'jmcantrell/vim-virtualenv'
@@ -244,6 +246,8 @@ command! -bang -nargs=* GGrep
 
 " Set syntax sync fromstart for all Python files
 autocmd BufEnter *.py :syntax sync fromstart
+
+autocmd BufEnter *.jinja set filetype=jinja-sql
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -263,18 +267,24 @@ map <C-k> <C-W>k
 map <C-j> <C-W>j
 map <C-l> <C-W>l
 map <C-h> <C-W>h
+" Resize current window to 90 wide.
+map <Leader>a :90 wincmd \| <CR>
 
 " Searching using Git
 map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
+
+" Start interactive EasyAlign in visual mode (e.g. vipga)
+xmap ga <Plug>(EasyAlign)
+
+" Start interactive EasyAlign for a motion/text object (e.g. gaip)
+nmap ga <Plug>(EasyAlign)
 
 " Mapping of function keys
 nmap <S-F2> :Explore<CR>
 noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
 nmap <F3> :TagbarOpen j<CR>
-nmap <F5> :GV<CR>
-nmap <S-F5> :GV!<CR>
-nmap <C-F5> :Twiggy<CR>
+nmap <F5> :Flog<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 nmap <S-F6> :GitGutterFold<CR>
 nmap <F7> :Git rebase -i master<CR>

@@ -46,6 +46,8 @@ Plug 'junegunn/vim-easy-align'
 Plug 'raimon49/requirements.txt.vim'
 Plug 'psf/black'
 Plug 'jmcantrell/vim-virtualenv'
+Plug 'junegunn/vim-peekaboo'
+Plug 'Jorengarenar/vim-SQL-UPPER'
 call plug#end()
 
 "=====================================================================
@@ -215,7 +217,12 @@ let g:fzf_colors =
   \ 'header':  ['fg', 'Comment'] }
 
 " ALE Python fixers
-let g:ale_fixers = {'python': ['isort', 'black', 'remove_trailing_lines', 'trim_whitespace']}
+let g:ale_fixers = {
+\   'python': ['isort', 'black', 'remove_trailing_lines', 'trim_whitespace'],
+\    'sql': ['remove_trailing_lines', 'trim_whitespace'],
+\    'jinja-sql': ['remove_trailing_lines', 'trim_whitespace'],
+\    'markdown': ['remove_trailing_lines', 'trim_whitespace'],
+\ }
 " ALE Python linters
 let g:ale_linters = {'python': ['flake8']}
 " Set this variable to 1 to fix files when you save them.
@@ -247,7 +254,23 @@ command! -bang -nargs=* GGrep
 " Set syntax sync fromstart for all Python files
 autocmd BufEnter *.py :syntax sync fromstart
 
-autocmd BufEnter *.jinja set filetype=jinja-sql
+" This is to be used with file .vim/syntax/jinja-sql.vim
+" It should in theory highlight both jinja and sql syntax found in the same
+" file.
+autocmd BufEnter *.sql set filetype=jinja-sql
+
+" Spell-check Markdown files and Git Commit Messages
+autocmd FileType markdown setlocal spell
+autocmd FileType gitcommit setlocal spell
+
+" Restore folds in fugitive commit windows. See this issue about
+" future development:
+" https://github.com/tpope/vim-fugitive/issues/1735#issuecomment-822037483
+autocmd User FugitiveCommit set foldmethod=syntax
+"=====================================================================
+" Highlights
+"=====================================================================
+
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -257,6 +280,11 @@ map <Leader>q :close<CR>
 map <Leader>w :tabclose<CR>
 map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
+
+" highlight the current line
+nnoremap <Leader>l :call matchadd('Search', '\%'.line('.').'l')<CR>
+" clear all the highlighted lines
+nnoremap <Leader>c :call clearmatches()<CR>
 
 " fzf.vim mappings
 nnoremap <Leader>o :GGrep<CR>

@@ -14,3 +14,6 @@
 .Rhistory
 
 dask-worker-space
+
+# dotenv run configuration files
+.envrc

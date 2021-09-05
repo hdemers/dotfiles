@@ -1,7 +1,7 @@
 alias beep='paplay ~/Music/Sounds/phone-incoming-call.ogg'
 alias docker_cleanup='docker rm $(docker ps -qa -f status=exited)'
 
-alias gentags="ctags --exclude=build --languages=python -R"
+alias gentags="etags --exclude=build --languages=python -R"
 
 slack_remind_me() {
     if [ -z "$MY_SLACK_USER_ID" ]; then

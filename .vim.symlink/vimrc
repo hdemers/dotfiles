@@ -48,6 +48,7 @@ Plug 'psf/black'
 Plug 'jmcantrell/vim-virtualenv'
 Plug 'junegunn/vim-peekaboo'
 Plug 'Jorengarenar/vim-SQL-UPPER'
+Plug 'sheerun/vim-polyglot'
 call plug#end()
 
 "=====================================================================

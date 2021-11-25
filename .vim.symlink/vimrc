@@ -34,11 +34,6 @@ Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'dense-analysis/ale'
-if has('python3')
-    Plug 'Shougo/deoplete.nvim'
-    Plug 'roxma/nvim-yarp'
-    Plug 'roxma/vim-hug-neovim-rpc'
-endif
 Plug 'davidhalter/jedi-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
@@ -49,19 +44,9 @@ Plug 'jmcantrell/vim-virtualenv'
 Plug 'junegunn/vim-peekaboo'
 Plug 'Jorengarenar/vim-SQL-UPPER'
 Plug 'sheerun/vim-polyglot'
+Plug 'ruanyl/vim-gh-line'
+Plug 'nathangrigg/vim-beancount'
 call plug#end()
-
-"=====================================================================
-" Color stuff (for highlighting see ~/.vim/after/syntax/syncolor.vim
-"=====================================================================
-" if &term =~# '256color' && ( &term =~# '^screen'  || &term =~# '^tmux' )
-"     let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
-"     let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
-"     set background=dark
-"     set t_Co=256
-" endif
-
-" set termguicolors
 
 if exists('+termguicolors')
   let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
@@ -73,6 +58,7 @@ let python_highlight_all = 1
 syntax enable
 set background=dark
 colorscheme solarized8
+let BAT_THEME='Solarized (dark)'
 
 "=====================================================================
 " Various settings
@@ -94,7 +80,7 @@ behave xterm
 set ttymouse=xterm2
 " Like a modern text editor
 set mouse=a
-set guioptions=agimt
+set guioptions=ai
 set nomousefocus
 " Set the text width
 set textwidth=79
@@ -173,7 +159,7 @@ let g:bufExplorerShowRelativePath=1
 let g:SuperTabDefaultCompletionType = "context"
 
 " Tagbar
-let g:tagbar_autoclose = 0
+let g:tagbar_autoclose = 1
 let g:tagbar_compact = 1
 let g:tagbar_show_visibility = 0
 let g:tagbar_iconchars = ['▸', '▾']
@@ -185,9 +171,6 @@ let g:gruvbox_vert_split = 'bg1'
 let g:gruvbox_invert_selection = 0
 let g:gruvbox_contrast_dark = 'soft'
 
-" Deoplete
-let g:deoplete#enable_at_startup = 1
-
 " Airline
 if !exists('g:airline_symbols')
     let g:airline_symbols = {}
@@ -198,24 +181,23 @@ let g:airline_symbols.maxlinenr = ''
 let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
 let g:airline#extensions#virtualenv#enabled = 1
 
-" Jedi is used only for jumping to definition, not for completion.
-let g:jedi#completions_enabled = 0
+let g:jedi#completions_enabled = 1
 
 " fzf colorscheme matching
-let g:fzf_colors =
-\ { 'fg':      ['fg', 'Normal'],
-  \ 'bg':      ['bg', 'Normal'],
-  \ 'hl':      ['fg', 'Comment'],
-  \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
-  \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
-  \ 'hl+':     ['fg', 'Statement'],
-  \ 'info':    ['fg', 'PreProc'],
-  \ 'border':  ['fg', 'Ignore'],
-  \ 'prompt':  ['fg', 'Conditional'],
-  \ 'pointer': ['fg', 'Exception'],
-  \ 'marker':  ['fg', 'Keyword'],
-  \ 'spinner': ['fg', 'Label'],
-  \ 'header':  ['fg', 'Comment'] }
+" let g:fzf_colors =
+" \ { 'fg':      ['fg', 'Normal'],
+"   \ 'bg':      ['bg', 'Normal'],
+"   \ 'hl':      ['fg', 'Comment'],
+"   \ 'fg+':     ['fg', 'CursorLine', 'CursorColumn', 'Normal'],
+"   \ 'bg+':     ['bg', 'CursorLine', 'CursorColumn'],
+"   \ 'hl+':     ['fg', 'Statement'],
+"   \ 'info':    ['fg', 'PreProc'],
+"   \ 'border':  ['fg', 'Ignore'],
+"   \ 'prompt':  ['fg', 'Conditional'],
+"   \ 'pointer': ['fg', 'Exception'],
+"   \ 'marker':  ['fg', 'Keyword'],
+"   \ 'spinner': ['fg', 'Label'],
+"   \ 'header':  ['fg', 'Comment'] }
 
 " ALE Python fixers
 let g:ale_fixers = {
@@ -223,6 +205,7 @@ let g:ale_fixers = {
 \    'sql': ['remove_trailing_lines', 'trim_whitespace'],
 \    'jinja-sql': ['remove_trailing_lines', 'trim_whitespace'],
 \    'markdown': ['remove_trailing_lines', 'trim_whitespace'],
+\    'beancount': ['remove_trailing_lines', 'trim_whitespace'],
 \ }
 " ALE Python linters
 let g:ale_linters = {'python': ['flake8']}
@@ -237,6 +220,13 @@ highlight GitGutterAdd term=bold ctermbg=1 guifg=#859900 guibg=NONE guisp=#85990
 highlight GitGutterChange term=bold ctermbg=5 guifg=#b58900 guibg=NONE guisp=#b58900
 highlight GitGutterDelete term=bold cterm=bold ctermfg=9 ctermbg=3 gui=bold guifg=#dc322f guibg=NONE
 
+" vim-gh-line doesn't open URL, but copy to clipboard
+let g:gh_open_command = 'fn() { echo "$@" | xclip -selection c -r; }; fn '
+" Disable default key mappings
+let g:gh_line_map_default = 0
+let g:gh_line_blame_map_default = 1
+let g:gh_line_map = '<leader>kh'
+let g:gh_line_blame_map = '<leader>kb'
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -249,8 +239,8 @@ autocmd VimLeave  *  if v:dying | :mksession! | endif
 
 command! -bang -nargs=* GGrep
   \ call fzf#vim#grep(
-  \   'git grep --line-number '.shellescape(<q-args>), 0,
-  \   { 'dir': systemlist('git rev-parse --show-toplevel')[0] }, <bang>0)
+  \   'git grep --line-number -- '.shellescape(<q-args>), 0,
+  \   fzf#vim#with_preview({'dir': systemlist('git rev-parse --show-toplevel')[0]}), <bang>0)
 
 " Set syntax sync fromstart for all Python files
 autocmd BufEnter *.py :syntax sync fromstart
@@ -268,6 +258,9 @@ autocmd FileType gitcommit setlocal spell
 " future development:
 " https://github.com/tpope/vim-fugitive/issues/1735#issuecomment-822037483
 autocmd User FugitiveCommit set foldmethod=syntax
+
+" Beancount filetype setting for Supertab
+autocmd FileType beancount let b:SuperTabContextDefaultCompletionType="<c-x><c-o>"
 "=====================================================================
 " Highlights
 "=====================================================================
@@ -300,7 +293,7 @@ map <C-h> <C-W>h
 map <Leader>a :90 wincmd \| <CR>
 
 " Searching using Git
-map <Leader>p :Ggrep <cword><CR><CR> :cl<CR>
+map <leader>* :Ggrep --untracked <cword><CR><CR> :cl<CR>
 
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)

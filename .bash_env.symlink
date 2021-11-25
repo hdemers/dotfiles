@@ -9,7 +9,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
 
 # Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
 export WORKON_HOME=$HOME/.virtualenvs
-export PROJECT_HOME=$HOME/Projets
+export PROJECT_HOME=$HOME/Projets/grubhub
 # Virtualenvwrapper can be installed globally or locally. Look into both to find
 # it.
 VIRTUALENVWRAPPER=`find $HOME/.local/bin /usr/local/bin -name virtualenvwrapper.sh 2> /dev/null`
@@ -43,3 +43,6 @@ export SLACK_API_URL=https://slack.com/api
 
 # GrubHub project directory
 export GRUBHUB_DIR=$HOME/Projets/grubhub
+
+# Bat theme (https://github.com/sharkdp/bat#highlighting-theme)
+export BAT_THEME="Solarized (dark)"

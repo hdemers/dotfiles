@@ -156,3 +156,5 @@ alias cal="ncal -Myb"
 alias pytest="pytest --tb=short"
 
 alias ssh_socks="ssh -D 8157"
+
+alias themejupyter="jt -t gruvboxl -vim -dfs 10 -fs 10"

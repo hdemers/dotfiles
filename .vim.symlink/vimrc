@@ -17,7 +17,6 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'morhetz/gruvbox'
-Plug 'sudar/vim-arduino-syntax'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-vinegar'
@@ -39,14 +38,11 @@ Plug 'raimon49/requirements.txt.vim'
 Plug 'psf/black'
 Plug 'jmcantrell/vim-virtualenv'
 Plug 'junegunn/vim-peekaboo'
-Plug 'Jorengarenar/vim-SQL-UPPER'
 Plug 'sheerun/vim-polyglot'
 Plug 'ruanyl/vim-gh-line'
 Plug 'nathangrigg/vim-beancount'
 Plug 'vim-test/vim-test'
 Plug 'puremourning/vimspector'
-Plug 'tpope/vim-dadbod'
-Plug 'kristijanhusak/vim-dadbod-ui'
 Plug 'tpope/vim-dotenv'
 Plug 'obreitwi/vim-sort-folds'
 call plug#end()
@@ -65,7 +61,6 @@ let python_highlight_all = 1
 syntax enable
 set background=dark
 colorscheme solarized8_flat
-let BAT_THEME='Solarized (dark)'
 
 "=====================================================================
 " Various settings
@@ -240,6 +235,13 @@ let g:gh_line_blame_map = '<leader>kb'
 let g:db_ui_execute_on_save=0
 
 "=====================================================================
+" Environment variables
+"=====================================================================
+
+let $BAT_THEME='Solarized (dark)'
+let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor bat --style=numbers --color=always {}"
+
+"=====================================================================
 " Autocommands
 "=====================================================================
 
@@ -275,6 +277,16 @@ autocmd User FugitiveCommit set foldmethod=syntax
 autocmd FileType beancount let b:SuperTabContextDefaultCompletionType="<c-x><c-o>"
 
 "=====================================================================
+" Commands
+"=====================================================================
+command! -bang -nargs=* Rg
+  \ call fzf#vim#grep(
+  \ "rg --column --line-number --no-heading --color=always --smart-case -- ".shellescape(<q-args>),
+  \ 1,
+  \ fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}),
+  \ <bang>0)
+
+"=====================================================================
 " Highlights
 "=====================================================================
 
@@ -294,7 +306,7 @@ nnoremap <Leader>l :call matchadd('Search', '\%'.line('.').'l')<CR>
 nnoremap <Leader>c :call clearmatches()<CR>
 
 " fzf.vim mappings
-nnoremap <Leader>o :GGrep<CR>
+nnoremap <Leader>o :Rg<CR>
 nnoremap <Leader>t :Tags<CR>
 
 " Moving around windows

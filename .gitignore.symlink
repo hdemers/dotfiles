@@ -17,3 +17,12 @@ dask-worker-space
 
 # dotenv run configuration files
 .envrc
+
+# Jedi project configuration file
+.jedi
+
+# Vim session files
+Session.vim
+
+# Tags files
+TAGS

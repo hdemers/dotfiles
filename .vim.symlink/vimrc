@@ -23,7 +23,7 @@ Plug 'tpope/vim-vinegar'
 Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
-Plug 'rbong/vim-flog'
+Plug 'rbong/vim-flog', { 'branch': 'v2'}
 Plug 'wellle/targets.vim'
 Plug 'lifepillar/vim-solarized8'
 Plug 'mhinz/vim-startify'
@@ -42,9 +42,13 @@ Plug 'sheerun/vim-polyglot'
 Plug 'ruanyl/vim-gh-line'
 Plug 'nathangrigg/vim-beancount'
 Plug 'vim-test/vim-test'
-Plug 'puremourning/vimspector'
+if has('python3')
+    Plug 'puremourning/vimspector'
+endif
 Plug 'tpope/vim-dotenv'
-Plug 'obreitwi/vim-sort-folds'
+if has('python3')
+    Plug 'obreitwi/vim-sort-folds'
+endif
 call plug#end()
 
 "=====================================================================
@@ -274,7 +278,9 @@ autocmd FileType gitcommit setlocal spell
 autocmd User FugitiveCommit set foldmethod=syntax
 
 " Beancount filetype setting for Supertab
+autocmd FileType beancount let g:beauncount_separator_col=56
 autocmd FileType beancount let b:SuperTabContextDefaultCompletionType="<c-x><c-o>"
+autocmd FileType beancount VirtualEnvActivate budget
 
 "=====================================================================
 " Commands

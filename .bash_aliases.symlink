@@ -1,37 +1,6 @@
-alias beep='paplay ~/Music/Sounds/phone-incoming-call.ogg'
 alias docker_cleanup='docker rm $(docker ps -qa -f status=exited)'
 
 alias gentags="etags --exclude=build --languages=python -R"
-
-slack_remind_me() {
-    if [ -z "$MY_SLACK_USER_ID" ]; then
-        echo "ERROR: environment variable MY_SLACK_USER_ID not set"
-        return
-    fi
-    text=$1
-    time=$2
-    json=`wget -q -O - "$SLACK_API_URL/reminders.add?token=$SLACK_TOKEN&text=$text&time=$time&user=$MY_SLACK_USER_ID"`
-    ok=`echo $json | python -c "import sys, json; print json.load(sys.stdin)['ok']"`
-    if [ $ok != 'True' ]; then
-        echo 'Error while setting reminder'
-        echo $json
-    fi
-}
-
-slack_me() {
-    if [ -z "$MY_SLACK_USER_ID" ]; then
-        echo "ERROR: environment variable MY_SLACK_USER_ID not set"
-        return
-    fi
-
-    text=$1
-    json=`wget -q -O - "$SLACK_API_URL/chat.postMessage?token=$SLACK_TOKEN&text=$text&channel=$MY_SLACK_USER_ID&username=you"`
-    ok=`echo $json | python -c "import sys, json; print json.load(sys.stdin)['ok']"`
-    if [ $ok != 'True' ]; then
-        echo 'Error while slacking you'
-        echo $json
-    fi
-}
 
 # Set variables for instance ID and public IP retrieved using tag name
 ec2_instance_from_tag() {
@@ -80,6 +49,18 @@ start_ec2() {
 
 alias sshnohost="ssh -A -o StrictHostKeyChecking=no"
 
+install_dotfiles() {
+    # Minimal installation of a remote host
+    sshnohost $1 << EOF
+    # Download and install dotfiles
+    wget https://raw.githubusercontent.com/hdemers/dotfiles/master/install.sh
+    source install.sh
+
+    # I'm unable to execute this vim command here without interrupting this
+    # script. Very weird. I'm aliasing a command to it instead.
+    echo 'alias vs="vim +PlugInstall +qall"' >> \$HOME/.bashrc
+EOF
+}
 remote_setup() {
     # Minimal installation of a remote host
     sshnohost $1 << EOF
@@ -158,3 +139,4 @@ alias pytest="pytest --tb=short"
 alias ssh_socks="ssh -D 8157"
 
 alias themejupyter="jt -t gruvboxl -vim -dfs 10 -fs 10"
+alias colab="jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --port=8888 --NotebookApp.port_retries=0"

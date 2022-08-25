@@ -25,6 +25,7 @@
     ci = commit
     br = branch
     co = checkout
+    sw = switch
     df = diff
     dc = diff --cached
     dm = diff master --stat

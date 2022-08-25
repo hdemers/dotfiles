@@ -42,6 +42,7 @@ Plug 'sheerun/vim-polyglot'
 Plug 'ruanyl/vim-gh-line'
 Plug 'nathangrigg/vim-beancount'
 Plug 'vim-test/vim-test'
+Plug 'mtth/scratch.vim'
 if has('python3')
     Plug 'puremourning/vimspector'
 endif
@@ -54,7 +55,6 @@ call plug#end()
 "=====================================================================
 " Colors and syntax highlighting.
 "=====================================================================
-
 if exists('+termguicolors')
   let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
   let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
@@ -238,6 +238,16 @@ let g:gh_line_blame_map = '<leader>kb'
 " DB-UI
 let g:db_ui_execute_on_save=0
 
+" Startify options
+let g:startify_session_persistence = 1
+
+" Undotree options
+let g:undotree_SetFocusWhenToggle = 1
+
+" Scratch re-mapping of defaults because they interfere with fugitive
+let g:scratch_no_mappings = 1
+let g:scratch_height = 20
+
 "=====================================================================
 " Environment variables
 "=====================================================================
@@ -295,7 +305,8 @@ command! -bang -nargs=* Rg
 "=====================================================================
 " Highlights
 "=====================================================================
-
+highlight ALEErrorSign cterm=bold ctermfg=160 ctermbg=2 gui=bold guifg=#dc322f guibg=#002b36
+highlight ALEInfoSign cterm=bold ctermfg=37 ctermbg=236 gui=bold guifg=#2aa198 guibg=#073642
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -337,12 +348,21 @@ nmap ga <Plug>(EasyAlign)
 nmap <silent> [j <Plug>(ale_previous)
 nmap <silent> ]j <Plug>(ale_next)
 
+" Scratch mappings
+nmap <Leader>gp :ScratchPreview<CR>
+nmap <Leader>gs <plug>(scratch-insert-reuse)
+nmap <Leader>gS <plug>(scratch-insert-clear)
+xmap <Leader>gs <plug>(scratch-selection-reuse)
+xmap <Leader>gS <plug>(scratch-selection-clear)
+
+
 " Mapping of function keys
 nmap <F1> :Files<CR>
 noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
 nmap <F3> :TagbarOpen j<CR>
 nmap <F5> :Flog<CR>
+nmap <S-F5> :Flog -path=%<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 nmap <S-F6> :GitGutterFold<CR>
 nmap <F7> :Git rebase -i master<CR>

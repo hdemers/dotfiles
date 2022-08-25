@@ -37,8 +37,10 @@ bind-key l select-pane -R
 # Shift arrow to switch windows
 bind -n S-Left  previous-window
 bind -n S-Right next-window
-bind -n S-Up select-pane -U
-bind -n S-Down select-pane -D
+bind -n C-k select-pane -U
+bind -n C-j select-pane -D
+bind -n C-h select-pane -L
+bind -n C-l select-pane -R
 
 # No delay for escape key press
 set -sg escape-time 0
@@ -49,8 +51,8 @@ bind r source-file ~/.tmux.conf
 # THEME
 set -g status-bg colour0
 set -g status-fg colour6
-set -g window-status-current-bg colour8
-set -g window-status-current-fg colour6
+set-window-option -g window-status-style fg=colour6
+set-window-option -g window-status-style bg=colour8
 #set -g window-status-current-attr bold
 set -g status-interval 60
 set -g status-left-length 30

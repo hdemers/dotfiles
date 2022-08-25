@@ -1,8 +1,10 @@
+# vim: filetype=bash
 export EDITOR=/usr/bin/vim
 
 # Set various PATH
 export PATH=$HOME/.local/bin:$PATH
 export PATH=$HOME/local/bin:$PATH
+export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
 export CPATH=$CPATH:$HOME/.local/include
 export LIBRARY_PATH=$LIBRARY_PATH:$HOME/.local/lib
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
@@ -46,3 +48,6 @@ export GRUBHUB_DIR=$HOME/Projets/grubhub
 
 # Bat theme (https://github.com/sharkdp/bat#highlighting-theme)
 export BAT_THEME="Solarized (dark)"
+
+# Set the default R lib path
+export R_LIBS_USER=$HOME/.local/lib/R

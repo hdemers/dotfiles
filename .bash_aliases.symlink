@@ -128,6 +128,13 @@ tmux_install() {
 EOF
 }
 
+installkernel() {
+    if ! pip list | grep ipykernel; then
+        pip install ipykernel
+    fi
+    python -m ipykernel install --user --name $(basename $VIRTUAL_ENV) --display-name $(basename $VIRTUAL_ENV)
+}
+
 alias pspark="PYSPARK_DRIVER_PYTHON=ipython pyspark"
 
 alias gl="glances --process-short-name"
@@ -140,3 +147,4 @@ alias ssh_socks="ssh -D 8157"
 
 alias themejupyter="jt -t gruvboxl -vim -dfs 10 -fs 10"
 alias colab="jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --port=8888 --NotebookApp.port_retries=0"
+alias more=bat

@@ -90,7 +90,7 @@ alias statit="/usr/bin/time -f '\n%M max rss\n%K avg total\n%E real\n%U user\n%S
 
 # Install tmux (and libevent) on host identified by the first argument
 tmux_install() {
-    ssh -A -o StrictHostKeyChecking=no $1 << EOF
+    sshnohost $1 << EOF
     cd \$HOME
     # Create the installation directory
     export DIR=\$HOME/.local
@@ -147,4 +147,8 @@ alias ssh_socks="ssh -D 8157"
 
 alias themejupyter="jt -t gruvboxl -vim -dfs 10 -fs 10"
 alias colab="jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --port=8888 --NotebookApp.port_retries=0"
-alias more=bat
+
+if command -v bat &> /dev/null
+then
+    alias more=bat
+fi

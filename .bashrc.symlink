@@ -113,6 +113,6 @@ fi
 # Some stuff needs to be done after .bash_prompt
 
 # Activate direnv
-if [ -x /usr/bin/direnv ]; then
+if command -v direnv &> /dev/null; then
     eval "$(direnv hook bash)"
 fi

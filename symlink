@@ -1,40 +1,47 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 import os.path as path
 import shutil
-import argparse
 
 BASE_DIR = "."
 
 
 def parse():
     parser = argparse.ArgumentParser(
-        description="Symlinks all files having extension '.symlink'.")
-    parser.add_argument("-o", "--overwrite-all",
-                        help="Overwrite everything by default.",
-                        action='store_true')
-    parser.add_argument("-b", "--backup-all",
-                        help="Backup everything by default.",
-                        action='store_true')
-    parser.add_argument("-c", "--create-paths",
-                        help="Automatically ceate non-existent paths.",
-                        action='store_true')
-    parser.add_argument("-n", "--no-op",
-                        help="Print what will be done",
-                        action='store_true')
+        description="Symlinks all files having extension '.symlink'."
+    )
+    parser.add_argument(
+        "-o",
+        "--overwrite-all",
+        help="Overwrite everything by default.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-b", "--backup-all", help="Backup everything by default.", action="store_true"
+    )
+    parser.add_argument(
+        "-c",
+        "--create-paths",
+        help="Automatically ceate non-existent paths.",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-n", "--no-op", help="Print what will be done", action="store_true"
+    )
 
     return parser.parse_args()
 
 
 def confirm(question):
     while True:
-        response = raw_input("%s [Y/n] " % (question)).lower()
+        response = input("%s [Y/n] " % (question)).lower()
         if not response:
             return True
-        if response in ['y', 'yes']:
+        if response in ["y", "yes"]:
             return True
-        if response in ['n', 'no']:
+        if response in ["n", "no"]:
             return False
         print("Please specify '(y)es' or '(n)o'.")
 
@@ -51,8 +58,7 @@ def get_symlinks():
         for name in filenames + dirnames:
             root, ext = path.splitext(name)
             if ext == ".symlink":
-                symlinks.append((path.join(source, name),
-                                 path.join(link_name, root)))
+                symlinks.append((path.join(source, name), path.join(link_name, root)))
     return symlinks
 
 
@@ -65,28 +71,30 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
         if path.lexists(link_name):
             if not (overwrite_all or backup_all or skip_all):
                 if path.islink(link_name):
-                    answer = raw_input(
+                    answer = input(
                         "Symbolic link %r already exists.\n"
                         "What do you want to do? "
                         "[s]kip, [S]kip all, [o]verwrite, "
-                        "[O]verwrite all: " % link_name)
+                        "[O]verwrite all: " % link_name
+                    )
                 else:
-                    answer = raw_input(
+                    answer = input(
                         "File %r already exists.\n"
                         "What do you want to do? "
                         "[s]kip, [S]kip all, [o]verwrite, [O]verwrite all,"
-                        " [b]ackup, [B]ackup all: " % link_name)
-                if answer == 'O':
+                        " [b]ackup, [B]ackup all: " % link_name
+                    )
+                if answer == "O":
                     overwrite_all = True
-                elif answer == 'o':
+                elif answer == "o":
                     overwrite = True
-                elif answer == 'B':
+                elif answer == "B":
                     backup_all = True
-                elif answer == 'b':
+                elif answer == "b":
                     backup = True
-                elif answer == 'S':
+                elif answer == "S":
                     skip_all = True
-                elif answer == 's':
+                elif answer == "s":
                     continue
                 else:
                     return
@@ -100,8 +108,9 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
                     shutil.rmtree(link_name)
 
         elif not path.exists(dirname):
-            if (create_paths or confirm(
-                    "Path {!r} does not exists. Create?".format(dirname))):
+            if create_paths or confirm(
+                "Path {!r} does not exists. Create?".format(dirname)
+            ):
                 os.makedirs(dirname)
             else:
                 print("Skipping {!r}".format(link_name))
@@ -112,14 +121,13 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
                 os.symlink(source, link_name)
             except Exception as exception:
                 print("Exception {} for {!r}".format(exception, link_name))
-                print("An error occured while symlinking {!r}".format(
-                    link_name))
+                print("An error occured while symlinking {!r}".format(link_name))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parse()
     if args.no_op:
         for source, link_name in get_symlinks():
-            print('{} --> {}').format(source, link_name)
+            print("{} --> {}").format(source, link_name)
     else:
         symlink(args.overwrite_all, args.backup_all, args.create_paths)

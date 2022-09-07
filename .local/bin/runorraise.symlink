@@ -1,0 +1,34 @@
+# vim: set filetype=bash:
+
+while getopts dt: flag
+do
+    case "${flag}" in
+        d) use_desktop_file=1;;
+        t) title=$OPTARG;;
+    esac
+done
+
+# If we had any option, then shift the name of the file to $1.
+if [ $# -gt 1 ]; then
+    shift $((OPTIND-1))
+fi
+
+
+if [ -z "$title" ]; then window=$1; else window=$title;fi
+
+# If we're asked to use a .desktop file find it first, then execute it using
+# gtk-launch.
+if [ -n "$use_desktop_file" ]; then
+
+    file=$(grep -l "Name=$1" /home/hdemers/.local/share/applications/*.desktop)
+    if [ -n "$file" ]; then
+        file=$(basename $file)
+        wmctrl -a "$1" || gtk-launch $file
+    else
+        echo "could not find $1"
+    fi
+else
+
+    wmctrl -a "$window" || `which $1` &>/dev/null &
+fi
+

@@ -23,6 +23,7 @@ Plug 'tpope/vim-vinegar'
 Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
+Plug 'tpope/vim-repeat'
 Plug 'rbong/vim-flog', { 'branch': 'v2'}
 Plug 'wellle/targets.vim'
 Plug 'lifepillar/vim-solarized8'
@@ -211,7 +212,7 @@ let g:ale_fixers = {
 \   'python': ['isort', 'black', 'remove_trailing_lines', 'trim_whitespace'],
 \    'sql': ['remove_trailing_lines', 'trim_whitespace'],
 \    'jinja-sql': ['remove_trailing_lines', 'trim_whitespace'],
-\    'markdown': ['remove_trailing_lines', 'trim_whitespace'],
+\    'markdown': ['remove_trailing_lines'],
 \    'beancount': ['remove_trailing_lines', 'trim_whitespace'],
 \ }
 " ALE Python linters

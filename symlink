@@ -24,7 +24,7 @@ def parse():
     parser.add_argument(
         "-c",
         "--create-paths",
-        help="Automatically ceate non-existent paths.",
+        help="Automatically create non-existent paths.",
         action="store_true",
     )
     parser.add_argument(

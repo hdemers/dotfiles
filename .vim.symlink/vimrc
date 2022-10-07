@@ -20,10 +20,12 @@ Plug 'morhetz/gruvbox'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-vinegar'
-Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-repeat'
+Plug 'tpope/vim-dotenv'
+Plug 'tpope/vim-projectionist'
+Plug 'igemnace/vim-makery'
 Plug 'rbong/vim-flog', { 'branch': 'v2'}
 Plug 'wellle/targets.vim'
 Plug 'lifepillar/vim-solarized8'
@@ -31,7 +33,6 @@ Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 Plug 'dense-analysis/ale'
-Plug 'davidhalter/jedi-vim'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/vim-easy-align'
@@ -43,13 +44,13 @@ Plug 'sheerun/vim-polyglot'
 Plug 'ruanyl/vim-gh-line'
 Plug 'nathangrigg/vim-beancount'
 Plug 'vim-test/vim-test'
+Plug 'tartansandal/vim-compiler-pytest'
 Plug 'mtth/scratch.vim'
+Plug 'skywind3000/asyncrun.vim'
 if has('python3')
     Plug 'puremourning/vimspector'
-endif
-Plug 'tpope/vim-dotenv'
-if has('python3')
     Plug 'obreitwi/vim-sort-folds'
+    Plug 'davidhalter/jedi-vim'
 endif
 call plug#end()
 
@@ -183,13 +184,45 @@ let g:gruvbox_contrast_dark = 'soft'
 if !exists('g:airline_symbols')
     let g:airline_symbols = {}
 endif
-let g:airline_symbols.linenr = ''
-let g:airline_symbols.maxlinenr = ''
-" Only show the file encoding if it differs from utf-9[unix]
+let g:airline_left_sep = ''
+let g:airline_left_alt_sep = '|'
+let g:airline_right_sep = ''
+let g:airline_right_alt_sep = '|'
+let g:airline_symbols.branch = ''
+let g:airline_symbols.readonly = ''
+let g:airline_symbols.dirty='⚡'
+let g:airline_symbols.spell = 'Ꞩ'
+let g:airline_symbols.notexists = 'Ɇ'
+let g:airline_symbols.crypt = '🔒'
+" Only show the file encoding if it differs from utf-8[unix]
 let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
 let g:airline#extensions#virtualenv#enabled = 1
+let g:airline_section_z = airline#section#create(['%l:%c'])
+let g:airline_skip_empty_sections = 1
+let g:airline_mode_map = {
+    \ '__'     : '-',
+    \ 'c'      : 'C',
+    \ 'i'      : 'I',
+    \ 'ic'     : 'I',
+    \ 'ix'     : 'I',
+    \ 'n'      : 'N',
+    \ 'multi'  : 'M',
+    \ 'ni'     : 'N',
+    \ 'no'     : 'N',
+    \ 'R'      : 'R',
+    \ 'Rv'     : 'R',
+    \ 's'      : 'S',
+    \ 'S'      : 'S',
+    \ ''     : 'S',
+    \ 't'      : 'T',
+    \ 'v'      : 'V',
+    \ 'V'      : 'V',
+    \ ''     : 'V',
+    \ }
 
+" Jedi
 let g:jedi#completions_enabled = 1
+let g:jedi#popup_on_dot = 0
 
 " fzf colorscheme matching
 let g:fzf_colors =
@@ -209,7 +242,7 @@ let g:fzf_colors =
 
 " ALE Python fixers
 let g:ale_fixers = {
-\   'python': ['isort', 'black', 'remove_trailing_lines', 'trim_whitespace'],
+\   'python': ['black', 'isort', 'remove_trailing_lines', 'trim_whitespace'],
 \    'sql': ['remove_trailing_lines', 'trim_whitespace'],
 \    'jinja-sql': ['remove_trailing_lines', 'trim_whitespace'],
 \    'markdown': ['remove_trailing_lines'],
@@ -236,11 +269,21 @@ let g:gh_line_blame_map_default = 1
 let g:gh_line_map = '<leader>kh'
 let g:gh_line_blame_map = '<leader>kb'
 
-" DB-UI
-let g:db_ui_execute_on_save=0
-
 " Startify options
 let g:startify_session_persistence = 1
+let g:startify_session_savevars = [
+    \ 'g:startify_session_savevars',
+    \ 'g:startify_session_savecmds',
+    \ 'g:jedi#environment_path'
+\ ]
+let g:startify_change_to_vcs_root = 1
+let g:startify_lists = [
+    \ { 'type': 'sessions',  'header': ['   Sessions']       },
+    \ { 'type': 'files',     'header': ['   MRU']            },
+    \ { 'type': 'dir',       'header': ['   MRU '. getcwd()] },
+    \ { 'type': 'bookmarks', 'header': ['   Bookmarks']      },
+    \ { 'type': 'commands',  'header': ['   Commands']       },
+\ ]
 
 " Undotree options
 let g:undotree_SetFocusWhenToggle = 1
@@ -249,27 +292,21 @@ let g:undotree_SetFocusWhenToggle = 1
 let g:scratch_no_mappings = 1
 let g:scratch_height = 20
 
+" Python vim-test settings
+let g:test#python#pytest#options = '--tb=short -q'
+let g:test#python#runner = 'pytest'
+let test#strategy = "asyncrun_background"
+
 "=====================================================================
 " Environment variables
 "=====================================================================
 
 let $BAT_THEME='Solarized (dark)'
-let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor bat --style=numbers --color=always {}"
+let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor bat --style=numbers,changes --force-colorization {}"
 
 "=====================================================================
 " Autocommands
 "=====================================================================
-
-" Save session upon dying unexpectedly
-autocmd VimLeave  *  if v:dying | :mksession! | endif
-" Commands for CloseTag plugin
-"autocmd FileType html,htmldjango,jinjahtml,eruby,mako let b:closetag_html_style=1
-"autocmd FileType html,xhtml,xml,htmldjango,jinjahtml,eruby,mako source ~/.vim/bundle/closetag/plugin/closetag.vim
-
-command! -bang -nargs=* GGrep
-  \ call fzf#vim#grep(
-  \   'git grep --line-number -- '.shellescape(<q-args>), 0,
-  \   fzf#vim#with_preview({'dir': systemlist('git rev-parse --show-toplevel')[0]}), <bang>0)
 
 " Set syntax sync fromstart for all Python files
 autocmd BufEnter *.py :syntax sync fromstart
@@ -293,9 +330,30 @@ autocmd FileType beancount let g:beauncount_separator_col=56
 autocmd FileType beancount let b:SuperTabContextDefaultCompletionType="<c-x><c-o>"
 autocmd FileType beancount VirtualEnvActivate budget
 
+" The following setup will automatically run tests when a test file or its
+" alternate application file is saved. Cf. vim-test.
+augroup test
+  autocmd!
+  autocmd BufWrite * if test#exists() |
+    \   TestFile |
+    \ endif
+augroup END
+
+" AsyncRun. Automatically open the quickfix window if there are error after
+" running a command with AsyncRun.
+autocmd User AsyncRunStop if g:asyncrun_code > 0 | copen | endif
+
+" Remove the filetype from the X section of airline. We basically, recreate
+" this section with this autocmd.
+autocmd VimEnter * let g:airline_section_x = airline#section#create_right(['tagbar']) | :AirlineRefresh
 "=====================================================================
 " Commands
 "=====================================================================
+command! -bang -nargs=* GGrep
+  \ call fzf#vim#grep(
+  \   'git grep --line-number -- '.shellescape(<q-args>), 0,
+  \   fzf#vim#with_preview({'dir': systemlist('git rev-parse --show-toplevel')[0]}), <bang>0)
+
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
   \ "rg --column --line-number --no-heading --color=always --smart-case -- ".shellescape(<q-args>),
@@ -303,19 +361,23 @@ command! -bang -nargs=* Rg
   \ fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}),
   \ <bang>0)
 
+" Makery
+" Make a :Make command using asyncrun#run. This allows to run makery command in
+" the background.
+command! -bang -nargs=* Make call asyncrun#run(<bang>0, '', &makeprg . ' ' . <f-args>)
+
 "=====================================================================
 " Highlights
 "=====================================================================
 highlight ALEErrorSign cterm=bold ctermfg=160 ctermbg=2 gui=bold guifg=#dc322f guibg=#002b36
 highlight ALEInfoSign cterm=bold ctermfg=37 ctermbg=236 gui=bold guifg=#2aa198 guibg=#073642
+
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
-
 map <Leader>z :b #<CR>
 map <Leader>q :close<CR>
 map <Leader>w :tabclose<CR>
-map <C-s> :write<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
 
 " highlight the current line
@@ -325,6 +387,7 @@ nnoremap <Leader>c :call clearmatches()<CR>
 
 " fzf.vim mappings
 nnoremap <Leader>o :Rg<CR>
+nnoremap <leader>O :Rg <C-R><C-W><CR>
 nnoremap <Leader>t :Tags<CR>
 
 " Moving around windows
@@ -335,9 +398,6 @@ map <C-h> <C-W>h
 " Resize current window to 90 wide.
 map <Leader>a :90 wincmd \| <CR>
 map <Leader>A :180 wincmd \| <CR>
-
-" Searching using Git
-map <leader>* :Ggrep --untracked <cword><CR><CR> :cl<CR>
 
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)

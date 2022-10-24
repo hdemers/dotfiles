@@ -1,4 +1,4 @@
-# vim: set filetype=bash:
+#!/bin/bash
 
 while getopts dt: flag
 do

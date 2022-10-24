@@ -26,16 +26,6 @@ if [ -d "$RBENV_ROOT" ]; then
   eval "$(rbenv init -)"
 fi
 
-# Set AWS access keys
-if [ -d $HOME/Private/aws/hdemers ]; then
-  source $HOME/Private/aws/hdemers/aws.sh
-fi
-
-# Default AMI in canada central region
-export EC2_AMI=ami-7e57ea1a
-export EC2_INSTANCE_TYPE=t2.nano
-#export EC2_SECURITY_GROUP_IDS=sg-f909ec90
-
 export R_LIBS_USER=~/.R/library
 
 export PIP_REQUIRE_VIRTUALENV=true
@@ -51,3 +41,6 @@ export BAT_THEME="Solarized (dark)"
 
 # Set the default R lib path
 export R_LIBS_USER=$HOME/.local/lib/R
+
+# Set the AWS profile for use with S3 only
+export AWS_PROFILE=s3-access

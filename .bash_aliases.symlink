@@ -1,6 +1,18 @@
+alias ncal="ncal -My"
+alias cal="ncal -Myb"
+alias pytest="pytest --tb=short"
+alias ssh_socks="ssh -D 8157"
+alias themejupyter="jt -t gruvboxl -vim -dfs 10 -fs 10"
+alias colab="jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --port=8888 --NotebookApp.port_retries=0"
 alias docker_cleanup='docker rm $(docker ps -qa -f status=exited)'
+alias gentags="ctags --exclude=build -R"
+alias sshnohost="ssh -A -o StrictHostKeyChecking=no"
+alias statit="/usr/bin/time -f '\n%M max rss\n%K avg total\n%E real\n%U user\n%S sys' $2"
 
-alias gentags="etags --exclude=build --languages=python -R"
+if command -v bat &> /dev/null
+then
+    alias more=bat
+fi
 
 # Set variables for instance ID and public IP retrieved using tag name
 ec2_instance_from_tag() {
@@ -47,8 +59,6 @@ start_ec2() {
 }
 
 
-alias sshnohost="ssh -A -o StrictHostKeyChecking=no"
-
 install_dotfiles() {
     # Minimal installation of a remote host
     sshnohost $1 << EOF
@@ -61,32 +71,6 @@ install_dotfiles() {
     echo 'alias vs="vim +PlugInstall +qall"' >> \$HOME/.bashrc
 EOF
 }
-remote_setup() {
-    # Minimal installation of a remote host
-    sshnohost $1 << EOF
-    # Download and install dotfiles
-    wget https://raw.githubusercontent.com/hdemers/dotfiles/master/install.sh
-    source install.sh
-
-    # I'm unable to execute this vim command here without interrupting this
-    # script. Very weird. I'm aliasing a command to it instead.
-    echo 'alias vs="vim +PlugInstall +qall"' >> \$HOME/.bashrc
-
-    # Create a virtualenv with virtualenvwrapper
-    pip install --user virtualenvwrapper
-    source \$HOME/.local/bin/virtualenvwrapper.sh
-    mkvirtualenv venv
-
-    # Upgrade pip and install some python libraries
-    pip install -U pip
-    pip install ipython
-    pip install jupyter
-    pip install pandas
-    pip install flake8
-EOF
-}
-
-alias statit="/usr/bin/time -f '\n%M max rss\n%K avg total\n%E real\n%U user\n%S sys' $2"
 
 # Install tmux (and libevent) on host identified by the first argument
 tmux_install() {
@@ -128,6 +112,13 @@ tmux_install() {
 EOF
 }
 
+remote_setup() {
+    install_dotfiles $1
+    tmux_install $1
+    ssh $1
+}
+
+
 installkernel() {
     if ! pip list | grep ipykernel; then
         pip install ipykernel
@@ -135,20 +126,3 @@ installkernel() {
     python -m ipykernel install --user --name $(basename $VIRTUAL_ENV) --display-name $(basename $VIRTUAL_ENV)
 }
 
-alias pspark="PYSPARK_DRIVER_PYTHON=ipython pyspark"
-
-alias gl="glances --process-short-name"
-
-alias ncal="ncal -My"
-alias cal="ncal -Myb"
-alias pytest="pytest --tb=short"
-
-alias ssh_socks="ssh -D 8157"
-
-alias themejupyter="jt -t gruvboxl -vim -dfs 10 -fs 10"
-alias colab="jupyter notebook --NotebookApp.allow_origin='https://colab.research.google.com' --port=8888 --NotebookApp.port_retries=0"
-
-if command -v bat &> /dev/null
-then
-    alias more=bat
-fi

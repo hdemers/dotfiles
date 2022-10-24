@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 80
+select = C,E,F,W,B950
+ignore = E203, E501, E123, W503
+exclude = versioneer.py, build, _version.py, dist, .git, Makefile

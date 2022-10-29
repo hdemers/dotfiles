@@ -219,7 +219,10 @@ let g:airline_mode_map = {
     \ 'V'      : 'V',
     \ ''     : 'V',
     \ }
-let g:airline#extensions#branch#displayed_head_limit = 20
+let g:airline#extensions#branch#displayed_head_limit = 35
+let g:airline#extensions#tabline#enabled = 1
+let g:airline#extensions#tabline#show_buffers = 0
+let g:airline#extensions#tabline#tab_min_count = 2
 
 "Set AsyncRun status in airline
 let g:asyncrun_status = ""

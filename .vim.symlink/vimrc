@@ -16,7 +16,10 @@ Plug 'jlanzarotta/bufexplorer'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
-Plug 'morhetz/gruvbox'
+Plug 'lifepillar/vim-solarized8'
+Plug 'gruvbox-community/gruvbox'
+Plug 'sainnhe/sonokai'
+Plug 'rakr/vim-one'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-vinegar'
@@ -26,9 +29,8 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-dotenv'
 Plug 'tpope/vim-projectionist'
 Plug 'igemnace/vim-makery'
-Plug 'rbong/vim-flog', { 'branch': 'v2'}
+Plug 'rbong/vim-flog'
 Plug 'wellle/targets.vim'
-Plug 'lifepillar/vim-solarized8'
 Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
@@ -178,7 +180,8 @@ let g:tagbar_show_balloon = 0
 " Gruvbox colorscheme settings
 let g:gruvbox_vert_split = 'bg1'
 let g:gruvbox_invert_selection = 0
-let g:gruvbox_contrast_dark = 'soft'
+let g:gruvbox_contrast_dark = 'medium'
+let g:gruvbox_sign_column = 'bg0'
 
 " Airline
 if !exists('g:airline_symbols')
@@ -223,6 +226,7 @@ let g:airline#extensions#branch#displayed_head_limit = 35
 let g:airline#extensions#tabline#enabled = 1
 let g:airline#extensions#tabline#show_buffers = 0
 let g:airline#extensions#tabline#tab_min_count = 2
+let g:airline#extensions#tabline#formatter = 'unique_tail'
 
 "Set AsyncRun status in airline
 let g:asyncrun_status = ""
@@ -260,6 +264,9 @@ let g:ale_fixers = {
 let g:ale_linters = {'python': ['flake8']}
 " Set this variable to 1 to fix files when you save them.
 let g:ale_fix_on_save = 1
+let g:ale_sign_error = '•'
+let g:ale_sign_warning = '•'
+let g:ale_sign_column_always=1
 
 " Virtualenv.vim auto activation
 let g:virtualenv_auto_activate = 1
@@ -310,7 +317,7 @@ let test#strategy = "asyncrun_background"
 "=====================================================================
 
 let $BAT_THEME='Solarized (dark)'
-let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor bat --style=numbers,changes --force-colorization {}"
+let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor batcat --style=numbers,changes --force-colorization {}"
 
 
 "=====================================================================
@@ -369,6 +376,27 @@ autocmd User AsyncRunStart let g:asyncrun_status = 'unit testing'
 " Remove the filetype from the X section of airline. We basically, recreate
 " this section with this autocmd.
 autocmd VimEnter * let g:airline_section_x = airline#section#create_right(['tagbar']) | :AirlineRefresh
+
+function! s:sonokai_custom() abort
+  " Initialize the color palette.
+  " The first parameter is a valid value for `g:sonokai_style`,
+  " and the second parameter is a valid value for `g:sonokai_colors_override`.
+  let l:palette = sonokai#get_palette('default', {})
+  " Define a highlight group.
+  " The first parameter is the name of a highlight group,
+  " the second parameter is the foreground color,
+  " the third parameter is the background color,
+  " the fourth parameter is for UI highlighting which is optional,
+  " and the last parameter is for `guisp` which is also optional.
+  " See `autoload/sonokai.vim` for the format of `l:palette`.
+  call sonokai#highlight('VertSplit', l:palette.none, l:palette.bg1)
+endfunction
+
+augroup SonokaiCustom
+  autocmd!
+  autocmd ColorScheme sonokai call s:sonokai_custom()
+augroup END
+
 "=====================================================================
 " Commands
 "=====================================================================
@@ -389,13 +417,26 @@ command! -bang -nargs=* Rg
 " the background.
 " command! -bang -nargs=+ -range=0 -complete=file Make
 " 		\ call asyncrun#run('<bang>', '', <q-args>, <count>, <line1>, <line2>)
-
+:
 "=====================================================================
 " Highlights
 "=====================================================================
-highlight ALEErrorSign cterm=bold ctermfg=160 ctermbg=2 gui=bold guifg=#dc322f guibg=#002b36
-highlight ALEInfoSign cterm=bold ctermfg=37 ctermbg=236 gui=bold guifg=#2aa198 guibg=#073642
+function! MyHighlights() abort
+    highlight ALEError gui=underline cterm=underline
+    highlight ALEWarning gui=underline cterm=underline
+    highlight ALEInfo gui=underline cterm=underline
+    highlight ALEErrorSign guibg=NONE
+    highlight ALEWarningSign guibg=NONE
+    highlight ALEInfoSign guibg=NONE
+    highlight ALEErrorSignLineNr guibg=NONE
+    highlight ALEWarningSignLineNr guibg=NONE
+    highlight ALEInfoSignLineNr guibg=NONE
+endfunction
 
+augroup MyColors
+    autocmd!
+    autocmd ColorScheme * call MyHighlights()
+augroup END
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================

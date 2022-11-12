@@ -10,7 +10,7 @@ alias sshnohost="ssh -A -o StrictHostKeyChecking=no"
 alias statit="/usr/bin/time -f '\n%M max rss\n%K avg total\n%E real\n%U user\n%S sys' $2"
 alias mounts3="s3fs ca-hdemers /home/hdemers/S3/ca-hdemers/ -o profile=s3-access"
 
-if command -v bat &> /dev/null
+if command -v batcat &> /dev/null
 then
     alias more=batcat
 fi

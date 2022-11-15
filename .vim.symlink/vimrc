@@ -49,6 +49,7 @@ Plug 'vim-test/vim-test'
 Plug 'tartansandal/vim-compiler-pytest'
 Plug 'mtth/scratch.vim'
 Plug 'skywind3000/asyncrun.vim'
+Plug 'matze/vim-move'
 if has('python3')
     Plug 'puremourning/vimspector'
     Plug 'obreitwi/vim-sort-folds'
@@ -159,6 +160,9 @@ set modeline
 
 set signcolumn=yes
 
+" 'showmode' must be disabled for Jedi command line call signatures to be
+" visible.
+set noshowmode
 "=====================================================================
 " Plugins
 "=====================================================================
@@ -235,6 +239,7 @@ let g:airline_section_error = airline#section#create_right(['%{g:asyncrun_status
 " Jedi
 let g:jedi#completions_enabled = 1
 let g:jedi#popup_on_dot = 0
+let g:jedi#show_call_signatures = 2
 
 " fzf colorscheme matching
 let g:fzf_colors =
@@ -253,6 +258,7 @@ let g:fzf_colors =
   \ 'header':  ['fg', 'Comment'] }
 
 " ALE Python fixers
+let g:ale_lsp_suggestions = 1
 let g:ale_fixers = {
 \   'python': ['black', 'isort', 'remove_trailing_lines', 'trim_whitespace'],
 \    'sql': ['remove_trailing_lines', 'trim_whitespace'],
@@ -270,11 +276,6 @@ let g:ale_sign_column_always=1
 
 " Virtualenv.vim auto activation
 let g:virtualenv_auto_activate = 1
-
-" GitGutter fix. Properly sets the background of the gutter signs.
-" highlight GitGutterAdd term=bold ctermbg=1 guifg=#859900 guibg=NONE guisp=#859900
-" highlight GitGutterChange term=bold ctermbg=5 guifg=#b58900 guibg=NONE guisp=#b58900
-" highlight GitGutterDelete term=bold cterm=bold ctermfg=9 ctermbg=3 gui=bold guifg=#dc322f guibg=NONE
 
 " vim-gh-line doesn't open URL, but copy to clipboard
 let g:gh_open_command = 'fn() { echo "$@" | xclip -selection c -r; }; fn '

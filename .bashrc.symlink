@@ -75,28 +75,6 @@ esac
 # Install a Solarized dircolors scheme from
 # https://github.com/Anthony25/gnome-terminal-colors-solarized enable color
 
-# support of ls and also add handy aliases
-if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-
-    alias ls='ls --color=auto'
-    #alias dir='dir --color=auto'
-    #alias vdir='vdir --color=auto'
-
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
-fi
-
-# some more ls aliases
-alias ll='ls -alFrth'
-alias la='ls -A'
-alias l='ls -CF'
-
-# Add an "alert" alias for long running commands.  Use like so:
-#   sleep 10; alert
-alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
-
 # Alias definitions.
 # You may want to put all your additions into a separate file like
 # ~/.bash_aliases, instead of adding them here directly.
@@ -106,7 +84,7 @@ if [ -f ~/.bash_aliases ]; then
     . ~/.bash_aliases
 fi
 
-# enable programmable completion features (you don't need to enable
+# Enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
 if ! shopt -oq posix; then
@@ -117,9 +95,22 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Source additional files.
-. $HOME/.bash_prompt
-. $HOME/.bash_env
+# Automatically source all files/links in the directory ~/.bashrc.d
+
+# If the auto-source folder exists and has files in it...
+if [[ -d $HOME/.bashrc.d ]]; then
+
+  # If the directory is not empty...
+  if [[ "$(\ls -A $HOME/.bashrc.d)" ]]; then
+
+    # Loop through files (in alphabetical order) and source them.
+    # To specify a load order, files can be prefixed with numbers
+    # (e.g. 00--filename, 50--filename, 95--filename)
+    for file in $HOME/.bashrc.d/*; do
+        source "${file}"
+    done
+  fi
+fi
 
 # Some stuff needs to be done after .bash_prompt
 
@@ -127,3 +118,4 @@ fi
 if command -v direnv &> /dev/null; then
     eval "$(direnv hook bash)"
 fi
+

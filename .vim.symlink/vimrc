@@ -187,6 +187,9 @@ let g:gruvbox_invert_selection = 0
 let g:gruvbox_contrast_dark = 'medium'
 let g:gruvbox_sign_column = 'bg0'
 
+" Sonokai colorscheme
+let g:sonokai_style='shusia'
+
 " Airline
 if !exists('g:airline_symbols')
     let g:airline_symbols = {}
@@ -398,6 +401,9 @@ augroup SonokaiCustom
   autocmd ColorScheme sonokai call s:sonokai_custom()
 augroup END
 
+"In order to recognize dvc.lock and .dvc files as YAML
+autocmd! BufNewFile,BufRead Dvcfile,*.dvc,dvc.lock setfiletype yaml
+
 "=====================================================================
 " Commands
 "=====================================================================
@@ -418,11 +424,11 @@ command! -bang -nargs=* Rg
 " the background.
 " command! -bang -nargs=+ -range=0 -complete=file Make
 " 		\ call asyncrun#run('<bang>', '', <q-args>, <count>, <line1>, <line2>)
-:
+
 "=====================================================================
 " Highlights
 "=====================================================================
-function! MyHighlights() abort
+function! ALEHighlights() abort
     highlight ALEError gui=underline cterm=underline
     highlight ALEWarning gui=underline cterm=underline
     highlight ALEInfo gui=underline cterm=underline
@@ -436,8 +442,9 @@ endfunction
 
 augroup MyColors
     autocmd!
-    autocmd ColorScheme * call MyHighlights()
+    autocmd ColorScheme * call ALEHighlights()
 augroup END
+
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -492,7 +499,9 @@ nmap <F5> :Flog<CR>
 nmap <S-F5> :Flog -path=%<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 nmap <S-F6> :GitGutterFold<CR>
-nmap <F7> :Git rebase -i master<CR>
+nmap <C-F6> :0Gclog<CR>
+nmap <CS-F6> :Gedit <CR> \| :ccl <CR>
 nmap <F8> :Git commit<CR>
 nmap <S-F8> :Git push origin HEAD<CR>
+nmap <CS-F8> :Git rebase -i master<CR>
 nmap <F9> :UndotreeToggle<CR>

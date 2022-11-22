@@ -24,6 +24,9 @@ dask-worker-space
 # Vim session files
 Session.vim
 
+# projectionist files
+.projections.json
+
 # Tags files
 TAGS
 tags

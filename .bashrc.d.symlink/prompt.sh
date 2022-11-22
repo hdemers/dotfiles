@@ -62,3 +62,8 @@ if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
 fi
 
 
+# Activate startship. In case starship is not available, the previous prompt
+# setting code will be used instead.
+if command -v starship &> /dev/null; then
+    eval "$(starship init bash)"
+fi

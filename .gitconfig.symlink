@@ -52,3 +52,6 @@
     user = hdemers
 [gist]
     private = yes
+
+[init]
+	defaultBranch = main

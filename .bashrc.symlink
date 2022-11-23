@@ -72,8 +72,10 @@ xterm*|rxvt*)
     ;;
 esac
 
-# Install a Solarized dircolors scheme from
+# Install a Solarized scheme from
 # https://github.com/Anthony25/gnome-terminal-colors-solarized enable color
+# Install a Dark One color scheme from
+# https://github.com/denysdovhan/one-gnome-terminal
 
 # Alias definitions.
 # You may want to put all your additions into a separate file like

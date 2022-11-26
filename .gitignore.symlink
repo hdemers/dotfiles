@@ -30,3 +30,6 @@ Session.vim
 # Tags files
 TAGS
 tags
+
+# Jetbrains' config directory
+.idea

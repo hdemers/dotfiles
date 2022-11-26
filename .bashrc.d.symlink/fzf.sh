@@ -1,16 +1,18 @@
 # Setup fzf
 # ---------
+
 if [[ ! "$PATH" == */home/hdemers/.fzf/bin* ]]; then
   PATH="${PATH:+${PATH}:}/home/hdemers/.fzf/bin"
 fi
 
 # Auto-completion
 # ---------------
-[[ $- == *i* ]] && source "/home/hdemers/.fzf/shell/completion.bash" 2> /dev/null
+[[ $- == *i* ]] && source "~/.fzf/shell/completion.bash" 2> /dev/null
 
 # Key bindings
 # ------------
-source "/home/hdemers/.fzf/shell/key-bindings.bash"
+bindings_file=~/.fzf/shell/key-bindings.bash
+[[ -f "${bindings_file}" ]] && source "${bindings_file}"
 
 export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
 --color=fg:#839496,bg:#002b36,hl:#b58900

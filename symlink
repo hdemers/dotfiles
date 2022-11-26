@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import argparse
+import logging
 import os
 import os.path as path
 import shutil
 
 BASE_DIR = "."
+dryrun = False
 
 
 def parse():
@@ -28,8 +30,9 @@ def parse():
         action="store_true",
     )
     parser.add_argument(
-        "-n", "--no-op", help="Print what will be done", action="store_true"
+        "-d", "--dryrun", help="Run in dry-run mode", action="store_true"
     )
+    parser.add_argument("-l", "--loglevel", help="Log level", default="error")
 
     return parser.parse_args()
 
@@ -62,6 +65,19 @@ def get_symlinks():
     return symlinks
 
 
+def set_logger(level):
+    global log
+    logformat = "%(asctime)s [%(levelname)s] %(message)s"
+
+    log = logging.getLogger()
+    log.setLevel(level)
+
+    # Logging to the console
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(logformat))
+    log.addHandler(handler)
+
+
 def symlink(overwrite_all=False, backup_all=False, create_paths=False):
     skip_all = False
     for source, link_name in get_symlinks():
@@ -69,13 +85,16 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
         dirname = path.dirname(link_name)
 
         if path.lexists(link_name):
-            if not (overwrite_all or backup_all or skip_all):
+            if skip_all:
+                continue
+
+            if not (overwrite_all or backup_all or dryrun):
                 if path.islink(link_name):
                     answer = input(
                         "Symbolic link %r already exists.\n"
                         "What do you want to do? "
-                        "[s]kip, [S]kip all, [o]verwrite, "
-                        "[O]verwrite all: " % link_name
+                        "[s]kip, [S]kip all existing, [o]verwrite, "
+                        "[O]verwrite all existing: " % link_name
                     )
                 else:
                     answer = input(
@@ -94,40 +113,52 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
                     backup = True
                 elif answer == "S":
                     skip_all = True
+                    continue
                 elif answer == "s":
                     continue
                 else:
                     return
 
             if backup or backup_all:
-                os.rename(link_name, "%s.backup" % link_name)
+                if not dryrun:
+                    os.rename(link_name, f"{link_name}.backup")
+                log.info(f"renamed {link_name} -> {link_name}.backup")
+
             if overwrite or overwrite_all:
-                try:
-                    os.remove(link_name)
-                except OSError:
-                    shutil.rmtree(link_name)
+                if not dryrun:
+                    try:
+                        os.remove(link_name)
+                    except OSError:
+                        shutil.rmtree(link_name)
+                log.info(f"removed {link_name}")
 
         elif not path.exists(dirname):
             if create_paths or confirm(
                 "Path {!r} does not exists. Create?".format(dirname)
             ):
-                os.makedirs(dirname)
+                if not dryrun:
+                    os.makedirs(dirname)
+                log.info(f"created dir {dirname}")
             else:
                 print("Skipping {!r}".format(link_name))
                 continue
 
-        if not skip_all:
-            try:
+        try:
+            if not dryrun:
                 os.symlink(source, link_name)
-            except Exception as exception:
-                print("Exception {} for {!r}".format(exception, link_name))
-                print("An error occured while symlinking {!r}".format(link_name))
+
+            log.info(f"symlinked {source} -> {link_name}")
+        except Exception as exception:
+            print("Exception {} for {!r}".format(exception, link_name))
+            print("An error occured while symlinking {!r}".format(link_name))
 
 
 if __name__ == "__main__":
     args = parse()
-    if args.no_op:
-        for source, link_name in get_symlinks():
-            print("{} --> {}").format(source, link_name)
-    else:
-        symlink(args.overwrite_all, args.backup_all, args.create_paths)
+    set_logger(args.loglevel.upper())
+
+    if args.dryrun:
+        dryrun = True
+        log.debug("dry-running")
+
+    symlink(args.overwrite_all, args.backup_all, args.create_paths)

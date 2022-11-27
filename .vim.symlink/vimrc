@@ -447,9 +447,20 @@ function! ALEHighlights() abort
     highlight ALEInfoSignLineNr guibg=NONE
 endfunction
 
+function! BeancountHighlights() abort
+    if g:colors_name == 'one'
+        highlight link beanAccount Function
+        highlight link beanDate Statement
+    elseif g:colors_name == 'gruvbox'
+        highlight link beanAmount Operator
+        highlight link beanDate Float
+    endif
+endfunction
+
 augroup MyColors
     autocmd!
     autocmd ColorScheme * call ALEHighlights()
+    autocmd ColorScheme * call BeancountHighlights()
 augroup END
 
 "=====================================================================

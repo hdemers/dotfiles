@@ -29,7 +29,7 @@ Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-dotenv'
 Plug 'tpope/vim-projectionist'
 Plug 'igemnace/vim-makery'
-Plug 'rbong/vim-flog'
+Plug 'rbong/vim-flog', { 'branch': 'v1' }
 Plug 'wellle/targets.vim'
 Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
@@ -163,6 +163,15 @@ set signcolumn=yes
 " 'showmode' must be disabled for Jedi command line call signatures to be
 " visible.
 set noshowmode
+
+" Allows italics to be properly shown in terminals, especially tmux.
+set t_ZH=[3m
+set t_ZR=[23m
+
+" Use a line cursor within insert mode and a block cursor everywhere else.
+let &t_SI = "\e[6 q"
+let &t_EI = "\e[2 q"
+
 "=====================================================================
 " Plugins
 "=====================================================================
@@ -436,15 +445,15 @@ command! -bang -nargs=* Rg
 " Highlights
 "=====================================================================
 function! ALEHighlights() abort
-    highlight ALEError gui=underline cterm=underline
-    highlight ALEWarning gui=underline cterm=underline
-    highlight ALEInfo gui=underline cterm=underline
-    highlight ALEErrorSign guibg=NONE
-    highlight ALEWarningSign guibg=NONE
-    highlight ALEInfoSign guibg=NONE
-    highlight ALEErrorSignLineNr guibg=NONE
-    highlight ALEWarningSignLineNr guibg=NONE
-    highlight ALEInfoSignLineNr guibg=NONE
+    " highlight ALEError gui=underline cterm=underline
+    " highlight ALEWarning gui=underline cterm=underline
+    " highlight ALEInfo gui=underline cterm=underline
+    highlight ALEErrorSign guibg=NONE ctermbg=NONE
+    highlight ALEWarningSign guibg=NONE ctermbg=NONE
+    highlight ALEInfoSign guibg=NONE ctermbg=NONE
+    highlight ALEErrorSignLineNr guibg=NONE ctermbg=NONE
+    highlight ALEWarningSignLineNr guibg=NONE ctermbg=NONE
+    highlight ALEInfoSignLineNr guibg=NONE ctermbg=NONE
 endfunction
 
 function! BeancountHighlights() abort
@@ -462,6 +471,8 @@ augroup MyColors
     autocmd ColorScheme * call ALEHighlights()
     autocmd ColorScheme * call BeancountHighlights()
 augroup END
+
+call ALEHighlights()
 
 "=====================================================================
 " Mappings and Abbreviations

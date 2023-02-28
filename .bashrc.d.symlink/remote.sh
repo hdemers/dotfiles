@@ -2,63 +2,15 @@
 #
 # Functions to ease dealing with remote machines
 
-install_dotfiles() {
-    # Minimal installation of a remote host
-    sshnohost $1 << EOF
-    # Download and install dotfiles
-    wget https://raw.githubusercontent.com/hdemers/dotfiles/master/install.sh
-    source install.sh
-
-    # I'm unable to execute this vim command here without interrupting this
-    # script. Very weird. I'm aliasing a command to it instead.
-    echo 'alias vs="vim +PlugInstall +qall"' >> \$HOME/.bashrc
-EOF
-}
-
-tmux_install() {
-    # Install tmux (and libevent) on host identified by the first argument
-    sshnohost $1 << EOF
-    cd \$HOME
-    # Create the installation directory
-    export DIR=\$HOME/.local
-    export SRC=\$HOME/src
-    mkdir -p \$DIR
-    mkdir -p \$SRC
-
-    # Download libevent, ncurses and tmux
-    cd \$SRC
-    wget https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz
-    wget https://github.com/tmux/tmux/releases/download/3.0a/tmux-3.0a.tar.gz
-    wget https://invisible-mirror.net/archives/ncurses/ncurses-6.2.tar.gz
-
-    # Untar archives
-    tar xfz libevent-2.1.8-stable.tar.gz
-    tar xfz tmux-3.0a.tar.gz
-    tar xfz ncurses-6.2.tar.gz
-
-    # Compile and install libevent
-    cd \$SRC/libevent-2.1.8-stable
-    ./configure --prefix=\$DIR --disable-shared
-    make -j install
-
-    # Compile and install ncurses
-    cd \$SRC/ncurses-6.2
-    ./configure --prefix=\$DIR --disable-shared
-    make -j install
-
-    # Compile and install tmux
-    cd \$SRC/tmux-3.0a
-    ./configure --prefix=\$DIR CFLAGS="-I\$DIR/include -I\$DIR/include/ncurses" LDFLAGS="-L\$DIR/lib"
-    make -j install
-
-    echo 'export PATH=\$PATH:\$HOME/.local/bin' >> \$HOME/.bashrc
-EOF
+remote_install() {
+    sshnohost $1 < $HOME/src/scripts/$2.sh
 }
 
 remote_setup() {
-    install_dotfiles $1
-    tmux_install $1
-    ssh $1
+    remote_install $1 dotfiles
+    remote_install $1 tmux
+    remote_install $1 btop
+    ssh_socks $1
 }
 
 ec2_instance_from_tag() {

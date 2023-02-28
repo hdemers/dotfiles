@@ -56,3 +56,6 @@ fi
 
 # Mount my S3 bucket
 alias mounts3="s3fs ca-hdemers /home/hdemers/S3/ca-hdemers/ -o profile=s3-access"
+
+# Pip related
+alias lspip="pip list --disable-pip-version-check | fzf"

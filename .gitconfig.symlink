@@ -32,6 +32,7 @@
     dmm = diff master... --stat
     lg = log --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset %C(bold blue)[%an]%Creset%n' --abbrev-commit --date=relative --stat
     hist = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)[%an]%Creset' --abbrev-commit --date=relative
+    all = log --branches --remotes --tags --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)[%an]%Creset' --abbrev-commit --date=relative HEAD
     ls = ls-files
     lsp = diff --stat
     lcp = log master..HEAD
@@ -60,3 +61,5 @@
 [delta]
     side-by-side = true
     syntax-theme = Solarized (dark)
+[credential]
+	helper = cache

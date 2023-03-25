@@ -52,6 +52,8 @@ if command -v batcat &> /dev/null
 then
     alias bat=batcat
     alias more=batcat
+else
+    alias more=bat
 fi
 
 # Mount my S3 bucket

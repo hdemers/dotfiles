@@ -2,7 +2,7 @@
 disabled = true
 
 [python]
-symbol = 'python '
+symbol = 'py '
 style = 'yellow'
 
 [directory]
@@ -23,3 +23,7 @@ style = 'red'
 [username]
 style_root = 'red'
 style_user = 'yellow'
+
+[rlang]
+detect_files = []
+symbol = 'R '

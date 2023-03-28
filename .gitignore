@@ -4,3 +4,4 @@
 .vim.symlink/session/
 .vim.symlink/spell/
 .vim.symlink/view/
+*.sw*

@@ -57,6 +57,16 @@ secret() {
     fi
 }
 
-ntfy() {
-    curl -d "${1}" ntfy.sh/hdemers
+notify() {
+    error_code=$?
+
+    cmd=$(history | tail -n1 | sed -e 's/^\s*[0-9]\+\s*//;s/[;&|]\s*notify$//')
+
+    if [ ${error_code} -eq 0 ]; then
+        curl -s -H "X-Title: Success" -H "Tags: heavy_check_mark" \
+            -d "${cmd}" ntfy.sh/hdemers > /dev/null
+    else
+        curl -s -H "X-Title: Fail" -H "Tags: x" \
+            -d "${cmd}" ntfy.sh/hdemers > /dev/null
+    fi
 }

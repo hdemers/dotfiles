@@ -52,7 +52,8 @@ if command -v batcat &> /dev/null
 then
     alias bat=batcat
     alias more=batcat
-else
+elif command -v bat &> /dev/null
+then
     alias more=bat
 fi
 

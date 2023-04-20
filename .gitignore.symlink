@@ -33,3 +33,6 @@ tags
 
 # Jetbrains' config directory
 .idea
+
+# Vim ARSync plugin config file
+.vim-arsync

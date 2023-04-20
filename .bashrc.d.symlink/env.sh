@@ -55,3 +55,5 @@ export R_LIBS_USER=$HOME/.local/lib/R
 export AWS_PROFILE=s3-access
 # That's the Grubhub AWS_PROFILE
 export GH_AWS_PROFILE=grubhub-data
+
+export OPENAI_API_KEY=$(cat $HOME/.config/openai/api.txt)

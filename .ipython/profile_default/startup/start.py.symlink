@@ -1,0 +1,12 @@
+# vim: set filetype=python:
+
+
+def notify(message, headers=None, topic="hdemers"):
+    import subprocess
+
+    headers = headers or {}
+    headers = " ".join(f'-H "{k}: {v}"' for k, v in headers.items())
+
+    cmd_str = f'curl -s {headers} -d "{message}" ntfy.sh/{topic}> /dev/null'
+    print(cmd_str)
+    subprocess.run(cmd_str, shell=True)

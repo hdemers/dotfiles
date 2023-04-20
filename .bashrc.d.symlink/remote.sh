@@ -7,10 +7,29 @@ remote_install() {
 }
 
 remote_setup() {
-    remote_install $1 dotfiles
-    remote_install $1 tmux
-    remote_install $1 btop
-    ssh_socks $1
+    local host
+    local ip_filename="$HOME/.gdp_cluster_ip"
+
+    if [[ -z "${1-}" ]]; then
+        # We don't have an ip address given as a parameter. Let's look into the
+        # $ip_filename
+        if [[ -f $ip_filename ]]; then
+            host=$(<$ip_filename)
+        else
+            echo "you need to provide an ip address"
+            return
+        fi
+    else
+        host=$1
+    fi
+
+    remote_install $host dotfiles
+    remote_install $host tmux
+    remote_install $host btop
+    remote_install $host starship
+    remote_install $host fzf
+    ntfy "Cluster up and ready at ${host}" -H "Tags: tada"
+    ssh_socks $host
 }
 
 ec2_instance_from_tag() {

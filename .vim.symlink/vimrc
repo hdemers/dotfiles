@@ -50,6 +50,16 @@ Plug 'tartansandal/vim-compiler-pytest'
 Plug 'mtth/scratch.vim'
 Plug 'skywind3000/asyncrun.vim'
 Plug 'matze/vim-move'
+Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
+Plug 'kenn7/vim-arsync'
+Plug 'prabirshrestha/async.vim' " vim-arsync dependency.
+Plug 'dense-analysis/neural'
+Plug 'liuchengxu/vista.vim'
+Plug 'rhysd/clever-f.vim'
+Plug 'markonm/traces.vim'
+Plug 'prabirshrestha/vim-lsp'
+Plug 'mattn/vim-lsp-settings'
+Plug 'github/copilot.vim'
 if has('python3')
     Plug 'puremourning/vimspector'
     Plug 'obreitwi/vim-sort-folds'
@@ -172,6 +182,10 @@ set t_ZR=[23m
 let &t_SI = "\e[6 q"
 let &t_EI = "\e[2 q"
 
+" Set the directory for swap files to something else then the default, which is
+" directory=~/.vim//,.,~/tmp,/var/tmp,/tmp 
+set directory=~/.vim/swapfiles//,~/.vim//,.,~/tmp,/var/tmp,/tmp
+
 "=====================================================================
 " Plugins
 "=====================================================================
@@ -180,7 +194,7 @@ let &t_EI = "\e[2 q"
 let g:bufExplorerShowRelativePath=1
 
 " SuperTab
-let g:SuperTabDefaultCompletionType = "context"
+" let g:SuperTabDefaultCompletionType = "context"
 
 " Tagbar
 let g:tagbar_autoclose = 1
@@ -249,7 +263,7 @@ let g:asyncrun_status = ""
 let g:airline_section_error = airline#section#create_right(['%{g:asyncrun_status}'])
 
 " Jedi
-let g:jedi#completions_enabled = 1
+let g:jedi#completions_enabled = 0
 let g:jedi#popup_on_dot = 0
 let g:jedi#show_call_signatures = 2
 
@@ -272,19 +286,20 @@ let g:fzf_colors =
 " ALE Python fixers
 let g:ale_lsp_suggestions = 1
 let g:ale_fixers = {
-\   'python': ['black', 'isort', 'remove_trailing_lines', 'trim_whitespace'],
+\   'python': ['black', 'ruff'],
 \    'sql': ['remove_trailing_lines', 'trim_whitespace'],
 \    'jinja-sql': ['remove_trailing_lines', 'trim_whitespace'],
 \    'markdown': ['remove_trailing_lines'],
 \    'beancount': ['remove_trailing_lines', 'trim_whitespace'],
 \ }
 " ALE Python linters
-let g:ale_linters = {'python': ['flake8']}
+let g:ale_linters = {'python': ['ruff']}
 " Set this variable to 1 to fix files when you save them.
 let g:ale_fix_on_save = 1
 let g:ale_sign_error = '■'
 let g:ale_sign_warning = '■'
 let g:ale_sign_column_always=1
+let g:ale_completion_enabled = 1
 
 " Virtualenv.vim auto activation
 let g:virtualenv_auto_activate = 1
@@ -325,12 +340,38 @@ let g:test#python#pytest#options = '--tb=short -q'
 let g:test#python#runner = 'pytest'
 let test#strategy = "asyncrun_background"
 
+" Doge configuration
+let g:doge_enable_mappings = 0
+let g:doge_mapping = '<Leader>u'
+let g:doge_doc_standard_python = 'google'
+
+" Configure Neural
+let g:neural = {
+\   'source': {
+\       'openai': {
+\           'api_key': $OPENAI_API_KEY,
+\       },
+\   },
+\   'selected': 'chatgpt',
+\}
+
+" clever-f settings
+let g:clever_f_smart_case = 1
+
+" vim-lsp settings
+let g:lsp_diagnostics_enabled = 0
+let g:lsp_semantic_enabled = 1
+
+" Vista settings
+let g:vista_default_executive = 'vim_lsp'
+let g:vista_fzf_preview = ['right:50%']
+
 "=====================================================================
 " Environment variables
 "=====================================================================
 
 let $BAT_THEME='Solarized (dark)'
-let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor batcat --style=numbers,changes --force-colorization {}"
+let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor bat --style=numbers,changes --force-colorization {}"
 
 
 "=====================================================================
@@ -389,13 +430,16 @@ augroup END
 
 " AsyncRun. Automatically open the quickfix window if there are error after
 " running a command with AsyncRun.
-autocmd User AsyncRunStop if g:asyncrun_code > 0 | copen | endif
+" autocmd User AsyncRunStop if g:asyncrun_code > 0 | copen | endif
 autocmd User AsyncRunStop call AsyncrunStatus()
-autocmd User AsyncRunStart let g:asyncrun_status = 'unit testing'
+autocmd User AsyncRunStart let g:asyncrun_status = '⌛'
 
 " Remove the filetype from the X section of airline. We basically, recreate
 " this section with this autocmd.
 autocmd VimEnter * let g:airline_section_x = airline#section#create_right(['tagbar']) | :AirlineRefresh
+" Disable tagbar integration. I want to see as much of the filename as I can
+" and beside I never look at the function in the status bar.
+let g:airline#extensions#tagbar#enabled = 0
 
 function! s:sonokai_custom() abort
   " Initialize the color palette.
@@ -507,9 +551,12 @@ xmap ga <Plug>(EasyAlign)
 " Start interactive EasyAlign for a motion/text object (e.g. gaip)
 nmap ga <Plug>(EasyAlign)
 
+" ALE mappings
 " Go to next/previous ALE warning or error.
 nmap <silent> [j <Plug>(ale_previous)
 nmap <silent> ]j <Plug>(ale_next)
+" Toggle on/off ALE linting
+nmap <Leader>e :ALEToggle<CR>
 
 " Scratch mappings
 nmap <Leader>gp :ScratchPreview<CR>
@@ -518,12 +565,14 @@ nmap <Leader>gS <plug>(scratch-insert-clear)
 xmap <Leader>gs <plug>(scratch-selection-reuse)
 xmap <Leader>gS <plug>(scratch-selection-clear)
 
+" Vista mappings
+nmap <Leader>f :Vista finder <CR>
 
 " Mapping of function keys
 nmap <F1> :Files<CR>
 noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
-nmap <F3> :TagbarOpen j<CR>
+nmap <F3> :Vista!! <CR>
 nmap <F5> :Flog<CR>
 nmap <S-F5> :Flog -path=%<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>

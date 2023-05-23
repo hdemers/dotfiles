@@ -1,13 +1,25 @@
+# vim: set filetype=readline:
+
+$include /etc/inputrc
+
+set colored-stats On
+set visible-stats On
+
+set completion-prefix-display-length 3
+set mark-symlinked-directories On
+
+set show-all-if-ambiguous On
+set show-all-if-unmodified On
+
+# Vi-mode settings
+# Set different prompts when in insert and command mode
+set editing-mode vi
+# set show-mode-in-prompt on
+set vi-ins-mode-string \1\e[6 q\2
+set vi-cmd-mode-string \1\e[2 q\2
+
 # Bind the up arrow to history search, instead of history step
 "\e[A": history-search-backward
 # And the reverse (down)
 "\e[B": history-search-forward
 
-set colored-stats On
-set completion-prefix-display-length 3
-set mark-symlinked-directories On
-set show-all-if-ambiguous On
-set show-all-if-unmodified On
-set visible-stats On
-
-# set editing-mode vi

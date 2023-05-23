@@ -111,3 +111,6 @@ fi
 if command -v direnv &> /dev/null; then
     eval "$(direnv hook bash)"
 fi
+
+# Set vi mode
+# set -o vi

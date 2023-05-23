@@ -8,7 +8,7 @@ remote_install() {
 
 remote_setup() {
     local host
-    local ip_filename="$HOME/.gdp_cluster_ip"
+    local ip_filename="$HOME/.gdpcluster_ip"
 
     if [[ -z "${1-}" ]]; then
         # We don't have an ip address given as a parameter. Let's look into the

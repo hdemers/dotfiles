@@ -60,6 +60,7 @@ Plug 'markonm/traces.vim'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
 Plug 'github/copilot.vim'
+Plug 'madox2/vim-ai'
 if has('python3')
     Plug 'puremourning/vimspector'
     Plug 'obreitwi/vim-sort-folds'
@@ -518,6 +519,9 @@ augroup END
 
 call ALEHighlights()
 
+" Change Copilot hightlighting
+highlight! link CopilotSuggestion TabLine
+
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -527,9 +531,9 @@ map <Leader>w :tabclose<CR>
 nnoremap <Leader>/ :nohlsearch<CR>
 
 " highlight the current line
-nnoremap <Leader>l :call matchadd('Search', '\%'.line('.').'l')<CR>
+nnoremap <Leader>L :call matchadd('Search', '\%'.line('.').'l')<CR>
 " clear all the highlighted lines
-nnoremap <Leader>c :call clearmatches()<CR>
+nnoremap <Leader>C :call clearmatches()<CR>
 
 " fzf.vim mappings
 nnoremap <Leader>o :Rg<CR>
@@ -567,6 +571,15 @@ xmap <Leader>gS <plug>(scratch-selection-clear)
 
 " Vista mappings
 nmap <Leader>f :Vista finder <CR>
+
+" vim-ai mappings
+" complete text on the current line or in visual selection
+nnoremap <leader>i :AI<CR>
+xnoremap <leader>i :AI<CR>
+
+" trigger chat
+xnoremap <leader>c :AIChat<CR>
+nnoremap <leader>c :AIChat<CR>
 
 " Mapping of function keys
 nmap <F1> :Files<CR>

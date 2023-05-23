@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+    set -o xtrace
+fi
+
+session="vim"
+sessionexists=$(tmux list-sessions -F '#{session_name}' | grep $session)
+
+
+main() {
+    # If session doesn't exists, create it.
+    if [ "$sessionexists" != "vim" ]; then
+        echo "creating new session '$session'"
+        tmux new-session -d -s $session
+
+        # If VIM_SESSIONS environment variable is set, create new windows for
+        # each session and send-keys to open vim with given session.
+        if [[ -f $HOME/.vim-sessions ]]; then
+            echo "creating new session '$session'"
+            # Parse environment variable $VIM_SESSIONS into array vim_sessions.
+            # Env variable must be delimited by semicolon.
+            readarray -t vim_sessions < $HOME/.vim-sessions
+
+            echo "starting following vim sessions ${vim_sessions[@]}"
+            # Extract first element of vim_sessions array and rename the newly created tmux
+            # window.
+            tmux rename-window -t 1 "${vim_sessions[0]}"
+            tmux send-keys -t "${vim_sessions[0]}" "vim -S ${HOME}/.vim/session/${vim_sessions[0]}" C-m
+
+            # Loop through the rest of the vim_sessions array and open given session.
+            for vim_session in "${vim_sessions[@]:1}"; do
+                echo "starting vim with session $vim_session"
+                tmux new-window -t $session -n $vim_session
+                # Send keys to start vim with that session.
+                tmux send-keys -t "$vim_session" "vim -S ${HOME}/.vim/session/$vim_session" C-m
+            done
+
+        fi
+    fi
+    echo "attaching to session '$session'"
+    tmux attach-session -t $session
+}
+
+main

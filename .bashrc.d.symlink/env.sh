@@ -57,3 +57,6 @@ export AWS_PROFILE=s3-access
 export GH_AWS_PROFILE=grubhub-data
 
 export OPENAI_API_KEY=$(cat $HOME/.config/openai/api.txt)
+
+export JIRA_API_TOKEN=$(cat $HOME/.config/jira/api-token.txt)
+export JIRA_AUTH_TYPE=bearer

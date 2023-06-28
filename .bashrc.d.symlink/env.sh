@@ -53,10 +53,13 @@ export R_LIBS_USER=$HOME/.local/lib/R
 
 # Set the AWS profile for use with S3 only
 export AWS_PROFILE=s3-access
-# That's the Grubhub AWS_PROFILE
-export GH_AWS_PROFILE=grubhub-data
 
-export OPENAI_API_KEY=$(cat $HOME/.config/openai/api.txt)
+if [[ -f "$HOME/.config/openai/api.txt" ]]; then
+    export OPENAI_API_KEY=$(cat $HOME/.config/openai/api.txt)
+fi
 
-export JIRA_API_TOKEN=$(cat $HOME/.config/jira/api-token.txt)
-export JIRA_AUTH_TYPE=bearer
+if [[ -f "$HOME/.config/jira/api-token.txt" ]]; then
+    export JIRA_API_TOKEN=$(cat $HOME/.config/jira/api-token.txt)
+    export JIRA_AUTH_TYPE=bearer
+fi
+

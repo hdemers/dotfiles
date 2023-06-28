@@ -62,3 +62,12 @@ alias mounts3="s3fs ca-hdemers /home/hdemers/S3/ca-hdemers/ -o profile=s3-access
 
 # Pip related
 alias lspip="pip list --disable-pip-version-check | fzf"
+
+alias statit="/usr/bin/time -f '\n%M max rss\n%K avg total\n%E real\n%U user\n%S sys' $2"
+
+# List all YARN nodes on a cluster.
+alias nodes="yarn node -list -all |
+    grep RUNNING |
+    cut -d ' ' -f 1 |
+    tr - . |
+    grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'"

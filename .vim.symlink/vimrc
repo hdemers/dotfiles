@@ -18,7 +18,6 @@ Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'lifepillar/vim-solarized8'
 Plug 'gruvbox-community/gruvbox'
-Plug 'sainnhe/sonokai'
 Plug 'rakr/vim-one'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
@@ -28,7 +27,6 @@ Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-dotenv'
 Plug 'tpope/vim-projectionist'
-Plug 'igemnace/vim-makery'
 Plug 'rbong/vim-flog', { 'branch': 'v1' }
 Plug 'wellle/targets.vim'
 Plug 'mhinz/vim-startify'
@@ -46,22 +44,22 @@ Plug 'sheerun/vim-polyglot'
 Plug 'ruanyl/vim-gh-line'
 Plug 'nathangrigg/vim-beancount'
 Plug 'vim-test/vim-test'
-Plug 'tartansandal/vim-compiler-pytest'
-Plug 'mtth/scratch.vim'
 Plug 'skywind3000/asyncrun.vim'
-Plug 'matze/vim-move'
-Plug 'kkoomen/vim-doge', { 'do': { -> doge#install() } }
+Plug 'skywind3000/asynctasks.vim'
 Plug 'kenn7/vim-arsync'
 Plug 'prabirshrestha/async.vim' " vim-arsync dependency.
-Plug 'dense-analysis/neural'
 Plug 'liuchengxu/vista.vim'
 Plug 'rhysd/clever-f.vim'
 Plug 'markonm/traces.vim'
 Plug 'prabirshrestha/vim-lsp'
 Plug 'mattn/vim-lsp-settings'
 Plug 'github/copilot.vim'
-Plug 'madox2/vim-ai'
+Plug 'quarto-dev/quarto-vim'
+Plug 'vim-pandoc/vim-pandoc-syntax'
+Plug 'voldikss/vim-floaterm'
+Plug 'tweekmonster/braceless.vim'
 if has('python3')
+    Plug 'madox2/vim-ai'
     Plug 'puremourning/vimspector'
     Plug 'obreitwi/vim-sort-folds'
     Plug 'davidhalter/jedi-vim'
@@ -224,7 +222,7 @@ let g:airline_right_sep = ''
 let g:airline_right_alt_sep = '|'
 let g:airline_symbols.branch = ''
 let g:airline_symbols.readonly = ''
-let g:airline_symbols.dirty='⚡'
+let g:airline_symbols.dirty=' !'
 let g:airline_symbols.spell = 'Ꞩ'
 let g:airline_symbols.notexists = 'Ɇ'
 let g:airline_symbols.crypt = '🔒'
@@ -294,7 +292,7 @@ let g:ale_fixers = {
 \    'beancount': ['remove_trailing_lines', 'trim_whitespace'],
 \ }
 " ALE Python linters
-let g:ale_linters = {'python': ['ruff']}
+let g:ale_linters = {'python': ['ruff', 'mypy']}
 " Set this variable to 1 to fix files when you save them.
 let g:ale_fix_on_save = 1
 let g:ale_sign_error = '■'
@@ -337,24 +335,11 @@ let g:scratch_no_mappings = 1
 let g:scratch_height = 20
 
 " Python vim-test settings
-let g:test#python#pytest#options = '--tb=short -q'
 let g:test#python#runner = 'pytest'
+" These options must match the errorformat defined in 
+" .vim/compiler/pytest.vim for the quickfix list to work.
+let g:test#python#pytest#options = '--tb=short -q -p no:warnings'
 let test#strategy = "asyncrun_background"
-
-" Doge configuration
-let g:doge_enable_mappings = 0
-let g:doge_mapping = '<Leader>u'
-let g:doge_doc_standard_python = 'google'
-
-" Configure Neural
-let g:neural = {
-\   'source': {
-\       'openai': {
-\           'api_key': $OPENAI_API_KEY,
-\       },
-\   },
-\   'selected': 'chatgpt',
-\}
 
 " clever-f settings
 let g:clever_f_smart_case = 1
@@ -366,6 +351,9 @@ let g:lsp_semantic_enabled = 1
 " Vista settings
 let g:vista_default_executive = 'vim_lsp'
 let g:vista_fzf_preview = ['right:50%']
+
+" Floatterm settings
+let g:floaterm_keymap_toggle = '<F12>'
 
 "=====================================================================
 " Environment variables
@@ -381,7 +369,7 @@ let $FZF_PREVIEW_COMMAND="COLORTERM=truecolor bat --style=numbers,changes --forc
 
 fun AsyncrunStatus()
     if g:asyncrun_code == 1
-        let g:asyncrun_status = "failed"
+        let g:asyncrun_status = "☢ "
     else
         let g:asyncrun_status = ""
     endif
@@ -433,7 +421,7 @@ augroup END
 " running a command with AsyncRun.
 " autocmd User AsyncRunStop if g:asyncrun_code > 0 | copen | endif
 autocmd User AsyncRunStop call AsyncrunStatus()
-autocmd User AsyncRunStart let g:asyncrun_status = '⌛'
+autocmd User AsyncRunStart let g:asyncrun_status = '◎ '
 
 " Remove the filetype from the X section of airline. We basically, recreate
 " this section with this autocmd.
@@ -465,6 +453,17 @@ augroup END
 "In order to recognize dvc.lock and .dvc files as YAML
 autocmd! BufNewFile,BufRead Dvcfile,*.dvc,dvc.lock setfiletype yaml
 
+" Supertab chaining: setup the supertab chaining for any filetype that has a
+" provided omnifunc to first try that, then fall back to supertab's default,
+" <c-p>, completion
+autocmd FileType *
+\ if &omnifunc != '' |
+\   call SuperTabChain(&omnifunc, "<c-p>") |
+\ endif
+
+" Enable braceless
+autocmd FileType python BracelessEnable +indent
+
 "=====================================================================
 " Commands
 "=====================================================================
@@ -475,16 +474,11 @@ command! -bang -nargs=* GGrep
 
 command! -bang -nargs=* Rg
   \ call fzf#vim#grep(
-  \ "rg --column --line-number --no-heading --color=always --smart-case -- ".shellescape(<q-args>),
+  \ "rg --column --line-number --no-heading --color=always --smart-case --hidden -- ".shellescape(<q-args>),
   \ 1,
   \ fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}),
   \ <bang>0)
 
-" Makery
-" Make a :Make command using asyncrun#run. This allows to run makery command in
-" the background.
-" command! -bang -nargs=+ -range=0 -complete=file Make
-" 		\ call asyncrun#run('<bang>', '', <q-args>, <count>, <line1>, <line2>)
 
 "=====================================================================
 " Highlights
@@ -522,6 +516,9 @@ call ALEHighlights()
 " Change Copilot hightlighting
 highlight! link CopilotSuggestion TabLine
 
+" Change color of Floaterm border
+hi link FloatermBorder Identifier
+
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -557,29 +554,10 @@ nmap ga <Plug>(EasyAlign)
 
 " ALE mappings
 " Go to next/previous ALE warning or error.
-nmap <silent> [j <Plug>(ale_previous)
-nmap <silent> ]j <Plug>(ale_next)
+nmap <silent> [a <Plug>(ale_previous)
+nmap <silent> ]a <Plug>(ale_next)
 " Toggle on/off ALE linting
 nmap <Leader>e :ALEToggle<CR>
-
-" Scratch mappings
-nmap <Leader>gp :ScratchPreview<CR>
-nmap <Leader>gs <plug>(scratch-insert-reuse)
-nmap <Leader>gS <plug>(scratch-insert-clear)
-xmap <Leader>gs <plug>(scratch-selection-reuse)
-xmap <Leader>gS <plug>(scratch-selection-clear)
-
-" Vista mappings
-nmap <Leader>f :Vista finder <CR>
-
-" vim-ai mappings
-" complete text on the current line or in visual selection
-nnoremap <leader>i :AI<CR>
-xnoremap <leader>i :AI<CR>
-
-" trigger chat
-xnoremap <leader>c :AIChat<CR>
-nnoremap <leader>c :AIChat<CR>
 
 " Mapping of function keys
 nmap <F1> :Files<CR>
@@ -590,7 +568,7 @@ nmap <F5> :Flog<CR>
 nmap <S-F5> :Flog -path=%<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 nmap <S-F6> :GitGutterFold<CR>
-nmap <C-F6> :0Gclog<CR>
+nmap <C-F6> :Gclog<CR>
 nmap <CS-F6> :Gedit <CR> \| :ccl <CR>
 nmap <F8> :Git commit<CR>
 nmap <S-F8> :Git push origin HEAD<CR>

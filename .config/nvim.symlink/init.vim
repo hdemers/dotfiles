@@ -7,7 +7,7 @@ set guifont=Hack\ Regular\ 9
 "=====================================================================
 " Load plugins using plug.vim (https://github.com/junegunn/vim-plug)
 "=====================================================================
-call plug#begin('~/.vim/plugged')
+call plug#begin('~/.config/nvim/plugged')
 Plug 'Glench/Vim-Jinja2-Syntax'
 Plug 'chrisbra/csv.vim'
 Plug 'airblade/vim-gitgutter'
@@ -17,8 +17,8 @@ Plug 'ctrlpvim/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'lifepillar/vim-solarized8'
-Plug 'gruvbox-community/gruvbox'
 Plug 'rakr/vim-one'
+Plug 'joshdick/onedark.vim'
 Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-vinegar'
@@ -27,7 +27,7 @@ Plug 'tpope/vim-unimpaired'
 Plug 'tpope/vim-repeat'
 Plug 'tpope/vim-dotenv'
 Plug 'tpope/vim-projectionist'
-Plug 'rbong/vim-flog', { 'branch': 'v1' }
+Plug 'rbong/vim-flog'
 Plug 'wellle/targets.vim'
 Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
@@ -58,6 +58,8 @@ Plug 'quarto-dev/quarto-vim'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'voldikss/vim-floaterm'
 Plug 'tweekmonster/braceless.vim'
+Plug 'nvim-lua/plenary.nvim'
+Plug 'andythigpen/nvim-coverage'
 if has('python3')
     Plug 'madox2/vim-ai'
     Plug 'puremourning/vimspector'
@@ -83,111 +85,40 @@ colorscheme solarized8_flat
 "=====================================================================
 " Various settings
 "=====================================================================
-
 let mapleader = ' '
 
 filetype on
 filetype plugin indent on
 
-" Be smart about it
-set smarttab
-" Set the number of space to indent
-set shiftwidth=4
-" Like a modern text editor and not like old vi
-set backspace=indent,eol,start
-" Behave thyself
-behave xterm
-" Setting ttymouse ensure it works properly inside tmux
-set ttymouse=xterm2
-" Like a modern text editor
-set mouse=a
-set guioptions=ai
-set nomousefocus
-" Set the text width
-set textwidth=79
-" Do backup before writing files
-set writebackup
-" Show the ruler at bottom of screen
-set ruler
-" Do no bother me with beeps or visual beeps
-set visualbell t_vb=
-set belloff=all
-" Do not wrap lines
-set nowrap
-" To highlight the searched words
-set hlsearch
-" Show the matched pattern as it is typed
-set incsearch
-" Insert spaces instead of tabstop
 set expandtab
-"Output format of grep
-"set grepformat=%f:%l:%m
-set grepprg=grep
-" The sign at the beginning of the line when wrapping a line
-set showbreak=>>>
 "Don't ignore case when there is an upper case character in the pattern. For
 "smartcase to take effect, ignorecase must be on.
 set ignorecase
 set smartcase
 " Set wrapping of cursor movement
-set ww=b,s,<,>,[,]
-" Print
-set printoptions=paper:letter,duplex:off
-" Vertical split shows no |
-set fillchars=fold:-
+set whichwrap=b,s,<,>,[,]
 
-" Diff
-set diffopt=filler,vertical
-"if &diff
-  "set foldcolumn=2
-"else
-  "set foldcolumn=0
-"endif
-
-" File Explorer settings
-let g:explHideFiles='^\.,\.gz$,\.exe$,\.zip$,\.o,\..*~$'
-
-" Files with this suffixe will get a lower priority
-set suffixes='.bak,~,.o,.info,.swp,.obj,.pyc'
-
-" statusline
-" cf the default statusline: %<%f\ %h%m%r%=%-14.(%l,%c%V%)\ %P
-set statusline=%<%f\ %h%m%r%{fugitive#statusline()}%=%-14.(%l,%c%V%)\ %P
-" Always show a status line.
-set laststatus=2
-" Ignore certain files from listings.
-set wildignore+=*.pyc,*.*~,build
-
-" Persist undo history in $HOME/.vimundo
+" Persist undo history
 set undofile
-set undodir=~/.vimundo
-
-" Set vim update time to 250ms (default 4sec)
-set updatetime=250
-
-set modeline
-
-set signcolumn=yes
 
 " 'showmode' must be disabled for Jedi command line call signatures to be
 " visible.
 set noshowmode
 
 " Allows italics to be properly shown in terminals, especially tmux.
-set t_ZH=[3m
-set t_ZR=[23m
+" set t_ZH=[3m
+" set t_ZR=[23m
 
 " Use a line cursor within insert mode and a block cursor everywhere else.
-let &t_SI = "\e[6 q"
-let &t_EI = "\e[2 q"
-
-" Set the directory for swap files to something else then the default, which is
-" directory=~/.vim//,.,~/tmp,/var/tmp,/tmp 
-set directory=~/.vim/swapfiles//,~/.vim//,.,~/tmp,/var/tmp,/tmp
+" let &t_SI = "\e[6 q"
+" let &t_EI = "\e[2 q"
 
 "=====================================================================
 " Plugins
 "=====================================================================
+
+" My custom lua config
+lua require('myconfig')
 
 " BufExplorer
 let g:bufExplorerShowRelativePath=1
@@ -202,15 +133,6 @@ let g:tagbar_show_visibility = 0
 let g:tagbar_iconchars = ['►', '▼']
 let g:tagbar_left = 1
 let g:tagbar_show_balloon = 0
-
-" Gruvbox colorscheme settings
-let g:gruvbox_vert_split = 'bg1'
-let g:gruvbox_invert_selection = 0
-let g:gruvbox_contrast_dark = 'medium'
-let g:gruvbox_sign_column = 'bg0'
-
-" Sonokai colorscheme
-let g:sonokai_style='shusia'
 
 " Airline
 if !exists('g:airline_symbols')
@@ -330,10 +252,6 @@ let g:startify_lists = [
 " Undotree options
 let g:undotree_SetFocusWhenToggle = 1
 
-" Scratch re-mapping of defaults because they interfere with fugitive
-let g:scratch_no_mappings = 1
-let g:scratch_height = 20
-
 " Python vim-test settings
 let g:test#python#runner = 'pytest'
 " These options must match the errorformat defined in 
@@ -382,6 +300,7 @@ function! AirlineThemePatch(palette)
         let g:airline_theme='base16_solarized'
     endif
 endfunction
+
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -429,26 +348,6 @@ autocmd VimEnter * let g:airline_section_x = airline#section#create_right(['tagb
 " Disable tagbar integration. I want to see as much of the filename as I can
 " and beside I never look at the function in the status bar.
 let g:airline#extensions#tagbar#enabled = 0
-
-function! s:sonokai_custom() abort
-  " Initialize the color palette.
-  " The first parameter is a valid value for `g:sonokai_style`,
-  " and the second parameter is a valid value for `g:sonokai_colors_override`.
-  let l:palette = sonokai#get_palette('shusia', {})
-  " Define a highlight group.
-  " The first parameter is the name of a highlight group,
-  " the second parameter is the foreground color,
-  " the third parameter is the background color,
-  " the fourth parameter is for UI highlighting which is optional,
-  " and the last parameter is for `guisp` which is also optional.
-  " See `autoload/sonokai.vim` for the format of `l:palette`.
-  call sonokai#highlight('VertSplit', l:palette.none, l:palette.bg1)
-endfunction
-
-augroup SonokaiCustom
-  autocmd!
-  autocmd ColorScheme sonokai call s:sonokai_custom()
-augroup END
 
 "In order to recognize dvc.lock and .dvc files as YAML
 autocmd! BufNewFile,BufRead Dvcfile,*.dvc,dvc.lock setfiletype yaml

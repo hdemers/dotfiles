@@ -5,3 +5,5 @@
 .vim.symlink/spell/
 .vim.symlink/view/
 *.sw*
+.config/nvim.symlink/plugged/
+.config/nvim.symlink/autoload/

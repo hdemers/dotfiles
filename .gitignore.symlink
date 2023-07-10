@@ -36,3 +36,6 @@ tags
 
 # Vim ARSync plugin config file
 .vim-arsync
+
+# vimspector config files
+.vimspector.json

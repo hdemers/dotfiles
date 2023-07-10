@@ -10,6 +10,9 @@ fi
 session="vim"
 sessionexists=$(tmux list-sessions -F '#{session_name}' | grep $session)
 
+# vim_cmd=vim
+# session_dir=$HOME/.vim/session/
+session_dir=$HOME/.local/share/nvim/session/
 
 main() {
     # If session doesn't exists, create it.
@@ -29,14 +32,14 @@ main() {
             # Extract first element of vim_sessions array and rename the newly created tmux
             # window.
             tmux rename-window -t 1 "${vim_sessions[0]}"
-            tmux send-keys -t "${vim_sessions[0]}" "vim -S ${HOME}/.vim/session/${vim_sessions[0]}" C-m
+            tmux send-keys -t "${vim_sessions[0]}" "nvim -S $session_dir/${vim_sessions[0]}" C-m
 
             # Loop through the rest of the vim_sessions array and open given session.
             for vim_session in "${vim_sessions[@]:1}"; do
                 echo "starting vim with session $vim_session"
                 tmux new-window -t $session -n $vim_session
                 # Send keys to start vim with that session.
-                tmux send-keys -t "$vim_session" "vim -S ${HOME}/.vim/session/$vim_session" C-m
+                tmux send-keys -t "$vim_session" "nvim -S $session_dir/$vim_session" C-m
             done
 
         fi

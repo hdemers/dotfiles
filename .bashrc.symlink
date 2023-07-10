@@ -88,29 +88,20 @@ if ! shopt -oq posix; then
   fi
 fi
 
-# Automatically source all files/links in the directory ~/.bashrc.d
-
+# Automatically source all files/links in the directory config_dir
 # If the auto-source folder exists and has files in it...
-if [[ -d $HOME/.bashrc.d ]]; then
+config_dir="$HOME/.shellrc.d"
+
+if [[ -d $config_dir ]]; then
 
   # If the directory is not empty...
-  if [[ "$(\ls -A $HOME/.bashrc.d)" ]]; then
+  if [[ "$(\ls -A $config_dir)" ]]; then
 
     # Loop through files (in alphabetical order) and source them.
     # To specify a load order, files can be prefixed with numbers
     # (e.g. 00--filename, 50--filename, 95--filename)
-    for file in $HOME/.bashrc.d/*; do
+    for file in $config_dir/*; do
         source "${file}"
     done
   fi
 fi
-
-# Some stuff needs to be done after .bash_prompt
-
-# Activate direnv
-if command -v direnv &> /dev/null; then
-    eval "$(direnv hook bash)"
-fi
-
-# Set vi mode
-# set -o vi

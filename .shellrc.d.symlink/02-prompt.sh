@@ -55,15 +55,17 @@ virtualenv_prompt ()
 }
 
 # Set-up the prompt.
-if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
-    # Inspired from: http://vvv.tobiassjosten.net/bash/dynamic-prompt-with-git-and-ansi-colors
-    #PROMPT_COMMAND='PS1="$(virtualenv_prompt)${c_user}\u@\h${c_reset}:${c_path}\w${c_reset}$(git_prompt)\$ "'
-    PROMPT_COMMAND='PS1="$(virtualenv_prompt)$(git_prompt)${c_user}\h${c_reset}:${c_path}\w${c_reset}\$ "'
+if [[ $CURRENT_SHELL = "bash" ]]; then
+    if [ -x /usr/bin/tput ] && tput setaf 1 >&/dev/null; then
+        # Inspired from: http://vvv.tobiassjosten.net/bash/dynamic-prompt-with-git-and-ansi-colors
+        #PROMPT_COMMAND='PS1="$(virtualenv_prompt)${c_user}\u@\h${c_reset}:${c_path}\w${c_reset}$(git_prompt)\$ "'
+        PROMPT_COMMAND='PS1="$(virtualenv_prompt)$(git_prompt)${c_user}\h${c_reset}:${c_path}\w${c_reset}\$ "'
+    fi
 fi
 
 
 # Activate startship. In case starship is not available, the previous prompt
 # setting code will be used instead.
 if command -v starship &> /dev/null; then
-    eval "$(starship init bash)"
+    eval "$(starship init $CURRENT_SHELL)"
 fi

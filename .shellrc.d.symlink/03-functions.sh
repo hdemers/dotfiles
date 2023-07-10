@@ -5,7 +5,7 @@
 
 tailf() {
     # tail -f with color (through batcat)
-    tail -f $1 | batcat --paging=never -l log
+    tail -f $1 | bat --paging=never -l log
 }
 
 installkernel() {

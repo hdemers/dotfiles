@@ -29,6 +29,7 @@ Plug 'tpope/vim-dotenv'
 Plug 'tpope/vim-projectionist'
 Plug 'rbong/vim-flog', { 'branch': 'v1' }
 Plug 'wellle/targets.vim'
+Plug 'wellle/context.vim'
 Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
@@ -57,7 +58,7 @@ Plug 'github/copilot.vim'
 Plug 'quarto-dev/quarto-vim'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'voldikss/vim-floaterm'
-Plug 'tweekmonster/braceless.vim'
+Plug 'CarloDePieri/pytest-vim-compiler'
 if has('python3')
     Plug 'madox2/vim-ai'
     Plug 'puremourning/vimspector'
@@ -355,6 +356,12 @@ let g:vista_fzf_preview = ['right:50%']
 " Floatterm settings
 let g:floaterm_keymap_toggle = '<F12>'
 
+" Ctrl-P to show hidden files
+let g:ctrlp_show_hidden = 1
+
+" context.vim is disabled by default, use :ContextToggle to enable.
+let g:context_enabled = 0
+
 "=====================================================================
 " Environment variables
 "=====================================================================
@@ -460,9 +467,6 @@ autocmd FileType *
 \ if &omnifunc != '' |
 \   call SuperTabChain(&omnifunc, "<c-p>") |
 \ endif
-
-" Enable braceless
-autocmd FileType python BracelessEnable +indent
 
 "=====================================================================
 " Commands

@@ -29,6 +29,7 @@ Plug 'tpope/vim-dotenv'
 Plug 'tpope/vim-projectionist'
 Plug 'rbong/vim-flog'
 Plug 'wellle/targets.vim'
+Plug 'wellle/context.vim'
 Plug 'mhinz/vim-startify'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
@@ -57,23 +58,22 @@ Plug 'github/copilot.vim'
 Plug 'quarto-dev/quarto-vim'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'voldikss/vim-floaterm'
-Plug 'tweekmonster/braceless.vim'
-Plug 'nvim-lua/plenary.nvim'
-Plug 'andythigpen/nvim-coverage'
+Plug 'CarloDePieri/pytest-vim-compiler'
 if has('python3')
     Plug 'madox2/vim-ai'
     Plug 'puremourning/vimspector'
     Plug 'obreitwi/vim-sort-folds'
     Plug 'davidhalter/jedi-vim'
 endif
+" NeoVim packages
+Plug 'andythigpen/nvim-coverage'
+Plug 'nvim-lua/plenary.nvim' " nvim-coverage dependency.
 call plug#end()
 
 "=====================================================================
 " Colors and syntax highlighting.
 "=====================================================================
 if exists('+termguicolors')
-  let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
-  let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"
   set termguicolors
 endif
 
@@ -97,14 +97,17 @@ set ignorecase
 set smartcase
 " Set wrapping of cursor movement
 set whichwrap=b,s,<,>,[,]
-
+" Do not wrap lines
+set nowrap
+" Set the text width
+set textwidth=79
 " Persist undo history
 set undofile
-
 " 'showmode' must be disabled for Jedi command line call signatures to be
 " visible.
 set noshowmode
-
+" Always show the sign column
+set signcolumn=yes
 " Allows italics to be properly shown in terminals, especially tmux.
 " set t_ZH=[3m
 " set t_ZR=[23m
@@ -256,7 +259,7 @@ let g:undotree_SetFocusWhenToggle = 1
 let g:test#python#runner = 'pytest'
 " These options must match the errorformat defined in 
 " .vim/compiler/pytest.vim for the quickfix list to work.
-let g:test#python#pytest#options = '--tb=short -q -p no:warnings'
+" let g:test#python#pytest#options = '--tb=short -q -p no:warnings'
 let test#strategy = "asyncrun_background"
 
 " clever-f settings
@@ -273,6 +276,11 @@ let g:vista_fzf_preview = ['right:50%']
 " Floatterm settings
 let g:floaterm_keymap_toggle = '<F12>'
 
+" Ctrl-P to show hidden files
+let g:ctrlp_show_hidden = 1
+
+" context.vim is disabled by default, use :ContextToggle to enable.
+let g:context_enabled = 0
 "=====================================================================
 " Environment variables
 "=====================================================================
@@ -359,9 +367,6 @@ autocmd FileType *
 \ if &omnifunc != '' |
 \   call SuperTabChain(&omnifunc, "<c-p>") |
 \ endif
-
-" Enable braceless
-autocmd FileType python BracelessEnable +indent
 
 "=====================================================================
 " Commands
@@ -471,17 +476,26 @@ nmap <Leader>dj <Plug>VimspectorStepInto
 nmap <Leader>dl <Plug>VimspectorStepOver
 
 " Mapping of function keys
+" Note that holding shifts gives F13 to F24
+" holding control gives F25 to F36
+" holding alt (or ctrl-shift) gives F37 to F48
 nmap <F1> :Files<CR>
 noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
 nmap <F3> :Vista!! <CR>
 nmap <F5> :Flog<CR>
-nmap <S-F5> :Flog -path=%<CR>
+" S-F5
+nmap <F17> :Flog -path=%<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
-nmap <S-F6> :GitGutterFold<CR>
-nmap <C-F6> :Gclog<CR>
-nmap <CS-F6> :Gedit <CR> \| :ccl <CR>
+" S-F6
+nmap <F18> :GitGutterFold<CR>
+" C-F6
+nmap <F30> :Gclog<CR>
+" CS-F6
+nmap <F42> :Gedit <CR> \| :ccl <CR>
 nmap <F8> :Git commit<CR>
-nmap <S-F8> :Git push origin HEAD<CR>
-nmap <CS-F8> :Git rebase -i master<CR>
+" S-F8
+nmap <F20> :Git push origin HEAD<CR>
+" CS-F8
+nmap <F44> :Git rebase -i master<CR>
 nmap <F9> :UndotreeToggle<CR>

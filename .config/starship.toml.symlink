@@ -1,5 +1,7 @@
 [aws]
-disabled = true
+disabled = false
+style = 'yellow'
+symbol = 'aws:'
 
 [python]
 symbol = 'py '
@@ -27,3 +29,10 @@ style_user = 'yellow'
 [rlang]
 detect_files = []
 symbol = 'R '
+
+[shell]
+bash_indicator = '·'
+zsh_indicator = ''
+format = '[$indicator]($style)'
+style = 'green'
+disabled = false

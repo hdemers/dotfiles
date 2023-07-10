@@ -6,12 +6,10 @@ if [[ ! "$PATH" == */home/hdemers/.fzf/bin* ]]; then
 fi
 
 # Auto-completion
-# ---------------
-[[ $- == *i* ]] && source "~/.fzf/shell/completion.bash" 2> /dev/null
+[[ $- == *i* ]] && source "~/.fzf/shell/completion.$CURRENT_SHELL" 2> /dev/null
 
 # Key bindings
-# ------------
-bindings_file=~/.fzf/shell/key-bindings.bash
+bindings_file=~/.fzf/shell/key-bindings.$CURRENT_SHELL
 [[ -f "${bindings_file}" ]] && source "${bindings_file}"
 
 export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'

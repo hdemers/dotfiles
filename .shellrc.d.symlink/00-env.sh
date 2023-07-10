@@ -63,3 +63,6 @@ if [[ -f "$HOME/.config/jira/api-token.txt" ]]; then
     export JIRA_AUTH_TYPE=bearer
 fi
 
+# Set environment variable CURRENT_SHELL to the name of the current shell
+CURRENT_SHELL=$(ps -ho cmd -p $$)
+export CURRENT_SHELL=${CURRENT_SHELL#-}

@@ -38,4 +38,4 @@ style = 'green'
 disabled = false
 
 [container]
-disabled = true
+format = '[$symbol]($style) '

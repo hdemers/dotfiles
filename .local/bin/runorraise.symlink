@@ -20,7 +20,7 @@ if [ -z "$title" ]; then window=$1; else window=$title;fi
 # gtk-launch.
 if [ -n "$use_desktop_file" ]; then
 
-    file=$(grep -l "Name=$1" /home/hdemers/.local/share/applications/*.desktop)
+    file=$(grep -l "Name=$1\$" /home/hdemers/.local/share/applications/*.desktop)
     if [ -n "$file" ]; then
         file=$(basename $file)
         wmctrl -a "$1" || gtk-launch $file

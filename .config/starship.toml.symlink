@@ -36,3 +36,6 @@ zsh_indicator = ''
 format = '[$indicator]($style)'
 style = 'green'
 disabled = false
+
+[container]
+disabled = true

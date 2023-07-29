@@ -105,3 +105,5 @@ if [[ -d $config_dir ]]; then
     done
   fi
 fi
+
+exec zsh

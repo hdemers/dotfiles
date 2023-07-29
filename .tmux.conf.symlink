@@ -51,6 +51,10 @@ set-option -sg escape-time 0
 
 set-option -g status-interval 5
 
+# Rename window to current path
+set-option -g automatic-rename on
+set-option -g automatic-rename-format '#{b:pane_current_path}'
+
 # Reload tmux config
 bind r source-file ~/.tmux.conf
 

@@ -106,4 +106,8 @@ if [[ -d $config_dir ]]; then
   fi
 fi
 
-exec zsh
+# Execute zsh if it exists
+if [ -x "$(command -v zsh)" ]; then
+  exec zsh
+fi
+

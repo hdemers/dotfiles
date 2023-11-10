@@ -72,7 +72,7 @@ if [[ -f "$HOME/.config/jira/api-token.txt" ]]; then
 fi
 
 # Set environment variable CURRENT_SHELL to the name of the current shell
-CURRENT_SHELL=$(ps -ho cmd -p $$)
+CURRENT_SHELL=$(ps -ho cmd -p $$ | cut -d ' ' -f 1)
 export CURRENT_SHELL=${CURRENT_SHELL#-}
 
 # If the secret-tool command exists, set our token.

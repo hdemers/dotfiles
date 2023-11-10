@@ -88,6 +88,11 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# Execute zsh if it exists
+if [ -x "$(command -v zsh)" ]; then
+  exec zsh
+fi
+
 # Automatically source all files/links in the directory config_dir
 # If the auto-source folder exists and has files in it...
 config_dir="$HOME/.shellrc.d"
@@ -105,9 +110,3 @@ if [[ -d $config_dir ]]; then
     done
   fi
 fi
-
-# Execute zsh if it exists
-if [ -x "$(command -v zsh)" ]; then
-  exec zsh
-fi
-

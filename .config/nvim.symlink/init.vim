@@ -45,20 +45,20 @@ Plug 'sheerun/vim-polyglot'
 Plug 'ruanyl/vim-gh-line'
 Plug 'nathangrigg/vim-beancount'
 Plug 'vim-test/vim-test'
+" TODO: with neomake, I'm not sure I need asyncrun anymore. Test it.
 Plug 'skywind3000/asyncrun.vim'
 Plug 'skywind3000/asynctasks.vim'
 Plug 'kenn7/vim-arsync'
 Plug 'prabirshrestha/async.vim' " vim-arsync dependency.
-Plug 'liuchengxu/vista.vim'
 Plug 'rhysd/clever-f.vim'
 Plug 'markonm/traces.vim'
-Plug 'prabirshrestha/vim-lsp'
-Plug 'mattn/vim-lsp-settings'
+" Plug 'prabirshrestha/vim-lsp'
+" Plug 'mattn/vim-lsp-settings'
 Plug 'github/copilot.vim'
 Plug 'quarto-dev/quarto-vim'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'voldikss/vim-floaterm'
-Plug 'CarloDePieri/pytest-vim-compiler'
+Plug 'luizribeiro/vim-cooklang'
 if has('python3')
     Plug 'madox2/vim-ai'
     Plug 'puremourning/vimspector'
@@ -68,6 +68,9 @@ endif
 " NeoVim packages
 Plug 'andythigpen/nvim-coverage'
 Plug 'nvim-lua/plenary.nvim' " nvim-coverage dependency.
+Plug 'neomake/neomake'
+Plug 'CarloDePieri/vim-pytest'
+Plug 'kevinhwang91/nvim-bqf'
 call plug#end()
 
 "=====================================================================
@@ -131,11 +134,28 @@ let g:bufExplorerShowRelativePath=1
 
 " Tagbar
 let g:tagbar_autoclose = 1
-let g:tagbar_compact = 1
+let g:tagbar_compact = 0
 let g:tagbar_show_visibility = 0
-let g:tagbar_iconchars = ['►', '▼']
+let g:tagbar_iconchars = ['+', '-']
 let g:tagbar_left = 1
-let g:tagbar_show_balloon = 0
+" let g:tagbar_show_balloon = 0
+" let g:tagbar_scopestrs = {
+"     \    'class': "\uf0e8",
+"     \    'const': "\uf8ff",
+"     \    'constant': "\uf8ff",
+"     \    'enum': "\uf702",
+"     \    'field': "\uf30b",
+"     \    'func': "\uf794",
+"     \    'function': "\uf794",
+"     \    'getter': "\ufab6",
+"     \    'implementation': "\uf776",
+"     \    'interface': "\uf7fe",
+"     \    'map': "\ufb44",
+"     \    'member': "\uf02b",
+"     \    'method': "\uf6a6",
+"     \    'setter': "\uf7a9",
+"     \    'variable': "\uf71b",
+"     \ }
 
 " Airline
 if !exists('g:airline_symbols')
@@ -220,6 +240,9 @@ let g:ale_fixers = {
 let g:ale_linters = {'python': ['ruff', 'mypy']}
 " Set this variable to 1 to fix files when you save them.
 let g:ale_fix_on_save = 1
+" The various sign characters set below will only be shown if the following
+" variable is set to 0
+let g:ale_use_neovim_diagnostics_api = 0
 let g:ale_sign_error = '■'
 let g:ale_sign_warning = '■'
 let g:ale_sign_column_always=1
@@ -233,7 +256,7 @@ let g:gh_open_command = 'fn() { echo "$@" | xclip -selection c -r; }; fn '
 " Disable default key mappings
 let g:gh_line_map_default = 0
 let g:gh_line_blame_map_default = 1
-let g:gh_line_map = '<leader>kh'
+let g:gh_line_map = '<leader>kl'
 let g:gh_line_blame_map = '<leader>kb'
 
 " Startify options
@@ -262,6 +285,9 @@ let g:test#python#runner = 'pytest'
 " let g:test#python#pytest#options = '--tb=short -q -p no:warnings'
 let test#strategy = "asyncrun_background"
 
+" vim-pytest settings
+let g:pytest_airline_enabled = 0
+
 " clever-f settings
 let g:clever_f_smart_case = 1
 
@@ -275,6 +301,7 @@ let g:vista_fzf_preview = ['right:50%']
 
 " Floatterm settings
 let g:floaterm_keymap_toggle = '<F12>'
+let g:floaterm_height = 0.85
 
 " Ctrl-P to show hidden files
 let g:ctrlp_show_hidden = 1
@@ -309,6 +336,17 @@ function! AirlineThemePatch(palette)
     endif
 endfunction
 
+function! Highlights(...)
+  redir => cout
+  silent highlight
+  redir END
+  let s:list = split(cout, '\n')
+  return fzf#run('highlights', {
+  \ 'source' : s:list,
+  \ 'options': '+m -x --ansi --tiebreak=index --header-lines 1 --tiebreak=begin --prompt "Highlight> "'
+  \ }, a:000)
+endfunction
+
 "=====================================================================
 " Autocommands
 "=====================================================================
@@ -339,8 +377,8 @@ autocmd FileType beancount VirtualEnvActivate budget
 " alternate application file is saved. Cf. vim-test.
 augroup test
   autocmd!
-  autocmd BufWrite * if test#exists() |
-    \   TestFile |
+  autocmd BufWrite *.py if test#exists() |
+    \   PytestFile |
     \ endif
 augroup END
 
@@ -423,6 +461,10 @@ highlight! link CopilotSuggestion TabLine
 " Change color of Floaterm border
 hi link FloatermBorder Identifier
 
+" Better Tagbar highlights
+hi link TagbarSignature Comment
+hi link TagbarHighlight Statement
+hi link TagbarType Constant
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -482,7 +524,7 @@ nmap <Leader>dl <Plug>VimspectorStepOver
 nmap <F1> :Files<CR>
 noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
-nmap <F3> :Vista!! <CR>
+nmap <F3> :Tagbar <CR>
 nmap <F5> :Flog<CR>
 " S-F5
 nmap <F17> :Flog -path=%<CR>

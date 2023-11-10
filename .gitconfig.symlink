@@ -52,7 +52,7 @@
     autosetupmerge = true
 
 [push]
-    default = nothing
+	default = current
 [github]
     user = hdemers
 [gist]

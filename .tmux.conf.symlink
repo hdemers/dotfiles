@@ -84,5 +84,12 @@ set -g @plugin 'seebi/tmux-colors-solarized'
 # set -g @plugin 'git@github.com:user/plugin'
 # set -g @plugin 'git@bitbucket.com:user/plugin'
 
+# Update these environment variables to match the system.
+
+# This one is part of a solution to have tmux pick up the new ssh-agent socket
+# path when re-attaching to a session.
+# cf. https://werat.dev/blog/happy-ssh-agent-forwarding/
+set -g update-environment "SSH_AUTH_SOCK"
+
 # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
 run '~/.tmux/plugins/tpm/tpm'

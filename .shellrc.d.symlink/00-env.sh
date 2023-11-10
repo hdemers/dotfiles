@@ -1,5 +1,11 @@
 # vim: filetype=bash
-export EDITOR=/usr/bin/vim
+
+# Set the EDITOR environment variable to use neovim if it exists else vim.
+if [[ -x "$(command -v nvim)" ]]; then
+    export EDITOR=$HOME/.local/bin/nvim
+else
+    export EDITOR=/usr/bin/vim
+fi
 
 # Set various PATH
 export PATH=$HOME/.local/bin:$PATH
@@ -68,3 +74,5 @@ fi
 # Set environment variable CURRENT_SHELL to the name of the current shell
 CURRENT_SHELL=$(ps -ho cmd -p $$)
 export CURRENT_SHELL=${CURRENT_SHELL#-}
+
+export GITHUB_TOKEN=$(secret-tool lookup github token)

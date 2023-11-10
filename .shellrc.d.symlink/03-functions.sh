@@ -41,22 +41,6 @@ releasemsg() {
     git log --reverse $FROM..$TO --no-merges --format="- %s [%h]($URL/%h)"
 }
 
-secret() {
-    attribute=$1
-    value=$2
-
-    password=$(secret-tool lookup "$attribute" "$value")
-    exit_code=$?
-
-    if [[ "$exit_code" != "0" ]];
-    then
-        echo "could not get password, error $exit_code"
-        return 1
-    else
-        echo $password
-    fi
-}
-
 ntfy() {
     message=$1
 

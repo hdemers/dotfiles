@@ -7,9 +7,9 @@ mkdir -p $SRC
 
 # Download libevent, ncurses and tmux
 cd $SRC
-wget https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz
-wget https://github.com/tmux/tmux/releases/download/3.3a/tmux-3.3a.tar.gz
-wget https://invisible-mirror.net/archives/ncurses/ncurses-6.2.tar.gz
+curl -OLsS https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz
+curl -OLsS https://github.com/tmux/tmux/releases/download/3.3a/tmux-3.3a.tar.gz
+curl -OLsS https://invisible-mirror.net/archives/ncurses/ncurses-6.2.tar.gz
 
 # Untar archives
 tar xfz libevent-2.1.8-stable.tar.gz

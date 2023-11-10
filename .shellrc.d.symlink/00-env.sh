@@ -75,4 +75,7 @@ fi
 CURRENT_SHELL=$(ps -ho cmd -p $$)
 export CURRENT_SHELL=${CURRENT_SHELL#-}
 
-export GITHUB_TOKEN=$(secret-tool lookup github token)
+# If the secret-tool command exists, set our token.
+if [[ -x "$(command -v secret-tool)" ]]; then
+    export GITHUB_TOKEN=$(secret-tool lookup github token)
+fi

@@ -45,8 +45,11 @@ fi
 
 export R_LIBS_USER=~/.R/library
 
-export PIP_REQUIRE_VIRTUALENV=true
-
+# Check if the USER environment variable is not equal to 'sagemaker-user'
+if [ "$USER" != "sagemaker-user" ]; then
+    # There's no virtuelenv on SageMaker, so that's useless there.
+    export PIP_REQUIRE_VIRTUALENV=true
+fi
 # For the functions defined in .bash_aliases
 export SLACK_API_URL=https://slack.com/api
 

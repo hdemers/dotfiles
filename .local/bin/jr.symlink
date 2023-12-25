@@ -1,4 +1,36 @@
-jira_epics() {
+#!/usr/bin/env bash
+
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+    set -o xtrace
+    set -o errexit
+    set -o nounset
+fi
+
+# Colors
+export red='\033[0;31m'
+export green='\033[0;32m'
+export blue='\033[0;34m'
+export yellow='\033[0;33m'
+export magenta='\033[0;35m'
+export cyan='\033[0;36m'
+export white='\033[0;37m'
+export normal='\033[0m'
+
+usage() {
+    echo -e "\n${magenta}Usage: ${blue}jr ${yellow}<command>${normal}
+
+My command line interface to Jira.
+
+Commands are:
+ - epics
+ - stories
+ - sprint
+ - add
+"
+}
+
+epics() {
     # This function makes use of jira-cli, found here:
     #   https://github.com/ankitpokhrel/jira-cli
     # and fzf found here:
@@ -19,16 +51,17 @@ jira_epics() {
         --preview-window=top
 }
 
-jira_stories() {
+stories() {
     # This function makes use of jira-cli, found here:
     #   https://github.com/ankitpokhrel/jira-cli
     # and fzf found here:
     #   https://github.com/junegunn/fzf
+    local project
     if [[ -z "${1}" ]]; then
-        echo "You must provide a project."
-        return 1
+        project=$(_default_project)
+        echo $project
     else
-        local project=${1}
+        project=${1}
     fi
 
     # If there is a second argument and it is the word "mine", then only
@@ -60,10 +93,10 @@ jira_stories() {
         --preview-window=top
 }
 
-jira_move_story() {
+move() {
     local issues
-    if [[ -z "${1}" ]]; then
-        issues=$(jira_sprint)
+    if [[ $# -eq 0 ]]; then
+        issues=$(sprint)
     else
         issues=$@
     fi
@@ -76,14 +109,14 @@ jira_move_story() {
     fi
 
     local state
-    echo "Move all to state:\n"
+    echo -e "Move all to state:\n"
     echo "1) Refined"
     echo "2) In Progress"
     echo "3) In Review"
     echo "4) Merged"
     echo "5) Done"
     
-    read state"?New state: "
+    read -p "New state: " state
     
     case $state in
         1) state="Refine" ;;
@@ -96,46 +129,54 @@ jira_move_story() {
 
     # Move all issues found in the space separated list `issues` to the new
     # state `state`.
-    for issue in $=issues; do
-        echo -e "\n 🚚  Moving $issue to $state"
-        jira issue move ${issue} ${state}
+    for issue in $issues; do
+        echo -e "\n 🚚  Moving ${green}$issue${normal} to ${magenta}$state${normal}"
+        jira issue move ${issue} "${state}"
+        # If the command failed, sleep for longer
+        if [[ $? -ne 0 ]]; then
+            sleep 5
+        fi
     done
+    sleep 1
 }
 
-jira_sprint() {
-    # This function makes use of jira-cli, found here:
-    #   https://github.com/ankitpokhrel/jira-cli
-
-    export current_script=${(%):-%x}
-    echo $current_script
+_sprint_list() {
     jira sprint list \
         --current \
         --assignee=$(jira me) \
         --status="~Closed" \
         --plain \
         --columns key,summary,status,updated \
-        --no-headers \
+        --no-headers
+}
+
+sprint() {
+    # This function makes use of jira-cli, found here:
+    #   https://github.com/ankitpokhrel/jira-cli
+    _sprint_list \
         | fzf \
         --bind 'enter:execute(echo {+1})+abort' \
-        --bind 'ctrl-m:execute("source $current_script; jira_move_story {+1}")' \
+        --bind 'ctrl-n:execute(jr move {+1})+reload(jr _sprint_list)' \
+        --bind 'ctrl-r:reload(jr _sprint_list)' \
         --header="My sprint" \
         --preview="jira issue view {1}" \
         --preview-window=top \
         --multi
 }
 
+_default_project() {
+    sed -n '/project:/,/ key:/ {s/\s*key:\s*\(\w*\)/\1/p}' \
+        ~/.config/.jira/.config.yml
+}
 
-jira_create_story() {
+add() {
     # This function makes use of jira-cli, found here:
     #   https://github.com/ankitpokhrel/jira-cli
     
     # Read default project from config file.
-    local default_project=$(\
-        sed -n '/project:/,/ key:/ {s/\s*key:\s*\(\w*\)/\1/p}' \
-        ~/.config/.jira/.config.yml \
-    )
+    local default_project=$(_default_project)
     if [[ -z "${1}" ]]; then
-        read project"?Which project? [$default_project]: "
+        read -p "Which project? [$default_project]: " project
         if [[ -z "${project}" ]]; then
             local project=$default_project
         fi
@@ -144,16 +185,16 @@ jira_create_story() {
     fi
 
     if [[ -z "${2}" ]]; then
-        read _epic_key"?Which epic? [enter to interactively choose]: "
+        read -p "Which epic? [enter to interactively choose]: " _epic_key
         local epic_key=${_epic_key}
         if [[ -z "${epic_key}" ]]; then
-            local epic_key=$(jira_epics $project)
+            local epic_key=$(jr epics $project)
         fi
     else
         local epic_key=${2}
     fi
 
-    read capitalizable"?Capitalizable? [Y/n]: "
+    read -p "Capitalizable? [Y/n]: " capitalizable
     if [[ -z "${capitalizable}" ]]; then
         local capitalizable="Yes"
     else
@@ -163,7 +204,7 @@ jira_create_story() {
         esac
     fi
 
-    read acceptance_criteria"?Acceptance Criteria: "
+    read -p "Acceptance Criteria: " acceptance_criteria
 
     jira issue create \
         --template $GRUBHUB_DIR/.jira.tmpl \
@@ -174,5 +215,45 @@ jira_create_story() {
         --custom "acceptance-criteria"=$acceptance_criteria
 }
 
-alias jsto="jira issues list --status ~Closed --order-by status,updated --type ~Epic" 
+main() {
+    if [[ "${1-}" =~ ^-*h(elp)?$ ]]; then
+        usage
+        return 0
+    elif [[ $# -eq 0 ]]; then
+        usage
+        return 1
+    fi
 
+    # Execute the correct function based on the first argument.
+    case "$1" in
+        "sprint")
+            shift
+            sprint "$@"
+            ;;
+        "epics")
+            shift
+            epics "$@"
+            ;;
+        "stories")
+            shift
+            stories "$@"
+            ;;
+        "add")
+            shift
+            add "$@"
+            ;;
+        "move")
+            shift
+            move "$@"
+            ;;
+        "_sprint_list")
+            shift
+            _sprint_list "$@"
+            ;;
+        *)
+            usage
+            ;;
+    esac
+}
+
+main "$@"

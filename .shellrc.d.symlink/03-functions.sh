@@ -38,7 +38,7 @@ releasemsg() {
 
     repo=$(git config --get remote.origin.url | cut -d : -f 2 | cut -d . -f 1)
     URL="https://github.com/${repo}/commit"
-    git log --reverse $FROM..$TO --no-merges --format="- %s [%h]($URL/%h)"
+    git log --reverse $FROM..$TO --no-merges --format="**%s (%h)**%n%n%b%n"
 }
 
 ntfy() {

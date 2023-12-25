@@ -263,8 +263,7 @@ let g:gh_line_blame_map = '<leader>kb'
 let g:startify_session_persistence = 1
 let g:startify_session_savevars = [
     \ 'g:startify_session_savevars',
-    \ 'g:startify_session_savecmds',
-    \ 'g:jedi#environment_path'
+    \ 'g:startify_session_savecmds'
 \ ]
 let g:startify_change_to_vcs_root = 1
 let g:startify_lists = [

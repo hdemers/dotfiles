@@ -1,8 +1,8 @@
 # Setup fzf
 # ---------
 
-if [[ ! "$PATH" == */home/hdemers/.fzf/bin* ]]; then
-  PATH="${PATH:+${PATH}:}/home/hdemers/.fzf/bin"
+if [[ ! "$PATH" == *$HOME/.fzf/bin* ]]; then
+  PATH="${PATH:+${PATH}:}$HOME/.fzf/bin"
 fi
 
 # Auto-completion

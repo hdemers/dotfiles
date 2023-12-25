@@ -1,0 +1,203 @@
+#!/usr/bin/env bash
+
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+    set -o xtrace
+    set -o errexit
+fi
+
+# Colors
+export red='\033[0;31m'
+export green='\033[0;32m'
+export blue='\033[0;34m'
+export yellow='\033[0;33m'
+export magenta='\033[0;35m'
+export cyan='\033[0;36m'
+export white='\033[0;37m'
+export normal='\033[0m'
+
+usage() {
+    echo -e "\n${magenta}Usage: ${blue}prr.sh ${yellow}<PR-NUMBER>${normal}
+
+This script will run a set of checks on a PR. It will:
+- checkout the PR
+- print the git logs
+- lint the commit messages using gitlint
+- lint the python files using Ruff
+- run the unit tests using Pytest
+
+"
+}
+
+# Print a horizontal line with a message in the middle
+rule() {
+    message="${cyan}======== ${green}${1} ${cyan}"
+    if [[ $# -eq 2 ]]; then
+        color="${2}"
+    else
+        color="${cyan}"
+    fi
+
+    # Calculate the length of the message
+    message_length=${#message}
+    # Add the color code to the message
+    message="${color}${message}"
+    # Print the message
+    echo -en "\n$message"
+    # Get the width of the terminal
+    term_width=$(tput cols)
+    # Calculate the remaining space after the message
+    remaining_space=$(( term_width - message_length ))
+    # Print the horizontal line for the remaining space
+    printf '%*s' "$remaining_space" '' | tr ' ' '='
+    # Move to the next line
+    echo -e "${normal}\n"
+}
+
+# Run the checks
+check() {
+    local pr_number=$1
+
+    # Retrieve the list of commits in the PR.
+    local commits=$(gh pr view $pr_number --json commits | jq -r '.commits[].oid')
+
+    # Retrieve the list of files changed in the PR, across all commits.
+    local affected_files=""
+    for commit in ${commits}; do
+        # Append the files from each commit to the `affected_files` variable
+        affected_files+=$(git diff-tree --no-commit-id --name-only -r "$commit")
+        affected_files+=" "
+    done
+    # Remove duplicate files
+    affected_files=$(echo "$affected_files" | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
+
+    # Select only the python files from the list of affected files.
+    local python_files=""
+    for file in $affected_files; do
+        if [[ $file == *.py ]]; then
+            python_files+="$file "
+        fi
+    done
+
+    # Checkout the PR
+    gh pr checkout $pr_number
+    if [[ $? -ne 0 ]]; then
+        echo -e "${red}ERROR: Failed to checkout PR${normal}"
+        return 1
+    fi
+
+    # Print the PR details
+    rule "PR details"
+    gh pr view $pr_number
+
+    rule "git logs"
+
+    # Print a short summary of the commits in the PR. Also count the number of
+    # commits.
+    local n_commits=0
+    for commit in ${commits}; do
+        git show --stat "$commit" 
+        n_commits=$(( n_commits + 1 ))
+    done
+
+    local output
+    # Remove any existing report.txt file
+    local report_file="report.txt"
+    rm -f $report_file
+    touch $report_file
+
+    # The following is ugly as I need to repeat each linter command twice, once
+    # to print the output to the terminal, and once to print the output to the
+    # report file. Using tee would work, but then I don't get color codes in the
+    # terminal. There are ways to get colors in the terminal, but then I get
+    # them in the report file. Anyway, this is good enough for now.
+
+    # Lint the commit messages in the PR.
+    rule "linting commit messages"
+    echo -e "\n==== GITLINT REPORT =========================\n" >> $report_file
+    if [[ $n_commits -eq 1 ]]; then
+        gitlint --commit $commits
+    else
+        gitlint --commits $(echo $commits | tr ' ' ',')
+    fi
+
+    if [[ $? -ne 0 ]]; then
+        echo -e "${red}FAILED${normal}"
+        if [[ $n_commits -eq 1 ]]; then
+            gitlint --commit $commits 2>> $report_file
+        else
+            gitlint --commits $(echo $commits | tr ' ' ',') 2>> $report_file
+        fi
+    else
+        echo -e "${green}SUCCESS${normal}"
+        echo -e "🎉 SUCCESS" >> $report_file
+    fi
+
+    # Run checks on python files in the PR, only if there are any.
+    if [[ -n $python_files ]]; then
+
+        rule "Running ruff"
+        echo -e "\n==== RUFF REPORT =========================\n" >> $report_file
+        ruff check $python_files
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}FAILED${normal}"
+            ruff check $python_files >> $report_file
+        else
+            echo -e "${green}SUCCESS${normal}"
+            echo -e "🎉 SUCCESS" >> $report_file
+        fi
+
+        rule "Running mypy"
+        echo -e "\n==== MYPY REPORT =========================\n" >> $report_file
+        mypy --no-color $python_files
+        if [[ $? -ne 0 ]]; then
+            echo -e "${red}FAILED${normal}"
+            mypy --no-color $python_files >> $report_file
+        else
+            echo -e "${green}SUCCESS${normal}"
+            echo -e "🎉 SUCCESS" >> $report_file
+        fi
+
+        rule "Running unit tests"
+        pytest --tb=no
+
+    else
+        rule "No python files changed"
+    fi
+}
+
+main() {
+    if [[ "${1-}" =~ ^-*h(elp)?$ ]]; then
+        usage
+        return 0
+    fi
+
+    local pr_number
+    # Check there is an argument provided and that's a number
+    if [ $# -eq 0 ] || ! [[ $1 =~ ^[0-9]+$ ]]; then
+        gh prl
+        echo
+        read -p "Choose a PR to review: " pr_number
+    else
+        pr_number="${1}"
+    fi
+
+    # Change directory to the root of the repo
+    cd $(git rev-parse --show-toplevel)
+
+    # Checkout master
+    git checkout master
+
+    # If that fails, then abort saying so.
+    if [[ $? -ne 0 ]]; then
+        echo -e "${red}ERROR: Failed to checkout master${normal}"
+        git status
+        return 1
+    fi
+
+    # Run the checks
+    check $pr_number
+}
+
+main "$@"

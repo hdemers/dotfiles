@@ -71,3 +71,32 @@ alias nodes="yarn node -list -all |
     cut -d ' ' -f 1 |
     tr - . |
     grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}'"
+
+# Create temporary virtualenvs.
+alias te7="mktmpenv --no-cd --python=python3.7"
+alias te8="mktmpenv --no-cd --python=python3.8"
+alias te9="mktmpenv --no-cd --python=python3.9"
+alias te10="mktmpenv --no-cd --python=python3.10"
+
+# Git + Jira + fzf = 🚀
+FZF_GREP_COMMIT_SHA="grep -oE \"[a-f0-9]+[ ]*$\""
+FZF_GIT_LOG_GRAPH="git log \
+    --color=always \
+    --graph \
+    --pretty=format:\"%C(yellow)%d%Creset %s %C(magenta)(%cr) %C(blue)[%an]%Creset %Cgreen%h%Creset\" \
+    --abbrev-commit \
+    --date=relative"
+FZF_GIT_LOG_GRAPH_ALL="$FZF_GIT_LOG_GRAPH --branches --remotes"
+FZF_GIT_JIRA_TICKET_NUMBER="git show --quiet --pretty=format:\"%s %b\" \$(echo {} | $FZF_GREP_COMMIT_SHA)"
+alias gf="$FZF_GIT_LOG_GRAPH | fzf \
+    --ansi \
+    --preview='git show --stat --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA)' \
+    --preview-window=wrap \
+    --bind='enter:execute(echo {} | $FZF_GREP_COMMIT_SHA)+abort' \
+    --bind='ctrl-p:preview(git show --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA))' \
+    --bind='ctrl-o:preview(git show --stat --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA))' \
+    --bind='ctrl-i:reload($FZF_GIT_LOG_GRAPH_ALL)' \
+    --bind='ctrl-u:reload($FZF_GIT_LOG_GRAPH)' \
+    --bind='ctrl-s:preview($FZF_GIT_JIRA_TICKET_NUMBER \
+        | grep -oE \"[A-Z]+-[0-9]+\" \
+        | xargs -I % jira issue view --comments 100 %)'"

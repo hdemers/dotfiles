@@ -1,4 +1,4 @@
-curl -sSO https://starship.rs/install.sh
+curl -LsSO https://starship.rs/install.sh
 
 chmod 755 install.sh
 

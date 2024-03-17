@@ -27,6 +27,7 @@ Commands are:
  - stories
  - sprint
  - add
+ - move
 "
 }
 
@@ -77,18 +78,10 @@ stories() {
         local columns="key,summary,status,assignee"
     fi
 
-    jira issues list \
-        --jql "project = $project" \
-        --status "~Closed" \
-        --assignee "$assignee" \
-        --order-by status,updated \
-        --type "~Epic" \
-        --plain \
-        --columns "$columns" \
-        --no-headers \
+    _all_issues "${project}" "${assignee}" "${columns}" \
         | fzf  \
         --bind 'enter:execute(echo {1})+abort' \
-        --header="$project's open stories" \
+        --header="$project $assignee open stories" \
         --preview="jira issue view {1}" \
         --preview-window=top
 }
@@ -109,7 +102,7 @@ move() {
     fi
 
     local state
-    echo -e "Move all to state:\n"
+    echo -e "Move to state:\n"
     echo "1) Refined"
     echo "2) In Progress"
     echo "3) In Review"
@@ -140,25 +133,61 @@ move() {
     sleep 1
 }
 
-_sprint_list() {
-    jira sprint list \
-        --current \
-        --assignee=$(jira me) \
-        --status="~Closed" \
+_all_issues() {
+    local project=${1}
+    local assignee=${2}
+    local columns=${3}
+    jira issues list \
+        --jql "project = $project" \
+        --project "$project" \
+        --status "~Closed" \
+        --assignee "$assignee" \
+        --order-by status,updated \
+        --type "~Epic" \
         --plain \
-        --columns key,summary,status,updated \
+        --columns "$columns" \
         --no-headers
 }
 
+_current_sprint_id() {
+    local project=${1}
+
+    jira sprint list \
+        --state=active \
+        --table \
+        --plain \
+        --columns id,name \
+        --no-headers \
+    | grep $project | cut -f1
+}
+
+_current_sprint_issues() {
+    local project=${1}
+
+    jira issues list \
+        --plain \
+        --no-headers \
+        --columns key,summary,status,assignee \
+        --jql "sprint = $(_current_sprint_id $project)"
+}
+
 sprint() {
+    # If there's an argument, then use it as the project. Otherwise, use the
+    # default project.
+    if [[ -n "${1}" ]]; then
+        local project=${1}
+    else
+        local project=$(_default_project)
+    fi
+
     # This function makes use of jira-cli, found here:
     #   https://github.com/ankitpokhrel/jira-cli
-    _sprint_list \
+    _current_sprint_issues $project \
         | fzf \
         --bind 'enter:execute(echo {+1})+abort' \
-        --bind 'ctrl-n:execute(jr move {+1})+reload(jr _sprint_list)' \
-        --bind 'ctrl-r:reload(jr _sprint_list)' \
-        --header="My sprint" \
+        --bind "ctrl-n:execute(jr move {+1})+reload(jr _current_sprint_issues $project)" \
+        --bind "ctrl-r:reload(jr _current_sprint_issues $project)" \
+        --header="Current $project sprint" \
         --preview="jira issue view {1}" \
         --preview-window=top \
         --multi
@@ -206,13 +235,25 @@ add() {
 
     read -p "Acceptance Criteria: " acceptance_criteria
 
+    read -p "Assignee ['me' to self-assign]: " assignee
+    # If assignee is equal to 'me', then set it to the current user.
+    if [[ "${assignee}" == "me" ]]; then
+        assignee=$(jira me)
+        # Strip everything after the @-sign.
+        assignee=${assignee%@*}
+    fi
+
+    read -p "Story Points: " story_points
+
     jira issue create \
         --template $GRUBHUB_DIR/.jira.tmpl \
         --type Story \
         --project $project \
         --parent $epic_key \
+        --assignee $assignee \
         --custom "capitalizable?"=$capitalizable \
-        --custom "acceptance-criteria"=$acceptance_criteria
+        --custom "acceptance-criteria"=$acceptance_criteria \
+        --custom "story-points"=$story_points
 }
 
 main() {
@@ -246,9 +287,13 @@ main() {
             shift
             move "$@"
             ;;
-        "_sprint_list")
+        "_current_sprint_issues")
             shift
-            _sprint_list "$@"
+            _current_sprint_issues "$@"
+            ;;
+        "_all_issues")
+            shift
+            _all_issues "$@"
             ;;
         *)
             usage

@@ -39,3 +39,6 @@ tags
 
 # vimspector config files
 .vimspector.json
+
+# gutentags config file
+.gutctags

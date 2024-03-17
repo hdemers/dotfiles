@@ -63,3 +63,35 @@ notify() {
     fi
     return $error_code
 }
+
+# 1. Search for text in files using Ripgrep
+# 2. Interactively narrow down the list using fzf
+# 3. Open the file in Vim
+rfv() {
+    # If there are no argument provided to this function, exit with a proper
+    # error message.
+    if [ -z "$1" ]; then
+        echo "Usage: rfv <search term>"
+        return 1
+    fi
+    rg \
+        --color=always \
+        --no-ignore \
+        --line-number \
+        --no-heading \
+        --smart-case \
+        --hidden \
+        "${*}" \
+            | \
+        fzf --ansi \
+        --color='hl:#268BD2,hl+:reverse' \
+        --delimiter=: \
+        --preview='bat \
+            --force-colorization {1} \
+            --highlight-line {2} \
+            --style=numbers,changes \
+            --theme=OneHalfDark' \
+        --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+        --bind='enter:become(vim {1} +{2})' \
+        --bind='ctrl-x:execute(rm {1})'
+}

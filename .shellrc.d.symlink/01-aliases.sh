@@ -1,3 +1,5 @@
+# vim: filetype=bash
+
 # Support of ls and also add handy aliases
 # Dircolors from https://github.com/seebi/dircolors-solarized
 if [ -x /usr/bin/dircolors ]; then
@@ -29,6 +31,7 @@ alias cal="ncal -Myb"
 
 # Coding related aliases
 alias pytest="pytest --tb=short"
+alias pupytest="pytest --pdbcls pudb.debugger:Debugger --pdb --capture=no"
 alias gentags="ctags --exclude=build -R"
 alias docker_cleanup='docker rm $(docker ps -qa -f status=exited)'
 
@@ -87,9 +90,13 @@ FZF_GIT_LOG_GRAPH="git log \
     --abbrev-commit \
     --date=relative"
 FZF_GIT_LOG_GRAPH_ALL="$FZF_GIT_LOG_GRAPH --branches --remotes"
-FZF_GIT_JIRA_TICKET_NUMBER="git show --quiet --pretty=format:\"%s %b\" \$(echo {} | $FZF_GREP_COMMIT_SHA)"
+FZF_GIT_JIRA_TICKET_NUMBER="git show \
+    --quiet \
+    --pretty=format:\"%s %b\" \
+    \$(echo {} | $FZF_GREP_COMMIT_SHA)"
 alias gf="$FZF_GIT_LOG_GRAPH | fzf \
     --ansi \
+    --reverse \
     --preview='git show --stat --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA)' \
     --preview-window=wrap \
     --bind='enter:execute(echo {} | $FZF_GREP_COMMIT_SHA)+abort' \
@@ -100,3 +107,17 @@ alias gf="$FZF_GIT_LOG_GRAPH | fzf \
     --bind='ctrl-s:preview($FZF_GIT_JIRA_TICKET_NUMBER \
         | grep -oE \"[A-Z]+-[0-9]+\" \
         | xargs -I % jira issue view --comments 100 %)'"
+
+# Git branches + FZF = 🚀
+alias gb="git rb \
+    | fzf --ansi --header-lines=1 \
+      --bind 'enter:execute(echo {1})+abort' \
+      --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
+      --bind 'ctrl-r:reload(git rba)' \
+      --preview='GH_FORCE_TTY=\"100%\" gh pr view --comments \$(echo {1} | tr -d \"*\") || \
+          git show --stat --color=always \$(echo {1} | tr -d \"*\")' \
+      --preview-window=top,75% \
+    | tr -d '*' \
+    | xargs --no-run-if-empty git sw"
+
+

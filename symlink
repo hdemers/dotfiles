@@ -159,6 +159,6 @@ if __name__ == "__main__":
 
     if args.dryrun:
         dryrun = True
-        log.debug("dry-running")
+        logging.debug("dry-running")
 
     symlink(args.overwrite_all, args.backup_all, args.create_paths)

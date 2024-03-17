@@ -13,7 +13,7 @@ Plug 'chrisbra/csv.vim'
 Plug 'airblade/vim-gitgutter'
 Plug 'ervandew/supertab'
 Plug 'jlanzarotta/bufexplorer'
-Plug 'ctrlpvim/ctrlp.vim'
+" Plug 'ctrlpvim/ctrlp.vim'
 Plug 'majutsushi/tagbar'
 Plug 'mbbill/undotree'
 Plug 'lifepillar/vim-solarized8'
@@ -44,10 +44,6 @@ Plug 'junegunn/vim-peekaboo'
 Plug 'sheerun/vim-polyglot'
 Plug 'ruanyl/vim-gh-line'
 Plug 'nathangrigg/vim-beancount'
-Plug 'vim-test/vim-test'
-" TODO: with neomake, I'm not sure I need asyncrun anymore. Test it.
-Plug 'skywind3000/asyncrun.vim'
-Plug 'skywind3000/asynctasks.vim'
 Plug 'kenn7/vim-arsync'
 Plug 'prabirshrestha/async.vim' " vim-arsync dependency.
 Plug 'rhysd/clever-f.vim'
@@ -59,18 +55,33 @@ Plug 'quarto-dev/quarto-vim'
 Plug 'vim-pandoc/vim-pandoc-syntax'
 Plug 'voldikss/vim-floaterm'
 Plug 'luizribeiro/vim-cooklang'
-if has('python3')
-    Plug 'madox2/vim-ai'
-    Plug 'puremourning/vimspector'
-    Plug 'obreitwi/vim-sort-folds'
-    Plug 'davidhalter/jedi-vim'
-endif
+Plug 'ludovicchabant/vim-gutentags'
+Plug 'madox2/vim-ai'
+Plug 'obreitwi/vim-sort-folds'
+Plug 'davidhalter/jedi-vim'
 " NeoVim packages
 Plug 'andythigpen/nvim-coverage'
 Plug 'nvim-lua/plenary.nvim' " nvim-coverage dependency.
-Plug 'neomake/neomake'
-Plug 'CarloDePieri/vim-pytest'
+Plug 'nvim-telescope/telescope.nvim', { 'branch': '0.1.x' }
 Plug 'kevinhwang91/nvim-bqf'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+Plug 'nvim-treesitter/nvim-treesitter-context'
+Plug 'RRethy/nvim-treesitter-textsubjects'
+" Plugins for the Debug Adapter Protocol
+Plug 'mfussenegger/nvim-dap'
+Plug 'mfussenegger/nvim-dap-python'
+Plug 'rcarriga/nvim-dap-ui'
+Plug 'nvim-neotest/neotest'
+Plug 'nvim-neotest/neotest-python'
+Plug 'antoinemadec/FixCursorHold.nvim' " Recommended by neotest
+
+Plug 'jackMort/ChatGPT.nvim'
+Plug 'MunifTanjim/nui.nvim'  " ChatGPT.nvim dependency
+Plug 'folke/trouble.nvim'  " ChatGPT.nvim dependency
+Plug 'folke/twilight.nvim'
+Plug 'folke/zen-mode.nvim'
+Plug 'ishan9299/nvim-solarized-lua'
+Plug 'stevearc/aerial.nvim'
 call plug#end()
 
 "=====================================================================
@@ -81,9 +92,9 @@ if exists('+termguicolors')
 endif
 
 let python_highlight_all = 1
-syntax enable
+syntax off
 set background=dark
-colorscheme solarized8_flat
+colorscheme solarized-flat
 
 "=====================================================================
 " Various settings
@@ -106,7 +117,7 @@ set nowrap
 set textwidth=79
 " Persist undo history
 set undofile
-" 'showmode' must be disabled for Jedi command line call signatures to be
+" showmode must be disabled for Jedi command line call signatures to be
 " visible.
 set noshowmode
 " Always show the sign column
@@ -119,12 +130,13 @@ set signcolumn=yes
 " let &t_SI = "\e[6 q"
 " let &t_EI = "\e[2 q"
 
+let g:python3_host_prog = '/usr/bin/python'
 "=====================================================================
 " Plugins
 "=====================================================================
 
 " My custom lua config
-lua require('myconfig')
+lua require('init')
 
 " BufExplorer
 let g:bufExplorerShowRelativePath=1
@@ -207,8 +219,8 @@ let g:asyncrun_status = ""
 let g:airline_section_error = airline#section#create_right(['%{g:asyncrun_status}'])
 
 " Jedi
-let g:jedi#completions_enabled = 0
-let g:jedi#popup_on_dot = 0
+let g:jedi#completions_enabled = 1
+let g:jedi#popup_on_dot = 1
 let g:jedi#show_call_signatures = 2
 
 " fzf colorscheme matching
@@ -242,7 +254,7 @@ let g:ale_linters = {'python': ['ruff', 'mypy']}
 let g:ale_fix_on_save = 1
 " The various sign characters set below will only be shown if the following
 " variable is set to 0
-let g:ale_use_neovim_diagnostics_api = 0
+let g:ale_use_neovim_diagnostics_api = 1
 let g:ale_sign_error = '■'
 let g:ale_sign_warning = '■'
 let g:ale_sign_column_always=1
@@ -277,16 +289,6 @@ let g:startify_lists = [
 " Undotree options
 let g:undotree_SetFocusWhenToggle = 1
 
-" Python vim-test settings
-let g:test#python#runner = 'pytest'
-" These options must match the errorformat defined in 
-" .vim/compiler/pytest.vim for the quickfix list to work.
-" let g:test#python#pytest#options = '--tb=short -q -p no:warnings'
-let test#strategy = "asyncrun_background"
-
-" vim-pytest settings
-let g:pytest_airline_enabled = 0
-
 " clever-f settings
 let g:clever_f_smart_case = 1
 
@@ -307,6 +309,10 @@ let g:ctrlp_show_hidden = 1
 
 " context.vim is disabled by default, use :ContextToggle to enable.
 let g:context_enabled = 0
+
+" gutentags exlude list
+let g:fzf_vim = {}
+let g:fzf_vim.tags_command = "ctags --options=.gutctags"
 "=====================================================================
 " Environment variables
 "=====================================================================
@@ -370,22 +376,7 @@ autocmd User FugitiveCommit set foldmethod=syntax
 " Beancount filetype setting for Supertab
 autocmd FileType beancount let g:beauncount_separator_col=56
 autocmd FileType beancount let b:SuperTabContextDefaultCompletionType="<c-x><c-o>"
-autocmd FileType beancount VirtualEnvActivate budget
-
-" The following setup will automatically run tests when a test file or its
-" alternate application file is saved. Cf. vim-test.
-augroup test
-  autocmd!
-  autocmd BufWrite *.py if test#exists() |
-    \   PytestFile |
-    \ endif
-augroup END
-
-" AsyncRun. Automatically open the quickfix window if there are error after
-" running a command with AsyncRun.
-" autocmd User AsyncRunStop if g:asyncrun_code > 0 | copen | endif
-autocmd User AsyncRunStop call AsyncrunStatus()
-autocmd User AsyncRunStart let g:asyncrun_status = '◎ '
+" autocmd FileType beancount VirtualEnvActivate budget
 
 " Remove the filetype from the X section of airline. We basically, recreate
 " this section with this autocmd.
@@ -408,23 +399,18 @@ autocmd FileType *
 "=====================================================================
 " Commands
 "=====================================================================
-command! -bang -nargs=* GGrep
-  \ call fzf#vim#grep(
-  \   'git grep --line-number -- '.shellescape(<q-args>), 0,
-  \   fzf#vim#with_preview({'dir': systemlist('git rev-parse --show-toplevel')[0]}), <bang>0)
 
-command! -bang -nargs=* Rg
+" Search using Rg from this buffer's root directory.
+command! -bang -nargs=* Rgc 
   \ call fzf#vim#grep(
-  \ "rg --column --line-number --no-heading --color=always --smart-case --hidden -- ".shellescape(<q-args>),
-  \ 1,
-  \ fzf#vim#with_preview({'options': '--delimiter : --nth 4..'}),
-  \ <bang>0)
-
+  \ "rg --column --line-number --no-heading --color=always --smart-case 
+  \ ".shellescape(<q-args>), 1, 
+  \ fzf#vim#with_preview({'dir': expand('%:p:h')}), <bang>0)
 
 "=====================================================================
 " Highlights
 "=====================================================================
-function! ALEHighlights() abort
+function! CustomHighlights() abort
     " highlight ALEError gui=underline cterm=underline
     " highlight ALEWarning gui=underline cterm=underline
     " highlight ALEInfo gui=underline cterm=underline
@@ -434,36 +420,70 @@ function! ALEHighlights() abort
     highlight ALEErrorSignLineNr guibg=NONE ctermbg=NONE
     highlight ALEWarningSignLineNr guibg=NONE ctermbg=NONE
     highlight ALEInfoSignLineNr guibg=NONE ctermbg=NONE
-endfunction
 
-function! BeancountHighlights() abort
-    if g:colors_name == 'one'
-        highlight link beanAccount Function
-        highlight link beanDate Statement
-    elseif g:colors_name == 'gruvbox'
-        highlight link beanAmount Operator
-        highlight link beanDate Float
-    endif
+    " Improve tree-sitter highlighting of variables
+    highlight link @variable NONE
+    highlight link @constructor Function
+    highlight link @variable.builtin Identifier
+    " highlight link @attribute.builtin Keyword
+    highlight link @attribute Keyword
+    highlight link @comment.todo Todo
+    highlight link @comment.error Todo
+    highlight link @comment.note Todo
+    highlight link @comment.warning Todo
+
+    " Change Copilot hightlighting
+    highlight! link CopilotSuggestion TabLine
+
+    " Change color of Floaterm border
+    hi link FloatermBorder Identifier
+
+    " Better Tagbar highlights
+    hi link TagbarSignature Comment
+    hi link TagbarHighlight Statement
+    hi link TagbarType Constant
+
+    " Better Diagnostic highlights
+    hi clear DiagnosticUnderlineError
+    hi link DiagnosticUnderlineError DiagnosticError
+    hi clear DiagnosticUnderlineWarn
+    hi link DiagnosticUnderlineWarn DiagnosticWarn
+    hi clear DiagnosticUnderlineInfo
+    hi link DiagnosticUnderlineInfo DiagnosticInfo
+    hi clear DiagnosticUnderlineHint
+    hi link DiagnosticUnderlineHint DiagnosticHint
+
+    " Diagnostic signs
+    sign define DiagnosticSignError text=■ texthl=DiagnosticSignError linehl=
+    sign define DiagnosticSignWarn text=■ texthl=DiagnosticSignWarn linehl=
+
+    " Aerial highlights
+    " Re-link all Aerial highlights to their respective highlights
+    hi clear AerialClass
+    hi link AerialClass Structure
+    hi clear AerialClassMethod
+    hi clear AerialFunction
+    hi link AerialFunction Function
+    hi clear AerialMethod
+    hi link AerialMethod Special
+    hi clear AerialVariable
+    hi link AerialVariable Normal
+    hi clear AerialConstructor
+    hi link AerialConstructor Function
+    hi clear AerialModule
+    hi link AerialModule Normal
+    hi clear AerialProperty
+    hi link AerialProperty Identifier
 endfunction
 
 augroup MyColors
     autocmd!
-    autocmd ColorScheme * call ALEHighlights()
-    autocmd ColorScheme * call BeancountHighlights()
+    autocmd ColorScheme * call CustomHighlights()
 augroup END
 
-call ALEHighlights()
+call CustomHighlights()
 
-" Change Copilot hightlighting
-highlight! link CopilotSuggestion TabLine
 
-" Change color of Floaterm border
-hi link FloatermBorder Identifier
-
-" Better Tagbar highlights
-hi link TagbarSignature Comment
-hi link TagbarHighlight Statement
-hi link TagbarType Constant
 "=====================================================================
 " Mappings and Abbreviations
 "=====================================================================
@@ -477,11 +497,6 @@ nnoremap <Leader>L :call matchadd('Search', '\%'.line('.').'l')<CR>
 " clear all the highlighted lines
 nnoremap <Leader>C :call clearmatches()<CR>
 
-" fzf.vim mappings
-nnoremap <Leader>o :Rg<CR>
-nnoremap <leader>O :Rg <C-R><C-W><CR>
-nnoremap <Leader>t :Tags<CR>
-
 " Moving around windows
 map <C-k> <C-W>k
 map <C-j> <C-W>j
@@ -490,6 +505,19 @@ map <C-h> <C-W>h
 " Resize current window to 90 wide.
 map <Leader>a :90 wincmd \| <CR>
 map <Leader>A :180 wincmd \| <CR>
+
+" Plugin mappings ====================================================
+
+" fzf.vim mappings
+nnoremap <Leader>i :Rg<CR>
+nnoremap <Leader>o :RG<CR>
+nnoremap <leader>O :Rg <C-R><C-W><CR>
+nnoremap <Leader>p :Rgc<CR>
+
+nnoremap <Leader>t :Tags<CR>
+nnoremap <Leader>T :BTags<CR>
+nnoremap <Leader>j :GFiles<CR>
+nnoremap <Leader>J :Files<CR>
 
 " Start interactive EasyAlign in visual mode (e.g. vipga)
 xmap ga <Plug>(EasyAlign)
@@ -503,30 +531,51 @@ nmap <silent> [a <Plug>(ale_previous)
 nmap <silent> ]a <Plug>(ale_next)
 " Toggle on/off ALE linting
 nmap <Leader>e :ALEToggle<CR>
+nmap <Leader>f :ALEFix<CR>
 
-" Vimspector mappings
-nnoremap <Leader>dd :call vimspector#Launch()<CR>
-nnoremap <Leader>de :call vimspector#Reset()<CR>
+" Floaterm mappings
+" Change branch using zsh alias 'gb'
+nmap <Leader>v :FloatermNew --name=Branches zsh -i -c gb<CR>
+" Deploy branch using deliveryds' jenkins command
+nmap <Leader>D :FloatermToggle --name=Jenkins<CR>
 
-nmap <Leader>dt <Plug>VimspectorToggleBreakpoint
-nnoremap <Leader>dT :call vimspector#ClearBreakpoints()<CR>
-nmap <Leader>dr <Plug>VimspectorRestart
-nmap <Leader>dc <Plug>VimspectorContinue
-nmap <Leader>dk <Plug>VimspectorStepOut
-nmap <Leader>dj <Plug>VimspectorStepInto
-nmap <Leader>dl <Plug>VimspectorStepOver
+" DAP mappings
+nmap <silent> <Leader>dc :lua require('dap').continue()<CR>
+nmap <silent> <Leader>db :lua require('dap').toggle_breakpoint()<CR>
+nmap <silent> <Leader>dr :lua require('dap').repl.toggle()<CR>
+nmap <silent> <Leader>ds :lua require('dap').step_over()<CR>
+nmap <silent> <Leader>di :lua require('dap').step_into()<CR>
+nmap <silent> <Leader>do :lua require('dap').step_out()<CR>
+nmap <silent> <Leader>du :lua require('dap').up()<CR>
+nmap <silent> <Leader>dd :lua require('dap').down()<CR>
+nmap <silent> <Leader>dh :lua require('dap.ui.widgets').hover()<CR>
+nmap <silent> <Leader>dp :lua require('dap.ui.widgets').preview()<CR>
 
-" Mapping of function keys
+" Unit test mappings
+nmap <silent> <Leader>sa :lua require("neotest").run.run(vim.fn.expand("%"))<CR>
+nmap <silent> <Leader>sf :lua require("neotest").run.run()<CR>
+
+" Diagnostic mappings
+nmap <silent> <Leader>' :lua vim.diagnostic.open_float()<CR>
+nmap <silent> [d :lua vim.diagnostic.goto_prev()<CR>
+nmap <silent> ]d :lua vim.diagnostic.goto_next()<CR>
+
+" Mapping of function keys ==========================================
 " Note that holding shifts gives F13 to F24
 " holding control gives F25 to F36
 " holding alt (or ctrl-shift) gives F37 to F48
-nmap <F1> :Files<CR>
 noremap <F2> :BufExplorer<CR>
 " nmap <F2> :BufExplorer<CR>
-nmap <F3> :Tagbar <CR>
+nmap <F3> :AerialToggle <CR>
+" S-F3
+nmap <F15> :AerialNavToggle<CR>
 nmap <F5> :Flog<CR>
 " S-F5
 nmap <F17> :Flog -path=%<CR>
+" C-F5
+nmap <F29> :tab Gvdiffsplit HEAD^1<CR>
+" CS-F5
+nmap <F41> :tab sb \| Gvdiffsplit master<CR>
 nmap <F6> :Gtabedit :<CR>:set previewwindow <CR>
 " S-F6
 nmap <F18> :GitGutterFold<CR>

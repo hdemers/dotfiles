@@ -2,9 +2,9 @@
 
 # Set the EDITOR environment variable to use neovim if it exists else vim.
 if [[ -x "$(command -v nvim)" ]]; then
-    export EDITOR=$HOME/.local/bin/nvim
+    export EDITOR=nvim
 else
-    export EDITOR=/usr/bin/vim
+    export EDITOR=vim
 fi
 
 # Set various PATH
@@ -82,3 +82,5 @@ export CURRENT_SHELL=${CURRENT_SHELL#-}
 if [[ -x "$(command -v secret-tool)" ]]; then
     export GITHUB_TOKEN=$(secret-tool lookup github token)
 fi
+
+export BROWSER=$(which google-chrome)

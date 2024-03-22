@@ -81,6 +81,9 @@ alias te8="mktmpenv --no-cd --python=python3.8"
 alias te9="mktmpenv --no-cd --python=python3.9"
 alias te10="mktmpenv --no-cd --python=python3.10"
 
+# Alias fdfind to fd
+alias fd=fdfind
+
 # Git + Jira + fzf = 🚀
 FZF_GREP_COMMIT_SHA="grep -oE \"[a-f0-9]+[ ]*$\""
 FZF_GIT_LOG_GRAPH="git log \

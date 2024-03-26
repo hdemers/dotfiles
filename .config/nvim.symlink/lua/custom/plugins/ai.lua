@@ -6,15 +6,12 @@ return {
       -- Set the highlight group for copilot suggestions
       local apply_highlight = function()
         vim.api.nvim_set_hl(0, 'CopilotSuggestion', {
-          link = 'TabLine',
+          link = 'Whitespace',
         })
       end
       apply_highlight()
-      vim.api.nvim_set_hl(0, 'CopilotSuggestion', {
-        link = 'TabLine',
-      })
       vim.api.nvim_create_autocmd('ColorScheme', {
-        pattern = 'solarized-*',
+        pattern = 'solarized',
         group = vim.api.nvim_create_augroup('CustomColorscheme', { clear = false }),
         callback = apply_highlight,
       })

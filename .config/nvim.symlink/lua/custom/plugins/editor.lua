@@ -18,6 +18,7 @@ return {
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+        ['<leader>x'] = { name = 'Trouble [X]', _ = 'which_key_ignore' },
       }
     end,
   },
@@ -67,7 +68,6 @@ return {
       statusline.section_location = function()
         return '%2l:%-2v'
       end
-      statusline.section_fileinfo = function() end
 
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
@@ -96,11 +96,57 @@ return {
     'tpope/vim-vinegar',
   },
   {
-    'voldikss/vim-floaterm',
-    lazy = false,
-    init = function()
-      vim.g.floaterm_keymap_toggle = '<F12>'
-      vim.g.floaterm_height = 0.85
+    {
+      'akinsho/toggleterm.nvim',
+      version = '*',
+      opts = {
+        open_mapping = '<F12>',
+        direction = 'vertical',
+        size = 180,
+      },
+      init = function()
+        vim.keymap.set('n', '<leader>cj', function()
+          require('toggleterm').exec('jenkins deploy-branch; notify', 1)
+        end, { desc = 'Toggle [j]enkins deploy branch' })
+        -- vim.keymap.set('t', '<esc>', [[<C-\><C-n>]])
+      end,
+    },
+  },
+  -- Undo tree
+  {
+    'debugloop/telescope-undo.nvim',
+    dependencies = { -- note how they're inverted to above example
+      {
+        'nvim-telescope/telescope.nvim',
+        dependencies = { 'nvim-lua/plenary.nvim' },
+      },
+    },
+    keys = {
+      { -- lazy style key map
+        '<leader>u',
+        '<cmd>Telescope undo<cr>',
+        desc = 'undo history',
+      },
+    },
+    opts = {
+      -- don't use `defaults = { }` here, do this in the main telescope spec
+      extensions = {
+        undo = {
+          side_by_side = true,
+          layout_strategy = 'vertical',
+          layout_config = {
+            preview_height = 0.7,
+          },
+        },
+        -- no other extensions here, they can have their own spec too
+      },
+    },
+    config = function(_, opts)
+      -- Calling telescope's setup from multiple specs does not hurt, it will happily merge the
+      -- configs for us. We won't use data, as everything is in it's own namespace (telescope
+      -- defaults, as well as each extension).
+      require('telescope').setup(opts)
+      require('telescope').load_extension 'undo'
     end,
   },
 }

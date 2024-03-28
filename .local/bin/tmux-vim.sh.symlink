@@ -10,7 +10,7 @@ fi
 session="vim"
 sessionexists=$(tmux list-sessions -F '#{session_name}' | grep $session)
 
-session_dir=$HOME/.local/share/nvim/session/
+session_dir=$HOME/.local/share/nvim/session
 project_dir=$HOME/Projets/grubhub
 
 main() {

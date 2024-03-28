@@ -50,6 +50,18 @@ return {
       'nvim-tree/nvim-web-devicons',
     },
     cmd = { 'AerialToggle', 'AerialOpen', 'AerialClose', 'AerialRefresh' },
+    keys = {
+      {
+        '<F3>',
+        ':AerialToggle<CR>',
+        desc = 'Aerial: toggle outline',
+      },
+      {
+        '<F15>',
+        ':AerialNavToggle<CR>',
+        desc = 'Aerial: toggle nav outline',
+      },
+    },
     init = function()
       local colors = function()
         vim.cmd.hi 'clear AerialClass'
@@ -86,6 +98,13 @@ return {
     event = 'VimEnter',
     dependencies = { 'nvim-lua/plenary.nvim' },
     opts = { signs = false },
+    keys = {
+      {
+        '<leader>wt',
+        ':TodoTelescope<CR>',
+        desc = 'Todo: list [t]odos',
+      },
+    },
   },
   { -- Add indentation guides even on blank lines
     'lukas-reineke/indent-blankline.nvim',

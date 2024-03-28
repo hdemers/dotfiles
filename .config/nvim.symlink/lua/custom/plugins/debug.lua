@@ -182,6 +182,14 @@ return {
           --   end
           -- end,
         },
+        icons = {
+          failed = '✗',
+          passed = '✔',
+          pending = '⧗',
+          error = '!',
+          running = '⟲',
+          unknown = '?',
+        },
       }
     end,
     init = function()

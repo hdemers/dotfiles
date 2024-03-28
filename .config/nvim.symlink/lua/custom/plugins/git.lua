@@ -94,6 +94,13 @@ return {
     'rbong/vim-flog',
     lazy = true,
     cmd = { 'Flog', 'Flogsplit', 'Floggit' },
+    keys = {
+      {
+        '<leader>gl',
+        ':Flog<CR>',
+        desc = 'Flog: show [g]it [l]og',
+      },
+    },
   },
   -- Fugitive is the premier Vim plugin for Git. Or maybe it's the premier Git
   -- plugin for Vim? Either way, it's "so awesome, it should be illegal".
@@ -108,6 +115,33 @@ return {
       vim.cmd [[
         autocmd User FugitiveCommit set foldmethod=syntax
       ]]
+    end,
+    keys = {
+      {
+        '<leader>gs',
+        ':Gtabedit :<CR>:set previewwindow <CR>',
+        desc = 'Git: show [g]it [s]tatus',
+      },
+      {
+        '<leader>gc',
+        ':Git commit<CR>',
+        desc = 'Git: [g]it [c]ommit',
+      },
+      {
+        '<leader>gp',
+        ':Git push',
+        desc = 'Git: [g]it [p]ush',
+      },
+      {
+        '<leader>gr',
+        ':Git rebase -i master<CR>',
+        desc = 'Git: [g]it [r]ebase -i master',
+      },
+    },
+    init = function()
+      require('which-key').register {
+        ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
+      }
     end,
   },
 }

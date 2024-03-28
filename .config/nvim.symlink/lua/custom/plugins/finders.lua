@@ -54,14 +54,19 @@ return {
         --     i = { ['<c-enter>'] = 'to_fuzzy_refine' },
         --   },
         -- },
-        -- pickers = {}
+        pickers = {
+          live_grep = {
+            additional_args = function()
+              return { '--hidden' }
+            end,
+          },
+        },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
         },
       }
-
       -- Enable telescope extensions, if they are installed
       pcall(require('telescope').load_extension, 'fzf')
       pcall(require('telescope').load_extension, 'ui-select')
@@ -147,36 +152,54 @@ return {
     'ibhagwan/fzf-lua',
     -- optional for icon support
     dependencies = { 'nvim-tree/nvim-web-devicons' },
-    opts = {},
-    config = function()
-      -- calling `setup` is optional for customization
-      local fzflua = require 'fzf-lua'
-      vim.keymap.set(
-        'n',
+    opts = {
+      grep = {
+        rg_opts = '--hidden --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e',
+      },
+    },
+    keys = {
+      {
         '<leader>sw',
-        fzflua.grep_cword,
-        { desc = '[S]earch current [W]ord' }
-      )
-      vim.keymap.set('n', '<leader>sg', fzflua.live_grep, { desc = '[S]earch by [G]rep' })
-      vim.keymap.set(
-        'n',
+        function()
+          require('fzf-lua').grep_cword()
+        end,
+        desc = '[S]earch current [W]ord',
+      },
+      {
+        '<leader>sg',
+        function()
+          require('fzf-lua').live_grep()
+        end,
+        desc = '[S]earch by [G]rep',
+      },
+      {
         '<leader>si',
-        fzflua.git_files,
-        { desc = '[S]earch G[i]t Files' }
-      )
-      vim.keymap.set(
-        'n',
+        function()
+          require('fzf-lua').git_files()
+        end,
+        desc = '[S]earch G[i]t Files',
+      },
+      {
         '<leader><leader>',
-        fzflua.buffers,
-        { desc = '[ ] Find existing buffers' }
-      )
-      vim.keymap.set(
-        'n',
+        function()
+          require('fzf-lua').buffers()
+        end,
+        desc = '[ ] Find existing buffers',
+      },
+      {
         '<leader>/',
-        fzflua.grep_curbuf,
-        { desc = '[/] Fuzzily search in current buffer' }
-      )
-      vim.keymap.set('n', '<leader>sf', fzflua.files, { desc = '[S]earch [F]iles' })
-    end,
+        function()
+          require('fzf-lua').grep_curbuf()
+        end,
+        desc = '[/] Fuzzily search in current buffer',
+      },
+      {
+        '<leader>sf',
+        function()
+          require('fzf-lua').files()
+        end,
+        desc = '[S]earch [F]iles',
+      },
+    },
   },
 }

@@ -225,18 +225,6 @@ vim.keymap.set('n', '<leader>a', '<C-^>', { desc = 'Alternate file' })
 -- Close buffers and tabs
 vim.keymap.set('n', '<leader>q', ':close <CR>', { desc = 'Close buffer' })
 vim.keymap.set('n', '<leader>Q', ':tabclose <CR>', { desc = 'Close tab' })
--- Most used mappings, are using function keys and their combinations with Shift and Ctrl.
-vim.keymap.set('n', '<F3>', ':AerialToggle<CR>')
--- S-F3
-vim.keymap.set('n', '<F15>', ':AerialNavToggle<CR>')
-vim.keymap.set('n', '<F5>', '<cmd> :Flog<CR>')
-vim.keymap.set('n', '<F6>', ':Gtabedit :<CR>:set previewwindow <CR>')
-vim.keymap.set('n', '<F8>', ':Git commit<CR>')
--- S-F8
-vim.keymap.set('n', '<F20>', ':Git push')
--- CS-F8
-vim.keymap.set('n', '<F44>', ':Git rebase -i master')
-
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -256,6 +244,7 @@ vim.api.nvim_create_autocmd('FileType', {
   pattern = 'python',
   callback = function()
     vim.bo.textwidth = 79
+    vim.opt_local.wrap = false
   end,
 })
 

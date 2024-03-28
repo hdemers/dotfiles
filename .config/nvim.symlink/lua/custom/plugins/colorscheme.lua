@@ -50,40 +50,31 @@ return {
             StatusLine = { bg = colors.base02 },
             StatusLineNC = { bg = colors.base02 },
             MiniStatuslineInactive = { bg = colors.base02 },
+            IblIndent = { fg = colors.base02 },
+            IblScope = { fg = colors.magenta },
+            TelescopeNormal = { bg = colors.base03 },
+            TelescopeBorder = { bg = colors.base03, fg = colors.blue },
+            ['@function.builtin'] = { link = 'Special' },
+            ['@variable'] = { bg = 'none', fg = 'none' },
+            ['@variable.builtin'] = { link = 'Identifier' },
+            ['@variable.member'] = { link = '@variable' },
+            ['@string.documentation'] = { link = 'String' },
+            ['@constant.builtin'] = { link = 'Special' },
+            ['@keyword.import'] = { link = 'Keyword' },
+            ['@attribute'] = { link = 'Keyword' },
+            ['@string.escape'] = { link = 'SpecialChar' },
+            Folded = { underline = false },
+            TabLine = { underline = false },
+            TabLineFill = { underline = false },
+            TabLineSel = { underline = false },
           }
         end,
       }
-      vim.o.background = 'dark' -- or 'light'
+      vim.o.background = 'dark'
       vim.cmd.colorscheme 'solarized'
     end,
-    init = function()
-      local set_hl = require('solarized.utils').set_hl
-      local apply_colors = function()
-        -- You can configure highlights by doing something like
-        set_hl('@function.builtin', { link = 'Special' })
-        set_hl('@variable', {})
-        set_hl('@variable.builtin', { link = 'Identifier' })
-        set_hl('@variable.member', { link = '@variable' })
-        set_hl('@string.documentation', { link = 'String' })
-        set_hl('@constant.builtin', { link = 'Special' })
-        set_hl('@keyword.import', { link = 'Keyword' })
-        set_hl('@attribute', { link = 'Keyword' })
-        set_hl('@string.escape', { link = 'SpecialChar' })
-      end
-      vim.api.nvim_create_autocmd('ColorScheme', {
-        pattern = 'solarized',
-        desc = 'Custom Solarized colorscheme',
-        group = vim.api.nvim_create_augroup('CustomColorscheme', { clear = false }),
-        callback = apply_colors,
-      })
-      apply_colors()
-    end,
   },
-  { -- You can easily change to a different colorscheme.
-    -- Change the name of the colorscheme plugin below, and then
-    -- change the command in the config to whatever the name of that colorscheme is
-    --
-    -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`
+  {
     'ishan9299/nvim-solarized-lua',
     priority = 1000, -- make sure to load this before all the other start plugins
     enabled = false,

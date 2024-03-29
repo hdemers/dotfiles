@@ -45,41 +45,41 @@ return {
         -- Actions
         -- Document key chains
         require('which-key').register {
-          ['<leader>h'] = { name = 'Diff [H]unk', _ = 'which_key_ignore' },
+          ['<leader>ch'] = { name = 'Diff [H]unk', _ = 'which_key_ignore' },
         }
-        map('n', '<leader>hs', gs.stage_hunk, { desc = 'GitSigns: [s]tage hunk' })
-        map('n', '<leader>hr', gs.reset_hunk, { desc = 'GitSigns: [r]eset hunk' })
-        map('v', '<leader>hs', function()
+        map('n', '<leader>chs', gs.stage_hunk, { desc = 'GitSigns: [s]tage hunk' })
+        map('n', '<leader>chr', gs.reset_hunk, { desc = 'GitSigns: [r]eset hunk' })
+        map('v', '<leader>chs', function()
           gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
         end, { desc = 'GitSigns: [s]tage hunk' })
-        map('v', '<leader>hr', function()
+        map('v', '<leader>chr', function()
           gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
         end, { desc = 'GitSigns: [r]eset hunk' })
-        map('n', '<leader>hS', gs.stage_buffer, { desc = 'GitSigns: [S]tage buffer' })
+        map('n', '<leader>chS', gs.stage_buffer, { desc = 'GitSigns: [S]tage buffer' })
         map(
           'n',
-          '<leader>hu',
+          '<leader>chu',
           gs.undo_stage_hunk,
           { desc = 'GitSigns: [u]ndo stage hunk' }
         )
-        map('n', '<leader>hR', gs.reset_buffer, { desc = 'GitSigns: [R]eset buffer' })
-        map('n', '<leader>hp', gs.preview_hunk, { desc = 'GitSigns: [p]review hunk' })
-        map('n', '<leader>hl', function()
+        map('n', '<leader>chR', gs.reset_buffer, { desc = 'GitSigns: [R]eset buffer' })
+        map('n', '<leader>chp', gs.preview_hunk, { desc = 'GitSigns: [p]review hunk' })
+        map('n', '<leader>chl', function()
           gs.blame_line { full = true }
         end, { desc = 'GitSigns: b[l]ame line' })
         map(
           'n',
-          '<leader>cb',
+          '<leader>chb',
           gs.toggle_current_line_blame,
           { desc = 'GitSigns: Toggle line [b]lame' }
         )
-        map('n', '<leader>hd', gs.diffthis, { desc = 'GitSigns: [d]iff this' })
-        map('n', '<leader>hD', function()
-          gs.diffthis '~'
-        end, { desc = 'GitSigns: [D]iff this (cached)' })
+        -- map('n', '<leader>chd', gs.diffthis, { desc = 'GitSigns: [d]iff this' })
+        -- map('n', '<leader>chD', function()
+        --   gs.diffthis '~'
+        -- end, { desc = 'GitSigns: [D]iff this (cached)' })
         map(
           'n',
-          '<leader>cd',
+          '<leader>chd',
           gs.toggle_deleted,
           { desc = 'GitSigns: Toggle [d]eleted signs' }
         )
@@ -120,7 +120,7 @@ return {
       {
         '<leader>gs',
         ':Gtabedit :<CR>:set previewwindow <CR>',
-        desc = 'Git: show [g]it [s]tatus',
+        desc = 'Git: [g]it [s]tatus',
       },
       {
         '<leader>gc',
@@ -141,6 +141,20 @@ return {
     init = function()
       require('which-key').register {
         ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
+      }
+    end,
+  },
+  {
+    'ruanyl/vim-gh-line',
+    init = function()
+      -- Set the command to copy the line to the clipboard, instead of opening in the
+      -- browser.
+      vim.g.gh_open_command = 'fn() { echo "$@" | xclip -selection c -r; }; fn '
+      vim.g.gh_line_map_default = 0
+      vim.g.gh_line_blame_map_default = 0
+      vim.g.gh_line_map = '<leader>gh'
+      require('which-key').register {
+        ['<leader>gh'] = 'Git-Line: Copy [g]it [l]ine to clipboard',
       }
     end,
   },

@@ -67,50 +67,12 @@ return {
             TabLine = { underline = false },
             TabLineFill = { underline = false },
             TabLineSel = { underline = false },
+            FloatBorder = { bg = colors.base03, fg = colors.blue },
           }
         end,
       }
       vim.o.background = 'dark'
       vim.cmd.colorscheme 'solarized'
-    end,
-  },
-  {
-    'ishan9299/nvim-solarized-lua',
-    priority = 1000, -- make sure to load this before all the other start plugins
-    enabled = false,
-    init = function()
-      -- Load the colorscheme here.
-      -- Like many other themes, this one has different styles, and you could load
-      -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'solarized-flat'
-      local apply_colors = function()
-        -- You can configure highlights by doing something like
-        vim.cmd.hi 'Comment gui=none'
-        vim.cmd.hi 'LspReferenceRead gui=none guibg=#073642'
-        vim.cmd.hi 'LspReferenceText gui=none guibg=#073642'
-        vim.cmd.hi 'LspReferenceWrite gui=none guibg=#073642'
-        vim.cmd.hi 'GitSignsAdd guibg=none'
-        vim.cmd.hi 'GitSignsDelete guibg=none'
-        vim.cmd.hi 'GitSignsChange guibg=none'
-        vim.cmd.hi 'TodoBgTODO gui=bold guifg=#002b36 guibg=#2aa198'
-        vim.cmd.hi 'TodoBgFIX gui=bold guifg=#002b36 guibg=#dc322f'
-        vim.cmd.hi 'link @variable NONE'
-        vim.cmd.hi 'link @constructor Function'
-        vim.cmd.hi 'link @variable.builtin Identifier'
-        vim.cmd.hi 'link @attribute Keyword'
-        -- Indent blank lines plugin highlights.
-        vim.cmd.hi 'IblIndent guifg=#073642'
-        vim.cmd.hi 'link IblScope LineNr'
-        vim.cmd.hi 'TelescopeBorder guifg=#2aa198'
-        -- vim.cmd.hi 'DiagnosticUnderlineWarn '
-      end
-      vim.api.nvim_create_autocmd('ColorScheme', {
-        pattern = 'solarized-*',
-        desc = 'Custom Solarized colorscheme',
-        group = vim.api.nvim_create_augroup('CustomColorscheme', { clear = false }),
-        callback = apply_colors,
-      })
-      apply_colors()
     end,
   },
   {

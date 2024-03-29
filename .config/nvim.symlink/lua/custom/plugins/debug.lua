@@ -8,9 +8,7 @@
 
 return {
   {
-    -- NOTE: Yes, you can install new plugins here!
     'mfussenegger/nvim-dap',
-    -- NOTE: And you can specify dependencies as well
     dependencies = {
       -- Creates a beautiful debugger UI
       'rcarriga/nvim-dap-ui',
@@ -23,7 +21,7 @@ return {
       'jay-babu/mason-nvim-dap.nvim',
 
       -- Add your own debuggers here
-      'leoluz/nvim-dap-go',
+      'mfussenegger/nvim-dap-python',
     },
     config = function()
       local dap = require 'dap'
@@ -47,19 +45,28 @@ return {
       }
 
       -- Basic debugging keymaps, feel free to change to your liking!
-      -- vim.keymap.set('n', '<F5>', dap.continue, { desc = 'Debug: Start/Continue' })
-      -- vim.keymap.set('n', '<F1>', dap.step_into, { desc = 'Debug: Step Into' })
-      -- vim.keymap.set('n', '<F2>', dap.step_over, { desc = 'Debug: Step Over' })
-      -- vim.keymap.set('n', '<F3>', dap.step_out, { desc = 'Debug: Step Out' })
       vim.keymap.set(
         'n',
-        '<leader>cb',
+        '<leader>cdc',
+        dap.continue,
+        { desc = 'Debug: start/[c]ontinue' }
+      )
+      vim.keymap.set('n', '<leader>cdi', dap.step_into, { desc = 'Debug: step [i]nto' })
+      vim.keymap.set('n', '<leader>cds', dap.step_over, { desc = 'Debug: [s]tep over' })
+      vim.keymap.set('n', '<leader>cdo', dap.step_out, { desc = 'Debug: step [o]ut' })
+      vim.keymap.set(
+        'n',
+        '<leader>cdb',
         dap.toggle_breakpoint,
         { desc = 'Debug: Toggle [b]reakpoint' }
       )
-      vim.keymap.set('n', '<leader>cB', function()
+      vim.keymap.set('n', '<leader>cdB', function()
         dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
       end, { desc = 'Debug: Set [B]reakpoint' })
+      -- Load a config from .vscode/launch.js
+      vim.keymap.set('n', '<leader>cdl', function()
+        require('dap.ext.vscode').load_launchjs()
+      end, { desc = 'Debug: [l]load .vscode/launch.js' })
 
       -- Dap UI setup
       -- For more information, see |:help nvim-dap-ui|
@@ -72,13 +79,40 @@ return {
           icons = {
             pause = '⏸',
             play = '▶',
-            step_into = '⏎',
-            step_over = '⏭',
-            step_out = '⏮',
-            step_back = 'b',
-            run_last = '▶▶',
+            step_into = '',
+            step_over = '',
+            step_out = '',
+            step_back = '',
+            run_last = '⟲',
             terminate = '⏹',
-            disconnect = '⏏',
+            disconnect = '✗',
+          },
+        },
+        layouts = {
+          {
+            elements = {
+              -- Other DAP UI elements you want to include in the layout
+              'scopes',
+              'breakpoints',
+              'stacks',
+              'watches',
+            },
+            size = 60,
+            position = 'left',
+          },
+          {
+            elements = {
+              'console',
+            },
+            size = 130,
+            position = 'right',
+          },
+          {
+            elements = {
+              'repl',
+            },
+            size = 80,
+            position = 'left',
           },
         },
       }
@@ -91,12 +125,46 @@ return {
       --   { desc = 'Debug: See last session result.' }
       -- )
 
-      dap.listeners.after.event_initialized['dapui_config'] = dapui.open
-      dap.listeners.before.event_terminated['dapui_config'] = dapui.close
-      dap.listeners.before.event_exited['dapui_config'] = dapui.close
+      -- Function to open the current buffer in a new tab
+      local function bufferTabOpen()
+        -- Get the current cursor position
+        local cur_pos = vim.api.nvim_win_get_cursor(0) -- Returns a table {row, col}
 
-      -- Install golang specific config
-      require('dap-go').setup()
+        -- Open the current buffer in a new tab
+        -- Get the current buffer's file path
+        local cur_buf_path = vim.api.nvim_buf_get_name(0)
+        -- Command to open a new tab and edit the current buffer's file
+        vim.cmd('tabnew ' .. cur_buf_path)
+        vim.api.nvim_win_set_width(0, 220)
+
+        -- Step 3: Set the cursor to the original position in the new tab
+        -- Wait for the new tab to fully open and then set the cursor position
+        vim.defer_fn(function()
+          vim.api.nvim_win_set_cursor(0, cur_pos)
+        end, 0) -- 0 ms delay to defer the function until after the command has completed
+      end
+
+      dap.listeners.after.event_initialized['dapui_config'] = function()
+        bufferTabOpen()
+        dapui.open()
+      end
+      dap.listeners.before.event_terminated['dapui_config'] = function()
+        vim.cmd 'tabclose'
+        dapui.close()
+      end
+      dap.listeners.before.event_exited['dapui_config'] = function()
+        dapui.close()
+      end
+
+      vim.keymap.set('n', '<leader>cdt', function()
+        bufferTabOpen()
+        require('neotest').run.run { strategy = 'dap' }
+      end, { desc = 'Debug: unit [t]est' })
+
+      -- Install Python specific config
+      local dap_python = require 'dap-python'
+      dap_python.setup '~/.virtualenvs/debugpy/bin/python'
+      dap_python.test_runner = 'pytest'
     end,
   },
   {

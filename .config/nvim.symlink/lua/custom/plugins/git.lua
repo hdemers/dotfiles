@@ -45,7 +45,7 @@ return {
         -- Actions
         -- Document key chains
         require('which-key').register {
-          ['<leader>ch'] = { name = 'Diff [H]unk', _ = 'which_key_ignore' },
+          ['<leader>ch'] = { name = 'diff [h]unk', _ = 'which_key_ignore' },
         }
         map('n', '<leader>chs', gs.stage_hunk, { desc = 'GitSigns: [s]tage hunk' })
         map('n', '<leader>chr', gs.reset_hunk, { desc = 'GitSigns: [r]eset hunk' })

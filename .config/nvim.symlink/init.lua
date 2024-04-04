@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -247,6 +247,17 @@ vim.api.nvim_create_autocmd('FileType', {
     vim.opt_local.wrap = false
   end,
 })
+
+-- Filetype patterns
+vim.filetype.add {
+  filename = {
+    ['.todo'] = 'txt',
+  },
+  pattern = {
+    ['req.*.txt'] = 'requirements',
+    ['req.*.in'] = 'requirements',
+  },
+}
 
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info

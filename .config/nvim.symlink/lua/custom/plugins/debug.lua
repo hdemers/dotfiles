@@ -44,7 +44,10 @@ return {
         },
       }
 
-      -- Basic debugging keymaps, feel free to change to your liking!
+      -- Document key chains
+      require('which-key').register {
+        ['<leader>cd'] = { name = '[d]ebug', _ = 'which_key_ignore' },
+      }
       vim.keymap.set(
         'n',
         '<leader>cdc',

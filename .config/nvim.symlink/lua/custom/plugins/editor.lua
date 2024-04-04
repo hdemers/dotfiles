@@ -1,7 +1,17 @@
 return {
   -- Detect tabstop and shiftwidth automatically
   { 'tpope/vim-sleuth' },
-
+  -- This plugin adds which-key entries for vim-unimpaired, which is a dependency.
+  {
+    'afreakk/unimpaired-which-key.nvim',
+    dependencies = { 'tpope/vim-unimpaired' },
+    config = function()
+      local wk = require 'which-key'
+      local uwk = require 'unimpaired-which-key'
+      wk.register(uwk.normal_mode)
+      wk.register(uwk.normal_and_visual_mode, { mode = { 'n', 'v' } })
+    end,
+  },
   -- "gc" to comment visual regions/lines
   { 'numToStr/Comment.nvim', opts = {} },
 
@@ -42,13 +52,13 @@ return {
       require('mini.surround').setup {
         -- Module mappings. Use `''` (empty string) to disable one.
         mappings = {
-          add = 'Sa', -- Add surrounding in Normal and Visual modes
-          delete = 'Sd', -- Delete surrounding
-          find = 'Sf', -- Find surrounding (to the right)
-          find_left = 'SF', -- Find surrounding (to the left)
-          highlight = 'Sh', -- Highlight surrounding
-          replace = 'Sr', -- Replace surrounding
-          update_n_lines = 'Sn', -- Update `n_lines`
+          add = 'sa', -- Add surrounding in Normal and Visual modes
+          delete = 'sd', -- Delete surrounding
+          find = 'sf', -- Find surrounding (to the right)
+          find_left = 'sF', -- Find surrounding (to the left)
+          highlight = 'sh', -- Highlight surrounding
+          replace = 'sr', -- Replace surrounding
+          update_n_lines = 'sn', -- Update `n_lines`
 
           suffix_last = 'l', -- Suffix to search with "prev" method
           suffix_next = 'n', -- Suffix to search with "next" method
@@ -67,6 +77,10 @@ return {
       -- cursor location to LINE:COLUMN
       statusline.section_location = function()
         return '%2l:%-2v'
+      end
+      -- Remove the file info section. Don't need that.
+      statusline.section_fileinfo = function()
+        return ''
       end
 
       -- ... and there is more!
@@ -155,6 +169,7 @@ return {
   },
   {
     'rcarriga/nvim-notify',
+    enabled = true,
     keys = {
       {
         '<leader>un',
@@ -180,6 +195,14 @@ return {
   {
     'folke/noice.nvim',
     event = 'VeryLazy',
+    dependencies = {
+      -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
+      'MunifTanjim/nui.nvim',
+      -- OPTIONAL:
+      --   `nvim-notify` is only needed, if you want to use the notification view.
+      --   If not available, we use `mini` as the fallback
+      'rcarriga/nvim-notify',
+    },
     opts = {
       lsp = {
         override = {
@@ -207,16 +230,23 @@ return {
         long_message_to_split = true,
         inc_rename = true,
       },
+      cmdline = {
+        format = {
+          cmdline = {
+            icon = '>',
+          },
+        },
+      },
     },
   -- stylua: ignore
-  keys = {
-    { "<S-Enter>", function() require("noice").redirect(vim.fn.getcmdline()) end, mode = "c", desc = "Redirect Cmdline" },
-    { "<leader>snl", function() require("noice").cmd("last") end, desc = "Noice Last Message" },
-    { "<leader>snh", function() require("noice").cmd("history") end, desc = "Noice History" },
-    { "<leader>sna", function() require("noice").cmd("all") end, desc = "Noice All" },
-    { "<leader>snd", function() require("noice").cmd("dismiss") end, desc = "Dismiss All" },
-    { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll forward", mode = {"i", "n", "s"} },
-    { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll backward", mode = {"i", "n", "s"}},
-  },
+    keys = {
+      { "<S-Enter>", function() require("noice").redirect(vim.fn.getcmdline()) end, mode = "c", desc = "Redirect Cmdline" },
+      { "<leader>snl", function() require("noice").cmd("last") end, desc = "Noice Last Message" },
+      { "<leader>snh", function() require("noice").cmd("history") end, desc = "Noice History" },
+      { "<leader>sna", function() require("noice").cmd("all") end, desc = "Noice All" },
+      { "<leader>snd", function() require("noice").cmd("dismiss") end, desc = "Dismiss All" },
+      { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll forward", mode = {"i", "n", "s"} },
+      { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll backward", mode = {"i", "n", "s"}},
+    },
   },
 }

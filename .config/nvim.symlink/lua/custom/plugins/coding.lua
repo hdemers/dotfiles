@@ -30,18 +30,18 @@ return {
         },
         -- Jump to symbol in source window when the cursor moves
         autojump = false,
-        -- Show a preview of the code in the right column, when there are no child symbols
-        preview = true,
-        icons = {
-          Function = '',
-          Method = '',
-          Variable = '',
-          Constructor = '',
-          Field = 'ﰠ',
-          Interface = '',
-          Module = '',
-          Property = '襁',
-        },
+      },
+      -- Show a preview of the code in the right column, when there are no child symbols
+      preview = true,
+      nerd_font = vim.g.have_nerd_font,
+      icons = {
+        Function = '𝑓 ',
+        Method = '𝜶 ',
+        Class = 'Ⓒ ',
+        Variable = '𝛼 ',
+        Constructor = 'c ',
+        Field = 'F ',
+        Collapsed = '• ',
       },
     },
     -- Optional dependencies
@@ -52,14 +52,14 @@ return {
     cmd = { 'AerialToggle', 'AerialOpen', 'AerialClose', 'AerialRefresh' },
     keys = {
       {
-        '<F3>',
+        '<leader>co',
         ':AerialToggle<CR>',
-        desc = 'Aerial: toggle outline',
+        desc = 'Aerial: toggle [o]utline',
       },
       {
-        '<F15>',
+        '<leader>cn',
         ':AerialNavToggle<CR>',
-        desc = 'Aerial: toggle nav outline',
+        desc = 'Aerial: toggle [n]av outline',
       },
     },
     init = function()

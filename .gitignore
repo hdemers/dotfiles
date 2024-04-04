@@ -7,3 +7,4 @@
 *.sw*
 .config/nvim.symlink/plugged/
 .config/nvim.symlink/autoload/
+lazy-lock.json

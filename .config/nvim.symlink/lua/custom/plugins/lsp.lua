@@ -106,7 +106,7 @@ return {
 
           -- Rename the variable under your cursor
           --  Most Language Servers support renaming across files, etc.
-          map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
+          map('<leader>wr', vim.lsp.buf.rename, '[r]ename')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
@@ -286,5 +286,9 @@ return {
         trouble.toggle 'lsp_references'
       end, { desc = 'Trouble: [R]eferences' })
     end,
+    -- Document key chains
+    require('which-key').register {
+      ['<leader>x'] = { name = 'Trouble [X]', _ = 'which_key_ignore' },
+    },
   },
 }

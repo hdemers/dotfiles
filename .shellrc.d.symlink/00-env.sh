@@ -83,4 +83,7 @@ if [[ -x "$(command -v secret-tool)" ]]; then
     export GITHUB_TOKEN=$(secret-tool lookup github token)
 fi
 
-export BROWSER=$(which google-chrome)
+# Check we have google-chrome installed and set the BROWSER environment variable
+if [[ -x "$(command -v google-chrome)" ]]; then
+    export BROWSER=$(which google-chrome)
+fi

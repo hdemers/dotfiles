@@ -52,7 +52,9 @@ return {
         defaults = {
           mappings = {
             i = { ['<c-enter>'] = 'to_fuzzy_refine' },
-            n = { ['x'] = 'delete_buffer' },
+          },
+          layout_config = {
+            width = 0.6,
           },
         },
         pickers = {
@@ -60,6 +62,11 @@ return {
             additional_args = function()
               return { '--hidden' }
             end,
+          },
+          buffers = {
+            mappings = {
+              n = { ['x'] = 'delete_buffer' },
+            },
           },
         },
         extensions = {
@@ -158,6 +165,9 @@ return {
     opts = {
       grep = {
         rg_opts = '--hidden --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e',
+      },
+      winopts = {
+        win_width = 0.60,
       },
     },
     keys = {

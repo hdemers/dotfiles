@@ -68,6 +68,7 @@ return {
             TabLineFill = { underline = false },
             TabLineSel = { underline = false },
             FloatBorder = { bg = colors.base03, fg = colors.blue },
+            FzfLuaBorder = { fg = colors.cyan },
           }
         end,
       }
@@ -75,30 +76,11 @@ return {
       vim.cmd.colorscheme 'solarized'
     end,
   },
-  {
-    'catppuccin/nvim',
-    priority = 1000, -- make sure to load this before all the other start plugins
-    name = 'catppucin',
-  },
-  {
-    'rebelot/kanagawa.nvim',
-    priority = 1000, -- make sure to load this before all the other start plugins
-  },
-  {
-    'folke/tokyonight.nvim',
-    lazy = false,
-    priority = 1000,
-    opts = { style = 'moon' },
-  },
-  {
-    'navarasu/onedark.nvim',
-    opts = {
-      style = 'darker',
-    },
-  },
-  {
-    'sainnhe/gruvbox-material',
-  },
+  { 'catppuccin/nvim', name = 'catppucin' },
+  { 'rebelot/kanagawa.nvim' },
+  { 'folke/tokyonight.nvim', opts = { style = 'moon' } },
+  { 'navarasu/onedark.nvim', opts = { style = 'darker' } },
+  { 'sainnhe/gruvbox-material' },
   {
     'kepano/flexoki-neovim',
     name = 'flexoki',
@@ -118,4 +100,30 @@ return {
     end,
   },
   { 'savq/melange-nvim' },
+  { 'nyoom-engineering/oxocarbon.nvim' },
+  { 'bluz71/vim-nightfly-colors', name = 'nightfly' },
+  { 'shaunsingh/nord.nvim' },
+  {
+    'AlexvZyl/nordic.nvim',
+    config = function()
+      local palette = require 'nordic.colors'
+      require('nordic').setup {
+        ts_context = { dark_background = false },
+        telescope = { style = 'flat' },
+        override = {
+          ['@spell'] = { link = '@spell' },
+          DiagnosticUnderlineError = {},
+          TelescopeMatching = { link = IncSearch },
+        },
+      }
+    end,
+  },
+  { 'rose-pine/neovim', name = 'rose-pine' },
+  {
+    'sainnhe/sonokai',
+    init = function()
+      vim.g.sonokai_style = 'default'
+      vim.g.sonokai_enable_italic = 1
+    end,
+  },
 }

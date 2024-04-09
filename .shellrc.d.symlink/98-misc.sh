@@ -1,5 +1,7 @@
 # Activate broot
-source $HOME/.config/broot/launcher/bash/br
+if [ -f "$HOME/.config/broot/launcher/bash/br" ]; then
+    source $HOME/.config/broot/launcher/bash/br
+fi
 
 # Activate direnv
 if command -v direnv &> /dev/null; then

@@ -28,7 +28,6 @@ return {
         ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>x'] = { name = 'Trouble [X]', _ = 'which_key_ignore' },
       }
     end,
   },
@@ -52,13 +51,13 @@ return {
       require('mini.surround').setup {
         -- Module mappings. Use `''` (empty string) to disable one.
         mappings = {
-          add = 'sa', -- Add surrounding in Normal and Visual modes
-          delete = 'sd', -- Delete surrounding
-          find = 'sf', -- Find surrounding (to the right)
-          find_left = 'sF', -- Find surrounding (to the left)
-          highlight = 'sh', -- Highlight surrounding
-          replace = 'sr', -- Replace surrounding
-          update_n_lines = 'sn', -- Update `n_lines`
+          add = 'Sa', -- Add surrounding in Normal and Visual modes
+          delete = 'Sd', -- Delete surrounding
+          find = 'Sf', -- Find surrounding (to the right)
+          find_left = 'SF', -- Find surrounding (to the left)
+          highlight = 'Sh', -- Highlight surrounding
+          replace = 'Sr', -- Replace surrounding
+          update_n_lines = 'Sn', -- Update `n_lines`
 
           suffix_last = 'l', -- Suffix to search with "prev" method
           suffix_next = 'n', -- Suffix to search with "next" method
@@ -119,10 +118,55 @@ return {
         size = 180,
       },
       init = function()
-        vim.keymap.set('n', '<leader>cj', function()
-          require('toggleterm').exec('jenkins deploy-branch; notify', 1)
-        end, { desc = 'Toggle [j]enkins deploy branch' })
-        -- vim.keymap.set('t', '<esc>', [[<C-\><C-n>]])
+        -- Jenkins commands using Toggleterm.
+
+        -- Set up a custom terminal for background tasks
+        local Terminal = require('toggleterm.terminal').Terminal
+        vim.g.jenkins_is_running = false
+
+        local on_exit = function(_, code, _)
+          vim.g.jenkins_is_running = false
+
+          local log_level = vim.log.levels.INFO
+          local message = 'Jenkins job finished successfully'
+          if code ~= 0 then -- Exit code 0 means success
+            log_level = vim.log.levels.ERROR
+            message = 'Error running Jenkins job'
+          end
+
+          vim.notify(message, log_level, { title = 'Jenkins' })
+        end
+
+        -- Function to create a new terminal.
+        local make_term = function()
+          local term = Terminal:new {
+            hidden = true,
+            close_on_exit = false,
+            on_exit = on_exit,
+            direction = 'vertical',
+          }
+          term:open(180, 'vertical')
+          term:close()
+          return term
+        end
+
+        local term = make_term()
+
+        vim.keymap.set('n', '<leader>cjt', function()
+          term:toggle()
+        end)
+
+        -- The Jenkins deploy-branch command.
+        vim.keymap.set('n', '<leader>cjd', function()
+          if not vim.g.jenkins_is_running then
+            vim.g.jenkins_is_running = true
+            vim.notify('Deploying branch', vim.log.levels.INFO, { title = 'Jenkins' })
+            term = make_term()
+            term:send 'direnv reload; jenkins deploy-branch; exit'
+          else
+            term:toggle()
+          end
+        end)
       end,
     },
   },
@@ -260,5 +304,9 @@ return {
       local cmp = require 'cmp'
       cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
     end,
+  },
+  {
+    'KenN7/vim-arsync',
+    dependencies = 'prabirshrestha/async.vim',
   },
 }

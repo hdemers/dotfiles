@@ -252,10 +252,11 @@ vim.api.nvim_create_autocmd('FileType', {
 vim.filetype.add {
   filename = {
     ['.todo'] = 'txt',
+    ['dev-requirements.txt'] = 'requirements',
   },
   pattern = {
-    ['req.*.txt'] = 'requirements',
-    ['req.*.in'] = 'requirements',
+    ['requirements.*.txt'] = 'requirements',
+    ['requirements.*.in'] = 'requirements',
   },
 }
 

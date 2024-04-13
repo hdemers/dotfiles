@@ -42,3 +42,5 @@ tags
 
 # gutentags config file
 .gutctags
+
+.vscode

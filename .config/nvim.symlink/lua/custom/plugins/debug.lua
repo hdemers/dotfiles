@@ -160,7 +160,6 @@ return {
       end
 
       vim.keymap.set('n', '<leader>cdt', function()
-        bufferTabOpen()
         require('neotest').run.run { strategy = 'dap' }
       end, { desc = 'Debug: unit [t]est' })
 

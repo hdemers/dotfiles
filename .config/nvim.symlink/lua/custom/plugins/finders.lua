@@ -63,6 +63,11 @@ return {
               return { '--hidden' }
             end,
           },
+          grep_string = {
+            additional_args = function()
+              return { '--hidden' }
+            end,
+          },
           buffers = {
             mappings = {
               n = { ['x'] = 'delete_buffer' },
@@ -83,22 +88,21 @@ return {
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      -- vim.keymap.set('n', '<leader>sf', function()
-      --   builtin.find_files { hidden = true }
-      -- end, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<leader>sf', function()
+        builtin.find_files { hidden = true }
+      end, { desc = '[S]earch [F]iles' })
       vim.keymap.set(
         'n',
         '<leader>ss',
         builtin.builtin,
         { desc = '[S]earch [S]elect Telescope' }
       )
-      --  Remapped to FzfLua, see below.
-      -- vim.keymap.set(
-      --   'n',
-      --   '<leader>sw',
-      --   builtin.grep_string,
-      --   { desc = '[S]earch current [W]ord' }
-      -- )
+      vim.keymap.set(
+        'n',
+        '<leader>sw',
+        builtin.grep_string,
+        { desc = '[S]earch current [W]ord' }
+      )
       vim.keymap.set(
         'n',
         '<leader>sg',
@@ -118,12 +122,12 @@ return {
         builtin.oldfiles,
         { desc = '[S]earch Recent Files ("." for repeat)' }
       )
-      -- vim.keymap.set(
-      --   'n',
-      --   '<leader>si',
-      --   builtin.git_files,
-      --   { desc = '[S]earch G[i]t Files' }
-      -- )
+      vim.keymap.set(
+        'n',
+        '<leader>si',
+        builtin.git_files,
+        { desc = '[S]earch G[i]t Files' }
+      )
       vim.keymap.set(
         'n',
         '<leader><leader>',
@@ -133,15 +137,15 @@ return {
 
       -- Slightly advanced example of overriding default behavior and theme
       -- You can pass additional configuration to telescope to change theme, layout, etc.
-      -- vim.keymap.set('n', '<leader>/', function()
-      --   builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
-      --     previewer = false,
-      --     layout_config = {
-      --       width = 120,
-      --       height = 0.5,
-      --     },
-      --   })
-      -- end, { desc = '[/] Fuzzily search in current buffer' })
+      vim.keymap.set('n', '<leader>/', function()
+        builtin.current_buffer_fuzzy_find(require('telescope.themes').get_dropdown {
+          previewer = false,
+          layout_config = {
+            width = 120,
+            height = 0.5,
+          },
+        })
+      end, { desc = '[/] Fuzzily search in current buffer' })
 
       -- Also possible to pass additional configuration options.
       --  See `:help telescope.builtin.live_grep()` for information about particular keys
@@ -161,7 +165,7 @@ return {
   {
     'ibhagwan/fzf-lua',
     -- optional for icon support
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    dependencies = { 'nvim-tree/nvim-web-devicons', enabled = vim.g.have_nerd_font },
     opts = {
       grep = {
         rg_opts = '--hidden --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e',
@@ -171,13 +175,13 @@ return {
       },
     },
     keys = {
-      {
-        '<leader>sw',
-        function()
-          require('fzf-lua').grep_cword()
-        end,
-        desc = '[S]earch current [W]ord',
-      },
+      -- {
+      --   '<leader>sw',
+      --   function()
+      --     require('fzf-lua').grep_cword()
+      --   end,
+      --   desc = '[S]earch current [W]ord',
+      -- },
       -- {
       --   '<leader>sg',
       --   function()
@@ -185,13 +189,13 @@ return {
       --   end,
       --   desc = '[S]earch by [G]rep',
       -- },
-      {
-        '<leader>si',
-        function()
-          require('fzf-lua').git_files()
-        end,
-        desc = '[S]earch G[i]t Files',
-      },
+      -- {
+      --   '<leader>si',
+      --   function()
+      --     require('fzf-lua').git_files()
+      --   end,
+      --   desc = '[S]earch G[i]t Files',
+      -- },
       -- {
       --   '<leader><leader>',
       --   function()
@@ -199,20 +203,20 @@ return {
       --   end,
       --   desc = '[ ] Find existing buffers',
       -- },
-      {
-        '<leader>/',
-        function()
-          require('fzf-lua').grep_curbuf()
-        end,
-        desc = '[/] Fuzzily search in current buffer',
-      },
-      {
-        '<leader>sf',
-        function()
-          require('fzf-lua').files()
-        end,
-        desc = '[S]earch [F]iles',
-      },
+      -- {
+      --   '<leader>/',
+      --   function()
+      --     require('fzf-lua').grep_curbuf()
+      --   end,
+      --   desc = '[/] Fuzzily search in current buffer',
+      -- },
+      -- {
+      --   '<leader>sf',
+      --   function()
+      --     require('fzf-lua').files()
+      --   end,
+      --   desc = '[S]earch [F]iles',
+      -- },
     },
   },
 }

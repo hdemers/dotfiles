@@ -25,7 +25,6 @@ return {
       require('which-key').register {
         ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
         ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
-        ['<leader>r'] = { name = '[R]ename', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
       }
@@ -107,68 +106,6 @@ return {
   },
   {
     'tpope/vim-vinegar',
-  },
-  {
-    {
-      'akinsho/toggleterm.nvim',
-      version = '*',
-      opts = {
-        open_mapping = '<F12>',
-        direction = 'vertical',
-        size = 180,
-      },
-      init = function()
-        -- Jenkins commands using Toggleterm.
-
-        -- Set up a custom terminal for background tasks
-        local Terminal = require('toggleterm.terminal').Terminal
-        vim.g.jenkins_is_running = false
-
-        local on_exit = function(_, code, _)
-          vim.g.jenkins_is_running = false
-
-          local log_level = vim.log.levels.INFO
-          local message = 'Jenkins job finished successfully'
-          if code ~= 0 then -- Exit code 0 means success
-            log_level = vim.log.levels.ERROR
-            message = 'Error running Jenkins job'
-          end
-
-          vim.notify(message, log_level, { title = 'Jenkins' })
-        end
-
-        -- Function to create a new terminal.
-        local make_term = function()
-          local term = Terminal:new {
-            hidden = true,
-            close_on_exit = false,
-            on_exit = on_exit,
-            direction = 'vertical',
-          }
-          term:open(180, 'vertical')
-          term:close()
-          return term
-        end
-
-        local term = make_term()
-
-        vim.keymap.set('n', '<leader>cjt', function()
-          term:toggle()
-        end)
-
-        -- The Jenkins deploy-branch command.
-        vim.keymap.set('n', '<leader>cjd', function()
-          if not vim.g.jenkins_is_running then
-            vim.g.jenkins_is_running = true
-            vim.notify('Deploying branch', vim.log.levels.INFO, { title = 'Jenkins' })
-            term = make_term()
-            term:send 'direnv reload; jenkins deploy-branch; exit'
-          else
-            term:toggle()
-          end
-        end)
-      end,
-    },
   },
   -- Undo tree
   {
@@ -294,19 +231,11 @@ return {
     },
   },
   {
-    'windwp/nvim-autopairs',
-    -- Optional dependency
-    dependencies = { 'hrsh7th/nvim-cmp' },
+    'ggandor/leap.nvim',
     config = function()
-      require('nvim-autopairs').setup {}
-      -- If you want to automatically add `(` after selecting a function or method
-      local cmp_autopairs = require 'nvim-autopairs.completion.cmp'
-      local cmp = require 'cmp'
-      cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
+      vim.keymap.set({ 'n', 'x', 'o' }, 'f', '<Plug>(leap-forward)')
+      vim.keymap.set({ 'n', 'x', 'o' }, 'F', '<Plug>(leap-backward)')
+      vim.keymap.set({ 'n', 'x', 'o' }, 'gs', '<Plug>(leap-from-window)')
     end,
-  },
-  {
-    'KenN7/vim-arsync',
-    dependencies = 'prabirshrestha/async.vim',
   },
 }

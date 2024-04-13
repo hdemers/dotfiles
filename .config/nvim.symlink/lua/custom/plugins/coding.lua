@@ -47,7 +47,10 @@ return {
     -- Optional dependencies
     dependencies = {
       'nvim-treesitter/nvim-treesitter',
-      'nvim-tree/nvim-web-devicons',
+      {
+        'nvim-tree/nvim-web-devicons',
+        enabled = vim.g.have_nerd_font,
+      },
     },
     cmd = { 'AerialToggle', 'AerialOpen', 'AerialClose', 'AerialRefresh' },
     keys = {
@@ -182,6 +185,18 @@ return {
           require('lint').try_lint()
         end,
       })
+    end,
+  },
+  {
+    'windwp/nvim-autopairs',
+    -- Optional dependency
+    dependencies = { 'hrsh7th/nvim-cmp' },
+    config = function()
+      require('nvim-autopairs').setup {}
+      -- If you want to automatically add `(` after selecting a function or method
+      local cmp_autopairs = require 'nvim-autopairs.completion.cmp'
+      local cmp = require 'cmp'
+      cmp.event:on('confirm_done', cmp_autopairs.on_confirm_done())
     end,
   },
 }

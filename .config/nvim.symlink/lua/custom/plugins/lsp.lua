@@ -251,6 +251,39 @@ return {
   },
   {
     'folke/trouble.nvim',
+    -- branch = 'dev',
+    -- keys = {
+    --   {
+    --     '<leader>xx',
+    --     '<cmd>Trouble diagnostics toggle<cr>',
+    --     desc = 'Trouble: diagnostics',
+    --   },
+    --   {
+    --     '<leader>xX',
+    --     '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
+    --     desc = 'Trouble: buffer diagnostics',
+    --   },
+    --   {
+    --     '<leader>cy',
+    --     '<cmd>Trouble symbols toggle focus=false<cr>',
+    --     desc = 'Trouble: [c]ode s[y]mbols',
+    --   },
+    --   {
+    --     '<leader>cl',
+    --     '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
+    --     desc = 'Trouble: [c]ode [l]sp definitions, references...',
+    --   },
+    --   {
+    --     '<leader>xL',
+    --     '<cmd>Trouble loclist toggle<cr>',
+    --     desc = 'Trouble: [l]ocation list',
+    --   },
+    --   {
+    --     '<leader>xQ',
+    --     '<cmd>Trouble qflist toggle<cr>',
+    --     desc = 'Trouble: [q]uickfix list',
+    --   },
+    -- },
     opts = {
       icons = false,
       fold_open = 'v', -- icon used for open folds
@@ -272,16 +305,16 @@ return {
       end, { desc = 'Trouble: Toggle' })
       vim.keymap.set('n', '<leader>xw', function()
         trouble.toggle 'workspace_diagnostics'
-      end, { desc = 'Trouble: [W]orkspace Diagnostics' })
+      end, { desc = 'Trouble: [w]orkspace Diagnostics' })
       vim.keymap.set('n', '<leader>xd', function()
         trouble.toggle 'document_diagnostics'
-      end, { desc = 'Trouble: [D]ocument Diagnostics' })
+      end, { desc = 'Trouble: [d]ocument Diagnostics' })
       vim.keymap.set('n', '<leader>xq', function()
         trouble.toggle 'quickfix'
-      end, { desc = 'Trouble: [Q]uickfix' })
+      end, { desc = 'Trouble: [q]uickfix' })
       vim.keymap.set('n', '<leader>xl', function()
         trouble.toggle 'loclist'
-      end, { desc = 'Trouble: [L]oclist' })
+      end, { desc = 'Trouble: [l]oclist' })
       vim.keymap.set('n', 'gR', function()
         trouble.toggle 'lsp_references'
       end, { desc = 'Trouble: [R]eferences' })

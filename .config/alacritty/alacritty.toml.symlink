@@ -11,31 +11,13 @@ decorations = "None"
 
 [font]
 
-# Normal font style
-# Default for Linux/BSD: "monospace", Regular
-normal = { family = "Iosevka Nerd Font Mono", style = "Regular" }
-# normal = { family = "Sudo", style = "Regular" }
+# Iosevka settings
+# normal = { family = "Iosevka Nerd Font Mono", style = "Regular" }
+# size = 10.16
 
-# Bold font style
-# Inherits family from normal, Default style: Bold
-bold = { style = "Bold" }
-
-# Italic font style
-# Inherits family from normal, Default style: Italic
-italic = { style = "Italic" }
-
-# Bold Italic font style
-# Inherits family from normal, Default style: Bold Italic
-bold_italic = { style = "Bold Italic" }
-
-# Font size in points
-size = 10.16 # Default: 11.25
-
-# Offset is extra space around each character
-offset = { x = 0, y = 0 }  # Default: x = 0, y = 0
-
-# Glyph offset determines the locations of the glyphs within their cells
-glyph_offset = { x = 0, y = 0 }  # Default: x = 0, y = 0
+# Sudo settings
+normal = { family = "Sudo", style = "Regular" }
+size = 11.7
 
 # Use built-in font for box drawing characters
 builtin_box_drawing = true  # Default: true

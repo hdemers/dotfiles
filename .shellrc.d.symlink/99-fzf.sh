@@ -24,3 +24,6 @@ export FZF_CTRL_T_OPTS="
 --preview 'batcat --style=full --color=always {}'
 --preview-window up,75%
 "
+
+# Set the default command to use ripgrep, as it's faster than find.
+export FZF_DEFAULT_COMMAND='rg --files --no-ignore-vcs --hidden'

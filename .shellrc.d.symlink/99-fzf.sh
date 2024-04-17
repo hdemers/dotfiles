@@ -21,7 +21,7 @@ export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
 
 export FZF_CTRL_T_OPTS="
 --height 60%
---preview 'batcat --style=full --color=always {}'
+--preview 'bat --style=full --color=always {}'
 --preview-window up,75%
 "
 

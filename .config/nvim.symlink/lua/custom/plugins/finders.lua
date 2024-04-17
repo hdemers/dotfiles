@@ -78,6 +78,11 @@ return {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
+          -- fzf = {
+          --   fuzzy = true, -- false will only do exact matching
+          --   override_generic_sorter = true,
+          --   override_file_sorter = true,
+          -- },
         },
       }
       -- Enable telescope extensions, if they are installed
@@ -160,6 +165,20 @@ return {
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+    end,
+    init = function()
+      -- The following adds a space between Telescope's file iconn and the filename.
+      -- This is really only needed when using the Sudo font. For some reason, the
+      -- glyph from that font are not spaced correctly.
+      local devicons = require 'nvim-web-devicons'
+      local original_get_icon = devicons.get_icon
+      devicons.get_icon = function(filename, extension, is_directory)
+        local icon, icon_highlight = original_get_icon(filename, extension, is_directory)
+        if icon ~= nil then
+          icon = icon .. ' '
+        end
+        return icon, icon_highlight
+      end
     end,
   },
   {

@@ -5,6 +5,16 @@ return {
       task_win = {
         max_width = 0.6,
       },
+      component_aliases = {
+        default = {
+          { 'display_duration', detail_level = 2 },
+          'on_output_summarize',
+          'on_exit_set_status',
+          'on_complete_notify',
+          -- Removing this line will cause tasks to never be disposed.
+          -- { 'on_complete_dispose', timeout = 3600 },
+        },
+      },
     },
     cmd = { 'OverseerRun', 'OverseerToggle', 'OverseerRunCmd' },
     keys = {
@@ -32,6 +42,31 @@ return {
       require('which-key').register {
         ['<leader>o'] = { name = '[O]verseer', _ = 'which_key_ignore' },
         ['<leader>cj'] = { name = '[j]enkins', _ = 'which_key_ignore' },
+      }
+
+      local overseer = require 'overseer'
+
+      overseer.register_template {
+        name = 'jenkins-deploy-branch',
+        builder = function()
+          return {
+            cmd = { 'jenkins' },
+            args = { 'deploy-branch' },
+            name = 'deploy-branch',
+          }
+        end,
+        desc = 'Deploy branch',
+      }
+      overseer.register_template {
+        name = 'jenkins-integrate',
+        builder = function()
+          return {
+            cmd = { 'jenkins' },
+            args = { 'integrate' },
+            name = 'integrate',
+          }
+        end,
+        desc = 'Integrate branch',
       }
     end,
   },

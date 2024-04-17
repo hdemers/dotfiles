@@ -74,7 +74,20 @@ return {
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       statusline.section_location = function()
-        return '%2l:%-2v'
+        local tasks = require('overseer.task_list').list_tasks { unique = true }
+        local tasks_by_status = require('overseer.util').tbl_group_by(tasks, 'status')
+        -- If we have running tasks, show them in the statusline
+        local line = '%2l:%-2v'
+        if tasks_by_status.RUNNING then
+          line = line .. '   ' .. #tasks_by_status.RUNNING
+        end
+        if tasks_by_status.FAILURE then
+          line = line .. '   ' .. #tasks_by_status.FAILURE
+        end
+        if tasks_by_status.SUCCESS then
+          line = line .. '   ' .. #tasks_by_status.SUCCESS
+        end
+        return line
       end
       -- Remove the file info section. Don't need that.
       statusline.section_fileinfo = function()

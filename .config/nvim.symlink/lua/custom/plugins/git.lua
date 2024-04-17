@@ -137,6 +137,11 @@ return {
         ':Git rebase -i master<CR>',
         desc = 'Git: [g]it [r]ebase -i master',
       },
+      {
+        '<leader>gb',
+        ':Git blame<CR>',
+        desc = 'Git: [g]it [b]lame',
+      },
     },
     init = function()
       require('which-key').register {

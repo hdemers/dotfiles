@@ -76,9 +76,30 @@ return {
       vim.cmd.colorscheme 'solarized'
     end,
   },
-  { 'catppuccin/nvim', name = 'catppucin' },
+  {
+    'catppuccin/nvim',
+    name = 'catppucin',
+    opts = {
+      custom_highlights = function(colors)
+        return {
+          LeapBackdrop = { fg = colors.surface2 },
+        }
+      end,
+    },
+    config = function(_, opts)
+      require('catppuccin').setup(opts)
+    end,
+  },
   { 'rebelot/kanagawa.nvim' },
-  { 'folke/tokyonight.nvim', opts = { style = 'moon' } },
+  {
+    'folke/tokyonight.nvim',
+    opts = {
+      style = 'moon',
+      on_highlights = function(hl, _)
+        hl.TelescopeMatching = { link = 'IncSearch' }
+      end,
+    },
+  },
   { 'navarasu/onedark.nvim', opts = { style = 'darker' } },
   { 'sainnhe/gruvbox-material' },
   {
@@ -106,14 +127,13 @@ return {
   {
     'AlexvZyl/nordic.nvim',
     config = function()
-      local palette = require 'nordic.colors'
       require('nordic').setup {
         ts_context = { dark_background = false },
         telescope = { style = 'flat' },
         override = {
           ['@spell'] = { link = '@spell' },
           DiagnosticUnderlineError = {},
-          TelescopeMatching = { link = IncSearch },
+          TelescopeMatching = { link = 'IncSearch' },
         },
       }
     end,
@@ -125,5 +145,8 @@ return {
       vim.g.sonokai_style = 'default'
       vim.g.sonokai_enable_italic = 1
     end,
+  },
+  {
+    'maxmx03/dracula.nvim',
   },
 }

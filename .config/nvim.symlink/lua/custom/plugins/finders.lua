@@ -193,49 +193,49 @@ return {
         win_width = 0.60,
       },
     },
-    keys = {
-      -- {
-      --   '<leader>sw',
-      --   function()
-      --     require('fzf-lua').grep_cword()
-      --   end,
-      --   desc = '[S]earch current [W]ord',
-      -- },
-      -- {
-      --   '<leader>sg',
-      --   function()
-      --     require('fzf-lua').live_grep()
-      --   end,
-      --   desc = '[S]earch by [G]rep',
-      -- },
-      -- {
-      --   '<leader>si',
-      --   function()
-      --     require('fzf-lua').git_files()
-      --   end,
-      --   desc = '[S]earch G[i]t Files',
-      -- },
-      -- {
-      --   '<leader><leader>',
-      --   function()
-      --     require('fzf-lua').buffers()
-      --   end,
-      --   desc = '[ ] Find existing buffers',
-      -- },
-      -- {
-      --   '<leader>/',
-      --   function()
-      --     require('fzf-lua').grep_curbuf()
-      --   end,
-      --   desc = '[/] Fuzzily search in current buffer',
-      -- },
-      -- {
-      --   '<leader>sf',
-      --   function()
-      --     require('fzf-lua').files()
-      --   end,
-      --   desc = '[S]earch [F]iles',
-      -- },
-    },
+    -- keys = {
+    -- {
+    --   '<leader>sw',
+    --   function()
+    --     require('fzf-lua').grep_cword()
+    --   end,
+    --   desc = '[S]earch current [W]ord',
+    -- },
+    -- {
+    --   '<leader>sg',
+    --   function()
+    --     require('fzf-lua').live_grep()
+    --   end,
+    --   desc = '[S]earch by [G]rep',
+    -- },
+    -- {
+    --   '<leader>si',
+    --   function()
+    --     require('fzf-lua').git_files()
+    --   end,
+    --   desc = '[S]earch G[i]t Files',
+    -- },
+    -- {
+    --   '<leader><leader>',
+    --   function()
+    --     require('fzf-lua').buffers()
+    --   end,
+    --   desc = '[ ] Find existing buffers',
+    -- },
+    -- {
+    --   '<leader>/',
+    --   function()
+    --     require('fzf-lua').grep_curbuf()
+    --   end,
+    --   desc = '[/] Fuzzily search in current buffer',
+    -- },
+    -- {
+    --   '<leader>sf',
+    --   function()
+    --     require('fzf-lua').files()
+    --   end,
+    --   desc = '[S]earch [F]iles',
+    -- },
+    -- },
   },
 }

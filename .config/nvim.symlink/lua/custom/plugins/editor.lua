@@ -251,4 +251,16 @@ return {
       vim.keymap.set({ 'n', 'x', 'o' }, 'gs', '<Plug>(leap-from-window)')
     end,
   },
+  {
+    'folke/zen-mode.nvim',
+    opts = {
+      -- this will change the font size on alacritty when in zen mode
+      -- requires  Alacritty Version 0.10.0 or higher
+      -- uses `alacritty msg` subcommand to change font size
+      alacritty = {
+        enabled = true,
+        font = '16', -- font size
+      },
+    },
+  },
 }

@@ -212,19 +212,25 @@ vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left wind
 vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
--- Zoom in/out of a window
-vim.keymap.set('n', '<leader>z', ':90 wincmd | <CR>', { desc = 'Set window width to 90' })
+-- Buffer related mappings
+-- Buffer zoom in/out
 vim.keymap.set(
   'n',
-  '<leader>Z',
-  ':180 wincmd | <CR>',
-  { desc = 'Set window width to 180' }
+  '<leader>bz',
+  ':90 wincmd | <CR>',
+  { desc = '[Z]oom in, window width to 90' }
 )
--- Alternate file
-vim.keymap.set('n', '<leader>a', '<C-^>', { desc = 'Alternate file' })
--- Close buffers and tabs
-vim.keymap.set('n', '<leader>q', ':close <CR>', { desc = 'Close buffer' })
-vim.keymap.set('n', '<leader>Q', ':tabclose <CR>', { desc = 'Close tab' })
+vim.keymap.set(
+  'n',
+  '<leader>bZ',
+  ':180 wincmd | <CR>',
+  { desc = '[Z]oom out, window width to 180' }
+)
+-- Buffer alternate file
+vim.keymap.set('n', '<leader>ba', '<C-^>', { desc = '[A]lternate file' })
+-- Close buffers
+vim.keymap.set('n', '<leader>bc', ':close <CR>', { desc = '[B]uffer [c]lose' })
+vim.keymap.set('n', '<leader>bl', ':tabclose <CR>', { desc = '[B]uffer close a[l]l' })
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 

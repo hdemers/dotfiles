@@ -40,13 +40,13 @@ return {
         -- online, please don't ask me how to install them :)
         ensure_installed = {
           -- Update this to ensure that you have the debuggers for the langs you want
-          'delve',
+          'python',
         },
       }
 
       -- Document key chains
       require('which-key').register {
-        ['<leader>cd'] = { name = '[d]ebug', _ = 'which_key_ignore' },
+        ['<leader>cd'] = { name = '[D]ebug', _ = 'which_key_ignore' },
       }
       vim.keymap.set(
         'n',
@@ -275,46 +275,46 @@ return {
         function()
           require("neotest").run.run(vim.fn.expand("%"))
         end,
-        desc = "Run File"
+        desc = "Neotest: run file"
       },
       {
         "<leader>tT",
         function() require("neotest").run.run(vim.uv.cwd()) end,
-        desc = "Run All Test Files"
+        desc = "Neotest: run all test files"
       },
       {
         "<leader>tr",
         function() require("neotest").run.run() end,
-        desc = "Run Nearest"
+        desc = "Neotest: run nearest"
       },
       {
         "<leader>tl",
         function() require("neotest").run.run_last() end,
-        desc = "Run Last"
+        desc = "Neotest: run last"
       },
       {
         "<leader>ts",
         function() require("neotest").summary.toggle() end,
-        desc = "Toggle Summary"
+        desc = "Neotest: [t]oggle [s]ummary"
       },
       {
         "<leader>to",
         function()
           require("neotest").output.open({ enter = true, auto_close = true })
         end,
-        desc = "Show Output"
+        desc = "Neotest: [t]oggle [o]utput"
       },
       {
         "<leader>tO",
         function()
           require("neotest").output_panel.toggle()
         end,
-        desc = "Toggle Output Panel"
+        desc = "Neotest: [t]oggle [O]utput panel"
       },
       {
         "<leader>tS",
         function() require("neotest").run.stop() end,
-        desc = "Stop"
+        desc = "Neotest: [S]top"
       },
     },
   },

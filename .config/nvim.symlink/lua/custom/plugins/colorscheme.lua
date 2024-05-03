@@ -73,12 +73,14 @@ return {
         end,
       }
       vim.o.background = 'dark'
-      vim.cmd.colorscheme 'solarized'
+      -- vim.cmd.colorscheme 'solarized'
     end,
   },
   {
     'catppuccin/nvim',
     name = 'catppucin',
+    lazy = false,
+    priority = 1000,
     opts = {
       custom_highlights = function(colors)
         return {
@@ -88,6 +90,8 @@ return {
     },
     config = function(_, opts)
       require('catppuccin').setup(opts)
+      vim.o.background = 'dark'
+      vim.cmd.colorscheme 'catppuccin-macchiato'
     end,
   },
   { 'rebelot/kanagawa.nvim' },
@@ -97,6 +101,7 @@ return {
       style = 'moon',
       on_highlights = function(hl, _)
         hl.TelescopeMatching = { link = 'IncSearch' }
+        hl.TelescopeSelection = { link = 'Visual' }
       end,
     },
   },
@@ -127,6 +132,7 @@ return {
   {
     'AlexvZyl/nordic.nvim',
     config = function()
+      local palette = require 'nordic.colors'
       require('nordic').setup {
         ts_context = { dark_background = false },
         telescope = { style = 'flat' },
@@ -134,6 +140,7 @@ return {
           ['@spell'] = { link = '@spell' },
           DiagnosticUnderlineError = {},
           TelescopeMatching = { link = 'IncSearch' },
+          LeapBackdrop = { fg = palette.gray4 },
         },
       }
     end,
@@ -148,5 +155,19 @@ return {
   },
   {
     'maxmx03/dracula.nvim',
+  },
+  {
+    'Mofiqul/vscode.nvim',
+    config = function()
+      local c = require('vscode.colors').get_colors()
+      require('vscode').setup {
+        -- Override highlight groups (see ./lua/vscode/theme.lua)
+        group_overrides = {
+          -- this supports the same val table as vim.api.nvim_set_hl
+          -- use colors from this colorscheme by requiring vscode.colors!
+          LeapBackdrop = { fg = c.vscGray },
+        },
+      }
+    end,
   },
 }

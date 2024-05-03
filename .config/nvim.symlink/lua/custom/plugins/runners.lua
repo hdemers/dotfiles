@@ -41,7 +41,7 @@ return {
       -- Document key chains
       require('which-key').register {
         ['<leader>o'] = { name = '[O]verseer', _ = 'which_key_ignore' },
-        ['<leader>cj'] = { name = '[j]enkins', _ = 'which_key_ignore' },
+        ['<leader>cj'] = { name = '[J]enkins', _ = 'which_key_ignore' },
       }
 
       local overseer = require 'overseer'

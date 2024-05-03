@@ -27,6 +27,7 @@ return {
         ['<leader>d'] = { name = '[D]ocument', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
         ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+        ['<leader>b'] = { name = '[B]uffer', _ = 'which_key_ignore' },
       }
     end,
   },
@@ -50,13 +51,13 @@ return {
       require('mini.surround').setup {
         -- Module mappings. Use `''` (empty string) to disable one.
         mappings = {
-          add = 'Sa', -- Add surrounding in Normal and Visual modes
-          delete = 'Sd', -- Delete surrounding
-          find = 'Sf', -- Find surrounding (to the right)
-          find_left = 'SF', -- Find surrounding (to the left)
-          highlight = 'Sh', -- Highlight surrounding
-          replace = 'Sr', -- Replace surrounding
-          update_n_lines = 'Sn', -- Update `n_lines`
+          add = 'gsa', -- Add surrounding in Normal and Visual modes
+          delete = 'gsd', -- Delete surrounding
+          find = 'gsf', -- Find surrounding (to the right)
+          find_left = 'gsF', -- Find surrounding (to the left)
+          highlight = 'gsh', -- Highlight surrounding
+          replace = 'gsr', -- Replace surrounding
+          update_n_lines = 'gsn', -- Update `n_lines`
 
           suffix_last = 'l', -- Suffix to search with "prev" method
           suffix_next = 'n', -- Suffix to search with "next" method
@@ -242,12 +243,17 @@ return {
       { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll forward", mode = {"i", "n", "s"} },
       { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll backward", mode = {"i", "n", "s"}},
     },
+    init = function()
+      require('which-key').register {
+        ['<leader>sn'] = { name = '[n]oice', _ = 'which_key_ignore' },
+      }
+    end,
   },
   {
     'ggandor/leap.nvim',
     config = function()
-      vim.keymap.set({ 'n', 'x', 'o' }, 'f', '<Plug>(leap-forward)')
-      vim.keymap.set({ 'n', 'x', 'o' }, 'F', '<Plug>(leap-backward)')
+      vim.keymap.set({ 'n', 'x', 'o' }, 'f', '<Plug>(leap)')
+      -- vim.keymap.set({ 'n', 'x', 'o' }, 'F', '<Plug>(leap-backward)')
       vim.keymap.set({ 'n', 'x', 'o' }, 'gs', '<Plug>(leap-from-window)')
     end,
   },

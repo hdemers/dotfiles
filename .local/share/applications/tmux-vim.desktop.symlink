@@ -10,9 +10,10 @@ Icon=/usr/share/icons/hicolor/scalable/apps/gvim.svg
 # https://stackoverflow.com/questions/3432536/how-to-create-new-tmux-session-if-none-exists
 # Exec=gnome-terminal --window --maximize --profile="Solarized Dark (small)" -t "tmux-vim" --name=tmux-vim --class=tmux-vim -e "tmux-vim.sh"
 # Alacritty doesn't set the wmclass properly, I can't create a shortcut that works.
-Exec=alacritty --title "tmux-vim" --class tmux-vim,tmux-vim -e "tmux-vim.sh"
+Exec=alacritty --title "tmux-vim" --class tmuxvim,tmuxvim -e "tmux-vim.sh"
 StartupNotify=true
 Terminal=false
 Categories=Utility;ConsoleOnly;
 Keywords=editor;vim;terminal;tmux
-StartupWMClass=tmux-vim
+StartupNotify=true
+StartupWMClass=tmuxvim

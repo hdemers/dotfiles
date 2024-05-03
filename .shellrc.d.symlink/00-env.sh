@@ -78,6 +78,15 @@ fi
 CURRENT_SHELL=$(ps -ho cmd -p $$ | cut -d ' ' -f 1)
 export CURRENT_SHELL=${CURRENT_SHELL#-}
 
+shell_cmd=$(ps -ho cmd -p $$ | cut -d ' ' -f 1)
+if [[ $shell_cmd == *"zsh"* ]]; then
+  export CURRENT_SHELL="zsh"
+elif [[ $shell_cmd == *"bash"* ]]; then
+  export CURRENT_SHELL="bash"
+else
+  echo "No match found"
+fi
+
 # If the secret-tool command exists, set our token.
 if [[ -x "$(command -v secret-tool)" ]]; then
     export GITHUB_TOKEN=$(secret-tool lookup github token)

@@ -28,6 +28,7 @@ remote_setup() {
     remote_install $host btop
     remote_install $host starship
     remote_install $host fzf
+    remote_install $host nvim
     ntfy "Cluster up and ready at ${host}" -H "Tags: tada"
     ssh_socks $host
 }

@@ -100,6 +100,11 @@ return {
         ':Flog<CR>',
         desc = 'Flog: show [g]it [l]og',
       },
+      {
+        '<leader>gL',
+        ':Flog -path=%<CR>',
+        desc = 'Flog: show [g]it [L]og of current file',
+      },
     },
   },
   -- Fugitive is the premier Vim plugin for Git. Or maybe it's the premier Git
@@ -141,6 +146,12 @@ return {
         '<leader>gb',
         ':Git blame<CR>',
         desc = 'Git: [g]it [b]lame',
+      },
+      {
+        '<leader>gh',
+        ':Gclog<CR>',
+        desc = 'Git: [g]it selected [h]istory',
+        mode = 'v',
       },
     },
     init = function()

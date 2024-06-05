@@ -33,7 +33,7 @@ if [ "$CURRENT_SHELL" = "bash" ]; then
 fi
 
 if [ -x "$(command -v atuin)" ]; then
-    eval "$(atuin init $CURRENT_SHELL)"
+    eval "$(atuin init $CURRENT_SHELL --disable-up-arrow)"
 else
     echo "Atuin is not installed, shell history won't be captured."
 fi

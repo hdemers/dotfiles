@@ -125,27 +125,27 @@ return {
       {
         '<leader>gs',
         ':Gtabedit :<CR>:set previewwindow <CR>',
-        desc = 'Git: [g]it [s]tatus',
+        desc = 'Fugitive: [g]it [s]tatus',
       },
       {
         '<leader>gc',
         ':Git commit<CR>',
-        desc = 'Git: [g]it [c]ommit',
+        desc = 'Fugitive: [g]it [c]ommit',
       },
       {
         '<leader>gp',
         ':Git push',
-        desc = 'Git: [g]it [p]ush',
+        desc = 'Fugitive: [g]it [p]ush',
       },
       {
         '<leader>gr',
         ':Git rebase -i master<CR>',
-        desc = 'Git: [g]it [r]ebase -i master',
+        desc = 'Fugitive: [g]it [r]ebase -i master',
       },
       {
         '<leader>gb',
         ':Git blame<CR>',
-        desc = 'Git: [g]it [b]lame',
+        desc = 'Fugitive: [g]it [b]lame',
       },
       {
         '<leader>gh',
@@ -173,5 +173,48 @@ return {
         ['<leader>gh'] = 'Git-Line: Copy [g]it [l]ine to clipboard',
       }
     end,
+  },
+  {
+    'sindrets/diffview.nvim',
+    cmd = {
+      'DiffviewOpen',
+      'DiffviewToggleFiles',
+      'DiffviewFocusFiles',
+      'DiffviewFileHistory',
+    },
+  },
+  {
+    'aaronhallaert/advanced-git-search.nvim',
+    cmd = { 'AdvancedGitSearch' },
+    config = function()
+      -- optional: setup telescope before loading the extension
+      require('telescope').setup {
+        -- move this to the place where you call the telescope setup function
+        extensions = {
+          advanced_git_search = {
+            -- fugitive or diffview
+            diff_plugin = 'diffview',
+            -- Telescope layout setup
+            telescope_theme = {
+              show_custom_functions = {
+                layout_config = { width = 0.4, height = 0.4 },
+              },
+            },
+          },
+        },
+      }
+
+      require('telescope').load_extension 'advanced_git_search'
+    end,
+    dependencies = {
+      'nvim-telescope/telescope.nvim',
+      -- to show diff splits and open commits in browser
+      'tpope/vim-fugitive',
+      -- to open commits in browser with fugitive
+      'tpope/vim-rhubarb',
+      -- optional: to replace the diff from fugitive with diffview.nvim
+      -- (fugitive is still needed to open in browser)
+      'sindrets/diffview.nvim',
+    },
   },
 }

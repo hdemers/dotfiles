@@ -3,7 +3,7 @@ return {
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for neovim
-      'williamboman/mason.nvim',
+      { 'williamboman/mason.nvim', config = true },
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
@@ -140,6 +140,19 @@ return {
               group = highlight_augroup,
               callback = vim.lsp.buf.clear_references,
             })
+            vim.api.nvim_create_autocmd('LspDetach', {
+              group = vim.api.nvim_create_augroup(
+                'kickstart-lsp-detach',
+                { clear = true }
+              ),
+              callback = function(event)
+                vim.lsp.buf.clear_references()
+                vim.api.nvim_clear_autocmds {
+                  group = 'kickstart-lsp-highlight',
+                  buffer = event.buf,
+                }
+              end,
+            })
           end
           -- The following autocommand is used to enable inlay hints in your
           -- code, if the language server you are using supports them
@@ -154,16 +167,6 @@ return {
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
             end, '[T]oggle Inlay [H]ints')
           end
-        end,
-      })
-      vim.api.nvim_create_autocmd('LspDetach', {
-        group = vim.api.nvim_create_augroup('kickstart-lsp-detach', { clear = true }),
-        callback = function(event)
-          vim.lsp.buf.clear_references()
-          vim.api.nvim_clear_autocmds {
-            group = 'kickstart-lsp-highlight',
-            buffer = event.buf,
-          }
         end,
       })
       -- LSP servers and clients are able to communicate to each other what features they support.
@@ -278,73 +281,102 @@ return {
   {
     'folke/trouble.nvim',
     -- branch = 'dev',
-    -- keys = {
-    --   {
-    --     '<leader>xx',
-    --     '<cmd>Trouble diagnostics toggle<cr>',
-    --     desc = 'Trouble: diagnostics',
-    --   },
-    --   {
-    --     '<leader>xX',
-    --     '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
-    --     desc = 'Trouble: buffer diagnostics',
-    --   },
-    --   {
-    --     '<leader>cy',
-    --     '<cmd>Trouble symbols toggle focus=false<cr>',
-    --     desc = 'Trouble: [c]ode s[y]mbols',
-    --   },
-    --   {
-    --     '<leader>cl',
-    --     '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
-    --     desc = 'Trouble: [c]ode [l]sp definitions, references...',
-    --   },
-    --   {
-    --     '<leader>xL',
-    --     '<cmd>Trouble loclist toggle<cr>',
-    --     desc = 'Trouble: [l]ocation list',
-    --   },
-    --   {
-    --     '<leader>xQ',
-    --     '<cmd>Trouble qflist toggle<cr>',
-    --     desc = 'Trouble: [q]uickfix list',
-    --   },
-    -- },
-    opts = {
-      icons = false,
-      fold_open = 'v', -- icon used for open folds
-      fold_closed = '>', -- icon used for closed folds
-      indent_lines = false, -- add an indent guide below the fold icons
-      signs = {
-        -- icons / text used for a diagnostic
-        error = 'error',
-        warning = 'warn',
-        hint = 'hint',
-        information = 'info',
+    cmd = 'Trouble',
+    keys = {
+      {
+        '<leader>xx',
+        '<cmd>Trouble diagnostics toggle<cr>',
+        desc = 'Diagnostics (Trouble)',
       },
-      use_diagnostic_signs = false, -- enabling this will use the signs defined in your lsp client
+      {
+        '<leader>xX',
+        '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
+        desc = 'Buffer Diagnostics (Trouble)',
+      },
+      {
+        '<leader>cs',
+        '<cmd>Trouble symbols toggle focus=false<cr>',
+        desc = 'Symbols (Trouble)',
+      },
+      {
+        '<leader>cl',
+        '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
+        desc = 'LSP Definitions / references / ... (Trouble)',
+      },
+      {
+        '<leader>xL',
+        '<cmd>Trouble loclist toggle<cr>',
+        desc = 'Location List (Trouble)',
+      },
+      {
+        '<leader>xQ',
+        '<cmd>Trouble qflist toggle<cr>',
+        desc = 'Quickfix List (Trouble)',
+      },
+      {
+        '[t',
+        function()
+          if require('trouble').is_open() then
+            require('trouble').prev { skip_groups = true, jump = true }
+          else
+            local ok, err = pcall(vim.cmd.cprev)
+            if not ok then
+              vim.notify(err, vim.log.levels.ERROR)
+            end
+          end
+        end,
+        desc = 'Previous Trouble/Quickfix Item',
+      },
+      {
+        ']t',
+        function()
+          if require('trouble').is_open() then
+            require('trouble').next { skip_groups = true, jump = true }
+          else
+            local ok, err = pcall(vim.cmd.cprev)
+            if not ok then
+              vim.notify(err, vim.log.levels.ERROR)
+            end
+          end
+        end,
+        desc = 'Next Trouble/Quickfix Item',
+      },
     },
-    config = function()
-      local trouble = require 'trouble'
-      vim.keymap.set('n', '<leader>xx', function()
-        trouble.toggle()
-      end, { desc = 'Trouble: Toggle' })
-      vim.keymap.set('n', '<leader>xw', function()
-        trouble.toggle 'workspace_diagnostics'
-      end, { desc = 'Trouble: [w]orkspace Diagnostics' })
-      vim.keymap.set('n', '<leader>xd', function()
-        trouble.toggle 'document_diagnostics'
-      end, { desc = 'Trouble: [d]ocument Diagnostics' })
-      vim.keymap.set('n', '<leader>xq', function()
-        trouble.toggle 'quickfix'
-      end, { desc = 'Trouble: [q]uickfix' })
-      vim.keymap.set('n', '<leader>xl', function()
-        trouble.toggle 'loclist'
-      end, { desc = 'Trouble: [l]oclist' })
-      vim.keymap.set('n', 'gR', function()
-        trouble.toggle 'lsp_references'
-      end, { desc = 'Trouble: [R]eferences' })
-    end,
+    opts = {
+      -- icons = false,
+      -- fold_open = 'v', -- icon used for open folds
+      -- fold_closed = '>', -- icon used for closed folds
+      -- indent_lines = false, -- add an indent guide below the fold icons
+      -- signs = {
+      --   -- icons / text used for a diagnostic
+      --   error = 'error',
+      --   warning = 'warn',
+      --   hint = 'hint',
+      --   information = 'info',
+      -- },
+      -- use_diagnostic_signs = false, -- enabling this will use the signs defined in your lsp client
+    },
+    -- config = function()
+    --   local trouble = require 'trouble'
+    -- vim.keymap.set('n', '<leader>xx', function()
+    --   trouble.toggle()
+    -- end, { desc = 'Trouble: Toggle' })
+    -- vim.keymap.set('n', '<leader>xw', function()
+    --   trouble.toggle 'workspace_diagnostics'
+    -- end, { desc = 'Trouble: [w]orkspace Diagnostics' })
+    -- vim.keymap.set('n', '<leader>xd', function()
+    --   trouble.toggle 'document_diagnostics'
+    -- end, { desc = 'Trouble: [d]ocument Diagnostics' })
+    -- vim.keymap.set('n', '<leader>xq', function()
+    --   trouble.toggle 'quickfix'
+    -- end, { desc = 'Trouble: [q]uickfix' })
+    -- vim.keymap.set('n', '<leader>xl', function()
+    --   trouble.toggle 'loclist'
+    -- end, { desc = 'Trouble: [l]oclist' })
+    -- vim.keymap.set('n', 'gR', function()
+    --   trouble.toggle 'lsp_references'
+    -- end, { desc = 'Trouble: [R]eferences' })
+    -- end,
     -- Document key chains
     require('which-key').register {
       ['<leader>x'] = { name = 'Trouble [X]', _ = 'which_key_ignore' },

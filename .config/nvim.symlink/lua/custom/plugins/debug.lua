@@ -30,7 +30,7 @@ return {
       require('mason-nvim-dap').setup {
         -- Makes a best effort to setup the various debuggers with
         -- reasonable debug configurations
-        automatic_setup = true,
+        automatic_installation = true,
 
         -- You can provide additional configuration to the handlers,
         -- see mason-nvim-dap README for more information
@@ -161,7 +161,7 @@ return {
 
       vim.keymap.set('n', '<leader>cdt', function()
         require('neotest').run.run { strategy = 'dap' }
-      end, { desc = 'Debug: unit [t]est' })
+      end, { desc = 'Debug: nearest unit [t]est' })
 
       -- Install Python specific config
       local dap_python = require 'dap-python'

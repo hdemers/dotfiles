@@ -129,7 +129,7 @@ return {
       },
       {
         '<leader>gc',
-        ':Git commit<CR>',
+        ':Git commit<CR><C-W>L',
         desc = 'Fugitive: [g]it [c]ommit',
       },
       {

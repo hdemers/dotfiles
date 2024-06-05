@@ -269,4 +269,25 @@ return {
       },
     },
   },
+  {
+    'tzachar/highlight-undo.nvim',
+    opts = {
+      duration = 700,
+      undo = {
+        hlgroup = 'CurSearch',
+        mode = 'n',
+        lhs = 'u',
+        map = 'undo',
+        opts = {},
+      },
+      redo = {
+        hlgroup = 'IncSearch',
+        mode = 'n',
+        lhs = '<C-r>',
+        map = 'redo',
+        opts = {},
+      },
+      highlight_for_count = true,
+    },
+  },
 }

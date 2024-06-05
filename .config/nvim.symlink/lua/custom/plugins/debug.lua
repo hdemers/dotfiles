@@ -11,38 +11,125 @@ return {
     'mfussenegger/nvim-dap',
     dependencies = {
       -- Creates a beautiful debugger UI
-      'rcarriga/nvim-dap-ui',
+      {
+        'rcarriga/nvim-dap-ui',
+        dependencies = { 'nvim-neotest/nvim-nio' },
+        opts = {
+          -- Set icons to characters that are more likely to work in every terminal.
+          --    Feel free to remove or use ones that you like more! :)
+          --    Don't feel like these are good choices.
+          icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
+          controls = {
+            icons = {
+              pause = '⏸',
+              play = '▶',
+              step_into = '',
+              step_over = '',
+              step_out = '',
+              step_back = '',
+              run_last = '⟲',
+              terminate = '⏹',
+              disconnect = '✗',
+            },
+          },
+          layouts = {
+            {
+              elements = {
+                -- Other DAP UI elements you want to include in the layout
+                'scopes',
+                'breakpoints',
+                'stacks',
+                'watches',
+              },
+              size = 60,
+              position = 'left',
+            },
+            {
+              elements = {
+                'console',
+              },
+              size = 130,
+              position = 'right',
+            },
+            {
+              elements = {
+                'repl',
+              },
+              size = 80,
+              position = 'left',
+            },
+          },
+        },
+        config = function(_, opts)
+          local dap = require 'dap'
+          local dapui = require 'dapui'
+
+          dapui.setup(opts)
+
+          -- Function to open the current buffer in a new tab
+          local function bufferTabOpen()
+            -- Get the current cursor position
+            local cur_pos = vim.api.nvim_win_get_cursor(0) -- Returns a table {row, col}
+
+            -- Open the current buffer in a new tab
+            -- Get the current buffer's file path
+            local cur_buf_path = vim.api.nvim_buf_get_name(0)
+            -- Command to open a new tab and edit the current buffer's file
+            vim.cmd('tabnew ' .. cur_buf_path)
+            vim.api.nvim_win_set_width(0, 220)
+
+            -- Step 3: Set the cursor to the original position in the new tab
+            -- Wait for the new tab to fully open and then set the cursor position
+            vim.defer_fn(function()
+              vim.api.nvim_win_set_cursor(0, cur_pos)
+            end, 0) -- 0 ms delay to defer the function until after the command has completed
+          end
+
+          dap.listeners.after.event_initialized['dapui_config'] = function()
+            bufferTabOpen()
+            dapui.open()
+          end
+          dap.listeners.before.event_terminated['dapui_config'] = function()
+            vim.cmd 'tabclose'
+            dapui.close()
+          end
+          dap.listeners.before.event_exited['dapui_config'] = function()
+            dapui.close()
+          end
+        end,
+      },
 
       -- Required dependency for nvim-dap-ui
       'nvim-neotest/nvim-nio',
 
       -- Installs the debug adapters for you
       'williamboman/mason.nvim',
-      'jay-babu/mason-nvim-dap.nvim',
+      {
+        'jay-babu/mason-nvim-dap.nvim',
+        dependencies = 'mason.nvim',
+        cmd = { 'DapInstall', 'DapUninstall' },
+        opts = {
+          -- Makes a best effort to setup the various debuggers with
+          -- reasonable debug configurations
+          automatic_installation = true,
+
+          -- You can provide additional configuration to the handlers,
+          -- see mason-nvim-dap README for more information
+          handlers = {},
+
+          -- You'll need to check that you have the required things installed
+          -- online, please don't ask me how to install them :)
+          ensure_installed = {
+            -- Update this to ensure that you have the debuggers for the langs you want
+          },
+        },
+      },
 
       -- Add your own debuggers here
       'mfussenegger/nvim-dap-python',
     },
     config = function()
       local dap = require 'dap'
-      local dapui = require 'dapui'
-
-      require('mason-nvim-dap').setup {
-        -- Makes a best effort to setup the various debuggers with
-        -- reasonable debug configurations
-        automatic_installation = true,
-
-        -- You can provide additional configuration to the handlers,
-        -- see mason-nvim-dap README for more information
-        handlers = {},
-
-        -- You'll need to check that you have the required things installed
-        -- online, please don't ask me how to install them :)
-        ensure_installed = {
-          -- Update this to ensure that you have the debuggers for the langs you want
-          'python',
-        },
-      }
 
       -- Document key chains
       require('which-key').register {
@@ -71,55 +158,6 @@ return {
         require('dap.ext.vscode').load_launchjs()
       end, { desc = 'Debug: [l]load .vscode/launch.js' })
 
-      -- Dap UI setup
-      -- For more information, see |:help nvim-dap-ui|
-      dapui.setup {
-        -- Set icons to characters that are more likely to work in every terminal.
-        --    Feel free to remove or use ones that you like more! :)
-        --    Don't feel like these are good choices.
-        icons = { expanded = '▾', collapsed = '▸', current_frame = '*' },
-        controls = {
-          icons = {
-            pause = '⏸',
-            play = '▶',
-            step_into = '',
-            step_over = '',
-            step_out = '',
-            step_back = '',
-            run_last = '⟲',
-            terminate = '⏹',
-            disconnect = '✗',
-          },
-        },
-        layouts = {
-          {
-            elements = {
-              -- Other DAP UI elements you want to include in the layout
-              'scopes',
-              'breakpoints',
-              'stacks',
-              'watches',
-            },
-            size = 60,
-            position = 'left',
-          },
-          {
-            elements = {
-              'console',
-            },
-            size = 130,
-            position = 'right',
-          },
-          {
-            elements = {
-              'repl',
-            },
-            size = 80,
-            position = 'left',
-          },
-        },
-      }
-
       -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
       -- vim.keymap.set(
       --   'n',
@@ -128,44 +166,17 @@ return {
       --   { desc = 'Debug: See last session result.' }
       -- )
 
-      -- Function to open the current buffer in a new tab
-      local function bufferTabOpen()
-        -- Get the current cursor position
-        local cur_pos = vim.api.nvim_win_get_cursor(0) -- Returns a table {row, col}
-
-        -- Open the current buffer in a new tab
-        -- Get the current buffer's file path
-        local cur_buf_path = vim.api.nvim_buf_get_name(0)
-        -- Command to open a new tab and edit the current buffer's file
-        vim.cmd('tabnew ' .. cur_buf_path)
-        vim.api.nvim_win_set_width(0, 220)
-
-        -- Step 3: Set the cursor to the original position in the new tab
-        -- Wait for the new tab to fully open and then set the cursor position
-        vim.defer_fn(function()
-          vim.api.nvim_win_set_cursor(0, cur_pos)
-        end, 0) -- 0 ms delay to defer the function until after the command has completed
-      end
-
-      dap.listeners.after.event_initialized['dapui_config'] = function()
-        bufferTabOpen()
-        dapui.open()
-      end
-      dap.listeners.before.event_terminated['dapui_config'] = function()
-        vim.cmd 'tabclose'
-        dapui.close()
-      end
-      dap.listeners.before.event_exited['dapui_config'] = function()
-        dapui.close()
-      end
-
       vim.keymap.set('n', '<leader>cdt', function()
         require('neotest').run.run { strategy = 'dap' }
       end, { desc = 'Debug: nearest unit [t]est' })
 
       -- Install Python specific config
       local dap_python = require 'dap-python'
-      dap_python.setup '~/.virtualenvs/debugpy/bin/python'
+      dap_python.setup('~/.virtualenvs/debugpy/bin/python', {
+        include_configs = true,
+        console = 'integratedTerminal',
+        pythonPath = nil,
+      })
       dap_python.test_runner = 'pytest'
     end,
   },
@@ -243,15 +254,15 @@ return {
         -- },
         status = { virtual_text = true },
         output = { open_on_run = true },
-        quickfix = {
-          -- open = function()
-          --   if package.loaded.trouble then
-          --     require('trouble').open { mode = 'quickfix', focus = false }
-          --   else
-          --     vim.cmd 'copen'
-          --   end
-          -- end,
-        },
+        -- quickfix = {
+        --   open = function()
+        --     if package.loaded.trouble then
+        --       require('trouble').open { mode = 'quickfix', focus = false }
+        --     else
+        --       vim.cmd 'copen'
+        --     end
+        --   end,
+        -- },
         icons = {
           failed = '✗',
           passed = '✔',

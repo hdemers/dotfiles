@@ -7,9 +7,14 @@ return {
     opts = { signs = false },
     keys = {
       {
-        '<leader>wt',
+        '<leader>st',
         ':TodoTelescope<CR>',
-        desc = 'Todo: list [t]odos',
+        desc = 'search [t]odos',
+      },
+      {
+        '<leader>xt',
+        '<cmd>Trouble todo toggle<cr>',
+        desc = 'Trouble: Todo',
       },
     },
   },

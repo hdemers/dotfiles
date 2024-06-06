@@ -91,47 +91,42 @@ return {
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
-      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
-      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
+      vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = 'search [h]elp' })
+      vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = 'search [k]eymaps' })
       vim.keymap.set('n', '<leader>sf', function()
         builtin.find_files { hidden = true }
-      end, { desc = '[S]earch [F]iles' })
+      end, { desc = 'search [f]iles' })
       vim.keymap.set(
         'n',
         '<leader>ss',
         builtin.builtin,
-        { desc = '[S]earch [S]elect Telescope' }
+        { desc = 'search [s]elect Telescope' }
       )
       vim.keymap.set(
         'n',
         '<leader>sw',
         builtin.grep_string,
-        { desc = '[S]earch current [W]ord' }
+        { desc = 'search current [w]ord' }
       )
-      vim.keymap.set(
-        'n',
-        '<leader>sg',
-        builtin.live_grep,
-        { desc = '[S]earch by [G]rep' }
-      )
+      vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = 'search by [g]rep' })
       vim.keymap.set(
         'n',
         '<leader>sd',
         builtin.diagnostics,
-        { desc = '[S]earch [D]iagnostics' }
+        { desc = 'search [d]iagnostics' }
       )
-      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
+      vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = 'search [r]esume' })
       vim.keymap.set(
         'n',
         '<leader>s.',
         builtin.oldfiles,
-        { desc = '[S]earch Recent Files ("." for repeat)' }
+        { desc = 'search recent files ("." for repeat)' }
       )
       vim.keymap.set(
         'n',
         '<leader>si',
         builtin.git_files,
-        { desc = '[S]earch G[i]t Files' }
+        { desc = 'search g[i]t files' }
       )
       vim.keymap.set(
         'n',
@@ -159,12 +154,12 @@ return {
           grep_open_files = true,
           prompt_title = 'Live Grep in Open Files',
         }
-      end, { desc = '[S]earch [/] in Open Files' })
+      end, { desc = 'search [/] in Open Files' })
 
       -- Shortcut for searching your neovim configuration files
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = '[S]earch [N]eovim files' })
+      end, { desc = 'search [N]eovim files' })
     end,
     init = function()
       -- The following adds a space between Telescope's file iconn and the filename.
@@ -199,21 +194,21 @@ return {
     --   function()
     --     require('fzf-lua').grep_cword()
     --   end,
-    --   desc = '[S]earch current [W]ord',
+    --   desc = 'search current [W]ord',
     -- },
     -- {
     --   '<leader>sg',
     --   function()
     --     require('fzf-lua').live_grep()
     --   end,
-    --   desc = '[S]earch by [G]rep',
+    --   desc = 'search by [G]rep',
     -- },
     -- {
     --   '<leader>si',
     --   function()
     --     require('fzf-lua').git_files()
     --   end,
-    --   desc = '[S]earch G[i]t Files',
+    --   desc = 'search G[i]t Files',
     -- },
     -- {
     --   '<leader><leader>',
@@ -234,7 +229,7 @@ return {
     --   function()
     --     require('fzf-lua').files()
     --   end,
-    --   desc = '[S]earch [F]iles',
+    --   desc = 'search [F]iles',
     -- },
     -- },
   },

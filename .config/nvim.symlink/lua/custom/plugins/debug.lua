@@ -14,6 +14,23 @@ return {
       {
         'rcarriga/nvim-dap-ui',
         dependencies = { 'nvim-neotest/nvim-nio' },
+        keys = {
+          {
+            '<leader>du',
+            function()
+              require('dapui').toggle {}
+            end,
+            desc = 'Dap UI',
+          },
+          {
+            '<leader>de',
+            function()
+              require('dapui').eval()
+            end,
+            desc = 'Eval',
+            mode = { 'n', 'v' },
+          },
+        },
         opts = {
           -- Set icons to characters that are more likely to work in every terminal.
           --    Feel free to remove or use ones that you like more! :)
@@ -99,9 +116,6 @@ return {
         end,
       },
 
-      -- Required dependency for nvim-dap-ui
-      'nvim-neotest/nvim-nio',
-
       -- Installs the debug adapters for you
       'williamboman/mason.nvim',
       {
@@ -125,50 +139,160 @@ return {
         },
       },
 
-      -- Add your own debuggers here
       'mfussenegger/nvim-dap-python',
+      'nvim-neotest/neotest',
+    },
+    keys = {
+      {
+        '<leader>dB',
+        function()
+          require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
+        end,
+        desc = 'Breakpoint Condition',
+      },
+      {
+        '<leader>db',
+        function()
+          require('dap').toggle_breakpoint()
+        end,
+        desc = 'Toggle Breakpoint',
+      },
+      {
+        '<leader>dc',
+        function()
+          require('dap').continue()
+        end,
+        desc = 'Continue',
+      },
+      {
+        '<leader>da',
+        function()
+          require('dap').continue { before = get_args }
+        end,
+        desc = 'Run with Args',
+      },
+      {
+        '<leader>dC',
+        function()
+          require('dap').run_to_cursor()
+        end,
+        desc = 'Run to Cursor',
+      },
+      {
+        '<leader>dg',
+        function()
+          require('dap').goto_()
+        end,
+        desc = 'Go to Line (No Execute)',
+      },
+      {
+        '<leader>di',
+        function()
+          require('dap').step_into()
+        end,
+        desc = 'Step Into',
+      },
+      {
+        '<leader>dj',
+        function()
+          require('dap').down()
+        end,
+        desc = 'Down',
+      },
+      {
+        '<leader>dk',
+        function()
+          require('dap').up()
+        end,
+        desc = 'Up',
+      },
+      {
+        '<leader>dl',
+        function()
+          require('dap').run_last()
+        end,
+        desc = 'Run Last',
+      },
+      {
+        '<leader>do',
+        function()
+          require('dap').step_out()
+        end,
+        desc = 'Step Out',
+      },
+      {
+        '<leader>dO',
+        function()
+          require('dap').step_over()
+        end,
+        desc = 'Step Over',
+      },
+      {
+        '<leader>dp',
+        function()
+          require('dap').pause()
+        end,
+        desc = 'Pause',
+      },
+      {
+        '<leader>dr',
+        function()
+          require('dap').repl.toggle()
+        end,
+        desc = 'Toggle REPL',
+      },
+      {
+        '<leader>ds',
+        function()
+          require('dap').session()
+        end,
+        desc = 'Session',
+      },
+      {
+        '<leader>dq',
+        function()
+          require('dap').terminate()
+        end,
+        desc = 'Terminate',
+      },
+      {
+        '<leader>dw',
+        function()
+          require('dap.ui.widgets').hover()
+        end,
+        desc = 'Widgets',
+      },
+      {
+        '<leader>dt',
+        function()
+          require('neotest').run.run { strategy = 'dap' }
+        end,
+        desc = 'Debug: nearest unit [t]est',
+      },
     },
     config = function()
-      local dap = require 'dap'
-
       -- Document key chains
       require('which-key').register {
-        ['<leader>cd'] = { name = '[D]ebug', _ = 'which_key_ignore' },
+        ['<leader>d'] = { name = '[D]ebug', _ = 'which_key_ignore' },
       }
-      vim.keymap.set(
-        'n',
-        '<leader>cdc',
-        dap.continue,
-        { desc = 'Debug: start/[c]ontinue' }
-      )
-      vim.keymap.set('n', '<leader>cdi', dap.step_into, { desc = 'Debug: step [i]nto' })
-      vim.keymap.set('n', '<leader>cds', dap.step_over, { desc = 'Debug: [s]tep over' })
-      vim.keymap.set('n', '<leader>cdo', dap.step_out, { desc = 'Debug: step [o]ut' })
-      vim.keymap.set(
-        'n',
-        '<leader>cdb',
-        dap.toggle_breakpoint,
-        { desc = 'Debug: Toggle [b]reakpoint' }
-      )
-      vim.keymap.set('n', '<leader>cdB', function()
-        dap.set_breakpoint(vim.fn.input 'Breakpoint condition: ')
-      end, { desc = 'Debug: Set [B]reakpoint' })
-      -- Load a config from .vscode/launch.js
-      vim.keymap.set('n', '<leader>cdl', function()
-        require('dap.ext.vscode').load_launchjs()
-      end, { desc = 'Debug: [l]load .vscode/launch.js' })
 
-      -- Toggle to see last session result. Without this, you can't see session output in case of unhandled exception.
-      -- vim.keymap.set(
-      --   'n',
-      --   '<F7>',
-      --   dapui.toggle,
-      --   { desc = 'Debug: See last session result.' }
-      -- )
-
-      vim.keymap.set('n', '<leader>cdt', function()
-        require('neotest').run.run { strategy = 'dap' }
-      end, { desc = 'Debug: nearest unit [t]est' })
+      -- setup dap config by VsCode launch.json file
+      local vscode = require 'dap.ext.vscode'
+      local _filetypes = require 'mason-nvim-dap.mappings.filetypes'
+      local filetypes = vim.tbl_deep_extend('force', _filetypes, {
+        ['node'] = { 'javascriptreact', 'typescriptreact', 'typescript', 'javascript' },
+        ['pwa-node'] = {
+          'javascriptreact',
+          'typescriptreact',
+          'typescript',
+          'javascript',
+        },
+      })
+      local json = require 'plenary.json'
+      vscode.json_decode = function(str)
+        return vim.json.decode(json.json_strip_comments(str))
+      end
+      vscode.load_launchjs(nil, filetypes)
 
       -- Install Python specific config
       local dap_python = require 'dap-python'

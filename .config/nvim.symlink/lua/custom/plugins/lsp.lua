@@ -91,22 +91,22 @@ return {
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
           map(
-            '<leader>ds',
+            '<leader>sy',
             require('telescope.builtin').lsp_document_symbols,
-            '[D]ocument [S]ymbols'
+            '[S]earch s[y]mbols'
           )
 
           -- Fuzzy find all the symbols in your current workspace
           --  Similar to document symbols, except searches over your whole project.
           map(
-            '<leader>ws',
+            '<leader>sY',
             require('telescope.builtin').lsp_dynamic_workspace_symbols,
-            '[W]orkspace [S]ymbols'
+            '[Search] all s[Y]mbols'
           )
 
           -- Rename the variable under your cursor
           --  Most Language Servers support renaming across files, etc.
-          map('<leader>wr', vim.lsp.buf.rename, '[r]ename')
+          map('<leader>cr', vim.lsp.buf.rename, '[r]ename')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
@@ -343,40 +343,18 @@ return {
       },
     },
     opts = {
-      -- icons = false,
-      -- fold_open = 'v', -- icon used for open folds
-      -- fold_closed = '>', -- icon used for closed folds
-      -- indent_lines = false, -- add an indent guide below the fold icons
-      -- signs = {
-      --   -- icons / text used for a diagnostic
-      --   error = 'error',
-      --   warning = 'warn',
-      --   hint = 'hint',
-      --   information = 'info',
-      -- },
-      -- use_diagnostic_signs = false, -- enabling this will use the signs defined in your lsp client
+      modes = {
+        diagnostics = {
+          mode = 'diagnostics',
+          preview = {
+            type = 'split',
+            relative = 'win',
+            position = 'right',
+            size = 0.5,
+          },
+        },
+      },
     },
-    -- config = function()
-    --   local trouble = require 'trouble'
-    -- vim.keymap.set('n', '<leader>xx', function()
-    --   trouble.toggle()
-    -- end, { desc = 'Trouble: Toggle' })
-    -- vim.keymap.set('n', '<leader>xw', function()
-    --   trouble.toggle 'workspace_diagnostics'
-    -- end, { desc = 'Trouble: [w]orkspace Diagnostics' })
-    -- vim.keymap.set('n', '<leader>xd', function()
-    --   trouble.toggle 'document_diagnostics'
-    -- end, { desc = 'Trouble: [d]ocument Diagnostics' })
-    -- vim.keymap.set('n', '<leader>xq', function()
-    --   trouble.toggle 'quickfix'
-    -- end, { desc = 'Trouble: [q]uickfix' })
-    -- vim.keymap.set('n', '<leader>xl', function()
-    --   trouble.toggle 'loclist'
-    -- end, { desc = 'Trouble: [l]oclist' })
-    -- vim.keymap.set('n', 'gR', function()
-    --   trouble.toggle 'lsp_references'
-    -- end, { desc = 'Trouble: [R]eferences' })
-    -- end,
     -- Document key chains
     require('which-key').register {
       ['<leader>x'] = { name = 'Trouble [X]', _ = 'which_key_ignore' },

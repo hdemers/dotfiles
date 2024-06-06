@@ -57,7 +57,7 @@ export SLACK_API_URL=https://slack.com/api
 export GRUBHUB_DIR=$HOME/Projets/grubhub
 
 # Bat theme (https://github.com/sharkdp/bat#highlighting-theme)
-export BAT_THEME="Solarized (dark)"
+export BAT_THEME="Dracula"
 
 # Set the default R lib path
 export R_LIBS_USER=$HOME/.local/lib/R

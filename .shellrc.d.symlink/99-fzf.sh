@@ -12,12 +12,11 @@ fi
 bindings_file=~/.fzf/shell/key-bindings.$CURRENT_SHELL
 [[ -f "${bindings_file}" ]] && source "${bindings_file}"
 
-export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
---color=fg:#839496,bg:#002b36,hl:#b58900
---color=fg+:#d33682,bg+:#073642,hl+:#DC322F
---color=info:#2aa198,prompt:#dc322f,pointer:#d33682
---color=marker:#859900,spinner:#cb4b16,header:#268bd2
-'
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#363a4f,bg:#24273a,spinner:#f4dbd6,hl:#ed8796 \
+--color=fg:#cad3f5,header:#ed8796,info:#c6a0f6,pointer:#f4dbd6 \
+--color=marker:#f4dbd6,fg+:#cad3f5,prompt:#c6a0f6,hl+:#ed8796"
+
 
 export FZF_CTRL_T_OPTS="
 --height 60%

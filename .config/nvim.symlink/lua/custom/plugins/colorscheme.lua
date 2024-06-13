@@ -109,7 +109,7 @@ return {
       overrides = function(colors) -- add/modify highlights
         local theme = colors.theme
         return {
-          LeapBackdrop = { fg = theme.ui.bg_p2 },
+          LeapBackdrop = { fg = theme.ui.nontext },
           TelescopeTitle = { fg = theme.ui.special, bold = true },
           TelescopePromptNormal = { bg = theme.ui.bg_p1 },
           TelescopePromptBorder = { fg = theme.ui.bg_p1, bg = theme.ui.bg_p1 },
@@ -138,8 +138,38 @@ return {
       end,
     },
   },
-  { 'navarasu/onedark.nvim', opts = { style = 'darker' } },
-  { 'sainnhe/gruvbox-material' },
+  {
+    'navarasu/onedark.nvim',
+    opts = {
+      style = 'darker',
+      highlights = {
+        LeapBackdrop = { fg = '$light_grey' },
+      },
+    },
+    config = function(_, opts)
+      require('onedark').setup(opts)
+    end,
+  },
+  {
+    'sainnhe/gruvbox-material',
+    config = function()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        group = vim.api.nvim_create_augroup('custom_highlights_gruvboxmaterial', {}),
+        pattern = 'gruvbox-material',
+        callback = function()
+          local config = vim.fn['gruvbox_material#get_configuration']()
+          local palette = vim.fn['gruvbox_material#get_palette'](
+            config.background,
+            config.foreground,
+            config.colors_override
+          )
+          local set_hl = vim.fn['gruvbox_material#highlight']
+
+          set_hl('LeapBackdrop', palette.grey1, palette.none)
+        end,
+      })
+    end,
+  },
   {
     'kepano/flexoki-neovim',
     name = 'flexoki',
@@ -160,7 +190,6 @@ return {
   },
   { 'savq/melange-nvim' },
   { 'nyoom-engineering/oxocarbon.nvim' },
-  { 'bluz71/vim-nightfly-colors', name = 'nightfly' },
   { 'shaunsingh/nord.nvim' },
   {
     'AlexvZyl/nordic.nvim',
@@ -178,16 +207,18 @@ return {
       }
     end,
   },
-  { 'rose-pine/neovim', name = 'rose-pine' },
   {
-    'sainnhe/sonokai',
-    init = function()
-      vim.g.sonokai_style = 'default'
-      vim.g.sonokai_enable_italic = 1
+    'Mofiqul/dracula.nvim',
+    opts = {
+      overrides = function(colors)
+        return {
+          LeapBackdrop = { fg = colors.white },
+        }
+      end,
+    },
+    config = function(_, opts)
+      require('dracula').setup(opts)
     end,
-  },
-  {
-    'maxmx03/dracula.nvim',
   },
   {
     'Mofiqul/vscode.nvim',
@@ -203,4 +234,5 @@ return {
       }
     end,
   },
+  { 'EdenEast/nightfox.nvim' },
 }

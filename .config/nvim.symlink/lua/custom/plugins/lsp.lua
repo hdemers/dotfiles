@@ -360,4 +360,20 @@ return {
       ['<leader>x'] = { name = 'Trouble [X]', _ = 'which_key_ignore' },
     },
   },
+  -- I wish lspconfig had sqlfluff support, but it doesn't. And nvim-lint doesn't
+  -- appear to support code-actions. So, I'm resorting to use `null-ls` for now.
+  {
+    'nvimtools/none-ls.nvim',
+    dependencies = 'nvim-lua/plenary.nvim',
+    config = function()
+      local null_ls = require 'null-ls'
+      local sources = {
+        null_ls.builtins.formatting.sqlfluff.with {
+          extra_args = { '--dialect', 'trino' }, -- change to your dialect
+        },
+      }
+
+      null_ls.setup { sources = sources, debug = true }
+    end,
+  },
 }

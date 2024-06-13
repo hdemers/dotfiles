@@ -129,7 +129,7 @@ return {
       },
       {
         '<leader>gc',
-        ':Git commit<CR><C-W>L',
+        ':Git commit<CR> <C-W>L',
         desc = 'Fugitive: [g]it [c]ommit',
       },
       {
@@ -147,12 +147,6 @@ return {
         ':Git blame<CR>',
         desc = 'Fugitive: [g]it [b]lame',
       },
-      {
-        '<leader>gh',
-        ':Gclog<CR>',
-        desc = 'Git: [g]it selected [h]istory',
-        mode = 'v',
-      },
     },
     init = function()
       require('which-key').register {
@@ -160,19 +154,44 @@ return {
       }
     end,
   },
+  -- {
+  --   'ruanyl/vim-gh-line',
+  --   init = function()
+  --     -- Set the command to copy the line to the clipboard, instead of opening in the
+  --     -- browser.
+  --     vim.g.gh_open_command = 'fn() { echo "$@" | xclip -selection c -r; }; fn '
+  --     vim.g.gh_line_map_default = 0
+  --     vim.g.gh_line_blame_map_default = 0
+  --     vim.g.gh_line_map = '<leader>gh'
+  --     require('which-key').register {
+  --       ['<leader>gh'] = 'Git-Line: Copy [g]it [l]ine to clipboard',
+  --     }
+  --   end,
+  -- },
   {
-    'ruanyl/vim-gh-line',
-    init = function()
-      -- Set the command to copy the line to the clipboard, instead of opening in the
-      -- browser.
-      vim.g.gh_open_command = 'fn() { echo "$@" | xclip -selection c -r; }; fn '
-      vim.g.gh_line_map_default = 0
-      vim.g.gh_line_blame_map_default = 0
-      vim.g.gh_line_map = '<leader>gh'
-      require('which-key').register {
-        ['<leader>gh'] = 'Git-Line: Copy [g]it [l]ine to clipboard',
+    'ruifm/gitlinker.nvim',
+    depdenencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      require('gitlinker').setup {
+        mappings = nil,
       }
     end,
+    keys = {
+      {
+        '<leader>gy',
+        function()
+          require('gitlinker').get_buf_range_url 'n'
+        end,
+        desc = 'GitLinker: [y]ank GitHub URL',
+      },
+      {
+        '<leader>gy',
+        function()
+          require('gitlinker').get_buf_range_url 'v'
+        end,
+        desc = 'GitLinker: [y]ank GitHub URL',
+      },
+    },
   },
   {
     'sindrets/diffview.nvim',
@@ -181,6 +200,19 @@ return {
       'DiffviewToggleFiles',
       'DiffviewFocusFiles',
       'DiffviewFileHistory',
+    },
+    keys = {
+      {
+        '<leader>gm',
+        ':DiffviewOpen master<CR>',
+        desc = 'Diffview: diff [ma]ster',
+      },
+      {
+        '<leader>gh',
+        ':DiffviewFileHistory %<CR>',
+        desc = 'Diffview: view current file [h]istory',
+        mode = { 'n', 'v' },
+      },
     },
   },
   {

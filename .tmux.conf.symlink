@@ -8,7 +8,7 @@ bind C-a send-prefix
 # 0 is too far from ` ;)
 set -g base-index 1
 
-set-option -s default-terminal "xterm-256color"
+set-option -s default-terminal "tmux-256color"
 set -ga terminal-overrides ",*256col*:Tc"
 setw -g xterm-keys on
 

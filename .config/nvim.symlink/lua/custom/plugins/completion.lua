@@ -19,13 +19,23 @@ return {
           -- `friendly-snippets` contains a variety of premade snippets.
           --    See the README about individual language/framework/plugin snippets:
           --    https://github.com/rafamadriz/friendly-snippets
-          -- {
-          --   'rafamadriz/friendly-snippets',
-          --   config = function()
-          --     require('luasnip.loaders.from_vscode').lazy_load()
-          --   end,
-          -- },
+          {
+            'rafamadriz/friendly-snippets',
+            config = function()
+              require('luasnip.loaders.from_vscode').lazy_load {
+                include = { 'python', 'markdown', 'quarto' },
+              }
+            end,
+          },
         },
+        config = function()
+          local luasnip = require 'luasnip'
+          -- require('luasnip.loaders.from_vscode').lazy_load {
+          --   paths = { vim.fn.stdpath 'config' .. '/snippets/' },
+          -- }
+          luasnip.filetype_extend('quarto', { 'markdown' })
+          luasnip.filetype_extend('rmarkdown', { 'markdown' })
+        end,
       },
       'saadparwaiz1/cmp_luasnip',
 
@@ -99,6 +109,7 @@ return {
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
+          { name = 'otter' },
         },
       }
     end,

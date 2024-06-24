@@ -44,3 +44,5 @@ tags
 .gutctags
 
 .vscode
+
+__pycache__

@@ -19,17 +19,17 @@ return {
     cmd = { 'OverseerRun', 'OverseerToggle', 'OverseerRunCmd' },
     keys = {
       {
-        '<leader>cjd',
+        '<leader>rjd',
         '<cmd>OverseerRun jenkins-deploy-branch<CR>',
         desc = 'Overseer: [j]enkins [d]eploy branch',
       },
       {
-        '<leader>cji',
+        '<leader>rji',
         '<cmd>OverseerRun jenkins-integrate<CR>',
         desc = 'Overseer: [j]enkins [i]ntegrate branch',
       },
       {
-        '<leader>ot',
+        '<leader>rt',
         '<cmd>OverseerToggle right<CR>',
         desc = 'Overseer: [t]oggle',
       },
@@ -40,8 +40,8 @@ return {
     init = function()
       -- Document key chains
       require('which-key').register {
-        ['<leader>o'] = { name = '[O]verseer', _ = 'which_key_ignore' },
-        ['<leader>cj'] = { name = '[J]enkins', _ = 'which_key_ignore' },
+        ['<leader>r'] = { name = '[R]unner', _ = 'which_key_ignore' },
+        ['<leader>rj'] = { name = '[J]enkins', _ = 'which_key_ignore' },
       }
 
       local overseer = require 'overseer'

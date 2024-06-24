@@ -73,6 +73,9 @@ return {
               n = { ['x'] = 'delete_buffer' },
             },
           },
+          colorscheme = {
+            enable_preview = true,
+          },
         },
         extensions = {
           ['ui-select'] = {
@@ -91,6 +94,7 @@ return {
 
       -- See `:help telescope.builtin`
       local builtin = require 'telescope.builtin'
+
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = 'search [h]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = 'search [k]eymaps' })
       vim.keymap.set('n', '<leader>sf', function()

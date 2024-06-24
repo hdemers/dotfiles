@@ -10,7 +10,7 @@ fi
 session="vim"
 sessionexists=$(tmux list-sessions -F '#{session_name}' | grep $session)
 
-session_dir=$HOME/.local/share/nvim/session
+session_dir=$HOME/.local/share/nvim/sessions
 project_dir=$HOME/Projets/grubhub
 
 main() {
@@ -32,7 +32,7 @@ main() {
             # created tmux window.
             cd "$project_dir/${vim_sessions[0]}"
             tmux rename-window -t 1 "${vim_sessions[0]}"
-            tmux send-keys -t "${vim_sessions[0]}" "nvim -S $session_dir/${vim_sessions[0]}" C-m
+            tmux send-keys -t "${vim_sessions[0]}" "nvim" C-m
 
             # Loop through the rest of the vim_sessions array and open given session.
             for vim_session in "${vim_sessions[@]:1}"; do
@@ -40,7 +40,7 @@ main() {
                 cd "$project_dir/$vim_session"
                 tmux new-window -t $session -n $vim_session
                 # Send keys to start vim with that session.
-                tmux send-keys -t "$vim_session" "nvim -S $session_dir/$vim_session" C-m
+                tmux send-keys -t "$vim_session" "nvim" C-m
             done
 
         fi

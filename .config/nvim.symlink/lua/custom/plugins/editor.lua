@@ -101,6 +101,7 @@ return {
   -- Session manager and startup screen
   {
     'mhinz/vim-startify',
+    enabled = false,
     init = function()
       vim.g.startify_session_persistence = 1
       vim.g.startify_session_savevars = {
@@ -250,6 +251,7 @@ return {
   },
   {
     'ggandor/leap.nvim',
+    enabled = false,
     config = function()
       vim.keymap.set({ 'n', 'x', 'o' }, 'f', '<Plug>(leap)')
       -- vim.keymap.set({ 'n', 'x', 'o' }, 'F', '<Plug>(leap-backward)')
@@ -288,5 +290,63 @@ return {
       },
       highlight_for_count = true,
     },
+  },
+  {
+    'olimorris/persisted.nvim',
+    lazy = false, -- make sure the plugin is always loaded at startup
+    opts = {
+      autosave = true,
+      autoload = true,
+      follow_cwd = false,
+      allowed_dirs = {
+        '~/Projets',
+        '~/.dotfiles',
+      },
+      ignored_dirs = {
+        { '~/Projets/grubhub', exact = true },
+      },
+    },
+    config = function(_, opts)
+      require('persisted').setup(opts)
+      require('telescope').load_extension 'persisted'
+    end,
+    keys = {
+      {
+        '<leader>se',
+        ':Telescope persisted<CR>',
+        desc = 'search s[e]ssions',
+      },
+    },
+  },
+  {
+    'nvimdev/dashboard-nvim',
+    enabled = true,
+    event = 'VimEnter',
+    config = function()
+      require('dashboard').setup {
+        -- config
+      }
+    end,
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+  },
+  {
+    'folke/flash.nvim',
+    event = 'VeryLazy',
+    ---@type Flash.Config
+    opts = {
+      modes = {
+        char = {
+          keys = { 'f', 'F', ';', ',' },
+        },
+      },
+    },
+  -- stylua: ignore
+  keys = {
+    { "t", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
+    { "T", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+    { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+    { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+    { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+  },
   },
 }

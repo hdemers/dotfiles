@@ -45,41 +45,41 @@ return {
         -- Actions
         -- Document key chains
         require('which-key').register {
-          ['<leader>ch'] = { name = 'Diff [h]unk', _ = 'which_key_ignore' },
+          ['<leader>gu'] = { name = 'Diff h[u]nk', _ = 'which_key_ignore' },
         }
-        map('n', '<leader>chs', gs.stage_hunk, { desc = 'GitSigns: [s]tage hunk' })
-        map('n', '<leader>chr', gs.reset_hunk, { desc = 'GitSigns: [r]eset hunk' })
-        map('v', '<leader>chs', function()
+        map('n', '<leader>gus', gs.stage_hunk, { desc = 'GitSigns: [s]tage hunk' })
+        map('n', '<leader>gur', gs.reset_hunk, { desc = 'GitSigns: [r]eset hunk' })
+        map('v', '<leader>gus', function()
           gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
         end, { desc = 'GitSigns: [s]tage hunk' })
-        map('v', '<leader>chr', function()
+        map('v', '<leader>gur', function()
           gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
         end, { desc = 'GitSigns: [r]eset hunk' })
-        map('n', '<leader>chS', gs.stage_buffer, { desc = 'GitSigns: [S]tage buffer' })
+        map('n', '<leader>guS', gs.stage_buffer, { desc = 'GitSigns: [S]tage buffer' })
         map(
           'n',
-          '<leader>chu',
+          '<leader>guu',
           gs.undo_stage_hunk,
           { desc = 'GitSigns: [u]ndo stage hunk' }
         )
-        map('n', '<leader>chR', gs.reset_buffer, { desc = 'GitSigns: [R]eset buffer' })
-        map('n', '<leader>chp', gs.preview_hunk, { desc = 'GitSigns: [p]review hunk' })
-        map('n', '<leader>chl', function()
+        map('n', '<leader>guR', gs.reset_buffer, { desc = 'GitSigns: [R]eset buffer' })
+        map('n', '<leader>gup', gs.preview_hunk, { desc = 'GitSigns: [p]review hunk' })
+        map('n', '<leader>gul', function()
           gs.blame_line { full = true }
         end, { desc = 'GitSigns: b[l]ame line' })
         map(
           'n',
-          '<leader>chb',
+          '<leader>gub',
           gs.toggle_current_line_blame,
           { desc = 'GitSigns: Toggle line [b]lame' }
         )
-        -- map('n', '<leader>chd', gs.diffthis, { desc = 'GitSigns: [d]iff this' })
-        -- map('n', '<leader>chD', function()
+        -- map('n', '<leader>gud', gs.diffthis, { desc = 'GitSigns: [d]iff this' })
+        -- map('n', '<leader>guD', function()
         --   gs.diffthis '~'
         -- end, { desc = 'GitSigns: [D]iff this (cached)' })
         map(
           'n',
-          '<leader>chd',
+          '<leader>gud',
           gs.toggle_deleted,
           { desc = 'GitSigns: Toggle [d]eleted signs' }
         )
@@ -122,14 +122,14 @@ return {
       ]]
     end,
     keys = {
-      {
-        '<leader>gs',
-        ':Gtabedit :<CR>:set previewwindow <CR>',
-        desc = 'Fugitive: [g]it [s]tatus',
-      },
+      -- {
+      --   '<leader>gs',
+      --   ':Gtabedit :<CR>:set previewwindow <CR>',
+      --   desc = 'Fugitive: [g]it [s]tatus',
+      -- },
       {
         '<leader>gc',
-        ':Git commit<CR> <C-W>L',
+        ':vertical rightb :Git commit<CR>',
         desc = 'Fugitive: [g]it [c]ommit',
       },
       {
@@ -170,7 +170,7 @@ return {
   -- },
   {
     'ruifm/gitlinker.nvim',
-    depdenencies = { 'nvim-lua/plenary.nvim' },
+    dependencies = { 'nvim-lua/plenary.nvim' },
     config = function()
       require('gitlinker').setup {
         mappings = nil,
@@ -213,7 +213,28 @@ return {
         desc = 'Diffview: view current file [h]istory',
         mode = { 'n', 'v' },
       },
+      {
+        '<leader>gs',
+        ':DiffviewOpen<CR>',
+        desc = 'Diffview: git status',
+      },
     },
+    opts = {
+      file_panel = {
+        listing_style = 'list',
+      },
+      keymaps = {
+        file_panel = {
+          { 'n', '<leader>b', false },
+        },
+        view = {
+          { 'n', '<leader>b', false },
+        },
+      },
+    },
+    config = function(_, opts)
+      require('diffview').setup(opts)
+    end,
   },
   {
     'aaronhallaert/advanced-git-search.nvim',

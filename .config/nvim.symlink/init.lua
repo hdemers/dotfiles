@@ -157,8 +157,9 @@ vim.opt.scrolloff = 10
 -- Ensure we use guifg and guibg colors from color schemes
 vim.opt.termguicolors = true
 
--- [[ Basic Keymaps ]]
---  See `:help vim.keymap.set()`
+-- Sets the Python executable to be used by Neovim. This requires the existence of a
+-- virtualenv named `nvim` with packages `pynvim` and `jupyter_client` installed.
+vim.g.python3_host_prog = '/home/hdemers/.virtualenvs/nvim/bin/python'
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true

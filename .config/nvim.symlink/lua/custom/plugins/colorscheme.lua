@@ -85,6 +85,7 @@ return {
       custom_highlights = function(colors)
         return {
           LeapBackdrop = { fg = colors.surface2 },
+          MiniStatuslineFilename = { link = 'StatusLine' },
         }
       end,
     },
@@ -135,6 +136,7 @@ return {
       on_highlights = function(hl, _)
         hl.TelescopeMatching = { link = 'IncSearch' }
         hl.TelescopeSelection = { link = 'Visual' }
+        hl.MiniStatuslineFilename = { link = 'MiniStatuslineInactive' }
       end,
     },
   },

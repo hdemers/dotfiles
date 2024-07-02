@@ -43,7 +43,7 @@ return {
       vim.keymap.set(
         'n',
         '<localleader><CR>',
-        ':QuartoSend<CR>]]',
+        ':QuartoSend<CR>',
         { desc = 'Quarto: run cell', silent = true }
       )
       vim.keymap.set(
@@ -149,16 +149,6 @@ return {
       handle_leading_whitespace = true,
     },
   },
-  { -- preview equations
-    'jbyuki/nabla.nvim',
-    keys = {
-      {
-        '<leader>jm',
-        ':lua require"nabla".toggle_virt()<cr>',
-        desc = 'Nabla: toggle [m]ath equations',
-      },
-    },
-  },
   {
     'benlubas/molten-nvim',
     lazy = false,
@@ -229,60 +219,88 @@ return {
       }
     end,
   },
-  { -- send code from python/r/qmd documets to a terminal or REPL
-    -- like ipython, R, bash
-    'jpalardy/vim-slime',
-    dev = false,
+  {
+    'milanglacier/yarepl.nvim',
+    event = 'VeryLazy',
+    config = true,
     init = function()
-      vim.b['quarto_is_python_chunk'] = false
-      Quarto_is_in_python_chunk = function()
-        require('otter.tools.functions').is_otter_language_context 'python'
-      end
+      local autocmd = vim.api.nvim_create_autocmd
+      local bufmap = vim.api.nvim_buf_set_keymap
 
-      vim.cmd [[
-      let g:slime_dispatch_ipython_pause = 100
-      function SlimeOverride_EscapeText_quarto(text)
-        call v:lua.Quarto_is_in_python_chunk()
-        if exists('g:slime_python_ipython') && len(split(a:text,"\n")) > 1 && b:quarto_is_python_chunk && !(exists('b:quarto_is_r_mode') && b:quarto_is_r_mode)
-          return ["%cpaste -q\n", g:slime_dispatch_ipython_pause, a:text, "--", "\n"]
-        else
-          if exists('b:quarto_is_r_mode') && b:quarto_is_r_mode && b:quarto_is_python_chunk
-            return [a:text, "\n"]
-          else
-            return [a:text]
-          end
-        end
-      endfunction
-      ]]
-
-      vim.g.slime_target = 'neovim'
-      vim.g.slime_no_mappings = true
-      vim.g.slime_python_ipython = 1
+      autocmd('FileType', {
+        pattern = {
+          'quarto',
+          'markdown',
+          'markdown.pandoc',
+          'rmd',
+          'python',
+          'sh',
+          'REPL',
+          'r',
+        },
+        group = vim.api.nvim_create_augroup('yarepl', {}),
+        desc = 'set up REPL keymap',
+        callback = function()
+          bufmap(0, 'n', '<localleader>js', '<Plug>(REPLStart)', {
+            desc = 'yarepl: [s]tart a repl',
+          })
+          -- bufmap(0, 'n', '<localleader>rf', '<Plug>(REPLFocus)', {
+          --   desc = 'yarepl: [f]ocus on REPL',
+          -- })
+          bufmap(0, 'n', '<localleader>jv', '<CMD>Telescope REPLShow<CR>', {
+            desc = 'yarepl: [v]iew REPLs in Telescope',
+          })
+          -- bufmap(0, 'n', '<localleader>rh', '<Plug>(REPLHide)', {
+          --   desc = 'Hide REPL',
+          -- })
+          bufmap(0, 'v', '<localleader>k', '<Plug>(REPLSendOperator)', {
+            desc = 'yarepl: send cell to repl',
+          })
+          -- bufmap(0, 'n', '<localleader>ss', '<Plug>(REPLSendLine)', {
+          --   desc = 'Send line to REPL',
+          -- })
+          -- bufmap(0, 'n', '<localleader>s', '<Plug>(REPLSendOperator)', {
+          --   desc = 'Send current line to REPL',
+          -- })
+          -- bufmap(0, 'n', '<localleader>re', '<Plug>(REPLExec)', {
+          --   desc = 'Execute command in REPL',
+          --   expr = true,
+          -- })
+          bufmap(0, 'n', '<localleader>jq', '<Plug>(REPLClose)', {
+            desc = 'yarepl: [q]uit REPL',
+          })
+          bufmap(0, 'n', '<localleader>ju', '<CMD>REPLCleanup<CR>', {
+            desc = 'yarepl: clean [u]p REPLs',
+          })
+          -- bufmap(0, 'n', '<localleader>rS', '<CMD>REPLSwap<CR>', {
+          --   desc = 'Swap REPLs.',
+          -- })
+          -- bufmap(0, 'n', '<localleader>r?', '<Plug>(REPLStart)', {
+          --   desc = 'Start an REPL from available REPL metas',
+          -- })
+          bufmap(0, 'n', '<localleader>jt', '<CMD>REPLAttachBufferToREPL<CR>', {
+            desc = 'yarepl: a[t]tach current buffer to a REPL',
+          })
+          -- bufmap(0, 'n', '<localleader>rd', '<CMD>REPLDetachBufferToREPL<CR>', {
+          --   desc = 'Detach current buffer to any REPL',
+          -- })
+        end,
+      })
     end,
-    config = function()
-      vim.g.slime_input_pid = false
-      vim.g.slime_suggest_default = true
-      vim.g.slime_menu_config = false
-      vim.g.slime_neovim_ignore_unlisted = true
-      vim.b.slime_cell_delimiter = '#\\s\\=%%'
-
-      local function mark_terminal()
-        local job_id = vim.b.terminal_job_id
-        vim.print('job_id: ' .. job_id)
-      end
-
-      local function set_terminal()
-        vim.fn.call('slime#config', {})
-      end
-      vim.keymap.set(
-        'n',
-        '<leader>jt',
-        mark_terminal,
-        { desc = 'Slime: mark [t]erminal' }
-      )
-      vim.keymap.set('n', '<leader>js', function()
-        vim.fn['slime#send_cell']()
-      end, { desc = 'Slime: [s]end cell' })
+  },
+  {
+    'Vigemus/iron.nvim',
+    opts = {
+      config = {
+        scratch_repl = true,
+        repl_open_cmd = 'vertical botright 80 split',
+        repl_definition = {
+          quarto = { command = 'ipython' },
+        },
+      },
+    },
+    config = function(_, opts)
+      require('iron.core').setup(opts)
     end,
   },
 }

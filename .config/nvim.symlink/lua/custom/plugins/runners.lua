@@ -19,19 +19,24 @@ return {
     cmd = { 'OverseerRun', 'OverseerToggle', 'OverseerRunCmd' },
     keys = {
       {
-        '<leader>rjd',
-        '<cmd>OverseerRun jenkins-deploy-branch<CR>',
-        desc = 'Overseer: [j]enkins [d]eploy branch',
+        '<leader>rd',
+        '<cmd>OverseerRun deploy-branch<CR>',
+        desc = 'Overseer: [d]eploy branch',
       },
       {
-        '<leader>rji',
-        '<cmd>OverseerRun jenkins-integrate<CR>',
-        desc = 'Overseer: [j]enkins [i]ntegrate branch',
+        '<leader>ri',
+        '<cmd>OverseerRun integrate<CR>',
+        desc = 'Overseer: [i]ntegrate branch',
+      },
+      {
+        '<leader>rs',
+        '<cmd>OverseerToggle right<CR>',
+        desc = 'Overseer: toggle [s]tatus',
       },
       {
         '<leader>rt',
-        '<cmd>OverseerToggle right<CR>',
-        desc = 'Overseer: [t]oggle',
+        '<cmd>OverseerRun make-test<CR>',
+        desc = 'Overseer: make [t]est',
       },
     },
     config = function(_, opts)
@@ -41,13 +46,12 @@ return {
       -- Document key chains
       require('which-key').register {
         ['<leader>r'] = { name = '[R]unner', _ = 'which_key_ignore' },
-        ['<leader>rj'] = { name = '[J]enkins', _ = 'which_key_ignore' },
       }
 
       local overseer = require 'overseer'
 
       overseer.register_template {
-        name = 'jenkins-deploy-branch',
+        name = 'deploy-branch',
         builder = function()
           return {
             cmd = { 'jenkins' },
@@ -58,7 +62,7 @@ return {
         desc = 'Deploy branch',
       }
       overseer.register_template {
-        name = 'jenkins-integrate',
+        name = 'integrate',
         builder = function()
           return {
             cmd = { 'jenkins' },
@@ -67,6 +71,17 @@ return {
           }
         end,
         desc = 'Integrate branch',
+      }
+      overseer.register_template {
+        name = 'make-test',
+        builder = function()
+          return {
+            cmd = { 'make' },
+            args = { 'test' },
+            name = 'make-test',
+          }
+        end,
+        desc = 'Run make test',
       }
     end,
   },

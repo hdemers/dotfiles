@@ -161,9 +161,9 @@ return {
       end, { desc = 'search [/] in Open Files' })
 
       -- Shortcut for searching your neovim configuration files
-      vim.keymap.set('n', '<leader>sn', function()
+      vim.keymap.set('n', '<leader>sc', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
-      end, { desc = 'search [N]eovim files' })
+      end, { desc = 'search neovim [c]onfig files' })
     end,
     init = function()
       -- The following adds a space between Telescope's file iconn and the filename.

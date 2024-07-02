@@ -110,6 +110,7 @@ return {
           { name = 'luasnip' },
           { name = 'path' },
           { name = 'otter' },
+          { name = 'lazydev', group_index = 0 },
         },
       }
     end,

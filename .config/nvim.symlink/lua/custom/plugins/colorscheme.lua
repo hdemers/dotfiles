@@ -84,8 +84,8 @@ return {
     opts = {
       custom_highlights = function(colors)
         return {
-          LeapBackdrop = { fg = colors.surface2 },
-          MiniStatuslineFilename = { link = 'StatusLine' },
+          -- LeapBackdrop = { fg = colors.surface2 },
+          -- MiniStatuslineFilename = { link = 'StatusLine' },
         }
       end,
     },
@@ -110,7 +110,7 @@ return {
       overrides = function(colors) -- add/modify highlights
         local theme = colors.theme
         return {
-          LeapBackdrop = { fg = theme.ui.nontext },
+          -- LeapBackdrop = { fg = theme.ui.nontext },
           TelescopeTitle = { fg = theme.ui.special, bold = true },
           TelescopePromptNormal = { bg = theme.ui.bg_p1 },
           TelescopePromptBorder = { fg = theme.ui.bg_p1, bg = theme.ui.bg_p1 },
@@ -134,8 +134,8 @@ return {
     opts = {
       style = 'moon',
       on_highlights = function(hl, _)
-        hl.TelescopeMatching = { link = 'IncSearch' }
-        hl.TelescopeSelection = { link = 'Visual' }
+        -- hl.TelescopeMatching = { link = 'IncSearch' }
+        -- hl.TelescopeSelection = { link = 'Visual' }
         hl.MiniStatuslineFilename = { link = 'MiniStatuslineInactive' }
       end,
     },

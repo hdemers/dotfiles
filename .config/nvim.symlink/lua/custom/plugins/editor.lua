@@ -25,7 +25,7 @@ return {
       require('which-key').register {
         ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
         ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
+        -- ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
         ['<leader>b'] = { name = '[B]uffer', _ = 'which_key_ignore' },
       }
     end,
@@ -341,12 +341,18 @@ return {
       },
     },
   -- stylua: ignore
-  keys = {
-    { "t", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash" },
-    { "T", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-    { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
-    { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-    { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
-  },
+    keys = {
+      {
+        "t",
+        mode = { "n", "x", "o" },
+        function() require("flash").jump() end,
+        desc = "Flash"
+      },
+      {
+        "T", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
+      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
+      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
+      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+    },
   },
 }

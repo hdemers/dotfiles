@@ -102,8 +102,8 @@ return {
       )
 
       -- Document key chains
-      require('which-key').register {
-        ['<leader>j'] = { name = '[J]upyter', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>j', group = '[J]upyter' },
       }
     end,
   },
@@ -216,6 +216,9 @@ return {
           codeblock_highlight = 'CodeBlock',
           treesitter_language = 'markdown',
         },
+        markdown = {
+          bullets = {},
+        },
       }
     end,
   },
@@ -253,7 +256,7 @@ return {
           -- bufmap(0, 'n', '<localleader>rh', '<Plug>(REPLHide)', {
           --   desc = 'Hide REPL',
           -- })
-          bufmap(0, 'v', '<localleader>k', '<Plug>(REPLSendOperator)', {
+          bufmap(0, 'n', '<localleader>k', '<Plug>(REPLSendOperator)', {
             desc = 'yarepl: send cell to repl',
           })
           -- bufmap(0, 'n', '<localleader>ss', '<Plug>(REPLSendLine)', {
@@ -297,6 +300,9 @@ return {
         repl_definition = {
           quarto = { command = 'ipython' },
         },
+      },
+      keymaps = {
+        -- send_mark = '<localleader>k',
       },
     },
     config = function(_, opts)

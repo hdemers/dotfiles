@@ -22,11 +22,11 @@ return {
       require('which-key').setup()
 
       -- Document existing key chains
-      require('which-key').register {
-        ['<leader>c'] = { name = '[C]ode', _ = 'which_key_ignore' },
-        ['<leader>s'] = { name = '[S]earch', _ = 'which_key_ignore' },
-        -- ['<leader>w'] = { name = '[W]orkspace', _ = 'which_key_ignore' },
-        ['<leader>b'] = { name = '[B]uffer', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>b', group = '[B]uffer' },
+        { '<leader>c', group = '[C]ode' },
+        -- { '<leader>w', group = '[W]orkspace' },
+        { '<leader>s', group = '[S]earch' },
       }
     end,
   },
@@ -134,7 +134,7 @@ return {
       { -- lazy style key map
         '<leader>u',
         '<cmd>Telescope undo<cr>',
-        desc = 'undo history',
+        desc = '[u]ndo history',
       },
     },
     opts = {
@@ -244,8 +244,8 @@ return {
       { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll backward", mode = {"i", "n", "s"}},
     },
     init = function()
-      require('which-key').register {
-        ['<leader>sn'] = { name = '[n]oice', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>sn', group = '[n]oice' },
       }
     end,
   },
@@ -298,6 +298,7 @@ return {
       autosave = true,
       autoload = true,
       follow_cwd = false,
+      use_git_branch = false,
       allowed_dirs = {
         '~/Projets',
         '~/.dotfiles',

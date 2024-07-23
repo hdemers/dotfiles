@@ -44,34 +44,39 @@ return {
 
         -- Actions
         -- Document key chains
-        require('which-key').register {
-          ['<leader>gu'] = { name = 'Diff h[u]nk', _ = 'which_key_ignore' },
+        require('which-key').add {
+          { '<leader>gu', group = 'Diff h[u]nk' },
         }
-        map('n', '<leader>gus', gs.stage_hunk, { desc = 'GitSigns: [s]tage hunk' })
-        map('n', '<leader>gur', gs.reset_hunk, { desc = 'GitSigns: [r]eset hunk' })
-        map('v', '<leader>gus', function()
+        map('n', '<leader>ga', gs.stage_hunk, { desc = 'GitSigns: [a]dd (stage) hunk' })
+        map('v', '<leader>ga', function()
           gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'GitSigns: [s]tage hunk' })
-        map('v', '<leader>gur', function()
+        end, { desc = 'GitSigns: [a]dd (stage) hunk' })
+        map('n', '<leader>gx', gs.reset_hunk, { desc = 'GitSigns: reset hunk' })
+        map('v', '<leader>gx', function()
           gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'GitSigns: [r]eset hunk' })
-        map('n', '<leader>guS', gs.stage_buffer, { desc = 'GitSigns: [S]tage buffer' })
+        end, { desc = 'GitSigns: reset hunk' })
         map(
           'n',
-          '<leader>guu',
-          gs.undo_stage_hunk,
-          { desc = 'GitSigns: [u]ndo stage hunk' }
+          '<leader>gA',
+          gs.stage_buffer,
+          { desc = 'GitSigns: [A]dd (stage) buffer' }
         )
-        map('n', '<leader>guR', gs.reset_buffer, { desc = 'GitSigns: [R]eset buffer' })
-        map('n', '<leader>gup', gs.preview_hunk, { desc = 'GitSigns: [p]review hunk' })
-        map('n', '<leader>gul', function()
-          gs.blame_line { full = true }
-        end, { desc = 'GitSigns: b[l]ame line' })
         map(
           'n',
-          '<leader>gub',
+          '<leader>gn',
+          gs.undo_stage_hunk,
+          { desc = 'GitSigns: u[n]do stage hunk' }
+        )
+        map('n', '<leader>gX', gs.reset_buffer, { desc = 'GitSigns: reset buffer' })
+        map('n', '<leader>gv', gs.preview_hunk, { desc = 'GitSigns: [v]iew hunk' })
+        map('n', '<leader>gn', function()
+          gs.blame_line { full = true }
+        end, { desc = 'GitSigns: blame line' })
+        map(
+          'n',
+          '<leader>gt',
           gs.toggle_current_line_blame,
-          { desc = 'GitSigns: Toggle line [b]lame' }
+          { desc = 'GitSigns: [t]oggle line blame' }
         )
         -- map('n', '<leader>gud', gs.diffthis, { desc = 'GitSigns: [d]iff this' })
         -- map('n', '<leader>guD', function()
@@ -79,9 +84,9 @@ return {
         -- end, { desc = 'GitSigns: [D]iff this (cached)' })
         map(
           'n',
-          '<leader>gud',
+          '<leader>gT',
           gs.toggle_deleted,
-          { desc = 'GitSigns: Toggle [d]eleted signs' }
+          { desc = 'GitSigns: [T]oggle deleted signs' }
         )
 
         -- Text object
@@ -135,22 +140,22 @@ return {
       {
         '<leader>gp',
         ':Git push',
-        desc = 'Fugitive: [g]it [p]ush',
+        desc = 'Fugitive: git [p]ush',
       },
       {
         '<leader>gr',
         ':Git rebase -i master<CR>',
-        desc = 'Fugitive: [g]it [r]ebase -i master',
+        desc = 'Fugitive: git [r]ebase -i master',
       },
       {
         '<leader>gb',
         ':Git blame<CR>',
-        desc = 'Fugitive: [g]it [b]lame',
+        desc = 'Fugitive: git [b]lame',
       },
     },
     init = function()
-      require('which-key').register {
-        ['<leader>g'] = { name = '[G]it', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>g', group = '[g]it' },
       }
     end,
   },
@@ -269,5 +274,16 @@ return {
       -- (fugitive is still needed to open in browser)
       'sindrets/diffview.nvim',
     },
+  },
+  {
+    'NeogitOrg/neogit',
+    dependencies = {
+      'nvim-lua/plenary.nvim', -- required
+      -- 'sindrets/diffview.nvim', -- optional - Diff integration
+      -- Only one of these is needed, not both.
+      'nvim-telescope/telescope.nvim', -- optional
+      'ibhagwan/fzf-lua', -- optional
+    },
+    config = true,
   },
 }

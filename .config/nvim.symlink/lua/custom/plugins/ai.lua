@@ -69,8 +69,8 @@ return {
     },
     init = function()
       -- Document key chains
-      require('which-key').register {
-        ['<leader>h'] = { name = '[H]elp', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>h', group = '[H]elp' },
       }
     end,
   },

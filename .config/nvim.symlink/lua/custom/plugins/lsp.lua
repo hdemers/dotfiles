@@ -93,11 +93,11 @@ return {
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
-          map(
-            '<leader>D',
-            require('telescope.builtin').lsp_type_definitions,
-            'Type [D]efinition'
-          )
+          -- map(
+          --   '<leader>D',
+          --   require('telescope.builtin').lsp_type_definitions,
+          --   'Type [D]efinition'
+          -- )
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
@@ -367,8 +367,8 @@ return {
       },
     },
     -- Document key chains
-    require('which-key').register {
-      ['<leader>x'] = { name = 'Trouble [X]', _ = 'which_key_ignore' },
+    require('which-key').add {
+      { '<leader>x', group = 'Trouble [X]' },
     },
   },
   -- I wish lspconfig had sqlfluff support, but it doesn't. And nvim-lint doesn't

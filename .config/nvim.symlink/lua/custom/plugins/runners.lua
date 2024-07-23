@@ -44,8 +44,8 @@ return {
     end,
     init = function()
       -- Document key chains
-      require('which-key').register {
-        ['<leader>r'] = { name = '[R]unner', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>r', group = '[R]unner' },
       }
 
       local overseer = require 'overseer'

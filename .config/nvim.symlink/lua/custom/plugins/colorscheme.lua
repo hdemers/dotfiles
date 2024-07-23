@@ -134,8 +134,8 @@ return {
     opts = {
       style = 'moon',
       on_highlights = function(hl, _)
-        -- hl.TelescopeMatching = { link = 'IncSearch' }
-        -- hl.TelescopeSelection = { link = 'Visual' }
+        hl.TelescopeMatching = { link = 'Title' }
+        hl.TelescopeSelection = { link = 'Visual' }
         hl.MiniStatuslineFilename = { link = 'MiniStatuslineInactive' }
       end,
     },
@@ -145,7 +145,7 @@ return {
     opts = {
       style = 'darker',
       highlights = {
-        LeapBackdrop = { fg = '$light_grey' },
+        -- LeapBackdrop = { fg = '$light_grey' },
       },
     },
     config = function(_, opts)
@@ -196,7 +196,7 @@ return {
   {
     'AlexvZyl/nordic.nvim',
     config = function()
-      local palette = require 'nordic.colors'
+      -- local palette = require 'nordic.colors'
       require('nordic').setup {
         ts_context = { dark_background = false },
         telescope = { style = 'flat' },
@@ -204,7 +204,7 @@ return {
           ['@spell'] = { link = '@spell' },
           DiagnosticUnderlineError = {},
           TelescopeMatching = { link = 'IncSearch' },
-          LeapBackdrop = { fg = palette.gray4 },
+          -- LeapBackdrop = { fg = palette.gray4 },
         },
       }
     end,
@@ -214,7 +214,7 @@ return {
     opts = {
       overrides = function(colors)
         return {
-          LeapBackdrop = { fg = colors.white },
+          -- LeapBackdrop = { fg = colors.white },
         }
       end,
     },
@@ -225,13 +225,13 @@ return {
   {
     'Mofiqul/vscode.nvim',
     config = function()
-      local c = require('vscode.colors').get_colors()
+      -- local c = require('vscode.colors').get_colors()
       require('vscode').setup {
         -- Override highlight groups (see ./lua/vscode/theme.lua)
         group_overrides = {
           -- this supports the same val table as vim.api.nvim_set_hl
           -- use colors from this colorscheme by requiring vscode.colors!
-          LeapBackdrop = { fg = c.vscGray },
+          -- LeapBackdrop = { fg = c.vscGray },
         },
       }
     end,

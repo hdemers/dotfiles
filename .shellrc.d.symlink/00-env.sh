@@ -88,8 +88,8 @@ else
 fi
 
 # If the secret-tool command exists, set our token.
-if [[ -x "$(command -v secret-tool)" ]]; then
-    export GITHUB_TOKEN=$(secret-tool lookup github token)
+if [[ -x "$(command -v secret)" ]]; then
+    export GITHUB_TOKEN=$(secret lookup github token)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable
@@ -99,3 +99,6 @@ fi
 
 # Quarto needs the python package `jupyter` which is installed in virtualenv `nvim`. Sett the Quarto python executable to the one from this virtualenv.
 export QUARTO_PYTHON=$HOME/.virtualenvs/nvim/bin/python
+
+# This token is taken from the Todoist app itself.
+export TODOIST_API_TOKEN=$(secret lookup todoist token)

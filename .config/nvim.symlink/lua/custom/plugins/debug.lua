@@ -54,9 +54,9 @@ return {
               elements = {
                 -- Other DAP UI elements you want to include in the layout
                 'scopes',
-                'breakpoints',
+                -- 'breakpoints',
                 'stacks',
-                'watches',
+                -- 'watches',
               },
               size = 60,
               position = 'left',
@@ -272,8 +272,8 @@ return {
     },
     config = function()
       -- Document key chains
-      require('which-key').register {
-        ['<leader>d'] = { name = '[D]ebug', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>d', group = '[D]ebug' },
       }
 
       -- setup dap config by VsCode launch.json file
@@ -399,8 +399,8 @@ return {
     end,
     init = function()
       -- Document key chains
-      require('which-key').register {
-        ['<leader>t'] = { name = 'Unit [t]est', _ = 'which_key_ignore' },
+      require('which-key').add {
+        { '<leader>t', group = 'Unit [t]est' },
       }
     end,
     -- stylua: ignore

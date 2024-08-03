@@ -92,7 +92,7 @@ return {
     config = function(_, opts)
       require('catppuccin').setup(opts)
       vim.o.background = 'dark'
-      vim.cmd.colorscheme 'catppuccin-macchiato'
+      vim.cmd.colorscheme 'catppuccin'
     end,
   },
   {
@@ -110,8 +110,9 @@ return {
       overrides = function(colors) -- add/modify highlights
         local theme = colors.theme
         return {
-          -- LeapBackdrop = { fg = theme.ui.nontext },
           TelescopeTitle = { fg = theme.ui.special, bold = true },
+          TelescopeMatching = { fg = theme.ui.special, bold = true },
+          TelescopeSelection = { bg = theme.ui.shade0 },
           TelescopePromptNormal = { bg = theme.ui.bg_p1 },
           TelescopePromptBorder = { fg = theme.ui.bg_p1, bg = theme.ui.bg_p1 },
           TelescopeResultsNormal = { fg = theme.ui.fg_dim, bg = theme.ui.bg_m1 },
@@ -133,10 +134,41 @@ return {
     'folke/tokyonight.nvim',
     opts = {
       style = 'moon',
-      on_highlights = function(hl, _)
+      on_highlights = function(hl, c)
+        local prompt = '#2d3149'
+
         hl.TelescopeMatching = { link = 'Title' }
-        hl.TelescopeSelection = { link = 'Visual' }
+        hl.TelescopeSelection = { bg = c.bg_visual }
+        hl.TelescopeSelectionCaret = { fg = c.orange }
         hl.MiniStatuslineFilename = { link = 'MiniStatuslineInactive' }
+        -- The following are highlights to make Telescope borderless.
+        hl.TelescopeNormal = {
+          bg = c.bg_dark,
+          fg = c.fg_dark,
+        }
+        hl.TelescopeBorder = {
+          bg = c.bg_dark,
+          fg = c.bg_dark,
+        }
+        hl.TelescopePromptNormal = {
+          bg = prompt,
+        }
+        hl.TelescopePromptBorder = {
+          bg = prompt,
+          fg = prompt,
+        }
+        hl.TelescopePromptTitle = {
+          bg = prompt,
+          fg = prompt,
+        }
+        hl.TelescopePreviewTitle = {
+          bg = c.bg_dark,
+          fg = c.bg_dark,
+        }
+        hl.TelescopeResultsTitle = {
+          bg = c.bg_dark,
+          fg = c.bg_dark,
+        }
       end,
     },
   },

@@ -111,9 +111,12 @@ vim.opt.mouse = 'a'
 vim.opt.showmode = false
 
 -- Sync clipboard between OS and Neovim.
+--  Schedule the setting after `UiEnter` because it can increase startup-time.
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
-vim.opt.clipboard = 'unnamedplus'
+vim.schedule(function()
+  vim.opt.clipboard = 'unnamedplus'
+end)
 
 -- Enable break indent
 vim.opt.breakindent = true
@@ -161,23 +164,22 @@ vim.opt.termguicolors = true
 -- virtualenv named `nvim` with packages `pynvim` and `jupyter_client` installed.
 vim.g.python3_host_prog = '/home/hdemers/.virtualenvs/nvim/bin/python'
 
--- Set highlight on search, but clear on pressing <Esc> in normal mode
-vim.opt.hlsearch = true
+-- Clear highlight on search when pressing <Esc> in normal mode
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set(
-  'n',
-  '[d',
-  vim.diagnostic.goto_prev,
-  { desc = 'Go to previous [d]iagnostic message' }
-)
-vim.keymap.set(
-  'n',
-  ']d',
-  vim.diagnostic.goto_next,
-  { desc = 'Go to next [d]iagnostic message' }
-)
+-- vim.keymap.set(
+--   'n',
+--   '[d',
+--   vim.diagnostic.goto_prev,
+--   { desc = 'Go to previous [d]iagnostic message' }
+-- )
+-- vim.keymap.set(
+--   'n',
+--   ']d',
+--   vim.diagnostic.goto_next,
+--   { desc = 'Go to next [d]iagnostic message' }
+-- )
 vim.keymap.set(
   'n',
   '<leader>e',
@@ -270,7 +272,7 @@ vim.filetype.add {
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   local lazyrepo = 'https://github.com/folke/lazy.nvim.git'
   vim.fn.system {
     'git',

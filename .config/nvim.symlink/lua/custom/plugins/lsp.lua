@@ -11,20 +11,7 @@ return {
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
       { 'j-hui/fidget.nvim', opts = {} },
 
-      {
-        'folke/lazydev.nvim',
-        ft = 'lua', -- only load on lua files
-        dependencies = {
-          { 'Bilal2453/luvit-meta', lazy = true }, -- optional `vim.uv` typings
-        },
-        opts = {
-          library = {
-            -- See the configuration section for more details
-            -- Load luvit types when the `vim.uv` word is found
-            { path = 'luvit-meta/library', words = { 'vim%.uv' } },
-          },
-        },
-      },
+      'hrsh7th/cmp-nvim-lsp',
     },
     config = function()
       -- Brief Aside: **What is LSP?**
@@ -306,12 +293,12 @@ return {
       },
       {
         '<leader>cs',
-        '<cmd>Trouble symbols toggle focus=false<cr>',
+        '<cmd>Trouble symbols toggle focus=false win.size.width=70<cr>',
         desc = 'Symbols (Trouble)',
       },
       {
         '<leader>cl',
-        '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
+        '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=70<cr>',
         desc = 'LSP Definitions / references / ... (Trouble)',
       },
       {
@@ -387,4 +374,16 @@ return {
       null_ls.setup { sources = sources, debug = true }
     end,
   },
+  {
+    'folke/lazydev.nvim',
+    ft = 'lua', -- only load on lua files
+    opts = {
+      library = {
+        -- See the configuration section for more details
+        -- Load luvit types when the `vim.uv` word is found
+        { path = 'luvit-meta/library', words = { 'vim%.uv' } },
+      },
+    },
+  },
+  { 'Bilal2453/luvit-meta', lazy = true }, -- optional `vim.uv` typings
 }

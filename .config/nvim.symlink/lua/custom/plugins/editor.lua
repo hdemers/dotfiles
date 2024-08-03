@@ -12,9 +12,6 @@ return {
       wk.register(uwk.normal_and_visual_mode, { mode = { 'n', 'v' } })
     end,
   },
-  -- "gc" to comment visual regions/lines
-  { 'numToStr/Comment.nvim', opts = {} },
-
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'

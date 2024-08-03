@@ -46,3 +46,6 @@ tags
 .vscode
 
 __pycache__
+
+# Ignore worktrees
+worktrees

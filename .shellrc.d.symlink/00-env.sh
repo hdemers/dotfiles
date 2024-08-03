@@ -101,4 +101,6 @@ fi
 export QUARTO_PYTHON=$HOME/.virtualenvs/nvim/bin/python
 
 # This token is taken from the Todoist app itself.
-export TODOIST_API_TOKEN=$(secret lookup todoist token)
+if [[ -x "$(command -v secret)" ]]; then
+    export TODOIST_API_TOKEN=$(secret lookup todoist token)
+fi

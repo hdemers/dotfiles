@@ -65,15 +65,6 @@ export R_LIBS_USER=$HOME/.local/lib/R
 # Set the AWS profile for use with S3 only
 export AWS_PROFILE=s3-access
 
-if [[ -f "$HOME/.config/openai/api.txt" ]]; then
-    export OPENAI_API_KEY=$(cat $HOME/.config/openai/api.txt)
-fi
-
-if [[ -f "$HOME/.config/jira/api-token.txt" ]]; then
-    export JIRA_API_TOKEN=$(cat $HOME/.config/jira/api-token.txt)
-    export JIRA_AUTH_TYPE=bearer
-fi
-
 # Set environment variable CURRENT_SHELL to the name of the current shell
 CURRENT_SHELL=$(ps -ho cmd -p $$ | cut -d ' ' -f 1)
 export CURRENT_SHELL=${CURRENT_SHELL#-}
@@ -87,9 +78,12 @@ else
   echo "No match found"
 fi
 
-# If the secret-tool command exists, set our token.
+# If the secret command exists, retrieve our tokens.
 if [[ -x "$(command -v secret)" ]]; then
     export GITHUB_TOKEN=$(secret lookup github token)
+    export TODOIST_API_TOKEN=$(secret lookup todoist token)
+    export JIRA_API_TOKEN=$(secret lookup jira token)
+    export OPENAI_API_KEY=$(secret lookup openai apikey)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable
@@ -102,5 +96,4 @@ export QUARTO_PYTHON=$HOME/.virtualenvs/nvim/bin/python
 
 # This token is taken from the Todoist app itself.
 if [[ -x "$(command -v secret)" ]]; then
-    export TODOIST_API_TOKEN=$(secret lookup todoist token)
 fi

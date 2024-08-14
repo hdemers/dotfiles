@@ -17,7 +17,7 @@ decorations = "None"
 
 # Sudo settings
 normal = { family = "Sudo", style = "Regular" }
-size = 11.7
+size = 12
 
 # Use built-in font for box drawing characters
 builtin_box_drawing = true  # Default: true

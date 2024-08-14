@@ -123,4 +123,9 @@ alias gb="git rb \
     | tr -d '*' \
     | xargs --no-run-if-empty git sw"
 
-
+alias jstories="jira issues -p ELMO \
+    | fzf \
+    --ansi \
+    --preview='jira describe {1}' \
+    --preview-window='top,50%' \
+    --header-lines=2"

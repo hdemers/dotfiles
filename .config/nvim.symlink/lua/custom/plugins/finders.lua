@@ -192,51 +192,158 @@ return {
       },
       winopts = {
         win_width = 0.60,
+        border = false,
       },
     },
-    -- keys = {
-    -- {
-    --   '<leader>sw',
-    --   function()
-    --     require('fzf-lua').grep_cword()
-    --   end,
-    --   desc = 'search current [W]ord',
-    -- },
-    -- {
-    --   '<leader>sg',
-    --   function()
-    --     require('fzf-lua').live_grep()
-    --   end,
-    --   desc = 'search by [G]rep',
-    -- },
-    -- {
-    --   '<leader>si',
-    --   function()
-    --     require('fzf-lua').git_files()
-    --   end,
-    --   desc = 'search G[i]t Files',
-    -- },
-    -- {
-    --   '<leader><leader>',
-    --   function()
-    --     require('fzf-lua').buffers()
-    --   end,
-    --   desc = '[ ] Find existing buffers',
-    -- },
-    -- {
-    --   '<leader>/',
-    --   function()
-    --     require('fzf-lua').grep_curbuf()
-    --   end,
-    --   desc = '[/] Fuzzily search in current buffer',
-    -- },
-    -- {
-    --   '<leader>sf',
-    --   function()
-    --     require('fzf-lua').files()
-    --   end,
-    --   desc = 'search [F]iles',
-    -- },
-    -- },
+    init = function()
+      local fzflua = require 'fzf-lua'
+
+      -- Show git branches and allow switching between them.
+
+      local function extract_branch(items)
+        local splitted = vim.split(items[1], ' ', { trimempty = true })
+        local metadata = {}
+        for k, v in pairs(splitted) do
+          if v ~= nil and v ~= '' then
+            metadata[k] = v
+          end
+        end
+        local branch = metadata[1]
+        local is_current = false
+        -- If branch starts with a '*',remote it
+        if string.sub(branch, 1, 1) == '*' then
+          branch = string.sub(branch, 2)
+          is_current = true
+        end
+        return branch, is_current
+      end
+
+      -- Toggle flag indicating if we are currently showing all branches.
+      local is_git_showing_all_branches = false
+
+      local function show_git_branch(all)
+        -- Reset the toggle flag.
+        is_git_showing_all_branches = false
+
+        local contents = 'git rb'
+        if all then
+          contents = 'git rba'
+        end
+
+        fzflua.fzf_exec(contents, {
+          fzf_opts = {
+            ['--header-lines'] = '1',
+            ['--preview-window'] = 'top,75%',
+          },
+          winopts = {
+            win_width = 175,
+          },
+          actions = {
+            ['default'] = function(selected)
+              local branch, is_current = extract_branch(selected)
+              if not is_current then
+                vim.cmd('Git switch ' .. branch)
+              end
+            end,
+            ['ctrl-e'] = {
+              function(selected)
+                local branch, is_current = extract_branch(selected)
+                if is_current then
+                  vim.notify('Cannot delete current branch', vim.log.levels.WARN)
+                else
+                  -- Get confirmation from the user
+                  local confirm = vim.fn.input(
+                    'Confirm deletion',
+                    'Delete branch ' .. branch .. '? [y/N] '
+                  )
+                  if confirm:sub(-1) == 'y' then
+                    vim.cmd('Git branch -D ' .. branch)
+                  end
+                end
+              end,
+              fzflua.actions.resume,
+            },
+            ['ctrl-o'] = {
+              function(_)
+                if is_git_showing_all_branches then
+                  show_git_branch(false)
+                  is_git_showing_all_branches = false
+                else
+                  show_git_branch(true)
+                  is_git_showing_all_branches = true
+                end
+              end,
+              fzflua.actions.resume,
+            },
+          },
+          preview = {
+            type = 'cmd',
+            fn = function(items)
+              -- Split items[1] by space and select the first one
+              local branch, _ = extract_branch(items)
+
+              local remote_branch = branch
+              if string.sub(branch, 1, 7) == 'origin/' then
+                remote_branch = string.sub(branch, 8)
+              end
+              return string.format(
+                'env GH_FORCE_TTY=100 gh pr view --comments %s || git show --stat --color=always %s',
+                remote_branch,
+                branch
+              )
+            end,
+          },
+        })
+      end
+      vim.keymap.set('n', '<leader>gw', function()
+        show_git_branch(false)
+      end, { desc = 'Git: s[w]itch branch', silent = true })
+
+      -- Show Jira issues.
+
+      local function show_jira_issues()
+        fzflua.fzf_exec('jira issues -p ELMO', {
+          fzf_opts = {
+            ['--header-lines'] = '2',
+            ['--preview-window'] = 'top,50%',
+          },
+          winopts = {
+            win_width = 200,
+          },
+          preview = {
+            type = 'cmd',
+            fn = function(items)
+              -- Split items[1] by space and select the first one
+              local key = vim.split(items[1], ' ', { trimempty = true })[1]
+              return string.format('jira describe %s', key)
+            end,
+          },
+        })
+      end
+      vim.keymap.set(
+        'n',
+        '<leader>sj',
+        show_jira_issues,
+        { desc = 'Jira: search [j]ira', silent = true }
+      )
+
+      -- pip list
+      local function pip_list()
+        fzflua.fzf_exec('pip list --disable-pip-version-check', {
+          fzf_opts = {
+            ['--header-lines'] = '2',
+          },
+          winopts = {
+            win_width = 70,
+          },
+        })
+      end
+      vim.keymap.set(
+        'n',
+        '<leader>sp',
+        pip_list,
+        { desc = 'Pip: search [p]ip', silent = true }
+      )
+    end,
   },
 }

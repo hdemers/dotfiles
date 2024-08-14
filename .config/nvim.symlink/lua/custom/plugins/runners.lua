@@ -38,6 +38,11 @@ return {
         '<cmd>OverseerRun make-test<CR>',
         desc = 'Overseer: make [t]est',
       },
+      {
+        '<leader>ro',
+        '<cmd>OverseerQuickAction open float<CR>',
+        desc = 'Overseer: show [o]utput',
+      },
     },
     config = function(_, opts)
       require('overseer').setup(opts)

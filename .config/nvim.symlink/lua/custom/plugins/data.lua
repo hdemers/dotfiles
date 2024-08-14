@@ -40,6 +40,39 @@ return {
     },
     init = function()
       local runner = require 'quarto.runner'
+
+      local ts_utils = require 'nvim-treesitter.ts_utils'
+
+      local function is_cursor_in_class_inner()
+        local node = ts_utils.get_node_at_cursor()
+        while node do
+          print(node)
+          local node_type = node:type()
+          print(node_type)
+          if node_type == 'fenced_code_block' then
+            print 'found it'
+            return true
+          end
+          node = ts_utils.get_previous_node(node, true, true)
+        end
+        return false
+      end
+
+      local function add_new_cell()
+        if is_cursor_in_class_inner() then
+          print 'in cell'
+          vim.api.nvim_feedkeys('][', 'n', false)
+          vim.api.nvim_feedkeys('o', 'n', false)
+        else
+          print 'not in cell'
+          vim.api.nvim_feedkeys(
+            "o\rpyc<cmd>lua require('luasnip').expand()<CR>",
+            'n',
+            false
+          )
+        end
+      end
+
       vim.keymap.set(
         'n',
         '<localleader><CR>',
@@ -256,7 +289,7 @@ return {
           -- bufmap(0, 'n', '<localleader>rh', '<Plug>(REPLHide)', {
           --   desc = 'Hide REPL',
           -- })
-          bufmap(0, 'n', '<localleader>k', '<Plug>(REPLSendOperator)', {
+          bufmap(0, 'n', '<localleader>k', '<Plug>(REPLSendOperator)vic', {
             desc = 'yarepl: send cell to repl',
           })
           -- bufmap(0, 'n', '<localleader>ss', '<Plug>(REPLSendLine)', {
@@ -307,6 +340,45 @@ return {
     },
     config = function(_, opts)
       require('iron.core').setup(opts)
+    end,
+  },
+  {
+    'chrisbra/csv.vim',
+  },
+  {
+    'kristijanhusak/vim-dadbod-ui',
+    dependencies = {
+      { 'tpope/vim-dadbod', lazy = true },
+      {
+        'kristijanhusak/vim-dadbod-completion',
+        ft = { 'sql', 'mysql', 'plsql' },
+        lazy = true,
+      }, -- Optional
+    },
+    cmd = {
+      'DBUI',
+      'DBUIToggle',
+      'DBUIAddConnection',
+      'DBUIFindBuffer',
+    },
+    keys = {
+      {
+        '<leader>cq',
+        ':tabnew DBUI<CR>:DBUI<CR>',
+        desc = 'DBUI: Open DBUI in a new tab',
+      },
+    },
+    init = function()
+      -- Your DBUI configuration
+      vim.g.db_ui_use_nerd_fonts = 1
+    end,
+    config = function()
+      -- Add cmp-nvim source for db completion
+      require('cmp').setup.buffer {
+        sources = {
+          { name = 'vim-dadbod-completion' },
+        },
+      }
     end,
   },
 }

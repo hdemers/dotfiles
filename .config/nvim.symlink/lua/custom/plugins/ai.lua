@@ -74,4 +74,25 @@ return {
       }
     end,
   },
+  {
+    'Aaronik/GPTModels.nvim',
+    dependencies = {
+      'MunifTanjim/nui.nvim',
+      'nvim-telescope/telescope.nvim',
+    },
+    keys = {
+      {
+        '<leader>hc',
+        ':GPTModelsChat<CR>',
+        desc = 'ChatGPT: [h]elp [c]hat',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ho',
+        ':GPTModelsCode<CR>',
+        desc = 'GPTModels: [h]elp c[o]de',
+        mode = { 'n', 'v' },
+      },
+    },
+  },
 }

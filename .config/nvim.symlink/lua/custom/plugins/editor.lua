@@ -8,8 +8,8 @@ return {
     config = function()
       local wk = require 'which-key'
       local uwk = require 'unimpaired-which-key'
-      wk.register(uwk.normal_mode)
-      wk.register(uwk.normal_and_visual_mode, { mode = { 'n', 'v' } })
+      wk.add(uwk.normal_mode)
+      wk.add(uwk.normal_and_visual_mode, { mode = { 'n', 'v' } })
     end,
   },
   { -- Useful plugin to show you pending keybinds.
@@ -71,7 +71,7 @@ return {
       -- default behavior. For example, here we set the section for
       -- cursor location to LINE:COLUMN
       statusline.section_location = function()
-        local tasks = require('overseer.task_list').list_tasks { unique = true }
+        local tasks = require('overseer.task_list').list_tasks { unique = false }
         local tasks_by_status = require('overseer.util').tbl_group_by(tasks, 'status')
         -- If we have running tasks, show them in the statusline
         local line = '%2l:%-2v'
@@ -289,32 +289,17 @@ return {
     },
   },
   {
-    'olimorris/persisted.nvim',
-    lazy = false, -- make sure the plugin is always loaded at startup
-    opts = {
-      autosave = true,
-      autoload = true,
-      follow_cwd = false,
-      use_git_branch = false,
-      allowed_dirs = {
-        '~/Projets',
-        '~/.dotfiles',
-      },
-      ignored_dirs = {
-        { '~/Projets/grubhub', exact = true },
-      },
+    'rmagatti/auto-session',
+    lazy = false,
+    dependencies = {
+      'nvim-telescope/telescope.nvim', -- Only needed if you want to use sesssion lens
     },
-    config = function(_, opts)
-      require('persisted').setup(opts)
-      require('telescope').load_extension 'persisted'
+    config = function()
+      require('auto-session').setup {
+        auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
+        silent_restore = false,
+      }
     end,
-    keys = {
-      {
-        '<leader>se',
-        ':Telescope persisted<CR>',
-        desc = 'search s[e]ssions',
-      },
-    },
   },
   {
     'nvimdev/dashboard-nvim',

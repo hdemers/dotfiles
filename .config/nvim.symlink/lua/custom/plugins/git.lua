@@ -228,14 +228,6 @@ return {
       file_panel = {
         listing_style = 'list',
       },
-      keymaps = {
-        file_panel = {
-          { 'n', '<leader>b', false },
-        },
-        view = {
-          { 'n', '<leader>b', false },
-        },
-      },
     },
     config = function(_, opts)
       require('diffview').setup(opts)
@@ -288,6 +280,7 @@ return {
   },
   {
     'ldelossa/gh.nvim',
+    enabled = false,
     dependencies = {
       {
         'ldelossa/litee.nvim',

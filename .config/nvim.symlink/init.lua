@@ -232,8 +232,8 @@ vim.keymap.set(
 -- Buffer alternate file
 vim.keymap.set('n', '<leader>ba', '<C-^>', { desc = '[A]lternate file' })
 -- Close buffers
-vim.keymap.set('n', '<leader>bq', ':close <CR>', { desc = '[B]uffer [q]uit' })
-vim.keymap.set('n', '<leader>bl', ':tabclose <CR>', { desc = '[B]uffer close a[l]l' })
+vim.keymap.set('n', '<leader>q', ':close <CR>', { desc = '[B]uffer [q]uit' })
+vim.keymap.set('n', '<leader>w', ':tabclose <CR>', { desc = '[B]uffer close a[l]l' })
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 

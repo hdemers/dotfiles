@@ -7,25 +7,32 @@ return {
     dependencies = { 'tpope/vim-unimpaired' },
     config = function()
       local wk = require 'which-key'
-      local uwk = require 'unimpaired-which-key'
-      wk.add(uwk.normal_mode)
-      wk.add(uwk.normal_and_visual_mode, { mode = { 'n', 'v' } })
+      wk.add(require 'unimpaired-which-key')
     end,
   },
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
-    event = 'VimEnter', -- Sets the loading event to 'VimEnter'
-    config = function() -- This is the function that runs, AFTER loading
-      require('which-key').setup()
+    event = 'VeryLazy',
+    config = function()
+      local wk = require 'which-key'
+      wk.setup()
 
       -- Document existing key chains
-      require('which-key').add {
+      wk.add {
         { '<leader>b', group = '[B]uffer' },
         { '<leader>c', group = '[C]ode' },
-        -- { '<leader>w', group = '[W]orkspace' },
         { '<leader>s', group = '[S]earch' },
       }
     end,
+    keys = {
+      {
+        '<leader>?',
+        function()
+          require('which-key').show { global = false }
+        end,
+        desc = 'Buffer Local Keymaps (which-key)',
+      },
+    },
   },
 
   {
@@ -129,7 +136,7 @@ return {
     },
     keys = {
       { -- lazy style key map
-        '<leader>u',
+        '<leader>su',
         '<cmd>Telescope undo<cr>',
         desc = '[u]ndo history',
       },

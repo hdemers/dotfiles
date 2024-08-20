@@ -241,6 +241,10 @@ return {
           actions = {
             ['default'] = function(selected)
               local branch, is_current = extract_branch(selected)
+              -- If we are trying to switch to a remote branch, remove the 'origin/' prefix.
+              if string.sub(branch, 1, 7) == 'origin/' then
+                branch = string.sub(branch, 8)
+              end
               if not is_current then
                 vim.cmd('Git switch ' .. branch)
               end
@@ -282,6 +286,7 @@ return {
               -- Split items[1] by space and select the first one
               local branch, _ = extract_branch(items)
 
+              -- If we are trying to show details of a remote branch, remove the 'origin/' prefix.
               local remote_branch = branch
               if string.sub(branch, 1, 7) == 'origin/' then
                 remote_branch = string.sub(branch, 8)
@@ -302,13 +307,28 @@ return {
       -- Show Jira issues.
 
       local function show_jira_issues()
-        fzflua.fzf_exec('jira issues -p ELMO', {
+        local Terminal = require('toggleterm.terminal').Terminal
+
+        fzflua.fzf_exec('jira issues', {
           fzf_opts = {
-            ['--header-lines'] = '2',
+            ['--header-lines'] = '1',
             ['--preview-window'] = 'top,50%',
+            ['--scheme'] = 'history',
           },
           winopts = {
             win_width = 200,
+          },
+          actions = {
+            ['ctrl-t'] = function(selected)
+              local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+              Terminal:new({
+                direction = 'float',
+                cmd = string.format('jira transition %s', key),
+                hidden = false,
+                float_opts = { width = 60, height = 15 },
+                on_close = fzflua.actions.resume,
+              }):open()
+            end,
           },
           preview = {
             type = 'cmd',

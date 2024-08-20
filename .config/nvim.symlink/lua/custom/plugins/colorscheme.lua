@@ -236,7 +236,7 @@ return {
           ['@spell'] = { link = '@spell' },
           DiagnosticUnderlineError = {},
           TelescopeMatching = { link = 'IncSearch' },
-          -- LeapBackdrop = { fg = palette.gray4 },
+          FlashBackdrop = { link = 'Conceal' },
         },
       }
     end,
@@ -246,7 +246,7 @@ return {
     opts = {
       overrides = function(colors)
         return {
-          -- LeapBackdrop = { fg = colors.white },
+          FlashBackdrop = { link = 'Conceal' },
         }
       end,
     },

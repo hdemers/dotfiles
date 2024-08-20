@@ -214,14 +214,14 @@ return {
         desc = 'Run Last',
       },
       {
-        '<leader>do',
+        '<leader>dO',
         function()
           require('dap').step_out()
         end,
         desc = 'Step Out',
       },
       {
-        '<leader>dO',
+        '<leader>do',
         function()
           require('dap').step_over()
         end,
@@ -311,7 +311,11 @@ return {
       'nvim-lua/plenary.nvim',
       'antoinemadec/FixCursorHold.nvim',
       'nvim-treesitter/nvim-treesitter',
-      'nvim-neotest/neotest-python',
+      {
+        'nvim-neotest/neotest-python',
+        -- FIXME: Remove this eventually.
+        commit = '2e83d2bc00acbcc1fd529dbf0a0e677cabfe6b50',
+      },
     },
     config = function(_, opts)
       local neotest_ns = vim.api.nvim_create_namespace 'neotest'

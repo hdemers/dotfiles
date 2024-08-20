@@ -39,6 +39,11 @@ return {
         desc = 'Overseer: make [t]est',
       },
       {
+        '<leader>rr',
+        '<cmd>OverseerRun make-requirements<CR>',
+        desc = 'Overseer: make [r]equirements',
+      },
+      {
         '<leader>ro',
         '<cmd>OverseerQuickAction open float<CR>',
         desc = 'Overseer: show [o]utput',
@@ -87,6 +92,17 @@ return {
           }
         end,
         desc = 'Run make test',
+      }
+      overseer.register_template {
+        name = 'make-requirements',
+        builder = function()
+          return {
+            cmd = { 'make' },
+            args = { 'requirements.txt' },
+            name = 'make-requirements',
+          }
+        end,
+        desc = 'Run make requirements.txt',
       }
     end,
   },

@@ -123,9 +123,19 @@ alias gb="git rb \
     | tr -d '*' \
     | xargs --no-run-if-empty git sw"
 
-alias jstories="jira issues -p ELMO \
+alias js="jira issues\
+    | fzf \
+    --ansi \
+    --preview='jira describe {1}' \
+    --preview-window='top,40%' \
+    --header-lines=1 \
+    --scheme=history \
+    --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)'"
+
+alias jsc="jira issues --current-sprint\
     | fzf \
     --ansi \
     --preview='jira describe {1}' \
     --preview-window='top,50%' \
-    --header-lines=2"
+    --header-lines=1 \
+    --scheme=history"

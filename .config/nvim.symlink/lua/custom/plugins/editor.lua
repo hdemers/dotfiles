@@ -13,9 +13,11 @@ return {
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VeryLazy',
-    config = function()
+    opts = {
+      preset = 'modern',
+    },
+    init = function()
       local wk = require 'which-key'
-      wk.setup()
 
       -- Document existing key chains
       wk.add {

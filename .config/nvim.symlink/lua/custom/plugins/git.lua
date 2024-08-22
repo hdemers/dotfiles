@@ -154,7 +154,8 @@ return {
       },
     },
     init = function()
-      require('which-key').add {
+      local wk = require 'which-key'
+      wk.add {
         { '<leader>g', group = '[g]it' },
       }
     end,
@@ -210,7 +211,7 @@ return {
       {
         '<leader>gm',
         ':DiffviewOpen master<CR>',
-        desc = 'Diffview: diff [ma]ster',
+        desc = 'Diffview: diff [m]aster',
       },
       {
         '<leader>gh',

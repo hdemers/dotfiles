@@ -239,16 +239,19 @@ return {
             win_width = 175,
           },
           actions = {
-            ['default'] = function(selected)
-              local branch, is_current = extract_branch(selected)
-              -- If we are trying to switch to a remote branch, remove the 'origin/' prefix.
-              if string.sub(branch, 1, 7) == 'origin/' then
-                branch = string.sub(branch, 8)
-              end
-              if not is_current then
-                vim.cmd('Git switch ' .. branch)
-              end
-            end,
+            ['default'] = {
+              function(selected)
+                local branch, is_current = extract_branch(selected)
+                -- If we are trying to switch to a remote branch, remove the 'origin/' prefix.
+                if string.sub(branch, 1, 7) == 'origin/' then
+                  branch = string.sub(branch, 8)
+                end
+                if not is_current then
+                  vim.cmd('Git switch ' .. branch)
+                end
+              end,
+              fzflua.actions.resume,
+            },
             ['ctrl-e'] = {
               function(selected)
                 local branch, is_current = extract_branch(selected)
@@ -325,7 +328,7 @@ return {
                 direction = 'float',
                 cmd = string.format('jira transition %s', key),
                 hidden = false,
-                float_opts = { width = 60, height = 15 },
+                float_opts = { width = 60, height = 30 },
                 on_close = fzflua.actions.resume,
               }):open()
             end,

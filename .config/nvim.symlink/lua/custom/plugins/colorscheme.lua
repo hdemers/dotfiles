@@ -177,7 +177,7 @@ return {
     opts = {
       style = 'darker',
       highlights = {
-        -- LeapBackdrop = { fg = '$light_grey' },
+        FlashBackdrop = { linkk = 'Conceal' },
       },
     },
     config = function(_, opts)
@@ -269,4 +269,20 @@ return {
     end,
   },
   { 'EdenEast/nightfox.nvim' },
+  {
+    '0xstepit/flow.nvim',
+    opts = {},
+    config = function()
+      require('flow').setup {
+        transparent = false, -- Set transparent background.
+        fluo_color = 'pink', --  Fluo color: pink, yellow, orange, or green.
+        mode = 'normal', -- Intensity of the palette: normal, bright, desaturate, or dark. Notice that dark is ugly!
+        aggressive_spell = false, -- Display colors for spell check.
+      }
+    end,
+  },
+  {
+    'slugbyte/lackluster.nvim',
+  },
+  { 'projekt0n/github-nvim-theme' },
 }

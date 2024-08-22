@@ -37,3 +37,6 @@ if [ -x "$(command -v atuin)" ]; then
 else
     echo "Atuin is not installed, shell history won't be captured."
 fi
+
+# Source Ryn
+. "$HOME/.rye/env"

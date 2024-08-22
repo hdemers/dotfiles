@@ -78,8 +78,9 @@ else
   echo "No match found"
 fi
 
-# If the secret command exists, retrieve our tokens.
-if [[ -x "$(command -v secret)" ]]; then
+# If the secret-tool command exists, it means we're on our local machine and
+# our custom `secret` command will work
+if [[ -x "$(command -v secret-tool)" ]]; then
     export GITHUB_TOKEN=$(secret lookup github token)
     export TODOIST_API_TOKEN=$(secret lookup todoist token)
     export JIRA_API_TOKEN=$(secret lookup jira token)

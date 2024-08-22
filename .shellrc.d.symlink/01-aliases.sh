@@ -99,9 +99,8 @@ FZF_GIT_JIRA_TICKET_NUMBER="git show \
     \$(echo {} | $FZF_GREP_COMMIT_SHA)"
 alias gf="$FZF_GIT_LOG_GRAPH | fzf \
     --ansi \
-    --reverse \
     --preview='git show --stat --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA)' \
-    --preview-window=wrap \
+    --preview-window=wrap,top \
     --bind='enter:execute(echo {} | $FZF_GREP_COMMIT_SHA)+abort' \
     --bind='ctrl-p:preview(git show --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA))' \
     --bind='ctrl-o:preview(git show --stat --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA))' \
@@ -109,7 +108,7 @@ alias gf="$FZF_GIT_LOG_GRAPH | fzf \
     --bind='ctrl-u:reload($FZF_GIT_LOG_GRAPH)' \
     --bind='ctrl-s:preview($FZF_GIT_JIRA_TICKET_NUMBER \
         | grep -oE \"[A-Z]+-[0-9]+\" \
-        | xargs -I % jira issue view --comments 100 %)'"
+        | xargs -I % jira describe %)'"
 
 # Git branches + FZF = 🚀
 alias gb="git rb \

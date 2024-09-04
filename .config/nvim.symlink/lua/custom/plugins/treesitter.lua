@@ -77,6 +77,14 @@ return {
               query_group = 'locals',
               desc = 'Select language scope',
             },
+            ['ia'] = {
+              query = '@parameter.inner',
+              desc = 'Select inner parameter',
+            },
+            ['aa'] = {
+              query = '@parameter.outer',
+              desc = 'Select outer parameter',
+            },
           },
           -- You can choose the select mode (default is charwise 'v')
           --
@@ -127,6 +135,15 @@ return {
           -- goto_previous = {
           --   ['[d'] = '@conditional.outer',
           -- },
+        },
+        swap = {
+          enable = true,
+          swap_next = {
+            [']a'] = '@parameter.inner',
+          },
+          swap_previous = {
+            ['[a'] = '@parameter.inner',
+          },
         },
       },
     },

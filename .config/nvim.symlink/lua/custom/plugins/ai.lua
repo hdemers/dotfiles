@@ -87,12 +87,45 @@ return {
         desc = 'ChatGPT: [h]elp [c]hat',
         mode = { 'n', 'v' },
       },
+      -- {
+      --   '<leader>ho',
+      --   ':GPTModelsCode<CR>',
+      --   desc = 'GPTModels: [h]elp c[o]de',
+      --   mode = { 'n', 'v' },
+      -- },
+    },
+  },
+  {
+    'robitx/gp.nvim',
+    keys = {
       {
-        '<leader>ho',
-        ':GPTModelsCode<CR>',
-        desc = 'GPTModels: [h]elp c[o]de',
+        '<leader>hn',
+        ':GpChatNew popup<CR>',
+        desc = 'GP: [h]elp [n]ew',
         mode = { 'n', 'v' },
       },
+      {
+        '<leader>ht',
+        ':GpChatToggle popup<CR>',
+        desc = 'GP: [h]elp [t]oggle',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>hf',
+        ':GpChatFinder<CR>',
+        desc = 'GP: [h]elp [f]ind',
+        mode = { 'n' },
+      },
+      {
+        '<leader>hd',
+        ':GpChatDelete<CR>',
+        desc = 'GP: [h]elp [d]elete',
+        mode = { 'n' },
+      },
     },
+    opts = {},
+    config = function(_, opts)
+      require('gp').setup(opts)
+    end,
   },
 }

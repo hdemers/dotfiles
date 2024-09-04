@@ -121,6 +121,18 @@ return {
         relative_width = false,
         auto_close = true,
       },
+      providers = {
+        priority = { 'markdown', 'lsp', 'coc', 'norg' },
+        -- Configuration for each provider (3rd party providers are supported)
+        lsp = {
+          -- Lsp client names to ignore
+          blacklist_clients = {},
+        },
+        markdown = {
+          -- List of supported ft's to use the markdown provider
+          filetypes = { 'markdown', 'quarto' },
+        },
+      },
     },
   },
   {

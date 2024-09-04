@@ -90,16 +90,16 @@ return {
           --  Symbols are things like variables, functions, types, etc.
           map(
             '<leader>sy',
-            require('telescope.builtin').lsp_document_symbols,
-            '[S]earch s[y]mbols'
+            require('telescope.builtin').lsp_dynamic_workspace_symbols,
+            '[S]earch all s[y]mbols'
           )
 
           -- Fuzzy find all the symbols in your current workspace
           --  Similar to document symbols, except searches over your whole project.
           map(
             '<leader>sY',
-            require('telescope.builtin').lsp_dynamic_workspace_symbols,
-            '[Search] all s[Y]mbols'
+            require('telescope.builtin').lsp_document_symbols,
+            '[Search] document s[Y]mbols'
           )
 
           -- Rename the variable under your cursor

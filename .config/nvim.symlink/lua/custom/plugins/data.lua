@@ -8,24 +8,25 @@ return {
     'quarto-dev/quarto-nvim',
     dependencies = {
       'jmbuhr/otter.nvim',
+      'nvim-treesitter/nvim-treesitter',
     },
     ft = { 'quarto' },
     dev = false,
     opts = {
-      lspFeatures = {
-        languages = {
-          'r',
-          'python',
-          'julia',
-          'bash',
-          'lua',
-          'html',
-          'dot',
-          'javascript',
-          'typescript',
-          'ojs',
-        },
-      },
+      -- lspFeatures = {
+      --   languages = {
+      --     'r',
+      --     'python',
+      --     'julia',
+      --     'bash',
+      --     'lua',
+      --     'html',
+      --     'dot',
+      --     'javascript',
+      --     'typescript',
+      --     'ojs',
+      --   },
+      -- },
       codeRunner = {
         enabled = true,
         default_method = 'molten',
@@ -41,37 +42,37 @@ return {
     init = function()
       local runner = require 'quarto.runner'
 
-      local ts_utils = require 'nvim-treesitter.ts_utils'
+      -- local ts_utils = require 'nvim-treesitter.ts_utils'
 
-      local function is_cursor_in_class_inner()
-        local node = ts_utils.get_node_at_cursor()
-        while node do
-          print(node)
-          local node_type = node:type()
-          print(node_type)
-          if node_type == 'fenced_code_block' then
-            print 'found it'
-            return true
-          end
-          node = ts_utils.get_previous_node(node, true, true)
-        end
-        return false
-      end
-
-      local function add_new_cell()
-        if is_cursor_in_class_inner() then
-          print 'in cell'
-          vim.api.nvim_feedkeys('][', 'n', false)
-          vim.api.nvim_feedkeys('o', 'n', false)
-        else
-          print 'not in cell'
-          vim.api.nvim_feedkeys(
-            "o\rpyc<cmd>lua require('luasnip').expand()<CR>",
-            'n',
-            false
-          )
-        end
-      end
+      -- local function is_cursor_in_class_inner()
+      --   local node = ts_utils.get_node_at_cursor()
+      --   while node do
+      --     print(node)
+      --     local node_type = node:type()
+      --     print(node_type)
+      --     if node_type == 'fenced_code_block' then
+      --       print 'found it'
+      --       return true
+      --     end
+      --     node = ts_utils.get_previous_node(node, true, true)
+      --   end
+      --   return false
+      -- end
+      --
+      -- local function add_new_cell()
+      --   if is_cursor_in_class_inner() then
+      --     print 'in cell'
+      --     vim.api.nvim_feedkeys('][', 'n', false)
+      --     vim.api.nvim_feedkeys('o', 'n', false)
+      --   else
+      --     print 'not in cell'
+      --     vim.api.nvim_feedkeys(
+      --       "o\rpyc<cmd>lua require('luasnip').expand()<CR>",
+      --       'n',
+      --       false
+      --     )
+      --   end
+      -- end
 
       vim.keymap.set(
         'n',
@@ -103,12 +104,12 @@ return {
         runner.run_line,
         { desc = 'Quarto: run [l]ine', silent = true }
       )
-      vim.keymap.set(
-        'v',
-        '<localleader>jv',
-        runner.run_range,
-        { desc = 'Quarto: run [v]isual range', silent = true }
-      )
+      -- vim.keymap.set(
+      --   'v',
+      --   '<localleader>jv',
+      --   runner.run_range,
+      --   { desc = 'Quarto: run [v]isual range', silent = true }
+      -- )
       vim.keymap.set(
         'n',
         '<localleader>jp',
@@ -124,7 +125,7 @@ return {
       vim.keymap.set(
         'n',
         '<localleader>jj',
-        "o\rpyc<cmd>lua require('luasnip').expand()<CR>",
+        "ko\rpyc<cmd>lua require('luasnip').expand()<CR>",
         { desc = 'Snippet: [n]ew cell', noremap = true }
       )
       vim.keymap.set(
@@ -194,9 +195,14 @@ return {
       -- vim.g.molten_output_win_max_height = 20
       vim.g.molten_virt_lines_off_by_1 = true
       vim.g.molten_auto_open_output = false
+      vim.g.molten_virt_text_max_lines = 20
+      vim.g.molten_auto_image_popup = true
       -- require('which-key').register {
       --   ['<localleader>j'] = { name = '[J]upyter', _ = 'which_key_ignore' },
       -- }
+
+      -- Clear the MoltenCell highlight
+      vim.api.nvim_command 'highlight clear MoltenCell'
     end,
     keys = {
       {
@@ -206,6 +212,12 @@ return {
       },
       { '<localleader>jr', ':MoltenRestart<cr>', desc = 'Molten: [r]estart' },
       { '<localleader>ji', ':MoltenInterrupt<cr>', desc = 'Molten: [i]nterrupt' },
+      {
+        '<localleader>jo',
+        ':MoltenImagePopup<cr>',
+        desc = 'Molten: [o]pen image',
+        silent = true,
+      },
       --   {
       --     '<localleader>jv',
       --     ':<C-u>MoltenEvaluateVisual<cr>',
@@ -258,7 +270,12 @@ return {
   {
     'milanglacier/yarepl.nvim',
     event = 'VeryLazy',
-    config = true,
+    config = function()
+      local yarepl = require 'yarepl'
+      yarepl.setup {
+        wincmd = 'botright 100vsplit',
+      }
+    end,
     init = function()
       local autocmd = vim.api.nvim_create_autocmd
       local bufmap = vim.api.nvim_buf_set_keymap
@@ -277,24 +294,24 @@ return {
         group = vim.api.nvim_create_augroup('yarepl', {}),
         desc = 'set up REPL keymap',
         callback = function()
-          bufmap(0, 'n', '<localleader>js', '<Plug>(REPLStart)', {
+          bufmap(0, 'n', '<localleader>js', '<Plug>(REPLStart-ipython)', {
             desc = 'yarepl: [s]tart a repl',
           })
           -- bufmap(0, 'n', '<localleader>rf', '<Plug>(REPLFocus)', {
           --   desc = 'yarepl: [f]ocus on REPL',
           -- })
-          bufmap(0, 'n', '<localleader>jv', '<CMD>Telescope REPLShow<CR>', {
-            desc = 'yarepl: [v]iew REPLs in Telescope',
-          })
+          -- bufmap(0, 'n', '<localleader>jv', '<CMD>Telescope REPLShow<CR>', {
+          --   desc = 'yarepl: [v]iew REPLs in Telescope',
+          -- })
           -- bufmap(0, 'n', '<localleader>rh', '<Plug>(REPLHide)', {
           --   desc = 'Hide REPL',
           -- })
           bufmap(0, 'n', '<localleader>k', '<Plug>(REPLSendOperator)vic', {
             desc = 'yarepl: send cell to repl',
           })
-          -- bufmap(0, 'n', '<localleader>ss', '<Plug>(REPLSendLine)', {
-          --   desc = 'Send line to REPL',
-          -- })
+          bufmap(0, 'v', '<localleader>jv', '<Plug>(REPLSendVisual-ipython)', {
+            desc = 'yarepl: send [v]isual to REPL',
+          })
           -- bufmap(0, 'n', '<localleader>s', '<Plug>(REPLSendOperator)', {
           --   desc = 'Send current line to REPL',
           -- })

@@ -177,7 +177,7 @@ return {
     opts = {
       style = 'darker',
       highlights = {
-        FlashBackdrop = { linkk = 'Conceal' },
+        FlashBackdrop = { link = 'Conceal' },
       },
     },
     config = function(_, opts)
@@ -224,7 +224,6 @@ return {
   },
   { 'savq/melange-nvim' },
   { 'nyoom-engineering/oxocarbon.nvim' },
-  { 'shaunsingh/nord.nvim' },
   {
     'AlexvZyl/nordic.nvim',
     config = function()
@@ -285,4 +284,10 @@ return {
     'slugbyte/lackluster.nvim',
   },
   { 'projekt0n/github-nvim-theme' },
+  {
+    'killitar/obscure.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = {},
+  },
 }

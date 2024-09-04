@@ -298,16 +298,37 @@ return {
     },
   },
   {
-    'rmagatti/auto-session',
-    lazy = false,
-    dependencies = {
-      'nvim-telescope/telescope.nvim', -- Only needed if you want to use sesssion lens
-    },
+    'jedrzejboczar/possession.nvim',
+    dependencies = { 'nvim-lua/plenary.nvim' },
     config = function()
-      require('auto-session').setup {
-        auto_session_suppress_dirs = { '~/', '~/Projects', '~/Downloads', '/' },
-        silent_restore = false,
+      require('possession').setup {
+        load_silent = true,
+        silent = true,
+        autosave = {
+          current = true,
+          cwd = function()
+            return not require('possession.session').exists(
+              require('possession.paths').cwd_session_name()
+            )
+          end,
+          on_quit = true,
+          on_load = true,
+        },
+        autoload = 'auto_cwd',
+        hooks = {
+          before_save = function(_)
+            return {
+              colorscheme = vim.g.colors_name,
+            }
+          end,
+          after_load = function(_, user_data)
+            if user_data.colorscheme then
+              vim.cmd('colorscheme ' .. user_data.colorscheme)
+            end
+          end,
+        },
       }
+      require('telescope').load_extension 'possession'
     end,
   },
   {

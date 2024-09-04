@@ -282,6 +282,13 @@ return {
               end,
               fzflua.actions.resume,
             },
+            ['ctrl-w'] = {
+              function(selected)
+                local branch, _ = extract_branch(selected)
+                vim.cmd(string.format('!gh pr view --web %s', branch))
+              end,
+              fzflua.actions.resume,
+            },
           },
           preview = {
             type = 'cmd',
@@ -332,6 +339,20 @@ return {
                 on_close = fzflua.actions.resume,
               }):open()
             end,
+            ['ctrl-i'] = function()
+              Terminal:new({
+                direction = 'float',
+                cmd = 'jira create',
+                hidden = false,
+                float_opts = { width = 200, height = 50 },
+                on_close = fzflua.actions.resume,
+              }):open()
+            end,
+            ['enter'] = function(selected)
+              -- Store `selected` in the system clipboard
+              local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+              vim.fn.setreg('+', key)
+            end,
           },
           preview = {
             type = 'cmd',
@@ -357,7 +378,7 @@ return {
             ['--header-lines'] = '2',
           },
           winopts = {
-            win_width = 70,
+            win_width = 100,
           },
         })
       end

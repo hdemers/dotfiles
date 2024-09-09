@@ -10,40 +10,12 @@ fi
 session="vim"
 sessionexists=$(tmux list-sessions -F '#{session_name}' | grep $session)
 
-session_dir=$HOME/.local/share/nvim/sessions
-project_dir=$HOME/Projets/grubhub
-
 main() {
     # If session doesn't exists, create it.
     if [ "$sessionexists" != $session ]; then
         echo "creating new session '$session'"
         tmux new-session -d -s $session
 
-        # If VIM_SESSIONS environment variable is set, create new windows for
-        # each session and send-keys to open vim with given session.
-        if [[ -f $HOME/.vim-sessions ]]; then
-            echo "creating new session '$session'"
-            # Parse environment variable $VIM_SESSIONS into array vim_sessions.
-            # Env variable must be delimited by semicolon.
-            readarray -t vim_sessions < $HOME/.vim-sessions
-
-            echo "starting following vim sessions ${vim_sessions[@]}"
-            # Extract first element of vim_sessions array and rename the newly
-            # created tmux window.
-            cd "$project_dir/${vim_sessions[0]}"
-            tmux rename-window -t 1 "${vim_sessions[0]}"
-            tmux send-keys -t "${vim_sessions[0]}" "nvim" C-m
-
-            # Loop through the rest of the vim_sessions array and open given session.
-            for vim_session in "${vim_sessions[@]:1}"; do
-                echo "starting vim with session $vim_session"
-                cd "$project_dir/$vim_session"
-                tmux new-window -t $session -n $vim_session
-                # Send keys to start vim with that session.
-                tmux send-keys -t "$vim_session" "nvim" C-m
-            done
-
-        fi
     fi
     echo "attaching to session '$session'"
     tmux attach-session -t $session

@@ -56,6 +56,8 @@ set-option -g status-interval 5
 # Rename window to current path
 set-option -g automatic-rename on
 set-option -g automatic-rename-format '#{b:pane_current_path}'
+# Remove the asterisk from the current window name
+set-option -g window-status-current-format '#I:#W'
 
 # Reload tmux config
 bind r source-file ~/.tmux.conf
@@ -64,27 +66,33 @@ bind r source-file ~/.tmux.conf
 set-window-option -g aggressive-resize on
 
 # THEME
-# set -g status-bg 0
-# set -g status-fg 6
-# set-window-option -g window-status-style fg=colour5
-# set-window-option -g window-status-style bg=0
-# set-window-option -g window-status-current-style fg=5
+set -g status-bg 0
+set -g status-fg 4
+# set-option -g window-status-style fg=0
+set-option -g window-status-style bg=0
+set-option -g window-status-current-style fg=1
 set-option -g status-left-length 30
-set-option -g status-left '#[fg=green](#S) #(whoami)@#H  '
-set-option -g status-right '#[fg=green]#(cut -d " " -f 1-3 /proc/loadavg)#[default]'
+# set-option -g status-left '#[fg=2]#(whoami)@#H  '
+set-option -g status-left ''
+set-option -g status-right ''
+# set-option -g status-right '#[fg=2]#(cut -d " " -f 1-3 /proc/loadavg)#[default]'
 set-option -g status-position top
-set -g @colors-solarized 'dark'
+
+# Make sure we can resurrect nvim, which is an appimage mounted in /tmp.
+# This is a hack to replace the nvim executable path, which looks something like
+# /tmp/.mount_nvim1QOO9k/usr/bin/nvim, with the string 'nvim'.
+resurrect_dir="$HOME/.local/share/tmux/resurrect"
+set -g @resurrect-dir $resurrect_dir
+set -g @resurrect-hook-post-save-all 'sed -i "s/\/tmp.*nvim/nvim/" $resurrect_dir/last'
+
+# Automatic resurrect when tmux starts
+set -g @continuum-restore 'on'
 
 # List of plugins
 set -g @plugin 'tmux-plugins/tpm'
 set -g @plugin 'tmux-plugins/tmux-sensible'
-set -g @plugin 'seebi/tmux-colors-solarized'
-
-# Other examples:
-# set -g @plugin 'github_username/plugin_name'
-# set -g @plugin 'github_username/plugin_name#branch'
-# set -g @plugin 'git@github.com:user/plugin'
-# set -g @plugin 'git@bitbucket.com:user/plugin'
+set -g @plugin 'tmux-plugins/tmux-resurrect'
+set -g @plugin 'tmux-plugins/tmux-continuum'
 
 # Update these environment variables to match the system.
 

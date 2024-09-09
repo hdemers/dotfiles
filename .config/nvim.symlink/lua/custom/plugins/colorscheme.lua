@@ -290,4 +290,5 @@ return {
     priority = 1000,
     opts = {},
   },
+  { 'fcancelinha/nordern.nvim', branch = 'master' },
 }

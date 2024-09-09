@@ -298,49 +298,38 @@ return {
     },
   },
   {
-    'jedrzejboczar/possession.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    config = function()
-      require('possession').setup {
-        load_silent = true,
-        silent = true,
-        autosave = {
-          current = true,
-          cwd = function()
-            return not require('possession.session').exists(
-              require('possession.paths').cwd_session_name()
-            )
-          end,
-          on_quit = true,
-          on_load = true,
-        },
-        autoload = 'auto_cwd',
-        hooks = {
-          before_save = function(_)
-            return {
-              colorscheme = vim.g.colors_name,
-            }
-          end,
-          after_load = function(_, user_data)
-            if user_data.colorscheme then
-              vim.cmd('colorscheme ' .. user_data.colorscheme)
-            end
-          end,
-        },
-      }
-      require('telescope').load_extension 'possession'
+    'stevearc/resession.nvim',
+    opts = {
+      autosave = {
+        enabled = true,
+        interval = 60,
+        notify = true,
+      },
+      extensions = {
+        plugin = {},
+      },
+    },
+    config = function(_, opts)
+      local resession = require 'resession'
+      resession.setup(opts)
+
+      -- Load a dir-specific session when we open Neovim, save it when we exit.
+      vim.api.nvim_create_autocmd('VimEnter', {
+        callback = function()
+          -- Only load the session if nvim was started with no args
+          if vim.fn.argc(-1) == 0 then
+            -- Save these to a different directory, so our manual sessions don't get polluted
+            resession.load(vim.fn.getcwd(), { dir = 'dirsession', silence_errors = true })
+          end
+        end,
+        nested = true,
+      })
+      vim.api.nvim_create_autocmd('VimLeavePre', {
+        callback = function()
+          resession.save(vim.fn.getcwd(), { dir = 'dirsession', notify = false })
+        end,
+      })
     end,
-  },
-  {
-    'nvimdev/dashboard-nvim',
-    enabled = true,
-    event = 'VimEnter',
-    config = function()
-      require('dashboard').setup {
-        -- config
-      }
-    end,
-    dependencies = { 'nvim-tree/nvim-web-devicons' },
   },
   {
     'folke/flash.nvim',

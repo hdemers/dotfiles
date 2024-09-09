@@ -234,6 +234,11 @@ vim.keymap.set('n', '<leader>ba', '<C-^>', { desc = '[A]lternate file' })
 -- Close buffers
 vim.keymap.set('n', '<leader>q', ':close <CR>', { desc = 'Close buffer' })
 vim.keymap.set('n', '<leader>w', ':tabclose <CR>', { desc = 'Close tab' })
+
+-- tmux uses Ctrl-A as its prefix, so we can't use it in Neovim. Let's remap some.
+vim.keymap.set({ 'n', 'v' }, '<C-s>', '<C-a>', { noremap = true, silent = true })
+vim.keymap.set({ 'n', 'v' }, 'g<C-s>', 'g<C-a>', { noremap = true, silent = true })
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 

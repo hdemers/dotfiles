@@ -270,7 +270,7 @@ return {
               end,
               fzflua.actions.resume,
             },
-            ['ctrl-o'] = {
+            ['ctrl-r'] = {
               function(_)
                 if is_git_showing_all_branches then
                   show_git_branch(false)
@@ -316,10 +316,12 @@ return {
 
       -- Show Jira issues.
 
-      local function show_jira_issues()
+      local function show_jira_issues(args)
         local Terminal = require('toggleterm.terminal').Terminal
 
-        fzflua.fzf_exec('jira issues', {
+        local cmd = string.format('jira issues %s', args or '')
+
+        fzflua.fzf_exec(cmd, {
           fzf_opts = {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'top,50%',
@@ -353,6 +355,25 @@ return {
               local key = vim.split(selected[1], ' ', { trimempty = true })[1]
               vim.fn.setreg('+', key)
             end,
+            ['ctrl-e'] = {
+              function(_)
+                show_jira_issues ' --epics-only'
+              end,
+              fzflua.actions.resume,
+            },
+            ['ctrl-h'] = {
+              function(_)
+                show_jira_issues()
+              end,
+              fzflua.actions.resume,
+            },
+            ['ctrl-l'] = {
+              function(selected)
+                local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                show_jira_issues(string.format(' --in-epic %s', key))
+              end,
+              fzflua.actions.resume,
+            },
           },
           preview = {
             type = 'cmd',
@@ -371,7 +392,7 @@ return {
         { desc = 'Jira: search [j]ira', silent = true }
       )
 
-      -- pip list
+      -- Show pip list
       local function pip_list()
         fzflua.fzf_exec('pip list --disable-pip-version-check', {
           fzf_opts = {

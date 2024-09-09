@@ -189,6 +189,7 @@ return {
           require('gitlinker').get_buf_range_url 'n'
         end,
         desc = 'GitLinker: [y]ank GitHub URL',
+        mode = 'n',
       },
       {
         '<leader>gy',
@@ -196,6 +197,7 @@ return {
           require('gitlinker').get_buf_range_url 'v'
         end,
         desc = 'GitLinker: [y]ank GitHub URL',
+        mode = 'v',
       },
     },
   },

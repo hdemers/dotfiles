@@ -1,4 +1,7 @@
 # vim: set filetype=toml
+
+import = ["/home/hdemers/.config/alacritty/tokyo-night-storm.toml" ]
+
 [window]
 
 # Window dimensions
@@ -21,3 +24,4 @@ size = 12
 
 # Use built-in font for box drawing characters
 builtin_box_drawing = true  # Default: true
+

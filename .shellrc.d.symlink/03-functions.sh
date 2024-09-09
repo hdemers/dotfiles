@@ -95,3 +95,50 @@ rfv() {
         --bind='enter:become(vim {1} +{2})' \
         --bind='ctrl-x:execute(rm {1})'
 }
+
+# CTRL-R - Paste the selected command from history into the command line
+custom-atuin-history-widget() {
+  local selected num
+  setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
+  selected=( $(atuin history list --reverse false --format "{time} \t {duration} \t {command}" \
+      | tspin \
+      | fzf -d '|' --bind 'enter:execute(echo {3})+abort' --ansi --delimiter='\t') )
+  local ret=$?
+  if [ -n "$selected" ]; then
+    num=$selected[1]
+    if [ -n "$num" ]; then
+      zle vi-fetch-history -n $num
+    fi
+  fi
+  zle reset-prompt
+  return $ret
+}
+zle     -N            custom-atuin-history-widget
+bindkey -M emacs '^R' custom-atuin-history-widget
+bindkey -M vicmd '^R' custom-atuin-history-widget
+bindkey -M viins '^R' custom-atuin-history-widget
+
+
+checkoutworktree() {
+    # Checkout a worktree from a branch
+    if [ -z "$1" ]; then
+        echo "Usage: checkoutworktree <branch>"
+        return 1
+    fi
+
+    # Check there is a worktrees directory in the current directory.
+    if [ ! -d worktrees ]; then
+        echo "No worktrees directory found. Please create one first."
+        return 1
+    fi
+
+    local branch=$1
+
+    # If the `branch` does not start with origin/, prepend it.
+    if [[ ! $branch == origin/* ]]; then
+        branch="origin/${branch}"
+    fi
+
+    echo 'Checking out worktree for branch:' ${branch}
+    echo ${branch} | awk -F'/' '{print $2}' | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{}
+}

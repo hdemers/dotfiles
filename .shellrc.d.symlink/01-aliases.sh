@@ -113,14 +113,14 @@ alias gf="$FZF_GIT_LOG_GRAPH | fzf \
 # Git branches + FZF = 🚀
 alias gb="git rb \
     | fzf --ansi --header-lines=1 \
-      --bind 'enter:execute(echo {1})+abort' \
-      --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
-      --bind 'ctrl-r:reload(git rba)' \
       --preview='GH_FORCE_TTY=\"100%\" gh pr view --comments \$(echo {1} | tr -d \"*\") || \
           git show --stat --color=always \$(echo {1} | tr -d \"*\")' \
       --preview-window=top,75% \
-    | tr -d '*' \
-    | xargs --no-run-if-empty git sw"
+      --bind 'enter:execute(echo {1} | tr -d \"*\" | xargs --no-run-if-empty git sw)+abort' \
+      --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
+      --bind 'ctrl-r:reload(git rba)' \
+      --bind 'ctrl-w:execute(awk -F\"/\" '\"'\"'{print \$2}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{})+abort' \
+    "
 
 alias js="jira issues\
     | fzf \
@@ -129,7 +129,12 @@ alias js="jira issues\
     --preview-window='top,40%' \
     --header-lines=1 \
     --scheme=history \
-    --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)'"
+    --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
+    --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
+    --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
+    --bind 'ctrl-h:reload(jira issues)+clear-query' \
+    --bind 'ctrl-e:reload(jira issues --epics-only)' \
+    "
 
 alias jsc="jira issues --current-sprint\
     | fzf \
@@ -138,3 +143,22 @@ alias jsc="jira issues --current-sprint\
     --preview-window='top,50%' \
     --header-lines=1 \
     --scheme=history"
+
+alias jse="jira issues --epics-only \
+    | fzf \
+    --ansi \
+    --preview='jira describe {1}' \
+    --preview-window='top,40%' \
+    --header-lines=1 \
+    --scheme=history \
+    --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
+    --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
+    --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
+    --bind 'ctrl-h:reload(jira issues --epics-only)+clear-query' \
+    "
+
+alias ghp="gh search prs --state=open --review-requested=@me"
+
+alias ah="atuin history list --reverse false --format '{time} \t {duration} \t {command}' \
+      | tspin \
+      | fzf -d '|' --bind 'enter:execute(echo {3})+abort' --ansi --delimiter='\t'"

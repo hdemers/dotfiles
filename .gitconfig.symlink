@@ -75,7 +75,6 @@
 [core]
     excludesfile = /home/hdemers/.gitignore
     ;autocrlf = true
-    pager = delta
 
 [branch]
     autosetupmerge = true
@@ -90,24 +89,23 @@
 [init]
 	defaultBranch = main
 
-[delta]
-    side-by-side = true
-    syntax-theme = Solarized (dark)
 [credential]
 	helper = cache
 
 [interactive]
-    diffFilter = delta --color-only
-
-[delta]
-    navigate = true    # use n and N to move between diff sections
-
-    # delta detects terminal colors automatically; set one of these to disable auto-detection
-    # dark = true
-    # light = true
+    diffFilter = difft
 
 [merge]
     conflictstyle = diff3
 
 [diff]
-    colorMoved = default
+    external = difft
+
+[difftool]
+    prompt = false
+
+[difftool "difftastic"]
+    cmd = difft "$LOCAL" "$REMOTE"
+
+[pager]
+    difftool = true

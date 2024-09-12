@@ -347,4 +347,26 @@ return {
       }, { prefix = '<leader>' })
     end,
   },
+  {
+    'pwntester/octo.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope.nvim',
+      'nvim-tree/nvim-web-devicons',
+    },
+    opts = {
+      mappings_disable_default = true,
+      mappings = {
+        submit_win = {
+          approve_review = { lhs = '<C-A>', desc = 'approve review' },
+        },
+      },
+      suppress_missing_scope = {
+        projects_v2 = true,
+      },
+    },
+    config = function(_, opts)
+      require('octo').setup(opts)
+    end,
+  },
 }

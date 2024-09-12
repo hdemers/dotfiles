@@ -291,4 +291,7 @@ return {
     opts = {},
   },
   { 'fcancelinha/nordern.nvim', branch = 'master' },
+  {
+    'tiagovla/tokyodark.nvim',
+  },
 }

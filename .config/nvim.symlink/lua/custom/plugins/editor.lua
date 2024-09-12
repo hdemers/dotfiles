@@ -171,15 +171,7 @@ return {
   {
     'rcarriga/nvim-notify',
     enabled = true,
-    keys = {
-      {
-        '<leader>un',
-        function()
-          require('notify').dismiss { silent = true, pending = true }
-        end,
-        desc = 'Dismiss all Notifications',
-      },
-    },
+    keys = {},
     opts = {
       timeout = 3000,
       max_height = function()
@@ -303,7 +295,7 @@ return {
       autosave = {
         enabled = true,
         interval = 60,
-        notify = true,
+        notify = false,
       },
       extensions = {
         plugin = {},
@@ -356,5 +348,50 @@ return {
       { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
       { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
     },
+  },
+  {
+    'OXY2DEV/markview.nvim',
+    enabled = true,
+    lazy = false, -- Recommended
+    dependencies = {
+      -- You will not need this if you installed the
+      -- parsers manually
+      -- Or if the parsers are in your $RUNTIMEPATH
+      'nvim-treesitter/nvim-treesitter',
+
+      'nvim-tree/nvim-web-devicons',
+    },
+    opts = {
+      modes = { 'n', 'i', 'no', 'c' },
+      hybrid_modes = { 'i' },
+      callbacks = {
+        on_enable = function(_, win)
+          vim.wo[win].conceallevel = 2
+          vim.wo[win].concealcursor = 'nc'
+        end,
+      },
+      code_blocks = {
+        enable = true,
+        style = 'simple',
+        hl = 'CursorLine',
+      },
+      list_items = {
+        enable = true,
+      },
+      checkboxes = {
+        enable = false,
+      },
+      headings = {
+        heading_1 = {
+          sign = ' ',
+        },
+        heading_2 = {
+          sign = ' ',
+        },
+      },
+    },
+    config = function(_, opts)
+      require('markview').setup(opts)
+    end,
   },
 }

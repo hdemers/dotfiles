@@ -275,7 +275,7 @@ return {
       require('flow').setup {
         transparent = false, -- Set transparent background.
         fluo_color = 'pink', --  Fluo color: pink, yellow, orange, or green.
-        mode = 'normal', -- Intensity of the palette: normal, bright, desaturate, or dark. Notice that dark is ugly!
+        mode = 'desaturate', -- Intensity of the palette: normal, bright, desaturate, or dark. Notice that dark is ugly!
         aggressive_spell = false, -- Display colors for spell check.
       }
     end,
@@ -293,5 +293,47 @@ return {
   { 'fcancelinha/nordern.nvim', branch = 'master' },
   {
     'tiagovla/tokyodark.nvim',
+  },
+  {
+    'yorik1984/newpaper.nvim',
+    config = function()
+      require('newpaper').setup { style = 'dark' }
+    end,
+  },
+  -- Using lazy.nvim
+  {
+    'ribru17/bamboo.nvim',
+    lazy = false,
+    priority = 1000,
+    config = function()
+      require('bamboo').setup {
+        -- optional configuration here
+      }
+    end,
+  },
+  {
+    'neanias/everforest-nvim',
+    version = false,
+    lazy = false,
+    priority = 1000, -- make sure to load this before all the other start plugins
+    -- Optional; default configuration will be used if setup isn't called.
+    config = function()
+      require('everforest').setup {
+        -- Your config here
+      }
+    end,
+  },
+  { 'rose-pine/neovim', name = 'rose-pine' },
+  {
+    '2giosangmitom/nightfall.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = {},
+  },
+  {
+    'sho-87/kanagawa-paper.nvim',
+    lazy = false,
+    priority = 1000,
+    opts = {},
   },
 }

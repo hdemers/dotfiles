@@ -125,9 +125,27 @@ return {
     end,
   },
   {
-    'tpope/vim-vinegar',
+    'echasnovski/mini.files',
+    version = false,
+    enabled = false,
+    config = function(_, opts)
+      require('mini.files').setup { opts }
+    end,
   },
-  -- Undo tree
+  {
+    'stevearc/oil.nvim',
+    enabled = true,
+    ---@module 'oil'
+    ---@type oil.SetupOpts
+    opts = {},
+    -- Optional dependencies
+    -- dependencies = { { 'echasnovski/mini.icons', opts = {} } },
+    dependencies = { 'nvim-tree/nvim-web-devicons' }, -- use if prefer nvim-web-devicons
+    config = function(_, opts)
+      require('oil').setup(opts)
+      vim.keymap.set('n', '-', '<CMD>Oil<CR>', { desc = 'Open parent directory' })
+    end,
+  },
   {
     'debugloop/telescope-undo.nvim',
     dependencies = { -- note how they're inverted to above example
@@ -357,13 +375,17 @@ return {
       -- You will not need this if you installed the
       -- parsers manually
       -- Or if the parsers are in your $RUNTIMEPATH
-      'nvim-treesitter/nvim-treesitter',
-
+      {
+        'nvim-treesitter/nvim-treesitter',
+        -- Treesitter thought it was a good idea to remove the registration of quarto.
+        -- This broke markview, otter and probably a bunch of other plugins.
+        commit = 'ef52e44bb24161e5138b3de5beadab3f3fcff233',
+      },
       'nvim-tree/nvim-web-devicons',
     },
     opts = {
       modes = { 'n', 'i', 'no', 'c' },
-      hybrid_modes = { 'i' },
+      hybrid_modes = { 'i', 'v' },
       callbacks = {
         on_enable = function(_, win)
           vim.wo[win].conceallevel = 2
@@ -374,6 +396,7 @@ return {
         enable = true,
         style = 'simple',
         hl = 'CursorLine',
+        icons = '',
       },
       list_items = {
         enable = true,
@@ -392,6 +415,24 @@ return {
     },
     config = function(_, opts)
       require('markview').setup(opts)
+    end,
+  },
+  {
+    'kevinhwang91/nvim-ufo',
+    dependencies = { 'kevinhwang91/promise-async' },
+    config = function()
+      vim.opt.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
+      vim.opt.foldlevelstart = 99
+
+      -- treesitter as a main provider instead
+      -- (Note: the `nvim-treesitter` plugin is *not* needed.)
+      -- ufo uses the same query files for folding (queries/<lang>/folds.scm)
+      -- performance and stability are better than `foldmethod=nvim_treesitter#foldexpr()`
+      require('ufo').setup {
+        provider_selector = function(bufnr, filetype, buftype)
+          return { 'treesitter', 'indent' }
+        end,
+      }
     end,
   },
 }

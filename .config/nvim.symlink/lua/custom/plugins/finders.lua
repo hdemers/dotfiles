@@ -77,6 +77,12 @@ return {
           colorscheme = {
             enable_preview = true,
           },
+          lsp_references = {
+            fname_width = 65,
+          },
+          lsp_dynamic_workspace_symbols = {
+            fname_width = 65,
+          },
         },
         extensions = {
           ['ui-select'] = {

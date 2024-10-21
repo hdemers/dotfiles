@@ -389,7 +389,7 @@ return {
           passed = '✔',
           pending = '⧗',
           error = '!',
-          running = '⟲',
+          running = '⟳',
           unknown = '?',
         },
       }
@@ -402,6 +402,7 @@ return {
     end,
     -- stylua: ignore
     keys = {
+
       {
         "<leader>tt",
         function()

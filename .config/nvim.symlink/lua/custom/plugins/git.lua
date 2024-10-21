@@ -360,6 +360,19 @@ return {
         submit_win = {
           approve_review = { lhs = '<C-A>', desc = 'approve review' },
         },
+        review_diff = {
+          add_review_comment = { lhs = '<leader>cc', desc = 'Octo: add comment' },
+          add_review_suggestion = { lhs = '<leader>cs', desc = 'Octo: add suggestion' },
+          next_thread = { lhs = ']t', desc = 'Octo: move to next thread' },
+          prev_thread = { lhs = '[t', desc = 'Octo: move to previous thread' },
+          select_next_entry = { lhs = ']q', desc = 'Octo: move to next changed file' },
+          select_prev_entry = { lhs = '[q', desc = 'Octo: move to previous changed file' },
+          select_first_entry = { lhs = '[Q', desc = 'Octo: move to first changed file' },
+          select_last_entry = { lhs = ']Q', desc = 'Octo: move to last changed file' },
+        },
+        review_thread = {
+          add_comment = { lhs = '<space>cc', desc = 'Octo: add comment' },
+        },
       },
       suppress_missing_scope = {
         projects_v2 = true,
@@ -367,6 +380,14 @@ return {
     },
     config = function(_, opts)
       require('octo').setup(opts)
+
+      -- Add keybinding for Octo pr list
+      vim.keymap.set(
+        'n',
+        '<leader>so',
+        ':Octo pr list<CR>',
+        { desc = 'Octo: open PR list' }
+      )
     end,
   },
 }

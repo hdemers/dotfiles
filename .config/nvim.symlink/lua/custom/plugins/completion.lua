@@ -44,6 +44,7 @@ return {
       --  into multiple repos for maintenance purposes.
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      'crispgm/cmp-beancount',
     },
     config = function()
       -- See `:help cmp`
@@ -112,8 +113,18 @@ return {
           { name = 'buffer' },
           { name = 'otter' },
           { name = 'lazydev', group_index = 0 },
+          {
+            name = 'beancount',
+            option = { account = '$HOME/Projets/budget/data/hugues/preamble.beancount' },
+          },
         },
       }
+    end,
+  },
+  {
+    'benfowler/telescope-luasnip.nvim',
+    config = function()
+      require('telescope').load_extension 'luasnip'
     end,
   },
 }

@@ -49,3 +49,5 @@ __pycache__
 
 # Ignore worktrees
 worktrees
+
+.nvim/

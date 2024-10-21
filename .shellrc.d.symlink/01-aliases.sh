@@ -162,3 +162,5 @@ alias ghp="gh search prs --state=open --review-requested=@me"
 alias ah="atuin history list --reverse false --format '{time} \t {duration} \t {command}' \
       | tspin \
       | fzf -d '|' --bind 'enter:execute(echo {3})+abort' --ansi --delimiter='\t'"
+
+alias et='aws ec2 describe-instance-types --output=json | jq -r ".InstanceTypes[] | [(.InstanceType | tostring), (.ProcessorInfo.SupportedArchitectures | join(\"/\")), (.VCpuInfo.DefaultVCpus | tostring), (.VCpuInfo.DefaultCores | tostring), ((.MemoryInfo.SizeInMiB / 1024) | tostring)] | join(\",\")" | column -t -s, -N InstanceType,Arch,VCpus,Cores,MemoryInGB | fzf --header-lines=1'

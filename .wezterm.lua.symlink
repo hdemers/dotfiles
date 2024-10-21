@@ -8,10 +8,11 @@ local config = wezterm.config_builder()
 
 local font_family = "Sudo"
 config.font = wezterm.font(font_family)
-config.line_height = 1.0
 
 if font_family == "Sudo" then
 	config.font_size = 12
+	config.line_height = 1.1
+	config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 elseif font_family == "Hack" then
 	config.font_size = 9
 elseif font_family == "FiraCode Nerd Font" then

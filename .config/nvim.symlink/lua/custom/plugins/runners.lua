@@ -44,6 +44,11 @@ return {
         desc = 'Overseer: make [r]equirements',
       },
       {
+        '<leader>rf',
+        '<cmd>OverseerRun run-file<CR>',
+        desc = 'Overseer: run [f]ile',
+      },
+      {
         '<leader>ro',
         '<cmd>OverseerQuickAction open float<CR>',
         desc = 'Overseer: show [o]utput',
@@ -59,51 +64,11 @@ return {
       }
 
       local overseer = require 'overseer'
-
-      overseer.register_template {
-        name = 'deploy-branch',
-        builder = function()
-          return {
-            cmd = { 'jenkins' },
-            args = { 'deploy-branch' },
-            name = 'deploy-branch',
-          }
-        end,
-        desc = 'Deploy branch',
-      }
-      overseer.register_template {
-        name = 'integrate',
-        builder = function()
-          return {
-            cmd = { 'jenkins' },
-            args = { 'integrate' },
-            name = 'integrate',
-          }
-        end,
-        desc = 'Integrate branch',
-      }
-      overseer.register_template {
-        name = 'make-test',
-        builder = function()
-          return {
-            cmd = { 'make' },
-            args = { 'test' },
-            name = 'make-test',
-          }
-        end,
-        desc = 'Run make test',
-      }
-      overseer.register_template {
-        name = 'make-requirements',
-        builder = function()
-          return {
-            cmd = { 'make' },
-            args = { 'requirements.txt' },
-            name = 'make-requirements',
-          }
-        end,
-        desc = 'Run make requirements.txt',
-      }
+      overseer.load_template 'misc.run_file'
+      overseer.load_template 'gh.deploy_branch'
+      overseer.load_template 'gh.integrate'
+      overseer.load_template 'gh.make_requirements'
+      overseer.load_template 'gh.make_test'
     end,
   },
   {

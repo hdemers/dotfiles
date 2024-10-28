@@ -231,7 +231,7 @@ return {
       require('nordic').setup {
         ts_context = { dark_background = false },
         telescope = { style = 'flat' },
-        override = {
+        on_highlight = {
           ['@spell'] = { link = '@spell' },
           DiagnosticUnderlineError = {},
           TelescopeMatching = { link = 'IncSearch' },
@@ -323,7 +323,6 @@ return {
       }
     end,
   },
-  { 'rose-pine/neovim', name = 'rose-pine' },
   {
     '2giosangmitom/nightfall.nvim',
     lazy = false,
@@ -336,4 +335,5 @@ return {
     priority = 1000,
     opts = {},
   },
+  { 'ramojus/mellifluous.nvim' },
 }

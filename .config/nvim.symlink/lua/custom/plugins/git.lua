@@ -123,7 +123,7 @@ return {
       -- future development:
       -- https://github.com/tpope/vim-fugitive/issues/1735#issuecomment-822037483
       vim.cmd [[
-        autocmd User FugitiveCommit set foldmethod=syntax
+        autocmd User FugitiveCommit set foldmethod=syntax foldenable
       ]]
     end,
     keys = {
@@ -372,6 +372,20 @@ return {
         },
         review_thread = {
           add_comment = { lhs = '<space>cc', desc = 'Octo: add comment' },
+        },
+        file_panel = {
+          -- submit_review = { lhs = '<leader>vs', desc = 'submit review' },
+          -- discard_review = { lhs = '<leader>vd', desc = 'discard review' },
+          next_entry = { lhs = 'j', desc = 'move to next changed file' },
+          prev_entry = { lhs = 'k', desc = 'move to previous changed file' },
+          select_entry = { lhs = '<cr>', desc = 'show selected changed file diffs' },
+          refresh_files = { lhs = 'R', desc = 'refresh changed files panel' },
+          select_next_entry = { lhs = ']q', desc = 'move to next changed file' },
+          select_prev_entry = { lhs = '[q', desc = 'move to previous changed file' },
+          select_first_entry = { lhs = '[Q', desc = 'move to first changed file' },
+          select_last_entry = { lhs = ']Q', desc = 'move to last changed file' },
+          close_review_tab = { lhs = '<C-c>', desc = 'close review tab' },
+          toggle_viewed = { lhs = '<leader><space>', desc = 'toggle viewer viewed state' },
         },
       },
       suppress_missing_scope = {

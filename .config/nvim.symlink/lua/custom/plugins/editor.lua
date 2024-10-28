@@ -106,25 +106,6 @@ return {
   },
   -- Session manager and startup screen
   {
-    'mhinz/vim-startify',
-    enabled = false,
-    init = function()
-      vim.g.startify_session_persistence = 1
-      vim.g.startify_session_savevars = {
-        'g:startify_session_savevars',
-        'g:startify_session_savecmds',
-      }
-      vim.g.startify_change_to_vcs_root = 1
-      vim.g.startify_lists = {
-        { type = 'sessions', header = { '   Sessions' } },
-        { type = 'files', header = { '   MRU' } },
-        { type = 'dir', header = { '   MRU ' .. vim.fn.getcwd() } },
-        { type = 'bookmarks', header = { '   Bookmarks' } },
-        { type = 'commands', header = { '   Commands' } },
-      }
-    end,
-  },
-  {
     'echasnovski/mini.files',
     version = false,
     enabled = false,
@@ -201,7 +182,106 @@ return {
       on_open = function(win)
         vim.api.nvim_win_set_config(win, { zindex = 100 })
       end,
+      -- top_down = false,
     },
+    config = function(_, opts)
+      local stages_util = require 'notify.stages.util'
+
+      -- Custom stages to show notifications at the top left of the screen.
+      local stages = {
+        function(state)
+          local next_row = stages_util.available_slot(
+            state.open_windows,
+            state.message.height + 2,
+            stages_util.DIRECTION.BOTTOM_UP
+          )
+
+          if not next_row then
+            return nil
+          end
+
+          return {
+            relative = 'editor',
+            anchor = 'NE',
+            width = state.message.width,
+            height = state.message.height,
+            col = 1,
+            row = next_row,
+            border = 'rounded',
+            style = 'minimal',
+            opacity = 0,
+          }
+        end,
+        function(state, win)
+          return {
+            opacity = { 100 },
+            col = { 1 },
+            row = {
+              stages_util.slot_after_previous(
+                win,
+                state.open_windows,
+                stages_util.DIRECTION.BOTTOM_UP
+              ),
+              frequency = 3,
+              complete = function()
+                return true
+              end,
+            },
+          }
+        end,
+        function(state, win)
+          return {
+            col = { 1 },
+            time = true,
+            row = {
+              stages_util.slot_after_previous(
+                win,
+                state.open_windows,
+                stages_util.DIRECTION.BOTTOM_UP
+              ),
+              frequency = 3,
+              complete = function()
+                return true
+              end,
+            },
+          }
+        end,
+        function(state, win)
+          return {
+            width = {
+              1,
+              frequency = 2.5,
+              damping = 0.9,
+              complete = function(cur_width)
+                return cur_width < 3
+              end,
+            },
+            opacity = {
+              0,
+              frequency = 2,
+              complete = function(cur_opacity)
+                return cur_opacity <= 4
+              end,
+            },
+            col = { 1 },
+            row = {
+              stages_util.slot_after_previous(
+                win,
+                state.open_windows,
+                stages_util.DIRECTION.BOTTOM_UP
+              ),
+              frequency = 3,
+              complete = function()
+                return true
+              end,
+            },
+          }
+        end,
+      }
+
+      opts.stages = stages
+      require('notify').setup(opts)
+    end,
   },
   {
     'folke/noice.nvim',
@@ -418,21 +498,13 @@ return {
     end,
   },
   {
-    'kevinhwang91/nvim-ufo',
-    dependencies = { 'kevinhwang91/promise-async' },
-    config = function()
-      vim.opt.foldlevel = 99 -- Using ufo provider need a large value, feel free to decrease the value
-      vim.opt.foldlevelstart = 99
-
-      -- treesitter as a main provider instead
-      -- (Note: the `nvim-treesitter` plugin is *not* needed.)
-      -- ufo uses the same query files for folding (queries/<lang>/folds.scm)
-      -- performance and stability are better than `foldmethod=nvim_treesitter#foldexpr()`
-      require('ufo').setup {
-        provider_selector = function(bufnr, filetype, buftype)
-          return { 'treesitter', 'indent' }
-        end,
-      }
-    end,
+    'nvim-neo-tree/neo-tree.nvim',
+    branch = 'v3.x',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
+      'MunifTanjim/nui.nvim',
+      -- "3rd/image.nvim", -- Optional image support in preview window: See `# Preview Mode` for more information
+    },
   },
 }

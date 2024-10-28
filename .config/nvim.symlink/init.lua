@@ -239,6 +239,17 @@ vim.keymap.set('n', '<leader>w', ':tabclose <CR>', { desc = 'Close tab' })
 vim.keymap.set({ 'n', 'v' }, '<C-s>', '<C-a>', { noremap = true, silent = true })
 vim.keymap.set({ 'n', 'v' }, 'g<C-s>', 'g<C-a>', { noremap = true, silent = true })
 
+-- Treesitter-based folding.
+-- Don't enable folding by default
+vim.opt.foldenable = false
+vim.opt.foldmethod = 'expr'
+vim.opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+vim.opt.foldtext = ''
+vim.opt.fillchars = {
+  foldclose = '>',
+  foldopen = '',
+}
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 

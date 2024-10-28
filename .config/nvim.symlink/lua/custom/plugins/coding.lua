@@ -138,4 +138,10 @@ return {
   {
     'ii14/neorepl.nvim',
   },
+  {
+    'numToStr/Comment.nvim',
+    opts = {
+      -- add any options here
+    },
+  },
 }

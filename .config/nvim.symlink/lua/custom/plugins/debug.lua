@@ -389,7 +389,7 @@ return {
           passed = '✔',
           pending = '⧗',
           error = '!',
-          running = '⟳',
+          running = '↯',
           unknown = '?',
         },
       }

@@ -46,7 +46,15 @@ return {
 
       -- [[ Configure Telescope ]]
       -- See `:help telescope` and `:help telescope.setup()`
-      require('telescope').setup {
+      local telescope = require 'telescope'
+      local fzf_opts = {
+        fuzzy = true, -- false will only do exact matching
+        override_generic_sorter = true, -- override the generic sorter
+        override_file_sorter = true, -- override the file sorter
+        case_mode = 'smart_case', -- or "ignore_case" or "respect_case"
+        -- the default case_mode is "smart_case"
+      }
+      telescope.setup {
         -- You can put your default mappings / updates / etc. in here
         --  All the info you're looking for is in `:help telescope.setup()`
         --
@@ -82,17 +90,14 @@ return {
           },
           lsp_dynamic_workspace_symbols = {
             fname_width = 65,
+            sorter = telescope.extensions.fzf.native_fzf_sorter(fzf_opts),
           },
         },
         extensions = {
           ['ui-select'] = {
             require('telescope.themes').get_dropdown(),
           },
-          -- fzf = {
-          --   fuzzy = true, -- false will only do exact matching
-          --   override_generic_sorter = true,
-          --   override_file_sorter = true,
-          -- },
+          fzf = fzf_opts,
         },
       }
       -- Enable telescope extensions, if they are installed

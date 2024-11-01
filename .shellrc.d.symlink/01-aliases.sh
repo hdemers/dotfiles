@@ -119,7 +119,7 @@ alias gb="git rb \
       --bind 'enter:execute(echo {1} | tr -d \"*\" | xargs --no-run-if-empty git sw)+abort' \
       --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
       --bind 'ctrl-r:reload(git rba)' \
-      --bind 'ctrl-w:execute(awk -F\"/\" '\"'\"'{print \$2}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{})+abort' \
+      --bind 'ctrl-w:execute(awk -F\"/\" '\"'\"'{print \$2}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{}; cd worktrees/{})+abort' \
     "
 
 alias js="jira issues\

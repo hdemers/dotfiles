@@ -88,6 +88,17 @@ return {
           -- MiniStatuslineFilename = { link = 'StatusLine' },
         }
       end,
+      integrations = {
+        diffview = true,
+        neotest = true,
+        noice = true,
+        notify = true,
+        overseer = true,
+        lsp_trouble = true,
+        dadbod_ui = true,
+        gitgutter = true,
+        which_key = true,
+      },
     },
     config = function(_, opts)
       require('catppuccin').setup(opts)

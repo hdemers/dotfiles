@@ -14,13 +14,15 @@ if font_family == "Sudo" then
 	config.line_height = 1.1
 	config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 elseif font_family == "Hack" then
-	config.font_size = 9
+	config.font_size = 9.5
+	config.line_height = 1.15
 elseif font_family == "FiraCode Nerd Font" then
 	config.font_size = 9
 elseif font_family == "JetBrains Mono" then
 	config.font_size = 9
 elseif font_family == "Iosevka Nerd Font" then
 	config.font_size = 10
+	config.line_height = 1.1
 else
 	config.font_size = 12
 end

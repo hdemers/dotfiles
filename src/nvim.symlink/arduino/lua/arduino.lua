@@ -4,26 +4,25 @@ local M = {}
 M.setup = function()
   print 'Arduino setup'
 
+  local overseer = require 'overseer'
+  overseer.load_template 'misc.compile_sketch'
+  overseer.load_template 'misc.upload_sketch'
+  overseer.load_template 'misc.monitor_sketch'
+
   vim.api.nvim_create_user_command('ArduinoRun', function()
-    local overseer = require 'overseer'
-
-    overseer.load_template 'misc.compile_sketch'
-    overseer.load_template 'misc.upload_sketch'
-    overseer.load_template 'misc.monitor_sketch'
-
     -- local task = overseer.new_task {
     --   name = 'Compile, upload and monitor',
     --   strategy = {
     --     'orchestrator',
     --     tasks = {
-    --       'misc.compile_sketch',
-    --       'misc.upload_sketch',
-    --       'misc.monitor_sketch',
+    --       'compile-sketch',
+    --       -- 'misc.upload_sketch',
+    --       -- 'misc.monitor_sketch',
     --     },
     --   },
     -- }
     -- task:start()
-
+    --
     -- task:subscribe('on_start', function(t, _)
     --   local main_win = vim.api.nvim_get_current_win()
     --   overseer.run_action(t, 'open vsplit')

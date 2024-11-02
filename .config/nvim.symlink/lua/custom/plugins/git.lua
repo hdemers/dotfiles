@@ -230,6 +230,9 @@ return {
     opts = {
       file_panel = {
         listing_style = 'list',
+        win_config = {
+          width = 55,
+        },
       },
     },
     config = function(_, opts)

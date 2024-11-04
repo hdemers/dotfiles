@@ -6,6 +6,10 @@ return {
     return {
       cmd = { 'arduino-cli' },
       args = { 'upload', file },
+      components = {
+        { 'dependencies', task_names = { 'compile-sketch' } },
+        { 'on_exit_set_status' },
+      },
     }
   end,
   condition = {

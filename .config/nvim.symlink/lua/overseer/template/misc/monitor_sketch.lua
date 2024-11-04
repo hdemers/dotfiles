@@ -6,9 +6,10 @@ return {
     return {
       cmd = { 'arduino-cli' },
       args = { 'monitor', file },
-      -- strategy = {
-      --   'toggleterm',
-      -- },
+      components = {
+        { 'dependencies', task_names = { 'upload-sketch' } },
+        { 'on_exit_set_status' },
+      },
     }
   end,
   condition = {

@@ -136,9 +136,9 @@ return {
             and client.server_capabilities.inlayHintProvider
             and vim.lsp.inlay_hint
           then
-            map('<leader>th', function()
+            map('<leader>ch', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
-            end, '[T]oggle Inlay [H]ints')
+            end, 'toggle inlay [h]ints')
           end
         end,
       })
@@ -163,32 +163,21 @@ return {
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        ruff = {
+        ruff_lsp = {
           on_attach = function(client)
-            if client.name == 'ruff' then
+            if client.name == 'ruff_lsp' then
               -- Disable hover in favor of Pyright
               client.server_capabilities.hoverProvider = false
             end
           end,
-        },
-        jedi_language_server = {
+          trace = 'messages',
           settings = {
-            jedi = {
-              -- Using Ruff's import organizer
-              disableOrganizeImports = true,
-            },
-            python = {
-              analysis = {
-                -- Ignore all files for analysis to exclusively use Ruff for linting
-                ignore = { '*' },
-                typeCheckingMode = 'off',
-              },
-            },
+            logLevel = 'debug',
           },
         },
-        -- basedpyright = {
+        -- jedi_language_server = {
         --   settings = {
-        --     pyright = {
+        --     jedi = {
         --       -- Using Ruff's import organizer
         --       disableOrganizeImports = true,
         --     },
@@ -201,6 +190,21 @@ return {
         --     },
         --   },
         -- },
+        pyright = {
+          settings = {
+            pyright = {
+              -- Using Ruff's import organizer
+              disableOrganizeImports = true,
+            },
+            python = {
+              analysis = {
+                -- Ignore all files for analysis to exclusively use Ruff for linting
+                ignore = { '*' },
+                -- typeCheckingMode = 'off',
+              },
+            },
+          },
+        },
         -- beancount = {},
         arduino_language_server = {
           cmd = {

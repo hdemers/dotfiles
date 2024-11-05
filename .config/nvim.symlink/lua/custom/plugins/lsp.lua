@@ -170,26 +170,7 @@ return {
               client.server_capabilities.hoverProvider = false
             end
           end,
-          trace = 'messages',
-          settings = {
-            logLevel = 'debug',
-          },
         },
-        -- jedi_language_server = {
-        --   settings = {
-        --     jedi = {
-        --       -- Using Ruff's import organizer
-        --       disableOrganizeImports = true,
-        --     },
-        --     python = {
-        --       analysis = {
-        --         -- Ignore all files for analysis to exclusively use Ruff for linting
-        --         ignore = { '*' },
-        --         typeCheckingMode = 'off',
-        --       },
-        --     },
-        --   },
-        -- },
         pyright = {
           settings = {
             pyright = {
@@ -200,7 +181,6 @@ return {
               analysis = {
                 -- Ignore all files for analysis to exclusively use Ruff for linting
                 ignore = { '*' },
-                -- typeCheckingMode = 'off',
               },
             },
           },

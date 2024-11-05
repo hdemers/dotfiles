@@ -35,13 +35,15 @@ return {
         -- Conform can also run multiple formatters sequentially
         python = { 'ruff_format' },
         quarto = { 'injected' },
+        json = { 'jq' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
         -- javascript = { { "prettierd", "prettier" } },
       },
     },
-    config = function()
+    config = function(_, opts)
+      require('conform').setup(opts)
       -- Customize the "injected" formatter
       require('conform').formatters.injected = {
         -- Set the options field

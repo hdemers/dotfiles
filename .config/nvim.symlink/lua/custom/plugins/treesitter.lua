@@ -15,6 +15,7 @@ return {
         'vim',
         'vimdoc',
         'python',
+        'regex',
       },
       -- Autoinstall languages that are not installed
       auto_install = true,

@@ -12,6 +12,7 @@ export PATH=$HOME/.local/bin:$PATH
 export PATH=$HOME/local/bin:$PATH
 export PATH=/usr/local/cuda/bin${PATH:+:${PATH}}
 export PATH=$HOME/.cargo/bin:$PATH
+export PATH=$HOME/go/bin:$PATH
 
 export CPATH=$CPATH:$HOME/.local/include
 export LIBRARY_PATH=$LIBRARY_PATH:$HOME/.local/lib

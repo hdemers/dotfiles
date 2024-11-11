@@ -221,7 +221,7 @@ return {
         end
         local branch = metadata[1]
         local is_current = false
-        -- If branch starts with a '*',remote it
+        -- If branch starts with a '*', remove it
         if string.sub(branch, 1, 1) == '*' then
           branch = string.sub(branch, 2)
           is_current = true

@@ -116,10 +116,10 @@ alias gb="git rb \
       --preview='GH_FORCE_TTY=\"100%\" gh pr view --comments \$(echo {1} | tr -d \"*\") || \
           git show --stat --color=always \$(echo {1} | tr -d \"*\")' \
       --preview-window=top,75% \
-      --bind 'enter:execute(echo {1} | tr -d \"*\" | xargs --no-run-if-empty git sw)+abort' \
+      --bind 'enter:execute(echo {1} | tr -d \"*\" | awk -F\"/\" '\''{print \$NF}'\'' | xargs --no-run-if-empty git sw)+abort' \
       --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
       --bind 'ctrl-r:reload(git rba)' \
-      --bind 'ctrl-w:execute(awk -F\"/\" '\"'\"'{print \$2}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{}; cd worktrees/{})+abort' \
+      --bind 'ctrl-t:execute(awk -F\"/\" '\"'\"'{print \$NF}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{}; cd worktrees/{})+abort' \
     "
 
 alias js="jira issues\

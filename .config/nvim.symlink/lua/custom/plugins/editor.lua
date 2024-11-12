@@ -172,6 +172,7 @@ return {
     enabled = true,
     keys = {},
     opts = {
+      render = 'compact',
       timeout = 3000,
       max_height = function()
         return math.floor(vim.o.lines * 0.75)
@@ -187,7 +188,7 @@ return {
     config = function(_, opts)
       local stages_util = require 'notify.stages.util'
 
-      -- Custom stages to show notifications at the top left of the screen.
+      -- Custom stages to show notifications at the bottom left of the screen.
       local stages = {
         function(state)
           local next_row = stages_util.available_slot(
@@ -368,6 +369,7 @@ return {
   },
   {
     'tzachar/highlight-undo.nvim',
+    enabled = false,
     opts = {
       duration = 700,
       undo = {
@@ -506,5 +508,26 @@ return {
       'MunifTanjim/nui.nvim',
       -- "3rd/image.nvim", -- Optional image support in preview window: See `# Preview Mode` for more information
     },
+  },
+  {
+    'folke/snacks.nvim',
+    priority = 1000,
+    lazy = false,
+    opts = {
+      styles = {},
+      bigfile = { enabled = true },
+      notifier = { enabled = false, style = 'compact' },
+      quickfile = { enabled = true },
+      statuscolumn = { enabled = true },
+      words = { enabled = true },
+    },
+    config = function(_, opts)
+      local snacks = require 'snacks'
+      snacks.setup(opts)
+
+      -- vim.keymap.set('n', '<leader>snh', function()
+      --   snacks.notifier.show_hihtory()
+      -- end, { desc = 'Noice History' })
+    end,
   },
 }

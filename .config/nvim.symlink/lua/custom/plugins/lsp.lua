@@ -163,9 +163,9 @@ return {
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        ruff_lsp = {
+        ruff = {
           on_attach = function(client)
-            if client.name == 'ruff_lsp' then
+            if client.name == 'ruff' then
               -- Disable hover in favor of Pyright
               client.server_capabilities.hoverProvider = false
             end

@@ -122,17 +122,31 @@ return {
 
           -- You can provide additional configuration to the handlers,
           -- see mason-nvim-dap README for more information
-          handlers = {},
+          handlers = { python = function() end },
 
           -- You'll need to check that you have the required things installed
           -- online, please don't ask me how to install them :)
           ensure_installed = {
-            -- Update this to ensure that you have the debuggers for the langs you want
+            'python',
           },
         },
       },
 
-      'mfussenegger/nvim-dap-python',
+      {
+        'mfussenegger/nvim-dap-python',
+        config = function()
+          -- Install Python specific config
+          local dap_python = require 'dap-python'
+          local root = vim.env.MASON or (vim.fn.stdpath 'data' .. '/mason')
+          local path = root .. '/packages/debugpy/venv/bin/python'
+          dap_python.setup(path, {
+            -- include_configs = true,
+            -- console = 'integratedTerminal',
+            -- pythonPath = nil,
+          })
+          dap_python.test_runner = 'pytest'
+        end,
+      },
       'nvim-neotest/neotest',
     },
     keys = {
@@ -269,7 +283,7 @@ return {
         { '<leader>d', group = '[D]ebug' },
       }
 
-      -- setup dap config by VsCode launch.json file
+      -- setup dap config by VSCode launch.json file
       local vscode = require 'dap.ext.vscode'
       local _filetypes = require 'mason-nvim-dap.mappings.filetypes'
       local filetypes = vim.tbl_deep_extend('force', _filetypes, {
@@ -286,15 +300,6 @@ return {
         return vim.json.decode(json.json_strip_comments(str))
       end
       vscode.load_launchjs(nil, filetypes)
-
-      -- Install Python specific config
-      local dap_python = require 'dap-python'
-      dap_python.setup('~/.virtualenvs/debugpy/bin/python', {
-        include_configs = true,
-        console = 'integratedTerminal',
-        pythonPath = nil,
-      })
-      dap_python.test_runner = 'pytest'
     end,
   },
   {
@@ -306,8 +311,6 @@ return {
       'nvim-treesitter/nvim-treesitter',
       {
         'nvim-neotest/neotest-python',
-        -- FIXME: Remove this eventually.
-        commit = '2e83d2bc00acbcc1fd529dbf0a0e677cabfe6b50',
       },
     },
     config = function(_, opts)
@@ -373,7 +376,7 @@ return {
         --     args = { "-tags=integration" },
         --   },
         -- },
-        status = { virtual_text = true },
+        status = { virtual_text = false },
         output = { open_on_run = true },
         -- quickfix = {
         --   open = function()

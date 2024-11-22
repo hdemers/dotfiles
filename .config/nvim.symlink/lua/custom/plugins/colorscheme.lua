@@ -233,7 +233,6 @@ return {
       })
     end,
   },
-  { 'savq/melange-nvim' },
   { 'nyoom-engineering/oxocarbon.nvim' },
   {
     'AlexvZyl/nordic.nvim',
@@ -299,7 +298,13 @@ return {
     'killitar/obscure.nvim',
     lazy = false,
     priority = 1000,
-    opts = {},
+    config = function()
+      require('obscure').setup {
+        on_highlights = function(hl, c)
+          hl.DiffChange = { bg = c.cyan, fg = c.black, underline = false }
+        end,
+      }
+    end,
   },
   { 'fcancelinha/nordern.nvim', branch = 'master' },
   {
@@ -347,4 +352,60 @@ return {
     opts = {},
   },
   { 'ramojus/mellifluous.nvim' },
+  {
+    'olimorris/onedarkpro.nvim',
+    priority = 1000, -- Ensure it loads first
+  },
+  {
+    'oxfist/night-owl.nvim',
+    lazy = false, -- make sure we load this during startup if it is your main colorscheme
+    priority = 1000, -- make sure to load this before all the other start plugins
+    config = function()
+      -- load the colorscheme here
+      require('night-owl').setup()
+    end,
+  },
+  {
+    'marko-cerovac/material.nvim',
+    config = function()
+      require('material').setup {
+        contrast = {
+          terminal = true,
+          sidebars = true,
+          floating_windows = true,
+        },
+        plugins = {
+          -- "coc",
+          -- "colorful-winsep",
+          'dap',
+          -- "dashboard",
+          -- "eyeliner",
+          'fidget',
+          'flash',
+          'gitsigns',
+          -- "harpoon",
+          -- "hop",
+          -- "illuminate",
+          'indent-blankline',
+          -- "lspsaga",
+          'mini',
+          'neogit',
+          'neotest',
+          'neo-tree',
+          -- "neorg",
+          'noice',
+          'nvim-cmp',
+          -- "nvim-navic",
+          -- "nvim-tree",
+          'nvim-web-devicons',
+          -- "rainbow-delimiters",
+          -- "sneak",
+          'telescope',
+          'trouble',
+          'which-key',
+          'nvim-notify',
+        },
+      }
+    end,
+  },
 }

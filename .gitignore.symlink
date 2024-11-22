@@ -55,3 +55,10 @@ worktrees
 pyrightconfig.json
 
 .cast
+
+examples/
+
+.coverage.*
+coverage.xml
+
+.null-ls_*

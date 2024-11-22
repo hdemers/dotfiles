@@ -344,6 +344,7 @@ return {
         },
         null_ls.builtins.diagnostics.bean_check,
         null_ls.builtins.formatting.bean_format,
+        null_ls.builtins.diagnostics.mypy,
       }
 
       null_ls.setup { sources = sources, debug = true }

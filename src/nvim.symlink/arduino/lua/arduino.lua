@@ -2,8 +2,6 @@
 local M = {}
 
 M.setup = function()
-  print 'Arduino setup'
-
   local overseer = require 'overseer'
   local running_task
 

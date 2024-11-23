@@ -46,6 +46,7 @@ return {
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
       'crispgm/cmp-beancount',
+      'lkhphuc/jupyter-kernel.nvim',
     },
     config = function()
       -- See `:help cmp`
@@ -118,6 +119,7 @@ return {
             name = 'beancount',
             option = { account = '$HOME/Projets/budget/data/hugues/preamble.beancount' },
           },
+          { name = 'jupyter' },
         },
       }
     end,

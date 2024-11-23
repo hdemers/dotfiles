@@ -189,7 +189,7 @@ return {
             },
           },
         },
-        -- beancount = {},
+        beancount = {},
         arduino_language_server = {
           cmd = {
             'arduino-language-server',

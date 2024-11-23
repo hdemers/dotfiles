@@ -14,4 +14,19 @@ return {
       overseer.load_template 'misc.monitor_sketch'
     end,
   },
+  {
+    name = 'ntfy',
+    dir = '~/src/nvim/ntfy',
+    config = function()
+      local ntfy = require 'ntfy'
+      ntfy.setup()
+    end,
+  },
+  {
+    name = 'misc',
+    dir = '~/src/nvim/misc',
+    config = function()
+      require('misc').setup()
+    end,
+  },
 }

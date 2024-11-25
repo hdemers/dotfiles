@@ -489,9 +489,19 @@ return {
       headings = {
         heading_1 = {
           sign = ' ',
+          icon = '█ ',
         },
         heading_2 = {
           sign = ' ',
+          icon = '▊ ',
+        },
+        heading_3 = {
+          sign = ' ',
+          icon = '▌ ',
+        },
+        heading_4 = {
+          sign = ' ',
+          icon = '▎ ',
         },
       },
     },

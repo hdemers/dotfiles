@@ -91,6 +91,7 @@ return {
 
       local overseer = require 'overseer'
       overseer.load_template 'misc.run_file'
+      overseer.load_template 'misc.test_task'
       overseer.load_template 'gh.deploy_branch'
       overseer.load_template 'gh.integrate'
       overseer.load_template 'gh.make_requirements'

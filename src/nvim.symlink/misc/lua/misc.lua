@@ -3,7 +3,12 @@ local M = {}
 
 M.setup = function()
   vim.api.nvim_create_user_command('StartPyscriptKernel', function()
-    local connection_file = ''
+    local connection_file = nil
+
+    if os.getenv 'VIRTUAL_ENV' == nil or os.getenv 'VIRTUAL_ENV' ~= 'pyscrip' then
+      vim.notify('Virtualenv is not `pyscript`. Aborting.', vim.log.levels.ERROR)
+      return
+    end
 
     local on_exit = vim.schedule_wrap(function(obj)
       if obj.code ~= 0 then
@@ -16,17 +21,16 @@ M.setup = function()
       'kernel',
       '--kernel',
       'pyscript',
-      -- '-f',
-      -- connection_file,
     }
     -- vim.notify(
     --   'Starting pyscript kernel, cmd is ' .. table.concat(cmd, ' '),
     --   vim.log.levels.INFO
     -- )
 
-    local init = vim.schedule_wrap(function()
-      vim.cmd('JupyterAttach ' .. connection_file)
-      vim.cmd('MoltenInit ' .. connection_file)
+    local init = vim.schedule_wrap(function(connection)
+      vim.notify('Attaching to kernel using ' .. connection, vim.log.levels.INFO)
+      vim.cmd('JupyterAttach ' .. connection)
+      vim.cmd('MoltenInit ' .. connection)
     end)
 
     local stdout = function(err, data)
@@ -37,12 +41,12 @@ M.setup = function()
         local pattern = 'Connection file: (/[%w%p]+%.json)'
         connection_file = string.match(data, pattern)
 
-        if connection_file then
-          -- vim.notify(
-          --   'Kernel pyscript started with connection file ' .. connection_file,
-          --   vim.log.levels.INFO
-          -- )
-          init()
+        if connection_file ~= nil then
+          vim.notify(
+            'Kernel pyscript started with connection file ' .. connection_file,
+            vim.log.levels.INFO
+          )
+          init(connection_file)
         end
       end
     end

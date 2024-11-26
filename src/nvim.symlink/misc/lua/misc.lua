@@ -5,8 +5,12 @@ M.setup = function()
   vim.api.nvim_create_user_command('StartPyscriptKernel', function()
     local connection_file = nil
 
-    if os.getenv 'VIRTUAL_ENV' == nil or os.getenv 'VIRTUAL_ENV' ~= 'pyscrip' then
-      vim.notify('Virtualenv is not `pyscript`. Aborting.', vim.log.levels.ERROR)
+    local virtual_env = os.getenv 'VIRTUAL_ENV'
+    if virtual_env == nil or not string.match(virtual_env, '.*pyscript$') then
+      vim.notify(
+        'Virtualenv is not `pyscript` (is' .. virtual_env .. '). Aborting.',
+        vim.log.levels.ERROR
+      )
       return
     end
 

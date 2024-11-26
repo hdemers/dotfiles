@@ -86,6 +86,7 @@ if [[ -x "$(command -v secret-tool)" ]]; then
     export TODOIST_API_TOKEN=$(secret lookup todoist token)
     export JIRA_API_TOKEN=$(secret lookup jira token)
     export OPENAI_API_KEY=$(secret lookup openai apikey)
+    export NTFY_NEPTUNE_CHANNEL=$(secret lookup ntfy neptune)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable
@@ -99,3 +100,4 @@ export QUARTO_PYTHON=$HOME/.virtualenvs/nvim/bin/python
 # This token is taken from the Todoist app itself.
 if [[ -x "$(command -v secret)" ]]; then
 fi
+

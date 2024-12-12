@@ -256,6 +256,7 @@ return {
       overrides = function(colors)
         return {
           FlashBackdrop = { link = 'Conceal' },
+          DiffAdd = { bg = '#1f6932', fg = colors.white },
         }
       end,
     },
@@ -349,21 +350,25 @@ return {
     'sho-87/kanagawa-paper.nvim',
     lazy = false,
     priority = 1000,
-    opts = {},
+    opts = {
+      style = 'dark',
+      overrides = function(colors)
+        return {
+          -- Override any highlight group
+          -- For example, to change the background color of the cursor line:
+          MiniStatuslineDevinfo = { fg = colors.theme.ui.fg_gray },
+          MiniStatuslineFilename = { fg = colors.theme.ui.fg },
+        }
+      end,
+    },
+    config = function(_, opts)
+      require('kanagawa-paper').setup(opts)
+    end,
   },
   { 'ramojus/mellifluous.nvim' },
   {
     'olimorris/onedarkpro.nvim',
     priority = 1000, -- Ensure it loads first
-  },
-  {
-    'oxfist/night-owl.nvim',
-    lazy = false, -- make sure we load this during startup if it is your main colorscheme
-    priority = 1000, -- make sure to load this before all the other start plugins
-    config = function()
-      -- load the colorscheme here
-      require('night-owl').setup()
-    end,
   },
   {
     'marko-cerovac/material.nvim',
@@ -406,6 +411,27 @@ return {
           'nvim-notify',
         },
       }
+    end,
+  },
+  { 'rose-pine/neovim', name = 'rose-pine' },
+  {
+    'sainnhe/edge',
+    lazy = false,
+    priority = 1000,
+    config = function()
+      -- Optionally configure and load the colorscheme
+      -- directly inside the plugin declaration.
+      vim.g.edge_enable_italic = true
+    end,
+  },
+  {
+    'sainnhe/sonokai',
+    lazy = false,
+    priority = 1000,
+    config = function()
+      -- Optionally configure and load the colorscheme
+      -- directly inside the plugin declaration.
+      vim.g.sonokai_enable_italic = true
     end,
   },
 }

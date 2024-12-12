@@ -18,64 +18,8 @@ return {
     end,
   },
   {
-    'jackMort/ChatGPT.nvim',
-    event = 'VeryLazy',
-    opts = {
-      popup_layout = {
-        default = 'center',
-        center = {
-          width = '50%',
-          height = '80%',
-        },
-        right = {
-          width = '30%',
-          width_settings_open = '50%',
-        },
-      },
-      openai_params = {
-        model = 'gpt-4',
-        frequency_penalty = 0,
-        presence_penalty = 0,
-        max_tokens = 300,
-        temperature = 0,
-        top_p = 1,
-        n = 1,
-      },
-      openai_edit_params = {
-        model = 'gpt-4',
-        frequency_penalty = 0,
-        presence_penalty = 0,
-        max_tokens = 300,
-        temperature = 0,
-        top_p = 1,
-        n = 1,
-      },
-    },
-    config = function(_, opts)
-      require('chatgpt').setup(opts)
-    end,
-    dependencies = {
-      'MunifTanjim/nui.nvim',
-      'nvim-lua/plenary.nvim',
-      'folke/trouble.nvim',
-      'nvim-telescope/telescope.nvim',
-    },
-    keys = {
-      {
-        '<leader>hg',
-        ':ChatGPT<CR>',
-        desc = 'ChatGPT: [h]elp Chat[G]PT',
-      },
-    },
-    init = function()
-      -- Document key chains
-      require('which-key').add {
-        { '<leader>h', group = '[H]elp' },
-      }
-    end,
-  },
-  {
     'Aaronik/GPTModels.nvim',
+    enabled = false,
     dependencies = {
       'MunifTanjim/nui.nvim',
       'nvim-telescope/telescope.nvim',
@@ -96,36 +40,56 @@ return {
     },
   },
   {
-    'robitx/gp.nvim',
-    keys = {
-      {
-        '<leader>hn',
-        ':GpChatNew popup<CR>',
-        desc = 'GP: [h]elp [n]ew',
-        mode = { 'n', 'v' },
-      },
-      {
-        '<leader>ht',
-        ':GpChatToggle popup<CR>',
-        desc = 'GP: [h]elp [t]oggle',
-        mode = { 'n', 'v' },
-      },
-      {
-        '<leader>hf',
-        ':GpChatFinder<CR>',
-        desc = 'GP: [h]elp [f]ind',
-        mode = { 'n' },
-      },
-      {
-        '<leader>hd',
-        ':GpChatDelete<CR>',
-        desc = 'GP: [h]elp [d]elete',
-        mode = { 'n' },
-      },
+    'yetone/avante.nvim',
+    enabled = true,
+    event = 'VeryLazy',
+    lazy = false,
+    version = false, -- set this if you want to always pull the latest change
+    opts = {
+      -- add any opts here
     },
-    opts = {},
-    config = function(_, opts)
-      require('gp').setup(opts)
+    -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
+    build = 'make',
+    -- build = "powershell -ExecutionPolicy Bypass -File Build.ps1 -BuildFromSource false" -- for windows
+    dependencies = {
+      'nvim-treesitter/nvim-treesitter',
+      'stevearc/dressing.nvim',
+      'nvim-lua/plenary.nvim',
+      'MunifTanjim/nui.nvim',
+      --- The below dependencies are optional,
+      'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
+      -- 'zbirenbaum/copilot.lua', -- for providers='copilot'
+      {
+        -- support for image pasting
+        'HakonHarnes/img-clip.nvim',
+        event = 'VeryLazy',
+        opts = {
+          -- recommended settings
+          default = {
+            embed_image_as_base64 = false,
+            prompt_for_file_name = false,
+            drag_and_drop = {
+              insert_mode = true,
+            },
+            -- required for Windows users
+            use_absolute_path = true,
+          },
+        },
+      },
+      -- {
+      --   -- Make sure to set this up properly if you have lazy=true
+      --   'MeanderingProgrammer/render-markdown.nvim',
+      --   opts = {
+      --     file_types = { 'markdown', 'Avante', 'quarto', 'rmd' },
+      --   },
+      --   ft = { 'markdown', 'Avante' },
+      -- },
+    },
+    init = function()
+      -- Document key chains
+      require('which-key').add {
+        { '<leader>a', group = '[A]I' },
+      }
     end,
   },
 }

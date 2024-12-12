@@ -207,7 +207,7 @@ return {
     keys = {
       {
         '<localleader>je',
-        ':noautocmd MoltenEnterOutput<CR>',
+        ':noautocmd MoltenEnterOutput<CR>:noautocmd MoltenEnterOutput<CR>[ow',
         desc = 'Molten: [e]nter output',
       },
       { '<localleader>jr', ':MoltenRestart<cr>', desc = 'Molten: [r]estart' },
@@ -249,6 +249,7 @@ return {
   {
     'milanglacier/yarepl.nvim',
     event = 'VeryLazy',
+    enabled = false,
     config = function()
       local yarepl = require 'yarepl'
       yarepl.setup {
@@ -322,6 +323,7 @@ return {
   },
   {
     'Vigemus/iron.nvim',
+    enabled = false,
     opts = {
       config = {
         scratch_repl = true,

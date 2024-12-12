@@ -1,6 +1,6 @@
 return {
   -- Detect tabstop and shiftwidth automatically
-  { 'tpope/vim-sleuth' },
+  { 'tpope/vim-sleuth', enabled = true },
   -- This plugin adds which-key entries for vim-unimpaired, which is a dependency.
   {
     'afreakk/unimpaired-which-key.nvim',
@@ -85,13 +85,13 @@ return {
         -- If we have running tasks, show them in the statusline
         local line = '%2l:%-2v'
         if tasks_by_status.RUNNING then
-          line = line .. '   ' .. #tasks_by_status.RUNNING
+          line = line .. ' ▶ ' .. #tasks_by_status.RUNNING
         end
         if tasks_by_status.FAILURE then
-          line = line .. '   ' .. #tasks_by_status.FAILURE
+          line = line .. ' ✗ ' .. #tasks_by_status.FAILURE
         end
         if tasks_by_status.SUCCESS then
-          line = line .. '   ' .. #tasks_by_status.SUCCESS
+          line = line .. ' ✔ ' .. #tasks_by_status.SUCCESS
         end
         return line
       end
@@ -461,11 +461,12 @@ return {
         'nvim-treesitter/nvim-treesitter',
         -- Treesitter thought it was a good idea to remove the registration of quarto.
         -- This broke markview, otter and probably a bunch of other plugins.
-        commit = 'ef52e44bb24161e5138b3de5beadab3f3fcff233',
+        -- commit = 'ef52e44bb24161e5138b3de5beadab3f3fcff233',
       },
       'nvim-tree/nvim-web-devicons',
     },
     opts = {
+      filetypes = { 'markdown', 'quarto', 'rmd', 'Avante' },
       modes = { 'n', 'i', 'no', 'c' },
       hybrid_modes = { 'i', 'v' },
       callbacks = {
@@ -482,6 +483,9 @@ return {
       },
       list_items = {
         enable = true,
+        marker_minus = {
+          text = '•',
+        },
       },
       checkboxes = {
         enable = false,
@@ -526,10 +530,20 @@ return {
     opts = {
       styles = {},
       bigfile = { enabled = true },
+      bufdelete = { enabled = true },
       notifier = { enabled = false, style = 'compact' },
       quickfile = { enabled = true },
       statuscolumn = { enabled = true },
       words = { enabled = true },
+    },
+    keys = {
+      {
+        '<leader>Q',
+        function()
+          Snacks.bufdelete()
+        end,
+        desc = 'Delete buffer',
+      },
     },
     config = function(_, opts)
       local snacks = require 'snacks'

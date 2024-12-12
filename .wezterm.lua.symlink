@@ -15,7 +15,7 @@ if font_family == "Sudo" then
 	config.allow_square_glyphs_to_overflow_width = "Never"
 elseif font_family == "Hack" then
 	config.font_size = 9.5
-	config.line_height = 1.15
+	config.line_height = 1.00
 elseif font_family == "FiraCode Nerd Font" then
 	config.font_size = 9
 elseif font_family == "JetBrains Mono" then

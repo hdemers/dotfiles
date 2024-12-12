@@ -7,6 +7,7 @@ return {
       components = {
         { 'on_exit_set_status' },
         { 'custom.on_complete_ntfy' },
+        { 'custom.on_pre_start_deploy_branch' },
       },
     }
   end,

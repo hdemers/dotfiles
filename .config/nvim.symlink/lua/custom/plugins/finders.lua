@@ -385,6 +385,16 @@ return {
               end,
               fzflua.actions.resume,
             },
+            ['ctrl-u'] = function(selected)
+              local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+              Terminal:new({
+                direction = 'float',
+                cmd = string.format('jira update %s', key),
+                hidden = false,
+                float_opts = { width = 200, height = 50 },
+                on_close = fzflua.actions.resume,
+              }):open()
+            end,
           },
           preview = {
             type = 'cmd',

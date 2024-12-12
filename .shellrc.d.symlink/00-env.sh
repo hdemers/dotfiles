@@ -87,6 +87,10 @@ if [[ -x "$(command -v secret-tool)" ]]; then
     export JIRA_API_TOKEN=$(secret lookup jira token)
     export OPENAI_API_KEY=$(secret lookup openai apikey)
     export NTFY_NEPTUNE_CHANNEL=$(secret lookup ntfy neptune)
+    export ANTHROPIC_API_KEY=$(secret lookup anthropic apikey)
+    export MQTTUI_USERNAME=mqtt-user
+    export MQTTUI_PASSWORD=$(secret lookup mqtt password)
+    export PAGERDUTY_TOKEN=$(secret lookup pagerduty token)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable

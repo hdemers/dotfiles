@@ -97,6 +97,7 @@ FZF_GIT_JIRA_TICKET_NUMBER="git show \
     --quiet \
     --pretty=format:\"%s %b\" \
     \$(echo {} | $FZF_GREP_COMMIT_SHA)"
+
 alias gf="$FZF_GIT_LOG_GRAPH | fzf \
     --ansi \
     --preview='git show --stat --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA)' \

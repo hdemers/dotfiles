@@ -62,3 +62,5 @@ examples/
 coverage.xml
 
 .null-ls_*
+
+lightning_logs

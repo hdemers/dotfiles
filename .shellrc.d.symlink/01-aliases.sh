@@ -20,6 +20,16 @@ alias ll='ls -alFrth'
 alias la='ls -A'
 alias l='ls -CF'
 
+# If exa is installed, use it instead of ls
+if command -v exa &> /dev/null
+then
+    alias ls='exa'
+    alias ll='exa -l --git -s time'
+    alias la='exa -la --git -s time'
+    alias l='exa -l --git -s time'
+    alias lg='exa -Tl --git --git-ignore -s time'
+fi
+
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
 alias alert='notify-send -i \

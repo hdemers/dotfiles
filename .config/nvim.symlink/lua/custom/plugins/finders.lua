@@ -297,6 +297,10 @@ return {
               function(selected)
                 local branch, _ = extract_branch(selected)
                 vim.cmd(string.format('!gh pr view --web %s', branch))
+                -- Check if the previous command failed
+                if vim.v.shell_error ~= 0 then
+                  vim.cmd '!gh browse'
+                end
               end,
               fzflua.actions.resume,
             },

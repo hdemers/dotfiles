@@ -198,6 +198,7 @@ return {
           },
         },
         clangd = {},
+        jdtls = {}, -- Add Java language server
         lua_ls = {
           settings = {
             Lua = {

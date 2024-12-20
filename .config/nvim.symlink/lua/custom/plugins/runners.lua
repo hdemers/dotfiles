@@ -3,7 +3,7 @@ return {
     'stevearc/overseer.nvim',
     opts = {
       task_win = {
-        max_width = 0.6,
+        width = 0.6,
       },
       component_aliases = {
         default = {
@@ -22,7 +22,9 @@ return {
         '<leader>rd',
         function()
           local filetype = vim.bo.filetype
-          if filetype == 'python' then
+          local file_types = { 'python', 'java' }
+
+          if vim.tbl_contains(file_types, filetype) then
             vim.cmd 'OverseerRun deploy-branch'
           elseif filetype == 'arduino' then
             vim.cmd 'ArduinoRun'
@@ -44,7 +46,9 @@ return {
         '<leader>ri',
         function()
           local filetype = vim.bo.filetype
-          if filetype == 'python' then
+          local file_types = { 'python', 'java' }
+
+          if vim.tbl_contains(file_types, filetype) then
             vim.cmd 'OverseerRun integrate'
           elseif filetype == 'arduino' then
             require('overseer').run_template { name = 'compile-sketch' }

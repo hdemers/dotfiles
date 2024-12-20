@@ -241,40 +241,11 @@ return {
       require('nordic').setup {
         ts_context = { dark_background = false },
         telescope = { style = 'flat' },
-        on_highlight = {
-          ['@spell'] = { link = '@spell' },
-          DiagnosticUnderlineError = {},
-          TelescopeMatching = { link = 'IncSearch' },
-          FlashBackdrop = { link = 'Conceal' },
-        },
-      }
-    end,
-  },
-  {
-    'Mofiqul/dracula.nvim',
-    opts = {
-      overrides = function(colors)
-        return {
-          FlashBackdrop = { link = 'Conceal' },
-          DiffAdd = { bg = '#1f6932', fg = colors.white },
-        }
-      end,
-    },
-    config = function(_, opts)
-      require('dracula').setup(opts)
-    end,
-  },
-  {
-    'Mofiqul/vscode.nvim',
-    config = function()
-      -- local c = require('vscode.colors').get_colors()
-      require('vscode').setup {
-        -- Override highlight groups (see ./lua/vscode/theme.lua)
-        group_overrides = {
-          -- this supports the same val table as vim.api.nvim_set_hl
-          -- use colors from this colorscheme by requiring vscode.colors!
-          -- LeapBackdrop = { fg = c.vscGray },
-        },
+        on_highlight = function(highlights, palette)
+          -- highlights.spell = { link = '@spell' }
+          -- highlights.DiagnosticUnderlineError = {}
+          highlights.TelescopeMatching = { link = 'IncSearch' }
+        end,
       }
     end,
   },
@@ -365,7 +336,11 @@ return {
       require('kanagawa-paper').setup(opts)
     end,
   },
-  { 'ramojus/mellifluous.nvim' },
+  {
+    'ramojus/mellifluous.nvim',
+    lazy = false,
+    priority = 1000,
+  },
   {
     'olimorris/onedarkpro.nvim',
     priority = 1000, -- Ensure it loads first
@@ -432,6 +407,25 @@ return {
       -- Optionally configure and load the colorscheme
       -- directly inside the plugin declaration.
       vim.g.sonokai_enable_italic = true
+    end,
+  },
+  {
+    'uloco/bluloco.nvim',
+    lazy = false,
+    priority = 1000,
+    dependencies = { 'rktjmp/lush.nvim' },
+    config = function()
+      -- your optional config goes here, see below.
+    end,
+  },
+  {
+    'rockyzhang24/arctic.nvim',
+    dependencies = { 'rktjmp/lush.nvim' },
+    name = 'arctic',
+    branch = 'main',
+    priority = 1000,
+    config = function()
+      vim.cmd 'colorscheme arctic'
     end,
   },
 }

@@ -62,7 +62,7 @@ export BAT_THEME="Dracula"
 
 # Set the default R lib path
 export R_LIBS_USER=$HOME/.local/lib/R
- Set the AWS profile for use with S3 only
+# Set the AWS profile for use with S3 only
 export AWS_PROFILE=s3-access
 
 # Set environment variable CURRENT_SHELL to the name of the current shell
@@ -99,10 +99,6 @@ fi
 
 # Quarto needs the python package `jupyter` which is installed in virtualenv `nvim`. Sett the Quarto python executable to the one from this virtualenv.
 export QUARTO_PYTHON=$HOME/.virtualenvs/nvim/bin/python
-
-# This token is taken from the Todoist app itself.
-if [[ -x "$(command -v secret)" ]]; then
-fi
 
 # If directory linuxbrew exists eval the following
 if [ -d "$HOME/.linuxbrew" ]; then

@@ -97,26 +97,26 @@ rfv() {
 }
 
 # CTRL-R - Paste the selected command from history into the command line
-custom-atuin-history-widget() {
-  local selected num
-  setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-  selected=( $(atuin history list --reverse false --format "{time} \t {duration} \t {command}" \
-      | tspin \
-      | fzf -d '|' --bind 'enter:execute(echo {3})+abort' --ansi --delimiter='\t') )
-  local ret=$?
-  if [ -n "$selected" ]; then
-    num=$selected[1]
-    if [ -n "$num" ]; then
-      zle vi-fetch-history -n $num
-    fi
-  fi
-  zle reset-prompt
-  return $ret
-}
-zle     -N            custom-atuin-history-widget
-bindkey -M emacs '^R' custom-atuin-history-widget
-bindkey -M vicmd '^R' custom-atuin-history-widget
-bindkey -M viins '^R' custom-atuin-history-widget
+# custom-atuin-history-widget() {
+#   local selected num
+#   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
+#   selected=( $(atuin history list --reverse false --format "{time} \t {duration} \t {command}" \
+#       | tspin \
+#       | fzf -d '|' --bind 'enter:execute(echo {3})+abort' --ansi --delimiter='\t') )
+#   local ret=$?
+#   if [ -n "$selected" ]; then
+#     num=$selected[1]
+#     if [ -n "$num" ]; then
+#       zle vi-fetch-history -n $num
+#     fi
+#   fi
+#   zle reset-prompt
+#   return $ret
+# }
+# zle     -N            custom-atuin-history-widget
+# bindkey -M emacs '^R' custom-atuin-history-widget
+# bindkey -M vicmd '^R' custom-atuin-history-widget
+# bindkey -M viins '^R' custom-atuin-history-widget
 
 
 checkoutworktree() {

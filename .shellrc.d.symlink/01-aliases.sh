@@ -9,11 +9,18 @@ if [ -x /usr/bin/dircolors ]; then
     alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
-
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
 fi
+
+# ugrep for grep
+if [ "$(command -v ug)" ]; then
+    alias grep='ug'
+    alias egrep='ug -E'
+    alias fgrep='ug -F'
+    alias xzgrep='ug -z'
+    alias xzegrep='ug -zE'
+    alias xzfgrep='ug -zF'
+fi
+
 
 # Some more ls aliases
 alias ll='ls -alFrth'
@@ -29,6 +36,14 @@ then
     alias l='exa -l --git -s time'
     alias lg='exa -Tl --git --git-ignore -s time'
 fi
+
+if [ "$(command -v eza)" ]; then
+    alias ll='eza -la --icons=auto --group-directories-first --sort newest'
+    alias l.='eza -d .*'
+    alias ls='eza'
+    alias l1='eza -1'
+fi
+
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -71,7 +86,7 @@ then
 fi
 
 # Mount my S3 bucket
-alias mounts3="s3fs ca-hdemers /home/hdemers/S3/ca-hdemers/ -o profile=s3-access"
+alias mounts3="s3fs ca-hdemers $HOME/S3/ca-hdemers/ -o profile=s3-access"
 
 # Pip related
 alias lspip="pip list --disable-pip-version-check | fzf"

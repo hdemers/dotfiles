@@ -16,6 +16,10 @@ setw -g xterm-keys on
 set-window-option -g automatic-rename on
 set-option -g set-titles on
 
+# set shell
+set -g default-shell /bin/zsh
+# set -g default-command "reattach-to-user-namespace -l zsh"
+
 # emacs key bindings in tmux command prompt (prefix + :) are better than
 # vi keys, even for vim users
 set-option -g status-keys emacs

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+    set -o xtrace
+fi
+
+# Make sure SSH keys are there
+# cp -r /media/hdemers/Backups/neptune/hdemers/.ssh $HOME
+
+cd $HOME
+
+ujust bluefin-cli
+brew install neovim
+
+mkdir -p $HOME/.local/share/atuin
+cp /media/hdemers/Backups/history.db $HOME/.local/share/atuin/
+
+brew tap wez/wezterm-linuxbrew
+brew install --HEAD wezterm
+
+cp -r /media/hdemers/Backups/neptune/hdemers/.fonts $HOME
+
+git clone https://github.com/tmux-plugins/tpm $HOME/.tmux/plugins/tpm
+
+# vim: set filetype=bash

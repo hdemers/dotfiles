@@ -1,15 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-which git > /dev/null
-if [ $? -ne 0 ]; then
-    echo "Installing git..."
-    sudo apt-get --yes install git
+# If the dotfiles directory does not already exists, clone it.
+if [ ! -d $HOME/.dotfiles ]; then
+    git clone https://github.com/hdemers/dotfiles.git $HOME/.dotfiles
 fi
 
-
-git clone https://github.com/hdemers/dotfiles.git $HOME/.dotfiles
-
 cd $HOME/.dotfiles
-./symlink --create-paths --overwrite-all
+./symlink --create-paths --overwrite-all --backup-all
 
 cd

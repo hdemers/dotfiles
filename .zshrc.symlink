@@ -25,7 +25,7 @@ bindkey -v
 export KEYTIMEOUT=1
 # End of lines configured by zsh-newuser-install
 # The following lines were added by compinstall
-zstyle :compinstall filename '/home/$HOME/.zshrc'
+zstyle :compinstall filename '$HOME/.zshrc'
 
 autoload -Uz compinit
 compinit
@@ -37,8 +37,9 @@ autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 
-bindkey "^[OA" up-line-or-beginning-search # Up
-bindkey "^[OB" down-line-or-beginning-search # Down
+# To find which sequence to use, press Ctrl-v then the key you want to bind.
+bindkey "^[[A" up-line-or-beginning-search # Up
+bindkey "^[[B" down-line-or-beginning-search # Down
 
 # Automatically source all files/links in the directory config_dir
 # If the auto-source folder exists and has files in it...

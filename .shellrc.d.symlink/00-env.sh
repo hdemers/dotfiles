@@ -1,5 +1,14 @@
 # vim: filetype=bash
 
+
+###############################################################################
+# Linux Brew
+# This needs to come first in order to find all commands installed via brew.
+# If directory linuxbrew exists eval the following
+if [ -d "/home/linuxbrew" ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
+
 # Set the EDITOR environment variable to use neovim if it exists else vim.
 if [[ -x "$(command -v nvim)" ]]; then
     export EDITOR=nvim
@@ -78,18 +87,23 @@ else
   echo "No match found"
 fi
 
-# If the secret-tool command exists, it means we're on our local machine and
-# our custom `secret` command will work
-if [[ -x "$(command -v secret-tool)" ]]; then
+# If the secret command exists, use it, otherwise use secret-tool.
+# if [[ -x "$(command -v secret)" ]]; then
+#     cmd=secret
+# else
+#     cmd=secret-tool
+# fi
+#
+if [[ -x "$(command -v secret)" ]]; then
     export GITHUB_TOKEN=$(secret lookup github token)
-    export TODOIST_API_TOKEN=$(secret lookup todoist token)
-    export JIRA_API_TOKEN=$(secret lookup jira token)
+#     export TODOIST_API_TOKEN=$($cmd lookup todoist token)
+#     export JIRA_API_TOKEN=$($cmd lookup jira token)
     export OPENAI_API_KEY=$(secret lookup openai apikey)
-    export NTFY_NEPTUNE_CHANNEL=$(secret lookup ntfy neptune)
+#     export NTFY_NEPTUNE_CHANNEL=$($cmd lookup ntfy neptune)
     export ANTHROPIC_API_KEY=$(secret lookup anthropic apikey)
-    export MQTTUI_USERNAME=mqtt-user
-    export MQTTUI_PASSWORD=$(secret lookup mqtt password)
-    export PAGERDUTY_TOKEN=$(secret lookup pagerduty token)
+#     export MQTTUI_USERNAME=mqtt-user
+#     export MQTTUI_PASSWORD=$($cmd lookup mqtt password)
+#     export PAGERDUTY_TOKEN=$($cmd lookup pagerduty token)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable
@@ -99,8 +113,3 @@ fi
 
 # Quarto needs the python package `jupyter` which is installed in virtualenv `nvim`. Sett the Quarto python executable to the one from this virtualenv.
 export QUARTO_PYTHON=$HOME/.virtualenvs/nvim/bin/python
-
-# If directory linuxbrew exists eval the following
-if [ -d "$HOME/.linuxbrew" ]; then
-    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-fi

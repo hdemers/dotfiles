@@ -33,10 +33,16 @@ if [ "$CURRENT_SHELL" = "bash" ]; then
 fi
 
 if [ -x "$(command -v atuin)" ]; then
-    eval "$(atuin init $CURRENT_SHELL --disable-up-arrow --disable-ctrl-r)"
+    eval "$(atuin init $CURRENT_SHELL --disable-up-arrow)"
 else
     echo "Atuin is not installed, shell history won't be captured."
 fi
 
-# Source Ryn
-. "$HOME/.rye/env"
+# Source Rye
+if [ -d "$HOME/.rye/env" ]; then
+    . "$HOME/.rye/env"
+fi
+
+###############################################################################
+# Bluefin-cli
+# test -f /usr/share/ublue-os/bluefin-cli/bling.sh && source /usr/share/ublue-os/bluefin-cli/bling.sh

@@ -1,0 +1,7 @@
+# vim: set ft=rc:
+
+layout_python() {
+    VIRTUAL_ENV="$(pwd)/.venv"
+    PATH_add "$VIRTUAL_ENV/bin"
+    export VIRTUAL_ENV
+}

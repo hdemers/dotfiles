@@ -87,13 +87,7 @@ else
   echo "No match found"
 fi
 
-# If the secret command exists, use it, otherwise use secret-tool.
-# if [[ -x "$(command -v secret)" ]]; then
-#     cmd=secret
-# else
-#     cmd=secret-tool
-# fi
-#
+# Try to execute the command `secret` and if there are no error, execute the following.
 if [[ -x "$(command -v secret)" ]]; then
     export GITHUB_TOKEN=$(secret lookup github token)
 #     export TODOIST_API_TOKEN=$($cmd lookup todoist token)

@@ -38,7 +38,7 @@ then
 fi
 
 if [ "$(command -v eza)" ]; then
-    alias ll='eza -la --icons=auto --group-directories-first --sort newest'
+    alias ll='eza -la --icons=auto --sort newest'
     alias l.='eza -d .*'
     alias ls='eza'
     alias l1='eza -1'

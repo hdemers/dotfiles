@@ -37,9 +37,9 @@ autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
 
-# To find which sequence to use, press Ctrl-v then the key you want to bind.
-bindkey "^[[A" up-line-or-beginning-search # Up
-bindkey "^[[B" down-line-or-beginning-search # Down
+# FIXME: these only work in tmux.
+bindkey "${terminfo[kcuu1]}" up-line-or-beginning-search # Up
+bindkey "${terminfo[kcud1]}" down-line-or-beginning-search # Down
 
 # Automatically source all files/links in the directory config_dir
 # If the auto-source folder exists and has files in it...

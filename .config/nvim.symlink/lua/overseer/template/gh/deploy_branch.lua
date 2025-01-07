@@ -2,8 +2,8 @@ return {
   name = 'deploy-branch',
   builder = function()
     return {
-      cmd = { 'jenkins' },
-      args = { 'deploy-branch' },
+      cmd = { 'distrobox' },
+      args = { 'enter', 'grubhub-dev', '--', 'jenkins', 'deploy-branch' },
       components = {
         { 'on_exit_set_status' },
         { 'custom.on_complete_ntfy' },

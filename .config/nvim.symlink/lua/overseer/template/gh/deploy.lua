@@ -1,14 +1,15 @@
 return {
-  name = 'make-requirements',
+  name = 'deploy',
   builder = function()
     return {
       cmd = { 'distrobox' },
-      args = { 'enter', 'grubhub-dev', '--', 'make', 'requirements.txt' },
+      args = { 'enter', 'grubhub-dev', '--', 'jenkins', 'deploy' },
       components = {
         { 'on_exit_set_status' },
         { 'custom.on_complete_ntfy' },
+        { 'custom.on_pre_start_deploy_branch' },
       },
     }
   end,
-  desc = 'Run make requirements.txt',
+  desc = 'Deploy',
 }

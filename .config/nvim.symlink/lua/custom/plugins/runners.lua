@@ -30,7 +30,21 @@ return {
             vim.cmd 'ArduinoRun'
           end
         end,
-        desc = '[d]eploy',
+        desc = '[d]eploy branch',
+      },
+      {
+        '<leader>rD',
+        function()
+          local filetype = vim.bo.filetype
+          local file_types = { 'python', 'java' }
+
+          if vim.tbl_contains(file_types, filetype) then
+            vim.cmd 'OverseerRun deploy'
+          elseif filetype == 'arduino' then
+            vim.cmd 'ArduinoRun'
+          end
+        end,
+        desc = '[D]eploy',
       },
       {
         '<leader>rc',
@@ -97,6 +111,7 @@ return {
       overseer.load_template 'misc.run_file'
       overseer.load_template 'misc.test_task'
       overseer.load_template 'gh.deploy_branch'
+      overseer.load_template 'gh.deploy'
       overseer.load_template 'gh.integrate'
       overseer.load_template 'gh.make_requirements'
       overseer.load_template 'gh.make_test'

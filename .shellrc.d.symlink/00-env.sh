@@ -90,14 +90,13 @@ fi
 # Try to execute the command `secret` and if there are no error, execute the following.
 if [[ -x "$(command -v secret)" ]]; then
     export GITHUB_TOKEN=$(secret lookup github token)
-#     export TODOIST_API_TOKEN=$($cmd lookup todoist token)
-#     export JIRA_API_TOKEN=$($cmd lookup jira token)
+    export TODOIST_API_TOKEN=$(secret lookup todoist token)
+    export JIRA_API_TOKEN=$(secret lookup jira token)
     export OPENAI_API_KEY=$(secret lookup openai apikey)
-#     export NTFY_NEPTUNE_CHANNEL=$($cmd lookup ntfy neptune)
+    export NTFY_NEPTUNE_CHANNEL=$(secret lookup ntfy neptune)
     export ANTHROPIC_API_KEY=$(secret lookup anthropic apikey)
-#     export MQTTUI_USERNAME=mqtt-user
-#     export MQTTUI_PASSWORD=$($cmd lookup mqtt password)
-#     export PAGERDUTY_TOKEN=$($cmd lookup pagerduty token)
+    export MQTTUI_USERNAME=mqtt-user
+    export MQTTUI_PASSWORD=$(secret lookup mqtt password)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable

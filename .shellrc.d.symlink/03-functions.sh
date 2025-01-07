@@ -47,7 +47,7 @@ ntfy() {
     curl -s \
         "${@:2}" \
         -d "${message}" \
-        ntfy.sh/hdemers \
+        ntfy.sh/${NTFY_NEPTUNE_CHANNEL} \
         > /dev/null
 }
 

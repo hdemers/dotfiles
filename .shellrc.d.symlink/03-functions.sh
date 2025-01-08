@@ -9,11 +9,11 @@ tailf() {
 }
 
 installkernel() {
-    # Install an ipython kernel.
     if ! uv pip list | grep ipykernel; then
         uv pip install ipykernel
     fi
-    python -m ipykernel install --user --name $(basename $VIRTUAL_ENV) --display-name $(basename $VIRTUAL_ENV)
+    local name=$(basename `pwd`)
+    python -m ipykernel install --user --name ${name} --display-name ${name}
 }
 
 releasemsg() {

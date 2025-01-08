@@ -105,5 +105,7 @@ set -g @plugin 'tmux-plugins/tmux-continuum'
 # cf. https://werat.dev/blog/happy-ssh-agent-forwarding/
 set -g update-environment "SSH_AUTH_SOCK"
 
+set-environment -g PATH "/home/linuxbrew/.linuxbrew/bin/:/usr/local/bin:/usr/bin:/bin"
+
 # Initialize TMUX plugin manager (keep this line at the very bottom of tmux.conf)
-run '~/.tmux/plugins/tpm/tpm'
+run '$HOME/.tmux/plugins/tpm/tpm'

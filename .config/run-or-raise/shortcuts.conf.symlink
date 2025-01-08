@@ -1,0 +1,62 @@
+# Here you list all the shortcuts. To reload, turn the extension off and on.
+#
+# The shortcuts may be defined in two ways:
+#
+# 1. Run-or-raise form: shortcut,command,[wm_class],[title]
+#        * `wm_class` and `title` are optional and case sensitive
+#        * if none is set, lowercased launch `command` is compared with lowercased windows wm_classes and titles
+#
+# 2. Run only form: shortcut,command
+#
+#
+# In fact, the full form is `shortcut[ char][:mode],command,[wm_class],[title]`
+# while `char` allows you to use layered shortcuts and `mode` to further specify circumstances.
+#
+# =================
+# Run or raise form
+# =================
+#
+#
+# This line cycles any firefox window (matched by "firefox" in the window title) OR if not found, launches new firefox instance.
+# <Super>f,firefox,,
+# This line cycles any open gnome-terminal (matched by wm_class = Gnome-terminal on Ubuntu 17.10) OR if not found, launches new one.
+# If you're using Arch, you may want to match by wm_class = gnome-terminal-server , just check yourself by Alt+F2/lg/Windows
+# <Super>r,gnome-terminal,Gnome-terminal,
+
+
+# You may use regular expression in title or wm_class.
+# Just put the regular expression between slashes.
+# E.g. to jump to pidgin conversation window you may use this line
+# (that means any windows of wm_class Pidgin, not containing the title Buddy List)"
+# <Super>KP_1,pidgin,Pidgin,/^((?!Buddy List).)*$/
+
+
+# Have the mail always at numpad-click.
+
+<Super>4,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,hdemers@grubhub.com
+<Super>6,gtk-launch tmux-vim.desktop,,vim
+
+<Super>m,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,Gmail,hdemers@gmail.com
+
+<Super><Shift>m,gtk-launch com.google.Chrome.flextop.chrome-pjibgclleladliembfgfagdaldikeohf-Default.desktop,,Spotify
+<Super><Shift>k,flatpak run org.keepassxc.KeePassXC,org.keepassxc.KeePassXC,KeePassXC 
+
+# =============
+# Run only form
+# =============
+#
+# This line will launch the `notify-send` command.
+# <Super>y,notify-send Hello world
+
+# This layered shortcut will output the text only when you write `hello` after hitting <Super>e.
+#<Super>e h e l l o,notify-send Layered hello
+
+# This layered shortcut will not interfere with the shorcut above that is launching a terminal.
+#<Super>e <Super>r,notify-send Layered 'Terminal was not launched.'
+
+# Blank lines are allowed. Line starting with "#" means a comment.
+# Now delete these shortcuts and put here yours.
+# How to know wm_class? Using xprop or the looking glass tool, see README.md
+
+
+

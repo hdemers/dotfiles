@@ -7,10 +7,10 @@ GenericName=Vim in tmux
 Comment=Vim running in tmux running in a terminal
 Icon=/var/home/hdemers/.local/share/icons/neovim.svg
 # Alacritty doesn't set the wmclass properly, I can't create a shortcut that works.
-Exec=/home/linuxbrew/.linuxbrew/bin/wezterm start --class tmuxvim /var/home/hdemers/.local/bin/tmux-vim.sh
+Exec=/home/linuxbrew/.linuxbrew/bin/wezterm start /var/home/hdemers/.local/bin/tmux-vim.sh
 StartupNotify=true
 Terminal=false
 Categories=Utility;ConsoleOnly;
 Keywords=editor;vim;terminal;tmux
 StartupNotify=true
-StartupWMClass=tmuxvim
+# StartupWMClass=tmuxvim

@@ -13,7 +13,7 @@ fi
 if [[ -x "$(command -v nvim)" ]]; then
     export EDITOR=nvim
 else
-    export EDITOR=vim
+    unset EDITOR
 fi
 
 # Set various PATH

@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+  set -o xtrace
+fi
+
+SOCKET_DIR=/tmp/jupyter-sockets
+
+mkdir -p "$SOCKET_DIR"
+
+# File to track the PIDs of the socat processes and their associated socket files
+TRACK_FILE=$(mktemp /tmp/socat_track.XXXXXX)
+
+# Create a mapping between port names and numbers using associative array
+declare -A PORTS=(
+["control"]=57001
+["hp"]=57002
+["iopub"]=57003
+["shell"]=57006
+["stdin"]=57005
+)
+
+# Trap SIGINT (Ctrl+C) and call cleanup function
+trap cleanup SIGINT
+
+# Function to clean up socat processes and socket files on exit
+cleanup() {
+  echo "Cleaning up processes..."
+  if [[ -f "$TRACK_FILE" ]]; then
+    # Read all PIDs into an array
+    mapfile -t pids < "$TRACK_FILE"
+    
+    # Kill kernel process (first line)
+    echo "Killing kernel process: ${pids[0]}"
+    podman exec --user ${USER} ${DISTROBOX_NAME} kill "${pids[0]}" 2>/dev/null || true
+
+    # Process the remaining PIDs (alternating container/host)
+    for ((i=1; i<${#pids[@]}; i++)); do
+      if ((i % 2 == 0)); then
+        echo "Killing container socat process: ${pids[i]}"
+        podman exec --user ${USER} ${DISTROBOX_NAME} kill "${pids[i]}" 2>/dev/null || true
+      else
+        echo "Killing host socat process: ${pids[i]}"
+        kill "${pids[i]}" 2>/dev/null || true
+      fi
+    done
+
+    echo "done"
+
+    # Clean up socket files
+    # rm -f "$SOCKET_DIR"/*_stream.sock
+    rm -f "$TRACK_FILE"
+    rm -f /tmp/socat.sh
+  fi
+  exit
+}
+
+start-kernel() {
+if [[ $# -ne 1 ]]; then
+  echo "Usage: start-kernel <kernel>"
+  exit 1
+fi
+
+local kernel="$1"
+
+local kernel_pid=$(\
+  podman exec \
+  --user ${USER} \
+  --workdir $(pwd) \
+  ${DISTROBOX_NAME} \
+  ${HOME}/.local/bin/jupyter_kernel ${kernel}
+)
+  echo "${kernel_pid}" > "$TRACK_FILE"
+  echo "Kernel started: ${kernel} (PID: ${kernel_pid})"
+}
+
+# Main function to setup environment and handle Docker commands
+main() {
+  if [[ $# -ne 1 ]]; then
+    echo "Usage: main <kernel>"
+    exit 1
+  fi
+
+  local kernel="$1"
+
+  # Start the kernel on the container
+  start-kernel "${kernel}" 
+  sleep 2
+
+  touch /tmp/socat.sh
+  chmod u+x /tmp/socat.sh
+
+  local port_number
+  local sock_file
+
+  for port_name in "${!PORTS[@]}"; do
+    port_number="${PORTS[$port_name]}"
+    sock_file="$SOCKET_DIR/${kernel}_${port_name}_stream.sock"
+    echo "${sock_file} => TCP:127.0.0.1:${port_number}"
+    
+    cat <<EOF > /tmp/socat.sh
+#!/bin/bash
+/home/linuxbrew/.linuxbrew/bin/socat UNIX-LISTEN:"${sock_file}",fork \
+  TCP:127.0.0.1:"${port_number}" \
+  & echo \$!
+EOF
+
+    socat_pid=$(podman exec --user ${USER} --workdir $(pwd) ${DISTROBOX_NAME} /tmp/socat.sh)
+    echo "${socat_pid}" >> "$TRACK_FILE"
+
+    sleep 1
+
+    echo "TCP:127.0.0.1:${port_number} => ${sock_file}"
+    socat TCP-LISTEN:${port_number},fork \
+      UNIX-CONNECT:${sock_file} \
+      & echo $! >> "$TRACK_FILE"
+  done
+
+  # Keep the script running to maintain the socat processes
+  while true; do
+    sleep 1
+  done
+}
+
+# Execute the main function
+main "$@"

@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+main() {
+	if [[ $# -ne 1 ]]; then
+		echo "Usage: jupyter_kernel <kernel>"
+		exit 1
+	fi
+
+	declare -A PORTS=(
+	["control"]=57001
+	["hp"]=57002
+	["iopub"]=57003
+	["shell"]=57006
+	["stdin"]=57005
+)
+
+local kernel="${1}"
+local file=/tmp/${kernel}.json
+
+source .venv/bin/activate
+jupyter kernel \
+	--kernel="${kernel}" \
+	--ip 0.0.0.0 \
+	--KernelManager.control_port="${PORTS["control"]}" \
+	--KernelManager.hb_port="${PORTS["hp"]}" \
+	--KernelManager.iopub_port="${PORTS["iopub"]}" \
+	--KernelManager.shell_port="${PORTS["shell"]}" \
+	--KernelManager.stdin_port="${PORTS["stdin"]}" \
+	--KernelManager.cache_ports=False \
+	--KernelManager.connection_file="${file}" \
+	&  echo $!
+}
+
+main "$@"

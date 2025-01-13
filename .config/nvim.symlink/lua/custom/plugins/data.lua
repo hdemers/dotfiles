@@ -29,7 +29,7 @@ return {
       -- },
       codeRunner = {
         enabled = true,
-        default_method = 'molten',
+        default_method = 'iron',
       },
     },
     keys = {
@@ -323,21 +323,36 @@ return {
   },
   {
     'Vigemus/iron.nvim',
-    enabled = false,
-    opts = {
-      config = {
-        scratch_repl = true,
-        repl_open_cmd = 'vertical botright 80 split',
-        repl_definition = {
-          quarto = { command = 'ipython' },
+    enabled = true,
+    config = function()
+      require('iron.core').setup {
+        config = {
+          scratch_repl = true,
+          repl_open_cmd = 'vertical botright 80 split',
+          repl_definition = {
+            python = {
+              command = {
+                'distrobox',
+                'enter',
+                'grubhub-dev',
+                '--',
+                'ipython',
+                '--no-autoindent',
+              },
+            },
+            quarto = {
+              command = {
+                'distrobox',
+                'enter',
+                'grubhub-dev',
+                '--',
+                'ipython',
+                '--no-autoindent',
+              },
+            },
+          },
         },
-      },
-      keymaps = {
-        -- send_mark = '<localleader>k',
-      },
-    },
-    config = function(_, opts)
-      require('iron.core').setup(opts)
+      }
     end,
   },
   {

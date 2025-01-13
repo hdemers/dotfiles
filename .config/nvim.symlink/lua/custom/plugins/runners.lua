@@ -132,11 +132,14 @@ return {
     'akinsho/toggleterm.nvim',
     version = '*',
     opts = {
-      open_mapping = '<F12>',
+      open_mapping = [[<c-\>]],
       direction = 'vertical',
       size = 180,
     },
     keys = {
+      {
+        [[<c-\>]],
+      },
       {
         '<leader>bt',
         function()

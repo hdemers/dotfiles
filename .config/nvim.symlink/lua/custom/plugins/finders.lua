@@ -202,7 +202,7 @@ return {
         rg_opts = '--hidden --column --line-number --no-heading --color=always --smart-case --max-columns=4096 -e',
       },
       winopts = {
-        win_width = 0.60,
+        width = 0.60,
         border = false,
       },
     },
@@ -247,7 +247,7 @@ return {
             ['--preview-window'] = 'top,75%',
           },
           winopts = {
-            win_width = 175,
+            width = 175,
           },
           actions = {
             ['default'] = {
@@ -343,7 +343,7 @@ return {
             ['--scheme'] = 'history',
           },
           winopts = {
-            win_width = 200,
+            width = 200,
           },
           actions = {
             ['ctrl-t'] = function(selected)
@@ -424,7 +424,7 @@ return {
             ['--header-lines'] = '2',
           },
           winopts = {
-            win_width = 100,
+            width = 100,
           },
         })
       end

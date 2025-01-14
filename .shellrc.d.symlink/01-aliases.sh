@@ -38,7 +38,7 @@ then
 fi
 
 if [ "$(command -v eza)" ]; then
-    alias ll='eza -la --icons=auto --sort newest'
+    alias ll='eza -la --git --icons=auto --sort newest'
     alias l.='eza -d .*'
     alias ls='eza'
     alias l1='eza -1'
@@ -145,7 +145,7 @@ alias gb="git rb \
       --bind 'enter:execute(echo {1} | tr -d \"*\" | awk -F\"/\" '\''{print \$NF}'\'' | xargs --no-run-if-empty git sw)+abort' \
       --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
       --bind 'ctrl-r:reload(git rba)' \
-      --bind 'ctrl-t:execute(awk -F\"/\" '\"'\"'{print \$NF}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{}; cd worktrees/{})+abort' \
+      --bind 'ctrl-t:execute(awk -F\"/\" '\"'\"'{print \$NF}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{})+abort' \
     "
 
 alias js="jira issues\

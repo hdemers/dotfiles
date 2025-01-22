@@ -74,11 +74,6 @@ xterm*|rxvt*)
     ;;
 esac
 
-# Install a Solarized scheme from
-# https://github.com/Anthony25/gnome-terminal-colors-solarized enable color
-# Install a Dark One color scheme from
-# https://github.com/denysdovhan/one-gnome-terminal
-
 # Enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
 # sources /etc/bash.bashrc).
@@ -89,11 +84,6 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-
-# Execute zsh if it exists
-# if [ -x "$(command -v zsh)" ]; then
-#   exec zsh
-# fi
 
 # Automatically source all files/links in the directory config_dir
 # If the auto-source folder exists and has files in it...
@@ -113,5 +103,5 @@ if [[ -d $config_dir ]]; then
   fi
 fi
 ### bling.sh source start
-test -f /usr/share/ublue-os/bluefin-cli/bling.sh && source /usr/share/ublue-os/bluefin-cli/bling.sh
+# test -f /usr/share/ublue-os/bluefin-cli/bling.sh && source /usr/share/ublue-os/bluefin-cli/bling.sh
 ### bling.sh source end

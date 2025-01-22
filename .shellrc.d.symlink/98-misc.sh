@@ -38,7 +38,8 @@ else
     echo "Atuin is not installed, shell history won't be captured."
 fi
 
-# Source Rye
+###############################################################################
+#  Rye
 if [ -d "$HOME/.rye/env" ]; then
     . "$HOME/.rye/env"
 fi

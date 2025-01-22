@@ -97,26 +97,34 @@ rfv() {
 }
 
 # CTRL-R - Paste the selected command from history into the command line
-# custom-atuin-history-widget() {
-#   local selected num
-#   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-#   selected=( $(atuin history list --reverse false --format "{time} \t {duration} \t {command}" \
-#       | tspin \
-#       | fzf -d '|' --bind 'enter:execute(echo {3})+abort' --ansi --delimiter='\t') )
-#   local ret=$?
-#   if [ -n "$selected" ]; then
-#     num=$selected[1]
-#     if [ -n "$num" ]; then
-#       zle vi-fetch-history -n $num
-#     fi
-#   fi
-#   zle reset-prompt
-#   return $ret
-# }
-# zle     -N            custom-atuin-history-widget
-# bindkey -M emacs '^R' custom-atuin-history-widget
-# bindkey -M vicmd '^R' custom-atuin-history-widget
-# bindkey -M viins '^R' custom-atuin-history-widget
+custom-atuin-history-widget() {
+  local selected
+  setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
+  selected=$(atuin search --reverse --format "{relativetime}\t{host}\t{command}" \
+      | awk -F'\t' '{ 
+          time=sprintf("%-5s", $1);
+          host=sprintf("%-20s", $2);
+          printf "\033[36m%s\033[0m\t\033[33m%s\033[0m\t%s\n", time, host, $3
+        }' \
+      | fzf --ansi --delimiter='\t' \
+          --bind 'tab:execute-silent(echo paste)+abort' \
+          --bind 'enter:execute-silent(echo execute)+abort' \
+          --expect=tab,enter \
+          )
+  local ret=$?
+  if [ -n "$selected" ]; then
+    local key=$(head -1 <<< "$selected")
+    local cmd=$(tail -n1 <<< "$selected")
+    BUFFER="${cmd##*$'\t'}"
+    if [[ "$key" == "enter" ]]; then
+      zle accept-line
+    fi
+  fi
+  zle reset-prompt
+  return $ret
+}
+zle -N custom-atuin-history-widget
+bindkey '^R' custom-atuin-history-widget
 
 
 checkoutworktree() {

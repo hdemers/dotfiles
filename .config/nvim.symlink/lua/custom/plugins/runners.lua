@@ -135,11 +135,17 @@ return {
       open_mapping = [[<c-\>]],
       direction = 'vertical',
       size = 180,
+      shading_factor = 0.75,
     },
+    cmd = { 'ToggleTerm' },
     keys = {
       {
         [[<c-\>]],
       },
+      -- {
+      --   '<leader>bt',
+      --   desc = '[b]uffer [t]erminal into distrobox',
+      -- },
       {
         '<leader>bt',
         function()

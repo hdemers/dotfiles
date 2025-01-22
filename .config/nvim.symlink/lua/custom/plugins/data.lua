@@ -9,6 +9,7 @@ return {
     dependencies = {
       'jmbuhr/otter.nvim',
       'nvim-treesitter/nvim-treesitter',
+      'akinsho/toggleterm.nvim',
     },
     ft = { 'quarto' },
     dev = false,
@@ -27,18 +28,103 @@ return {
       --     'ojs',
       --   },
       -- },
-      codeRunner = {
-        enabled = true,
-        default_method = 'iron',
-      },
     },
     keys = {
+      {
+        '<CR>',
+        ':QuartoSend<CR>',
+        desc = 'Quarto: run cell',
+      },
       {
         '<localleader>jc',
         ':QuartoActivate<CR>',
         desc = 'Quarto: a[c]tivate',
       },
+      {
+        '<localleader>ja',
+        function()
+          require('quarto.runner').run_above()
+        end,
+        desc = 'Quarto: run cell and all [a]bove',
+      },
+      {
+        '<localleader>jb',
+        function()
+          require('quarto.runner').run_below()
+        end,
+        desc = 'Quarto: run cell and all [b]elow',
+      },
+      {
+        '<localleader>jA',
+        function()
+          require('quarto.runner').run_all()
+        end,
+        desc = 'Quarto: run [A]ll cells',
+      },
+      {
+        '<localleader>jl',
+        function()
+          require('quarto.runner').run_line()
+        end,
+        desc = 'Quarto: run [l]ine',
+      },
+      {
+        '<localleader>jp',
+        ':QuartoPreview<CR>',
+        desc = 'Quarto: open [p]review',
+      },
+      {
+        '<localleader>jP',
+        ':QuartoClosePreview<CR>',
+        desc = 'Quarto: close [p]review',
+      },
+      {
+        '<localleader>jj',
+        "ko\rpyc<cmd>lua require('luasnip').expand()<CR>",
+        desc = 'Snippet: [n]ew cell',
+      },
+      {
+        '<localleader>j/',
+        'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O',
+        desc = 'split cell',
+      },
     },
+    config = function(_, opts)
+      local quarto = require 'quarto'
+      -- local concat = require('quarto.tools').concat
+      local toggleterm = require 'toggleterm'
+      local misc = require 'misc'
+      local terminal_id = 42
+      local box_name = os.getenv 'DISTROBOX_NAME'
+
+      local function runner(cell, _)
+        misc.start_ipython_kernel()
+        vim.wait(6000, function()
+          return _G.ipython_started
+        end, 100)
+        if not _G.ipython_started then
+          vim.notify('Failed to start ipython.', vim.log.levels.ERROR)
+          return
+        end
+
+        local filtered_lines = vim.tbl_filter(function(line)
+          -- Return false for empty lines or lines starting with # (including those with leading whitespace)
+          return line:match '^%s*$' == nil and line:match '^%s*#' == nil
+        end, cell.text)
+
+        local text_lines = table.concat(filtered_lines, '\n')
+        -- Send this as bracketed content
+        text_lines = '\x1b[200~' .. text_lines .. '\x1b[201~'
+        toggleterm.exec(text_lines, terminal_id)
+      end
+
+      -- Update opts to add runner.
+      opts.codeRunner = {
+        enabled = true,
+        default_method = runner,
+      }
+      quarto.setup(opts)
+    end,
     init = function()
       local runner = require 'quarto.runner'
 
@@ -74,67 +160,12 @@ return {
       --   end
       -- end
 
-      vim.keymap.set(
-        'n',
-        '<localleader><CR>',
-        ':QuartoSend<CR>',
-        { desc = 'Quarto: run cell', silent = true }
-      )
-      vim.keymap.set(
-        'n',
-        '<localleader>ja',
-        runner.run_above,
-        { desc = 'Quarto: run cell and all [a]bove', silent = true }
-      )
-      vim.keymap.set(
-        'n',
-        '<localleader>jb',
-        runner.run_below,
-        { desc = 'Quarto: run cell and all [b]elow', silent = true }
-      )
-      vim.keymap.set(
-        'n',
-        '<localleader>jA',
-        runner.run_all,
-        { desc = 'Quarto: run [A]ll cells', silent = true }
-      )
-      vim.keymap.set(
-        'n',
-        '<localleader>jl',
-        runner.run_line,
-        { desc = 'Quarto: run [l]ine', silent = true }
-      )
       -- vim.keymap.set(
       --   'v',
       --   '<localleader>jv',
       --   runner.run_range,
       --   { desc = 'Quarto: run [v]isual range', silent = true }
       -- )
-      vim.keymap.set(
-        'n',
-        '<localleader>jp',
-        ':QuartoPreview<CR>',
-        { desc = 'Quarto: open [p]review', silent = true }
-      )
-      vim.keymap.set(
-        'n',
-        '<localleader>jP',
-        ':QuartoClosePreview<CR>',
-        { desc = 'Quarto: close [p]review', silent = true }
-      )
-      vim.keymap.set(
-        'n',
-        '<localleader>jj',
-        "ko\rpyc<cmd>lua require('luasnip').expand()<CR>",
-        { desc = 'Snippet: [n]ew cell', noremap = true }
-      )
-      vim.keymap.set(
-        'n',
-        '<localleader>j/',
-        'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O',
-        { desc = 'split cell', noremap = true }
-      )
-
       -- Document key chains
       require('which-key').add {
         { '<leader>j', group = '[J]upyter' },
@@ -274,9 +305,9 @@ return {
         group = vim.api.nvim_create_augroup('yarepl', {}),
         desc = 'set up REPL keymap',
         callback = function()
-          bufmap(0, 'n', '<localleader>js', '<Plug>(REPLStart-ipython)', {
-            desc = 'yarepl: [s]tart a repl',
-          })
+          -- bufmap(0, 'n', '<localleader>js', '<Plug>(REPLStart-ipython)', {
+          --   desc = 'yarepl: [s]tart a repl',
+          -- })
           -- bufmap(0, 'n', '<localleader>rf', '<Plug>(REPLFocus)', {
           --   desc = 'yarepl: [f]ocus on REPL',
           -- })
@@ -329,16 +360,79 @@ return {
         config = {
           scratch_repl = true,
           repl_open_cmd = 'vertical botright 80 split',
+          -- repl_open_cmd = 'ToggleTerm',
           repl_definition = {
             python = {
-              command = {
-                'distrobox',
-                'enter',
-                'grubhub-dev',
-                '--',
-                'ipython',
-                '--no-autoindent',
-              },
+              command = function(meta)
+                local distrobox_name = os.getenv 'DISTROBOX_NAME' or 'grubhub-dev'
+                -- Check if ipython is available in the distrobox
+                local handle = io.popen(
+                  'distrobox enter ' .. distrobox_name .. ' -- which ipython 2>/dev/null'
+                )
+                if not handle then
+                  vim.notify('Failed to check for ipython.', vim.log.levels.ERROR)
+                  return nil
+                end
+                local result = handle:read '*a'
+                handle:close()
+                if result == '' then
+                  -- Prompt user to install ipykernel
+                  vim.notify(
+                    'ipython is not available. Asking for input.',
+                    vim.log.levels.ERROR
+                  )
+                  local input = vim.fn
+                    .input('Confirm', 'ipython not found. Install ipykernel? [y/N]: ')
+                    :sub(-1)
+
+                  vim.notify('input: ' .. input)
+                  if input and input:lower() == 'y' then
+                    local Terminal = require('toggleterm.terminal').Terminal
+                    -- Create a function that returns a promise-like object
+                    local function wait_for_terminal(cmd)
+                      local done = false
+
+                      local term = Terminal:new {
+                        direction = 'float',
+                        cmd = cmd,
+                        hidden = false,
+                        float_opts = { width = 100, height = 40 },
+                        on_exit = function()
+                          done = true
+                        end,
+                      }
+
+                      term:open()
+
+                      -- Wait for the terminal to finish
+                      vim.wait(30000, function()
+                        return done
+                      end, 100)
+
+                      -- Give a small delay for cleanup
+                      vim.defer_fn(function()
+                        term:close()
+                      end, 5000)
+                    end
+
+                    local cmd = 'distrobox enter '
+                      .. distrobox_name
+                      .. ' -- uv pip install ipykernel'
+
+                    -- Use the waiting terminal
+                    wait_for_terminal(cmd)
+                  end
+                end
+                -- Return ipython command if available
+                return {
+                  'distrobox',
+                  'enter',
+                  distrobox_name,
+                  '--',
+                  'ipython',
+                  '--no-autoindent',
+                }
+              end,
             },
             quarto = {
               command = {

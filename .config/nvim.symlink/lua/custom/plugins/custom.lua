@@ -26,7 +26,15 @@ return {
     name = 'misc',
     dir = '~/src/nvim/misc',
     config = function()
-      require('misc').setup()
+      local misc = require 'misc'
+      misc.setup()
+
+      vim.keymap.set(
+        'n',
+        '<localleader>js',
+        misc.start_ipython_kernel,
+        { desc = 'start ipython', silent = true }
+      )
     end,
   },
 }

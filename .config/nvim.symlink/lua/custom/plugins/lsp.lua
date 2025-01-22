@@ -335,9 +335,21 @@ return {
   -- I wish lspconfig had sqlfluff support, but it doesn't. And nvim-lint doesn't
   -- appear to support code-actions. So, I'm resorting to use `null-ls` for now.
   {
-    'nvimtools/none-ls.nvim',
-    dependencies = 'nvim-lua/plenary.nvim',
+    'jay-babu/mason-null-ls.nvim',
+    event = { 'BufReadPre', 'BufNewFile' },
+    dependencies = {
+      'williamboman/mason.nvim',
+      { 'nvimtools/none-ls.nvim', dependencies = 'nvim-lua/plenary.nvim' },
+    },
     config = function()
+      local virtual_env = vim.env.VIRTUAL_ENV
+      local mypy_opts = {}
+      if virtual_env ~= nil then
+        mypy_opts = {
+          extra_args = { '--python-executable', virtual_env .. '/bin/python' },
+        }
+      end
+      require('mason').setup()
       local null_ls = require 'null-ls'
       local sources = {
         null_ls.builtins.formatting.sqlfluff.with {
@@ -345,10 +357,15 @@ return {
         },
         null_ls.builtins.diagnostics.bean_check,
         null_ls.builtins.formatting.bean_format,
-        null_ls.builtins.diagnostics.mypy,
+        null_ls.builtins.diagnostics.mypy.with(mypy_opts),
       }
 
       null_ls.setup { sources = sources, debug = true }
+
+      require('mason-null-ls').setup {
+        ensure_installed = {},
+        automatic_installation = true,
+      }
     end,
   },
   {

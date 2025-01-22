@@ -476,10 +476,9 @@ return {
         end,
       },
       code_blocks = {
-        enable = true,
         style = 'simple',
-        hl = 'CursorLine',
-        icons = '',
+        sign = false,
+        -- icons = '',
       },
       list_items = {
         enable = true,

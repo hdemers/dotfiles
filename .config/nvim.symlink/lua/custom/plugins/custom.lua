@@ -32,7 +32,7 @@ return {
       vim.keymap.set(
         'n',
         '<localleader>js',
-        misc.start_ipython_kernel,
+        misc.start_ipython,
         { desc = 'start ipython', silent = true }
       )
     end,

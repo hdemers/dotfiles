@@ -91,18 +91,14 @@ return {
     },
     config = function(_, opts)
       local quarto = require 'quarto'
-      -- local concat = require('quarto.tools').concat
-      local toggleterm = require 'toggleterm'
       local misc = require 'misc'
-      local terminal_id = 42
-      local box_name = os.getenv 'DISTROBOX_NAME'
 
       local function runner(cell, _)
-        misc.start_ipython_kernel()
+        misc.start_ipython()
         vim.wait(6000, function()
-          return _G.ipython_started
+          return misc.ipython_term ~= nil
         end, 100)
-        if not _G.ipython_started then
+        if misc.ipython_term == nil then
           vim.notify('Failed to start ipython.', vim.log.levels.ERROR)
           return
         end
@@ -115,7 +111,7 @@ return {
         local text_lines = table.concat(filtered_lines, '\n')
         -- Send this as bracketed content
         text_lines = '\x1b[200~' .. text_lines .. '\x1b[201~'
-        toggleterm.exec(text_lines, terminal_id)
+        misc.ipython_term:send(text_lines, true)
       end
 
       -- Update opts to add runner.

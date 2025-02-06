@@ -42,6 +42,7 @@ if [ "$(command -v eza)" ]; then
     alias l.='eza -d .*'
     alias ls='eza'
     alias l1='eza -1'
+    alias lt='eza -lT --git --icons=auto'
 fi
 
 

@@ -22,7 +22,7 @@ set -g default-shell /bin/zsh
 
 # emacs key bindings in tmux command prompt (prefix + :) are better than
 # vi keys, even for vim users
-set-option -g status-keys emacs
+set-option -g status-keys vi
 set-option -g history-limit 50000
 
 set-option -g mouse on
@@ -41,6 +41,14 @@ bind-key j select-pane -D
 bind-key k select-pane -U
 bind-key h select-pane -L
 bind-key l select-pane -R
+
+# Prompt navigation in copy mode
+bind-key -T copy-mode-vi C-k send -X previous-prompt
+bind-key -T copy-mode-vi C-j send -X next-prompt
+
+# Quick access to copy mode with prompt navigation
+bind C-k copy-mode \; send -X previous-prompt
+bind C-j copy-mode \; send -X next-prompt
 
 # Shift arrow to switch windows
 bind -n S-Left  previous-window
@@ -64,7 +72,7 @@ set-option -g automatic-rename-format '#{b:pane_current_path}'
 set-option -g window-status-current-format '#I:#W'
 
 # Reload tmux config
-bind r source-file ~/.tmux.conf
+bind R source-file ~/.tmux.conf
 
 # super useful when using "grouped sessions" and multi-monitor setup
 set-window-option -g aggressive-resize on

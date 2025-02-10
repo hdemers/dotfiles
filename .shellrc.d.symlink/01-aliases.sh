@@ -90,7 +90,7 @@ fi
 alias mounts3="s3fs ca-hdemers $HOME/S3/ca-hdemers/ -o profile=s3-access"
 
 # Pip related
-alias lspip="uv pip list --disable-pip-version-check | fzf"
+alias lspip="uv pip list --disable-pip-version-check | fzf --header-lines=2"
 
 alias statit="/usr/bin/time -f '\n%M max rss\n%K avg total\n%E real\n%U user\n%S sys' $2"
 

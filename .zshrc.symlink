@@ -47,6 +47,14 @@ bindkey "^[OB" down-line-or-beginning-search # Up
 # If the auto-source folder exists and has files in it...
 config_dir="$HOME/.shellrc.d"
 
+# Set preexec hook to mark command start and output with OSC 133 sequences
+preexec() {
+  # Mark command start with the actual command
+  print -Pn "\e]133;C;$(echo $1 | base64)\a"
+  # Mark beginning of command output
+  print -Pn "\e]133;A\a"
+}
+
 if [[ -d $config_dir ]]; then
 
   # If the directory is not empty...

@@ -63,19 +63,19 @@ return {
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
-          map(
-            '<leader>sy',
-            require('telescope.builtin').lsp_dynamic_workspace_symbols,
-            '[S]earch all s[y]mbols'
-          )
+          -- map(
+          --   '<leader>sy',
+          --   require('telescope.builtin').lsp_dynamic_workspace_symbols,
+          --   '[S]earch all s[y]mbols'
+          -- )
 
           -- Fuzzy find all the symbols in your current workspace
           --  Similar to document symbols, except searches over your whole project.
-          map(
-            '<leader>sY',
-            require('telescope.builtin').lsp_document_symbols,
-            '[Search] document s[Y]mbols'
-          )
+          -- map(
+          --   '<leader>sY',
+          --   require('telescope.builtin').lsp_document_symbols,
+          --   '[Search] document s[Y]mbols'
+          -- )
 
           -- Rename the variable under your cursor
           --  Most Language Servers support renaming across files, etc.
@@ -189,7 +189,7 @@ return {
             },
           },
         },
-        beancount = {},
+        -- beancount = {},
         arduino_language_server = {
           cmd = {
             'arduino-language-server',
@@ -357,7 +357,7 @@ return {
         },
         null_ls.builtins.diagnostics.bean_check,
         null_ls.builtins.formatting.bean_format,
-        null_ls.builtins.diagnostics.mypy.with(mypy_opts),
+        -- null_ls.builtins.diagnostics.mypy.with(mypy_opts),
       }
 
       null_ls.setup { sources = sources, debug = true }

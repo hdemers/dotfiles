@@ -21,9 +21,9 @@ return {
 
       -- Document existing key chains
       wk.add {
-        { '<leader>b', group = '[B]uffer' },
-        { '<leader>c', group = '[C]ode' },
-        { '<leader>s', group = '[S]earch' },
+        { '<leader>b', group = '[b]uffer' },
+        { '<leader>c', group = '[c]ode' },
+        { '<leader>s', group = '[s]earch' },
       }
     end,
     keys = {
@@ -129,6 +129,7 @@ return {
   },
   {
     'debugloop/telescope-undo.nvim',
+    enabled = false,
     dependencies = { -- note how they're inverted to above example
       {
         'nvim-telescope/telescope.nvim',
@@ -334,7 +335,7 @@ return {
     keys = {
       { "<S-Enter>", function() require("noice").redirect(vim.fn.getcmdline()) end, mode = "c", desc = "Redirect Cmdline" },
       { "<leader>snl", function() require("noice").cmd("last") end, desc = "Noice Last Message" },
-      { "<leader>snh", function() require("noice").cmd("history") end, desc = "Noice History" },
+      { "<leader>sni", function() require("noice").cmd("history") end, desc = "Noice History" },
       { "<leader>sna", function() require("noice").cmd("all") end, desc = "Noice All" },
       { "<leader>snd", function() require("noice").cmd("dismiss") end, desc = "Dismiss All" },
       { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll forward", mode = {"i", "n", "s"} },
@@ -466,45 +467,49 @@ return {
       'nvim-tree/nvim-web-devicons',
     },
     opts = {
-      filetypes = { 'markdown', 'quarto', 'rmd', 'Avante' },
-      modes = { 'n', 'i', 'no', 'c' },
-      hybrid_modes = { 'i', 'v' },
-      callbacks = {
-        on_enable = function(_, win)
-          vim.wo[win].conceallevel = 2
-          vim.wo[win].concealcursor = 'nc'
-        end,
+      preview = {
+        filetypes = { 'markdown', 'quarto', 'rmd', 'Avante' },
+        modes = { 'n', 'i', 'no', 'c' },
+        callbacks = {
+          on_enable = function(_, win)
+            vim.wo[win].conceallevel = 2
+            vim.wo[win].concealcursor = 'nc'
+          end,
+        },
+        hybrid_modes = { 'i', 'v' },
       },
       code_blocks = {
         style = 'simple',
         sign = false,
         -- icons = '',
       },
-      list_items = {
-        enable = true,
-        marker_minus = {
-          text = '•',
-        },
-      },
       checkboxes = {
         enable = false,
       },
-      headings = {
-        heading_1 = {
-          sign = ' ',
-          icon = '█ ',
+      markdown = {
+        list_items = {
+          enable = true,
+          marker_minus = {
+            text = '•',
+          },
         },
-        heading_2 = {
-          sign = ' ',
-          icon = '▊ ',
-        },
-        heading_3 = {
-          sign = ' ',
-          icon = '▌ ',
-        },
-        heading_4 = {
-          sign = ' ',
-          icon = '▎ ',
+        headings = {
+          heading_1 = {
+            sign = ' ',
+            icon = '█ ',
+          },
+          heading_2 = {
+            sign = ' ',
+            icon = '▊ ',
+          },
+          heading_3 = {
+            sign = ' ',
+            icon = '▌ ',
+          },
+          heading_4 = {
+            sign = ' ',
+            icon = '▎ ',
+          },
         },
       },
     },
@@ -521,6 +526,13 @@ return {
       'MunifTanjim/nui.nvim',
       -- "3rd/image.nvim", -- Optional image support in preview window: See `# Preview Mode` for more information
     },
+    keys = {
+      {
+        '<leader>sx',
+        ':Neotree toggle<CR>',
+        desc = 'Toggle Neotree',
+      },
+    },
   },
   {
     'folke/snacks.nvim',
@@ -534,6 +546,85 @@ return {
       quickfile = { enabled = true },
       statuscolumn = { enabled = true },
       words = { enabled = true },
+      scroll = { enabled = true },
+      picker = { enabled = true },
+      indent = { enabled = false },
+      dashboard = {
+        enabled = true,
+        width = 120,
+        sections = {
+          { section = 'header' },
+          -- {
+          --   pane = 2,
+          --   section = 'terminal',
+          --   cmd = 'colorscript -e square',
+          --   height = 5,
+          --   padding = 1,
+          -- },
+          {
+            icon = ' ',
+            desc = 'Browse Repo',
+            padding = 1,
+            key = 'b',
+            action = function()
+              Snacks.gitbrowse()
+            end,
+          },
+          function()
+            local in_git = Snacks.git.get_root() ~= nil
+            local cmds = {
+              -- {
+              --   title = 'Notifications',
+              --   cmd = 'gh notify -s -a -n5',
+              --   action = function()
+              --     vim.ui.open 'https://github.com/notifications'
+              --   end,
+              --   key = 'n',
+              --   icon = ' ',
+              --   height = 5,
+              --   enabled = true,
+              -- },
+              -- {
+              --   title = 'Open Issues',
+              --   cmd = 'gh issue list -L 3',
+              --   key = 'i',
+              --   action = function()
+              --     vim.fn.jobstart('gh issue list --web', { detach = true })
+              --   end,
+              --   icon = ' ',
+              --   height = 7,
+              -- },
+              {
+                icon = ' ',
+                title = 'Open PRs',
+                cmd = 'gh pr list -L 10',
+                key = 'P',
+                action = function()
+                  vim.fn.jobstart('gh pr list --web', { detach = true })
+                end,
+                height = 12,
+              },
+              {
+                icon = ' ',
+                title = 'Git Status',
+                -- cmd = 'git --no-pager diff --stat -B -M -C',
+                cmd = 'git status -sb',
+                height = 20,
+              },
+            }
+            return vim.tbl_map(function(cmd)
+              return vim.tbl_extend('force', {
+                section = 'terminal',
+                enabled = in_git,
+                padding = 1,
+                ttl = 5 * 60,
+                indent = 3,
+              }, cmd)
+            end, cmds)
+          end,
+          { section = 'startup' },
+        },
+      },
     },
     keys = {
       {
@@ -543,14 +634,197 @@ return {
         end,
         desc = 'Delete buffer',
       },
+      {
+        '<leader>D',
+        function()
+          Snacks.dashboard()
+        end,
+        desc = '[d]ashboard',
+      },
+      {
+        '<leader>se',
+        function()
+          Snacks.explorer.open { autoclose = true }
+        end,
+        desc = 'file explorer',
+      },
+      {
+        '<leader><leader>',
+        function()
+          Snacks.picker.buffers()
+        end,
+        desc = 'buffers',
+      },
+      {
+        '<leader>sf',
+        function()
+          Snacks.picker.files()
+        end,
+        desc = '[s]earch [f]iles',
+      },
+      {
+        '<leader>sF',
+        function()
+          Snacks.picker.files { hidden = true }
+        end,
+        desc = '[s]earch [F]iles including hidden',
+      },
+      {
+        '<leader>si',
+        function()
+          Snacks.picker.git_files()
+        end,
+        desc = '[s]earch g[i]t files',
+      },
+      {
+        '<leader>sc',
+        function()
+          Snacks.picker.files { cwd = vim.fn.stdpath 'config' }
+        end,
+        desc = '[s]earch [c]onfig files',
+      },
+      {
+        '<leader>ss',
+        function()
+          Snacks.picker.smart()
+        end,
+        desc = '[s]earch [s]mart',
+      },
+      {
+        '<leader>s.',
+        function()
+          Snacks.picker.recent()
+        end,
+        desc = '[s]earch recent files ("." for repeat)',
+      },
+      {
+        '<leader>sg',
+        function()
+          Snacks.picker.grep()
+        end,
+        desc = 'search with [g]rep',
+      },
+      {
+        '<leader>sG',
+        function()
+          Snacks.picker.grep { hidden = true }
+        end,
+        desc = 'search with [G]rep including hidden',
+      },
+      {
+        '<leader>s/',
+        function()
+          Snacks.picker.grep_buffers()
+        end,
+        desc = 'search buffers with [g]rep',
+      },
+      {
+        '<leader>sw',
+        function()
+          Snacks.picker.grep_word()
+        end,
+        desc = 'grep for [w]ord',
+        mode = { 'n', 'x' },
+      },
+      {
+        '<leader>/',
+        function()
+          Snacks.picker.lines()
+        end,
+        desc = 'Fuzzy search of current buffer',
+      },
+      {
+        '<leader>sl',
+        function()
+          Snacks.picker.colorschemes()
+        end,
+        desc = '[s]earch colorschemes',
+      },
+      {
+        '<leader>sy',
+        function()
+          Snacks.picker.lsp_workspace_symbols()
+        end,
+        desc = 'search lsp s[y]mbols',
+      },
+      {
+        '<leader>sY',
+        function()
+          Snacks.picker.lsp_symbols()
+        end,
+        desc = 'search lsp document symbols',
+      },
+      {
+        '<leader>sk',
+        function()
+          Snacks.picker.keymaps()
+        end,
+        desc = '[s]earch [k]eymaps',
+      },
+      {
+        '<leader>sh',
+        function()
+          Snacks.picker.help()
+        end,
+        desc = '[s]earch [h]elp',
+      },
+      {
+        '<leader>sr',
+        function()
+          Snacks.picker.resume()
+        end,
+        desc = '[s]earch [r]esume',
+      },
+      {
+        '<leader>su',
+        function()
+          Snacks.picker.undo()
+        end,
+        desc = '[s]earch [u]ndo',
+      },
+      {
+        '<leader>sd',
+        function()
+          Snacks.picker.diagnostics()
+        end,
+        desc = '[s]earch [d]iagnostics',
+      },
+      {
+        '<leader>sD',
+        function()
+          Snacks.picker.diagnostics_buffer()
+        end,
+        desc = '[s]earch [D]iagnostics in buffer',
+      },
+      {
+        '<leader>snh',
+        function()
+          Snacks.notifier.show_history()
+        end,
+        desc = '[s]how [n]otification [h]istory',
+      },
+      {
+        '<leader>be',
+        function()
+          Snacks.zen()
+        end,
+        desc = '[b]e z[e]n',
+      },
     },
     config = function(_, opts)
       local snacks = require 'snacks'
       snacks.setup(opts)
 
-      -- vim.keymap.set('n', '<leader>snh', function()
-      --   snacks.notifier.show_hihtory()
-      -- end, { desc = 'Noice History' })
+      local indent_on = false
+
+      vim.keymap.set('n', '<leader>ci', function()
+        if indent_on then
+          Snacks.indent.disable()
+        else
+          Snacks.indent.enable()
+        end
+        indent_on = not indent_on
+      end, { desc = '[c]ode [i]ndent' })
     end,
   },
 }

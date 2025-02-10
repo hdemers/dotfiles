@@ -3,13 +3,15 @@ return {
   {
     'folke/todo-comments.nvim',
     event = 'VimEnter',
-    dependencies = { 'nvim-lua/plenary.nvim' },
+    dependencies = { 'nvim-lua/plenary.nvim', 'folke/trouble.nvim' },
     opts = { signs = false },
     keys = {
       {
         '<leader>st',
-        ':TodoTelescope<CR>',
-        desc = 'search [t]odos',
+        function()
+          Snacks.picker.todo_comments()
+        end,
+        desc = '[s]earch [t]odo comments',
       },
       {
         '<leader>xt',
@@ -17,31 +19,6 @@ return {
         desc = 'Trouble: Todo',
       },
     },
-  },
-  { -- Add indentation guides even on blank lines
-    'lukas-reineke/indent-blankline.nvim',
-    -- Enable `lukas-reineke/indent-blankline.nvim`
-    -- See `:help ibl`
-    main = 'ibl',
-    opts = {
-      enabled = false,
-      scope = { enabled = false },
-    },
-    config = function()
-      vim.keymap.set(
-        'n',
-        '<leader>ci',
-        ':IBLToggle<CR> :IBLToggleScope<CR>',
-        { desc = 'IBL: toggle [i]ndent lines' }
-      )
-      vim.keymap.set(
-        'n',
-        '<leader>cs',
-        ':IBLToggleScope<CR>',
-        { desc = 'IBL: toggle [s]cope lines' }
-      )
-    end,
-    init = function() end,
   },
   { -- Linting
     'mfussenegger/nvim-lint',

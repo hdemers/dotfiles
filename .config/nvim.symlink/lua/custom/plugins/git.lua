@@ -5,15 +5,12 @@ return {
     'lewis6991/gitsigns.nvim',
     opts = {
       signs = {
-        add = { text = '+' },
-        change = { text = '~' },
-        delete = { text = '_' },
-        topdelete = { text = '‾' },
-        changedelete = { text = '~' },
-        untracked = { text = '┆' },
+        add = { text = '│' },
+        change = { text = '│' },
       },
       on_attach = function(bufnr)
         local gs = package.loaded.gitsigns
+        local base = 'HEAD'
 
         local function map(mode, l, r, opts)
           opts = opts or {}
@@ -91,6 +88,19 @@ return {
 
         -- Text object
         map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
+
+        -- Toggle base between HEAD and master
+        map('n', '<leader>gi', function()
+          if base == 'HEAD' then
+            gs.change_base 'master'
+            vim.notify('Gitsign base changed to master', 'info')
+            base = 'master'
+          else
+            gs.change_base 'HEAD'
+            vim.notify('Gitsign base changed to HEAD', 'info')
+            base = 'HEAD'
+          end
+        end, { desc = 'GitSigns: toggle base index|master' })
       end,
     },
   },

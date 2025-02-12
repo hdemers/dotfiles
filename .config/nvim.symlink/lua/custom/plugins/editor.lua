@@ -542,7 +542,12 @@ return {
       styles = {},
       bigfile = { enabled = true },
       bufdelete = { enabled = true },
-      notifier = { enabled = false, style = 'compact' },
+      notifier = {
+        enabled = true,
+        style = 'fancy',
+        top_down = false,
+        layout = { top = 1 },
+      },
       quickfile = { enabled = true },
       statuscolumn = { enabled = true },
       words = { enabled = true },
@@ -809,6 +814,21 @@ return {
           Snacks.zen()
         end,
         desc = '[b]e z[e]n',
+      },
+      {
+        'gr',
+        function()
+          Snacks.picker.lsp_references()
+        end,
+        nowait = true,
+        desc = '[g]o to [r]eferences',
+      },
+      {
+        'gd',
+        function()
+          Snacks.picker.lsp_definitions()
+        end,
+        desc = '[g]o to [d]efinition',
       },
     },
     config = function(_, opts)

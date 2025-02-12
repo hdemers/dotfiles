@@ -95,7 +95,7 @@ set-option -g status-position top
 # /tmp/.mount_nvim1QOO9k/usr/bin/nvim, with the string 'nvim'.
 resurrect_dir="$HOME/.local/share/tmux/resurrect"
 set -g @resurrect-dir $resurrect_dir
-set -g @resurrect-hook-post-save-all 'sed -i "s/\/tmp.*nvim/nvim/" $resurrect_dir/last'
+# set -g @resurrect-hook-post-save-all 'sed -i "s/\/tmp.*nvim/nvim/" $resurrect_dir/last'
 
 # Automatic resurrect when tmux starts
 set -g @continuum-restore 'on'

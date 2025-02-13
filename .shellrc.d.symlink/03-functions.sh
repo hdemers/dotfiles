@@ -150,3 +150,36 @@ checkoutworktree() {
     echo 'Checking out worktree for branch:' ${branch}
     echo ${branch} | awk -F'/' '{print $2}' | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{}
 }
+
+rpq() {
+    if ! command -v duckdb &> /dev/null; then
+        echo "duckdb is not installed. Please install it first."
+        return 1
+    fi
+
+    if [ -z "$1" ]; then
+        echo "Usage: rpq <query>"
+        return 1
+    fi
+
+    local file=${1}
+    local query=""
+
+    # If $1 is a directory use glob pattern
+    if [ -d "$file" ]; then
+        file="${file}/**/*.parquet"
+    fi
+
+    duckdb -c "select * from read_parquet('${file}') limit 10;"
+    duckdb -c "describe select * from read_parquet('${file}') limit 10;"
+    duckdb -c "select column_id \
+        , path_in_schema \
+        , num_values \
+        , stats_min \
+        , stats_max \
+        , stats_null_count \
+        , stats_distinct_count \
+        , stats_min_value \
+        , stats_max_value \
+        from parquet_metadata('${file}');"
+}

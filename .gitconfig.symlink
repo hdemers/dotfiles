@@ -109,3 +109,5 @@
 
 [pager]
     difftool = true
+[rebase]
+	autosquash = true

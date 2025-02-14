@@ -137,8 +137,8 @@ alias gf="$FZF_GIT_LOG_GRAPH | fzf \
 # Git branches + FZF = 🚀
 alias gb="git rb \
     | fzf --ansi --header-lines=1 \
-      --preview='GH_FORCE_TTY=\"100%\" gh pr view --comments \$(echo {1} | tr -d \"*\") || \
-          git show --stat --color=always \$(echo {1} | tr -d \"*\")' \
+      --preview='GH_FORCE_TTY=\"100%\" gh pr view --comments \$(echo {1} | tr -d \"*\" | sed \"s|^origin/||\") || \
+          git show --stat --color=always \$(echo {1} | tr -d \"*\" | sed \"s|^origin/||\")' \
       --preview-window=top,75% \
       --bind 'enter:execute(echo {1} | tr -d \"*\" | awk -F\"/\" '\''{print \$NF}'\'' | xargs --no-run-if-empty git sw)+abort' \
       --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \

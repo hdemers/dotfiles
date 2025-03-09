@@ -48,7 +48,7 @@
             behind=$(git rev-list --count \"${branch}..${refbranch:-origin/master}\"); \
             colorline=$(echo \"$line\" | sed 's/^[^|]*|//'); \
             echo \"$colorline|$ahead|$behind\" | awk -F'|' -vOFS='|' '{$3=substr($3,1,70)}1' ; done \
-            | ( echo \"branch|lastcommit|message|author|ahead|behind\\n\" && cat) | column -ts'|';}; r"
+            | ( echo \"branch|lastcommit|message|author|ahead|behind\" && cat) | column -ts'|';}; r"
     rba = "!r() { refbranch=$1 count=$2; git for-each-ref --sort=-committerdate refs/heads refs/remotes \
         --format='%(refname:short)|\
 %(HEAD)%(color:yellow)%(refname:short)|\

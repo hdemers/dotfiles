@@ -123,6 +123,7 @@ FZF_GIT_JIRA_TICKET_NUMBER="git show \
 
 alias gf="$FZF_GIT_LOG_GRAPH | fzf \
     --ansi \
+    --height 70% \
     --preview='git show --stat --color=always \$(echo {} | $FZF_GREP_COMMIT_SHA)' \
     --preview-window=wrap,top \
     --bind='enter:execute(echo {} | $FZF_GREP_COMMIT_SHA)+abort' \
@@ -134,23 +135,12 @@ alias gf="$FZF_GIT_LOG_GRAPH | fzf \
         | grep -oE \"[A-Z]+-[0-9]+\" \
         | xargs -I % jira describe %)'"
 
-# Git branches + FZF = 🚀
-alias gb="git rb \
-    | fzf --ansi --header-lines=1 \
-      --preview='GH_FORCE_TTY=\"100%\" gh pr view --comments \$(echo {1} | tr -d \"*\" | sed \"s|^origin/||\") || \
-          git show --stat --color=always \$(echo {1} | tr -d \"*\" | sed \"s|^origin/||\")' \
-      --preview-window=top,75% \
-      --bind 'enter:execute(echo {1} | tr -d \"*\" | awk -F\"/\" '\''{print \$NF}'\'' | xargs --no-run-if-empty git sw)+abort' \
-      --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
-      --bind 'ctrl-r:reload(git rba)' \
-      --bind 'ctrl-t:execute(awk -F\"/\" '\"'\"'{print \$NF}'\"'\"' <<< {1} | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{})+abort' \
-    "
-
 alias js="jira issues\
     | fzf \
     --ansi \
+    --height=60% \
     --preview='jira describe {1}' \
-    --preview-window='top,40%' \
+    --preview-window='top,50%' \
     --header-lines=1 \
     --scheme=history \
     --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
@@ -163,6 +153,7 @@ alias js="jira issues\
 alias jsc="jira issues --current-sprint\
     | fzf \
     --ansi \
+    --height=60% \
     --preview='jira describe {1}' \
     --preview-window='top,50%' \
     --header-lines=1 \

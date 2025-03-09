@@ -89,9 +89,9 @@ rfv() {
         --preview='bat \
             --force-colorization {1} \
             --highlight-line {2} \
-            --style=numbers,changes \
-            --theme=OneHalfDark' \
+            --style=numbers,changes' \
         --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
+        --height 100% \
         --bind='enter:become(nvim {1} +{2})' \
         --bind='ctrl-x:execute(rm {1})'
 }
@@ -182,4 +182,39 @@ rpq() {
         , stats_min_value \
         , stats_max_value \
         from parquet_metadata('${file}');"
+}
+
+gb() {
+    git rb | \
+        fzf \
+        --prompt 'Local Branches> ' \
+        --ansi \
+        --height=60% \
+        --header-lines=1 \
+        --border-label='  ctrl-r: toggle remote | ctrl-e: delete | ctrl-w: open web | ctrl-t: add as worktree | ctrl-i: toggle graph '\
+        --border-label-pos=5:bottom \
+        --border='rounded' \
+        --preview='GH_FORCE_TTY="100%" gh pr view --comments $(echo {1} | \
+            tr -d "*" | \
+            sed "s|^origin/||") || \
+            git show --stat --color=always $(echo {1} | tr -d "*" | sed "s|^origin/||")' \
+        --preview-window=border-none,top,75% \
+        --bind 'enter:execute(\
+            echo {1} | \
+            tr -d "*" | \
+            sed "s|^origin/||" | \
+            xargs --no-run-if-empty git sw )+abort' \
+        --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
+        --bind 'ctrl-r:transform:[[ ! $FZF_PROMPT =~ "Local" ]] &&
+              echo "change-prompt(Local Branches> )+reload(git rb)" ||
+              echo "change-prompt(All Branches> )+reload(git rba)"' \
+        --bind 'ctrl-t:execute(\
+            awk -F"/" '"'"'{print \$NF}'"'"' <<< {1} | \
+            xargs -I {} git worktree add --track -b {} worktrees/{} origin/{})+abort' \
+        --bind 'ctrl-w:execute-silent(gh pr view --web)' \
+        --bind 'ctrl-i:preview($FZF_GIT_LOG_GRAPH_ALL)' \
+        --bind 'ctrl-s:preview($FZF_GIT_JIRA_TICKET_NUMBER \
+            | grep -oE "[A-Z]+-[0-9]+" \
+            | xargs -I % jira describe %)'
+
 }

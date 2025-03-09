@@ -276,6 +276,13 @@ return {
         end,
         desc = 'Debug: nearest unit [t]est',
       },
+      {
+        '<leader>dT',
+        function()
+          require('neotest').run.run { vim.uv.cwd(), strategy = 'dap' }
+        end,
+        desc = 'Debug: all test files',
+      },
     },
     config = function()
       -- Document key chains

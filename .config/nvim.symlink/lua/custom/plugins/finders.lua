@@ -153,7 +153,10 @@ return {
         fzflua.fzf_exec(contents, {
           fzf_opts = {
             ['--header-lines'] = '1',
-            ['--preview-window'] = 'top,75%',
+            ['--preview-window'] = 'border-none,top,75%',
+            ['--border-label'] = 'ctrl-r: toggle remote | ctrl-e: delete | ctrl-w: web',
+            ['--border-label-pos'] = '5:bottom',
+            ['--border'] = 'rounded',
           },
           winopts = {
             width = 175,
@@ -248,8 +251,11 @@ return {
         fzflua.fzf_exec(cmd, {
           fzf_opts = {
             ['--header-lines'] = '1',
-            ['--preview-window'] = 'top,50%',
+            ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
+            ['--border-label'] = 'ctrl-t: transition | ctrl-i: new | ctrl-w: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update',
+            ['--border-label-pos'] = '5:bottom',
+            ['--border'] = 'rounded',
           },
           winopts = {
             width = 200,

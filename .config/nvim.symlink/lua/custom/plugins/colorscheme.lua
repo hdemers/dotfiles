@@ -187,9 +187,6 @@ return {
     'navarasu/onedark.nvim',
     opts = {
       style = 'darker',
-      highlights = {
-        FlashBackdrop = { link = 'Conceal' },
-      },
     },
     config = function(_, opts)
       require('onedark').setup(opts)
@@ -426,5 +423,13 @@ return {
     config = function()
       vim.cmd 'colorscheme arctic'
     end,
+  },
+  {
+    'ficcdaf/ashen.nvim',
+    -- optional but recommended,
+    -- pin to the latest stable release:
+    lazy = false,
+    priority = 1000,
+    -- configuration is optional!
   },
 }

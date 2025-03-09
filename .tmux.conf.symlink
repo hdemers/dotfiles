@@ -86,6 +86,9 @@ bind R source-file ~/.tmux.conf
 # super useful when using "grouped sessions" and multi-monitor setup
 set-window-option -g aggressive-resize on
 
+# The following is needed for nvim zen-mode plugin to increase the size of the font in ZenMode.
+set-option -g allow-passthrough on
+
 # THEME
 set -g status-bg 0
 set -g status-fg 4

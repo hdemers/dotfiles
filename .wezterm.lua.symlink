@@ -51,6 +51,33 @@ wezterm.on("gui-startup", function(cmd)
 	window:gui_window():maximize()
 end)
 
+-- The following is needed for nvim zen-mode plugin to increase the size of the
+-- font in ZenMode.
+wezterm.on("user-var-changed", function(window, pane, name, value)
+	local overrides = window:get_config_overrides() or {}
+	if name == "ZEN_MODE" then
+		local incremental = value:find("+")
+		local number_value = tonumber(value)
+		if incremental ~= nil then
+			while number_value > 0 do
+				window:perform_action(wezterm.action.IncreaseFontSize, pane)
+				number_value = number_value - 1
+			end
+			overrides.enable_tab_bar = false
+			-- window:set_inner_size(2160, 500)
+		elseif number_value < 0 then
+			window:perform_action(wezterm.action.ResetFontSize, pane)
+			overrides.font_size = nil
+			overrides.enable_tab_bar = true
+			-- window:set_inner_size(2160, 3840)
+		else
+			overrides.font_size = number_value
+			overrides.enable_tab_bar = false
+		end
+	end
+	window:set_config_overrides(overrides)
+end)
+
 -- Wezterm doesn't do layout persisting and application restore like tmux-resurrect does.
 -- However, there's this this project that does something similar:
 -- https://github.com/danielcopper/wezterm-session-manager

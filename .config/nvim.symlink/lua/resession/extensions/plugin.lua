@@ -24,6 +24,9 @@ M.on_post_load = function(data)
     require('kanagawa').load(data.kanagawa_theme)
   else
     vim.cmd('colorscheme ' .. data.colorscheme)
+    vim.defer_fn(function()
+      vim.cmd('colorscheme ' .. data.colorscheme)
+    end, 1000) -- Delay in milliseconds
   end
 end
 

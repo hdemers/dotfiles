@@ -107,4 +107,5 @@ fi
 # Quarto needs the python package `jupyter` which is installed in virtualenv `nvim`. Sett the Quarto python executable to the one from this virtualenv.
 export QUARTO_PYTHON=$HOME/.virtualenvs/nvim/bin/python
 
-export DISTROBOX_NAME=ubuntu
+export DBX_CONTAINER_NAME=ubuntu
+export DISTROBOX_NAME=$DBX_CONTAINER_NAME

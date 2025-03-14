@@ -7,14 +7,14 @@ M.setup = function()
 end
 
 M.spawn_ipython_term = function()
-  local box_name = os.getenv 'DISTROBOX_NAME' or 'grubhub-dev'
+  local box_name = os.getenv 'DBX_CONTAINER_NAME' or 'grubhub-dev'
   local Terminal = require('toggleterm.terminal').Terminal
   local ipython_cmd = 'distrobox enter ' .. box_name .. ' -- ipython --no-autoindent'
 
   M.ipython_term = nil
 
   if not box_name then
-    vim.notify('DISTROBOX_NAME is not set', vim.log.levels.ERROR)
+    vim.notify('DBX_CONTAINER_NAME is not set', vim.log.levels.ERROR)
     return
   end
 
@@ -32,11 +32,11 @@ M.spawn_ipython_term = function()
 end
 
 M.check_for_ipython = function()
-  local box_name = os.getenv 'DISTROBOX_NAME'
+  local box_name = os.getenv 'DBX_CONTAINER_NAME'
   M.ipython_available = false
 
   if not box_name then
-    vim.notify('DISTROBOX_NAME is not set', vim.log.levels.ERROR)
+    vim.notify('DBX_CONTAINER_NAME is not set', vim.log.levels.ERROR)
     return
   end
   -- Check if ipython is available in the distrobox

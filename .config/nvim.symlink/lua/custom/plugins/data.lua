@@ -360,10 +360,10 @@ return {
           repl_definition = {
             python = {
               command = function(meta)
-                local distrobox_name = os.getenv 'DISTROBOX_NAME' or 'grubhub-dev'
+                local container_name = os.getenv 'DBX_CONTAINER_NAME' or 'grubhub-dev'
                 -- Check if ipython is available in the distrobox
                 local handle = io.popen(
-                  'distrobox enter ' .. distrobox_name .. ' -- which ipython 2>/dev/null'
+                  'distrobox enter ' .. container_name .. ' -- which ipython 2>/dev/null'
                 )
                 if not handle then
                   vim.notify('Failed to check for ipython.', vim.log.levels.ERROR)
@@ -412,7 +412,7 @@ return {
                     end
 
                     local cmd = 'distrobox enter '
-                      .. distrobox_name
+                      .. container_name
                       .. ' -- uv pip install ipykernel'
 
                     -- Use the waiting terminal
@@ -423,7 +423,7 @@ return {
                 return {
                   'distrobox',
                   'enter',
-                  distrobox_name,
+                  container_name,
                   '--',
                   'ipython',
                   '--no-autoindent',

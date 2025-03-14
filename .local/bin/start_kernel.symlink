@@ -35,13 +35,13 @@ cleanup() {
     
     # Kill kernel process (first line)
     echo "Killing kernel process: ${pids[0]}"
-    podman exec --user ${USER} ${DISTROBOX_NAME} kill "${pids[0]}" 2>/dev/null || true
+    podman exec --user ${USER} ${DBX_CONTAINER_NAME} kill "${pids[0]}" 2>/dev/null || true
 
     # Process the remaining PIDs (alternating container/host)
     for ((i=1; i<${#pids[@]}; i++)); do
       if ((i % 2 == 0)); then
         echo "Killing container socat process: ${pids[i]}"
-        podman exec --user ${USER} ${DISTROBOX_NAME} kill "${pids[i]}" 2>/dev/null || true
+        podman exec --user ${USER} ${DBX_CONTAINER_NAME} kill "${pids[i]}" 2>/dev/null || true
       else
         echo "Killing host socat process: ${pids[i]}"
         kill "${pids[i]}" 2>/dev/null || true
@@ -70,7 +70,7 @@ local kernel_pid=$(\
   podman exec \
   --user ${USER} \
   --workdir $(pwd) \
-  ${DISTROBOX_NAME} \
+  ${DBX_CONTAINER_NAME} \
   ${HOME}/.local/bin/jupyter_kernel ${kernel}
 )
   echo "${kernel_pid}" > "$TRACK_FILE"
@@ -108,7 +108,7 @@ main() {
   & echo \$!
 EOF
 
-    socat_pid=$(podman exec --user ${USER} --workdir $(pwd) ${DISTROBOX_NAME} /tmp/socat.sh)
+    socat_pid=$(podman exec --user ${USER} --workdir $(pwd) ${DBX_CONTAINER_NAME} /tmp/socat.sh)
     echo "${socat_pid}" >> "$TRACK_FILE"
 
     sleep 1

@@ -790,6 +790,13 @@ return {
         desc = '[s]earch [u]ndo',
       },
       {
+        '<leader>sq',
+        function()
+          Snacks.picker.qflist()
+        end,
+        desc = '[s]earch [q]uickfix',
+      },
+      {
         '<leader>sd',
         function()
           Snacks.picker.diagnostics()

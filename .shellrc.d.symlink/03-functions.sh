@@ -185,13 +185,17 @@ rpq() {
 }
 
 gb() {
+    local story="git show --quiet --pretty=format:\"%s %b\" {1} \
+            | grep -oE \"[A-Z]+-[0-9]+\" \
+            | xargs -I % jira describe %"
+
     git rb | \
         fzf \
         --prompt 'Local Branches> ' \
         --ansi \
         --height=60% \
         --header-lines=1 \
-        --border-label='  ctrl-r: toggle remote | ctrl-e: delete | ctrl-w: open web | ctrl-t: add as worktree | ctrl-i: toggle graph '\
+        --border-label='  ctrl-r: toggle remote | ctrl-e: delete | ctrl-w: open web | ctrl-t: add as worktree | ctrl-i: show graph | ctrl-s: show ticket | ctrl-m: show message' \
         --border-label-pos=5:bottom \
         --border='rounded' \
         --preview='GH_FORCE_TTY="100%" gh pr view --comments $(echo {1} | \
@@ -212,9 +216,16 @@ gb() {
             awk -F"/" '"'"'{print \$NF}'"'"' <<< {1} | \
             xargs -I {} git worktree add --track -b {} worktrees/{} origin/{})+abort' \
         --bind 'ctrl-w:execute-silent(gh pr view --web)' \
-        --bind 'ctrl-i:preview($FZF_GIT_LOG_GRAPH_ALL)' \
-        --bind 'ctrl-s:preview($FZF_GIT_JIRA_TICKET_NUMBER \
-            | grep -oE "[A-Z]+-[0-9]+" \
-            | xargs -I % jira describe %)'
+        --bind 'ctrl-i:preview(git log \
+            --color=always \
+            --graph \
+            --pretty=format:"%C(yellow)%d%Creset %s %C(magenta)(%cr) %C(blue)[%an]%Creset %Cgreen%h%Creset" \
+            --abbrev-commit \
+            --date=relative \
+            --branches \
+            --remotes \
+            )' \
+        --bind "ctrl-s:preview($story)" \
+        --bind 'ctrl-m:preview(git show --stat --color=always $(echo {1} | tr -d "*" | sed "s|^origin/||"))'
 
 }

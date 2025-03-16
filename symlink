@@ -128,7 +128,7 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
                 if not dryrun:
                     try:
                         os.remove(link_name)
-                    except OSError:
+                    except (OSError, FileNotFoundError):
                         shutil.rmtree(link_name)
                 log.info(f"removed {link_name}")
 

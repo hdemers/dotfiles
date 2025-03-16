@@ -129,7 +129,10 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
                     try:
                         os.remove(link_name)
                     except (OSError, FileNotFoundError):
-                        shutil.rmtree(link_name)
+                        try:
+                            shutil.rmtree(link_name)
+                        except (OSError, FileNotFoundError):
+                            pass
                 log.info(f"removed {link_name}")
 
         elif not path.exists(dirname):

@@ -123,8 +123,12 @@ custom-atuin-history-widget() {
   zle reset-prompt
   return $ret
 }
-zle -N custom-atuin-history-widget
-bindkey '^R' custom-atuin-history-widget
+
+# Only works in Zsh
+if [[ -n "$ZSH_VERSION" ]]; then
+  zle -N custom-atuin-history-widget
+  bindkey '^R' custom-atuin-history-widget
+fi
 
 
 checkoutworktree() {

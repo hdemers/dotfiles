@@ -115,11 +115,11 @@ return {
         ':Flog<CR>',
         desc = 'Flog: show git [l]og',
       },
-      {
-        '<leader>gL',
-        ':Flog -path=%<CR>',
-        desc = 'Flog: show git [L]og of current file',
-      },
+      -- {
+      --   '<leader>gL',
+      --   ':Flog -path=%<CR>',
+      --   desc = 'Flog: show git [L]og of current file',
+      -- },
     },
   },
   -- Fugitive is the premier Vim plugin for Git. Or maybe it's the premier Git
@@ -213,12 +213,6 @@ return {
   },
   {
     'sindrets/diffview.nvim',
-    cmd = {
-      'DiffviewOpen',
-      'DiffviewToggleFiles',
-      'DiffviewFocusFiles',
-      'DiffviewFileHistory',
-    },
     keys = {
       {
         '<leader>gm',
@@ -235,6 +229,11 @@ return {
         '<leader>gs',
         ':DiffviewOpen<CR>',
         desc = 'Diffview: git status',
+      },
+      {
+        '<leader>gL',
+        ':DiffviewFileHistory<CR>',
+        desc = 'Diffview: all history',
       },
     },
     opts = {

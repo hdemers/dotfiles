@@ -162,7 +162,7 @@ vim.opt.termguicolors = true
 
 -- Sets the Python executable to be used by Neovim. This requires the existence of a
 -- virtualenv named `nvim` with packages `pynvim` and `jupyter_client` installed.
-vim.g.python3_host_prog = '/home/hdemers/.virtualenvs/nvim/bin/python'
+vim.g.python3_host_prog = vim.env.HOME .. '/.virtualenvs/nvim/bin/python'
 
 -- Clear highlight on search when pressing <Esc> in normal mode
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')

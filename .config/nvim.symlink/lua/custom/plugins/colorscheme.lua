@@ -73,7 +73,6 @@ return {
         end,
       }
       vim.o.background = 'dark'
-      -- vim.cmd.colorscheme 'solarized'
     end,
   },
   {
@@ -82,12 +81,6 @@ return {
     lazy = false,
     priority = 1000,
     opts = {
-      custom_highlights = function(colors)
-        return {
-          -- LeapBackdrop = { fg = colors.surface2 },
-          -- MiniStatuslineFilename = { link = 'StatusLine' },
-        }
-      end,
       integrations = {
         diffview = true,
         neotest = true,
@@ -281,6 +274,7 @@ return {
   },
   {
     'yorik1984/newpaper.nvim',
+    enabled = false,
     config = function()
       require('newpaper').setup { style = 'dark' }
     end,

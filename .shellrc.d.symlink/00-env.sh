@@ -71,8 +71,10 @@ export BAT_THEME="Dracula"
 
 # Set the default R lib path
 export R_LIBS_USER=$HOME/.local/lib/R
-# Set the AWS profile for use with S3 only
-export AWS_PROFILE=s3-access
+# Set the AWS profile for use with S3 only, but only if it's not already set.
+if [ -z "$AWS_PROFILE" ]; then
+    export AWS_PROFILE=s3-access
+fi
 
 # Set environment variable CURRENT_SHELL to the name of the current shell
 CURRENT_SHELL=$(ps -ho cmd -p $$ | cut -d ' ' -f 1)

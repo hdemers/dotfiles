@@ -160,6 +160,11 @@ vim.opt.scrolloff = 10
 -- Ensure we use guifg and guibg colors from color schemes
 vim.opt.termguicolors = true
 
+-- if performing an operation that would fail due to unsaved changes in the buffer (like `:q`),
+-- instead raise a dialog asking if you wish to save the current file(s)
+-- See `:help 'confirm'`
+vim.opt.confirm = true
+
 -- Sets the Python executable to be used by Neovim. This requires the existence of a
 -- virtualenv named `nvim` with packages `pynvim` and `jupyter_client` installed.
 vim.g.python3_host_prog = vim.env.HOME .. '/.virtualenvs/nvim/bin/python'

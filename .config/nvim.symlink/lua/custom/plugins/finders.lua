@@ -327,10 +327,13 @@ return {
       end
       vim.keymap.set(
         'n',
-        '<leader>sj',
+        '<leader>sJ',
         show_jira_issues,
         { desc = 'Jira: search [j]ira', silent = true }
       )
+      vim.keymap.set('n', '<leader>sj', function()
+        show_jira_issues '--mine --current-sprint'
+      end, { desc = 'Jira: search [j]ira', silent = true })
 
       -- Show pip list
       local function pip_list()

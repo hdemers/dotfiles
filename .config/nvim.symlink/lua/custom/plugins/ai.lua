@@ -41,7 +41,7 @@ return {
   },
   {
     'yetone/avante.nvim',
-    enabled = true,
+    enabled = false,
     event = 'VeryLazy',
     lazy = false,
     version = false, -- set this if you want to always pull the latest change
@@ -113,6 +113,66 @@ return {
     opts = {
       -- See Configuration section for options
     },
-    -- See Commands section for default commands if you want to lazy load on them
+    keys = {
+      {
+        '<leader>aa',
+        ':CopilotChat<CR>',
+        desc = 'Copilot: ch[a]t',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>al',
+        ':CopilotChatToggle<CR>',
+        desc = 'Copilot: togg[l]e',
+      },
+      {
+        '<leader>ae',
+        ':CopilotChatExplain<CR>',
+        desc = 'Copilot: [e]xplain',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ac',
+        ':CopilotChatCommit<CR>',
+        desc = 'Copilot: [c]ommit',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ad',
+        ':CopilotChatDocs<CR>',
+        desc = 'Copilot: [d]ocument',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>af',
+        ':CopilotChatFix<CR>',
+        desc = 'Copilot: [f]ix',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ao',
+        ':CopilotChatOptimize<CR>',
+        desc = 'Copilot: [o]ptimize',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ar',
+        ':CopilotChatReview<CR>',
+        desc = 'Copilot: [r]eview',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>at',
+        ':CopilotChatTests<CR>',
+        desc = 'Copilot: [t]ests',
+        mode = { 'n', 'v' },
+      },
+      {
+        '<leader>ax',
+        ':CopilotChatReset<CR>',
+        desc = 'Copilot: reset',
+        mode = { 'n', 'v' },
+      },
+    },
   },
 }

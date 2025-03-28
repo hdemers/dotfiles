@@ -1,5 +1,7 @@
 return {
-  'rcarriga/nvim-notify',
-  lazy = false,
-  opts = {},
+  {
+    'rcarriga/nvim-notify',
+    lazy = false,
+    opts = {},
+  },
 }

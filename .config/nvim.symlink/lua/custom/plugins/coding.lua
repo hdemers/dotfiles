@@ -131,6 +131,7 @@ return {
     config = function()
       require('devcontainer').setup {
         container_runtime = 'podman',
+        cache_image = false,
       }
     end,
   },

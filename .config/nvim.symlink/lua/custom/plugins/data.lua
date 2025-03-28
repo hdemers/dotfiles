@@ -475,6 +475,7 @@ return {
     init = function()
       -- Your DBUI configuration
       vim.g.db_ui_use_nerd_fonts = 1
+      vim.g.db_ui_bind_param_pattern = '{{\\w\\+}}'
     end,
     config = function()
       -- Add cmp-nvim source for db completion

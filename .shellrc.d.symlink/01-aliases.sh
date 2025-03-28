@@ -135,43 +135,6 @@ alias gf="$FZF_GIT_LOG_GRAPH | fzf \
         | grep -oE \"[A-Z]+-[0-9]+\" \
         | xargs -I % jira describe %)'"
 
-alias js="jira issues\
-    | fzf \
-    --ansi \
-    --height=60% \
-    --preview='jira describe {1}' \
-    --preview-window='top,50%' \
-    --header-lines=1 \
-    --scheme=history \
-    --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
-    --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
-    --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
-    --bind 'ctrl-h:reload(jira issues)+clear-query' \
-    --bind 'ctrl-e:reload(jira issues --epics-only)' \
-    "
-
-alias jsc="jira issues --current-sprint\
-    | fzf \
-    --ansi \
-    --height=60% \
-    --preview='jira describe {1}' \
-    --preview-window='top,50%' \
-    --header-lines=1 \
-    --scheme=history"
-
-alias jse="jira issues --epics-only \
-    | fzf \
-    --ansi \
-    --preview='jira describe {1}' \
-    --preview-window='top,40%' \
-    --header-lines=1 \
-    --scheme=history \
-    --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
-    --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
-    --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
-    --bind 'ctrl-h:reload(jira issues --epics-only)+clear-query' \
-    "
-
 alias ghp="gh search prs --state=open --review-requested=@me"
 
 alias ah="atuin history list --reverse false --format '{time} \t {duration} \t {command}' \

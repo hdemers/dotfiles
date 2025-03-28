@@ -38,7 +38,10 @@ releasemsg() {
 
     repo=$(git config --get remote.origin.url | cut -d : -f 2 | cut -d . -f 1)
     URL="https://github.com/${repo}/commit"
-    git log --reverse $FROM..$TO --no-merges --format="**%s (%h)**%n%n%b%n"
+    message=$(git log --reverse $FROM..$TO --no-merges --format="**%s (%h)**%n%n%b%n")
+    echo "$message"
+    echo "$message" | wl-copy
+
 }
 
 ntfy() {
@@ -231,5 +234,48 @@ gb() {
             )' \
         --bind "ctrl-s:preview($story)" \
         --bind 'ctrl-m:preview(git show --stat --color=always $(echo {1} | tr -d "*" | sed "s|^origin/||"))'
+}
 
+
+js() {
+    jira issues \
+        | fzf \
+        --ansi \
+        --height=60% \
+        --preview='jira describe {1}' \
+        --preview-window='top,50%' \
+        --header-lines=1 \
+        --scheme=history \
+        --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
+        --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
+        --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
+        --bind 'ctrl-h:reload(jira issues)+clear-query' \
+        --bind 'ctrl-e:reload(jira issues --epics-only)'
+}
+
+jsc() {
+    jira issues --current-sprint --mine \
+        | fzf \
+        --ansi \
+        --height=40% \
+        --preview='jira describe {1}' \
+        --preview-window='top,80%' \
+        --header-lines=1 \
+        --scheme=history
+}
+
+jse() {
+    jira issues --epics-only \
+        | fzf \
+        --ansi \
+        --height=60% \
+        --preview='jira describe {1}' \
+        --preview-window='top,60%' \
+        --header-lines=1 \
+        --scheme=history \
+        --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
+        --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
+        --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
+        --bind 'ctrl-h:reload(jira issues)+clear-query' \
+        --bind 'ctrl-e:reload(jira issues --epics-only)'
 }

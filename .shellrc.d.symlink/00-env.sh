@@ -23,37 +23,16 @@ export PATH=$HOME/local/bin:$PATH
 # export PATH=$HOME/.cargo/bin:$PATH
 # export PATH=$HOME/go/bin:$PATH
 
-export CPATH=$CPATH:$HOME/.local/include
-export LIBRARY_PATH=$LIBRARY_PATH:$HOME/.local/lib
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
-
-# Virtualenvwrapper, cf. http://virtualenvwrapper.readthedocs.org
-export WORKON_HOME=$HOME/.virtualenvs
-export PROJECT_HOME=$HOME/Projets/grubhub
-# Virtualenvwrapper can be installed globally or locally. Look into both to find
-# it.
-VIRTUALENVWRAPPER=`find \
-    $HOME/.local/pipx/venvs/virtualenvwrapper \
-    $HOME/.local/bin \
-    /usr/local/bin \
-    -name virtualenvwrapper.sh -print -quit 2> /dev/null`
-
-if [[ "$VIRTUALENVWRAPPER" == *pipx* ]]; then
-    export VIRTUALENVWRAPPER_PYTHON=$HOME/.local/pipx/venvs/virtualenvwrapper/bin/python
-fi
-
-if [ "$VIRTUALENVWRAPPER" ] && [ -f $VIRTUALENVWRAPPER ]; then
-    source $VIRTUALENVWRAPPER
-fi
+# export CPATH=$CPATH:$HOME/.local/include
+# export LIBRARY_PATH=$LIBRARY_PATH:$HOME/.local/lib
+# export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
 
 ### rbenv path
-export RBENV_ROOT="$HOME/.rbenv"
-if [ -d "$RBENV_ROOT" ]; then
-  export PATH="$RBENV_ROOT/bin:${PATH}"
-  eval "$(rbenv init -)"
-fi
-
-export R_LIBS_USER=~/.R/library
+# export RBENV_ROOT="$HOME/.rbenv"
+# if [ -d "$RBENV_ROOT" ]; then
+#   export PATH="$RBENV_ROOT/bin:${PATH}"
+#   eval "$(rbenv init -)"
+# fi
 
 # Check if the USER environment variable is not equal to 'sagemaker-user'
 if [ "$USER" != "sagemaker-user" ]; then

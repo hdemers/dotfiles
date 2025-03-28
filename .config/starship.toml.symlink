@@ -39,5 +39,5 @@ format = '[$indicator]($style)'
 style = 'green'
 disabled = false
 
-[container]
-format = '[$symbol]($style) '
+# [container]
+# format = '[$symbol]($style) '

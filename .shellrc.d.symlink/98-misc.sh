@@ -5,21 +5,12 @@ if [ -f "$HOME/.config/broot/launcher/bash/br" ]; then
     source $HOME/.config/broot/launcher/bash/br
 fi
 
-# Activate direnv
+################################################################################
+# direnv
+#
 if command -v direnv &> /dev/null; then
     eval "$(direnv hook $CURRENT_SHELL)"
 fi
-
-###############################################################################
-# pyenv
-#
-# export PYENV_ROOT="$HOME/.pyenv"
-# command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"
-# eval "$(pyenv init -)"
-
-# Load pyenv-virtualenv
-# eval "$(pyenv virtualenv-init -)"
-
 
 ###############################################################################
 # Atuin
@@ -33,17 +24,10 @@ if [ "$CURRENT_SHELL" = "bash" ]; then
 fi
 
 if [ -x "$(command -v atuin)" ]; then
+    # Normally the below arguments --disable-up-arrow --disable-ctrl-r should work, but they don't anymore.
+    # I now need to set the environment variable ATUIN_NOBIND to true.
+    export ATUIN_NOBIND="true"
     eval "$(atuin init $CURRENT_SHELL --disable-up-arrow --disable-ctrl-r)"
 else
     echo "Atuin is not installed, shell history won't be captured."
 fi
-
-###############################################################################
-#  Rye
-if [ -d "$HOME/.rye/env" ]; then
-    . "$HOME/.rye/env"
-fi
-
-###############################################################################
-# Bluefin-cli
-# test -f /usr/share/ublue-os/bluefin-cli/bling.sh && source /usr/share/ublue-os/bluefin-cli/bling.sh

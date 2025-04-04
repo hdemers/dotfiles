@@ -142,12 +142,8 @@ return {
       {
         [[<c-\>]],
       },
-      -- {
-      --   '<leader>bt',
-      --   desc = '[b]uffer [t]erminal into distrobox',
-      -- },
       {
-        '<leader>bt',
+        '<leader>bd',
         function()
           local Terminal = require('toggleterm.terminal').Terminal
           local box_name = os.getenv 'DBX_CONTAINER_NAME'
@@ -158,7 +154,7 @@ return {
             float_opts = { width = 60, height = 30 },
           }):open()
         end,
-        desc = '[b]uffer [t]erminal into distrobox',
+        desc = '[b]uffer terminal into [d]istrobox',
       },
     },
   },

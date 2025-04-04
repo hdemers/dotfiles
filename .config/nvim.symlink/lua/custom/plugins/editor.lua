@@ -39,6 +39,15 @@ return {
 
   {
     'echasnovski/mini.nvim',
+    keys = {
+      {
+        '<leader>se',
+        function()
+          require('mini.files').open()
+        end,
+        desc = '[s]earch [e]xplorer',
+      },
+    },
     config = function()
       -- Better Around/Inside textobjects
       --
@@ -100,17 +109,7 @@ return {
         return ''
       end
 
-      -- ... and there is more!
-      --  Check out: https://github.com/echasnovski/mini.nvim
-    end,
-  },
-  -- Session manager and startup screen
-  {
-    'echasnovski/mini.files',
-    version = false,
-    enabled = false,
-    config = function(_, opts)
-      require('mini.files').setup { opts }
+      require('mini.files').setup()
     end,
   },
   {
@@ -556,82 +555,7 @@ return {
       scroll = { enabled = true },
       picker = { enabled = true },
       indent = { enabled = false },
-      dashboard = {
-        enabled = true,
-        width = 120,
-        sections = {
-          { section = 'header' },
-          -- {
-          --   pane = 2,
-          --   section = 'terminal',
-          --   cmd = 'colorscript -e square',
-          --   height = 5,
-          --   padding = 1,
-          -- },
-          {
-            icon = ' ',
-            desc = 'Browse Repo',
-            padding = 1,
-            key = 'b',
-            action = function()
-              Snacks.gitbrowse()
-            end,
-          },
-          function()
-            local in_git = Snacks.git.get_root() ~= nil
-            local cmds = {
-              -- {
-              --   title = 'Notifications',
-              --   cmd = 'gh notify -s -a -n5',
-              --   action = function()
-              --     vim.ui.open 'https://github.com/notifications'
-              --   end,
-              --   key = 'n',
-              --   icon = ' ',
-              --   height = 5,
-              --   enabled = true,
-              -- },
-              -- {
-              --   title = 'Open Issues',
-              --   cmd = 'gh issue list -L 3',
-              --   key = 'i',
-              --   action = function()
-              --     vim.fn.jobstart('gh issue list --web', { detach = true })
-              --   end,
-              --   icon = ' ',
-              --   height = 7,
-              -- },
-              {
-                icon = ' ',
-                title = 'Open PRs',
-                cmd = 'gh pr list -L 10',
-                key = 'P',
-                action = function()
-                  vim.fn.jobstart('gh pr list --web', { detach = true })
-                end,
-                height = 12,
-              },
-              {
-                icon = ' ',
-                title = 'Git Status',
-                -- cmd = 'git --no-pager diff --stat -B -M -C',
-                cmd = 'git status -sb',
-                height = 20,
-              },
-            }
-            return vim.tbl_map(function(cmd)
-              return vim.tbl_extend('force', {
-                section = 'terminal',
-                enabled = in_git,
-                padding = 1,
-                ttl = 5 * 60,
-                indent = 3,
-              }, cmd)
-            end, cmds)
-          end,
-          { section = 'startup' },
-        },
-      },
+      dashboard = { enabled = false },
     },
     keys = {
       {
@@ -647,13 +571,6 @@ return {
           Snacks.dashboard()
         end,
         desc = '[d]ashboard',
-      },
-      {
-        '<leader>se',
-        function()
-          Snacks.explorer.open { autoclose = true }
-        end,
-        desc = 'file explorer',
       },
       {
         '<leader><leader>',
@@ -816,13 +733,6 @@ return {
           Snacks.notifier.show_history()
         end,
         desc = '[s]how [n]otification [h]istory',
-      },
-      {
-        '<leader>be',
-        function()
-          Snacks.zen()
-        end,
-        desc = '[b]e z[e]n',
       },
       {
         'gr',

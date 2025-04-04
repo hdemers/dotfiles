@@ -5,31 +5,24 @@
 HISTFILE=~/.zsh_histfile
 HISTSIZE=10000000
 SAVEHIST=10000000
-
 HISTORY_IGNORE="(ls|cd|pwd|exit|cd)*"
-
-setopt EXTENDED_HISTORY      # Write the history file in the ':start:elapsed;command' format.
-setopt INC_APPEND_HISTORY    # Write to the history file immediately, not when the shell exits.
-setopt SHARE_HISTORY         # Share history between all sessions.
-setopt HIST_IGNORE_DUPS      # Do not record an event that was just recorded again.
-setopt HIST_IGNORE_ALL_DUPS  # Delete an old recorded event if a new event is a duplicate.
-setopt HIST_IGNORE_SPACE     # Do not record an event starting with a space.
-setopt HIST_SAVE_NO_DUPS     # Do not write a duplicate event to the history file.
-setopt HIST_VERIFY           # Do not execute immediately upon history expansion.
-setopt APPEND_HISTORY        # append to history file (Default)
-setopt HIST_NO_STORE         # Don't store history commands
-setopt HIST_REDUCE_BLANKS    # Remove superfluous blanks from each command line being added to the history.
+HISTDUP=erase
+setopt extended_history      # Write the history file in the ':start:elapsed;command' format.
+setopt inc_append_history    # Write to the history file immediately, not when the shell exits.
+setopt share_history         # Share history between all sessions.
+setopt hist_ignore_dups      # Do not record an event that was just recorded again.
+setopt hist_ignore_all_dups  # Delete an old recorded event if a new event is a duplicate.
+setopt hist_ignore_space     # Do not record an event starting with a space.
+setopt hist_save_no_dups     # Do not write a duplicate event to the history file.
+setopt hist_verify           # Do not execute immediately upon history expansion.
+setopt append_history        # append to history file (Default)
+setopt hist_no_store         # Don't store history commands
+setopt hist_reduce_blanks    # Remove superfluous blanks from each command line being added to the history.
 
 setopt autocd extendedglob nomatch notify
 bindkey -v
 export KEYTIMEOUT=1
 # End of lines configured by zsh-newuser-install
-# The following lines were added by compinstall
-zstyle :compinstall filename '$HOME/.zshrc'
-
-autoload -Uz compinit
-compinit
-# End of lines added by compinstall
 
 # Autocompletion using arrow keys (based on history)
 autoload -U up-line-or-beginning-search
@@ -43,10 +36,6 @@ bindkey "^[[B" down-line-or-beginning-search # Down
 bindkey "^[OA" up-line-or-beginning-search # Up
 bindkey "^[OB" down-line-or-beginning-search # Up
 
-# Automatically source all files/links in the directory config_dir
-# If the auto-source folder exists and has files in it...
-config_dir="$HOME/.shellrc.d"
-
 # Set preexec hook to mark command start and output with OSC 133 sequences
 preexec() {
   # Mark command start with the actual command
@@ -54,6 +43,10 @@ preexec() {
   # Mark beginning of command output
   print -Pn "\e]133;A\a"
 }
+
+# Automatically source all files/links in the directory config_dir
+# If the auto-source folder exists and has files in it...
+config_dir="$HOME/.shellrc.d"
 
 if [[ -d $config_dir ]]; then
 
@@ -74,6 +67,25 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 [ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 source "${ZINIT_HOME}/zinit.zsh"
 
-
 # Zinit plugins
 zinit load zsh-users/zsh-syntax-highlighting
+zinit load zsh-users/zsh-completions
+zinit load zsh-users/zsh-autosuggestions
+zinit load Aloxaf/fzf-tab
+
+# Load completions
+# zstyle :compinstall filename '$HOME/.zshrc'
+autoload -Uz compinit && compinit
+
+bindkey '^y' autosuggest-accept
+
+zinit cdreplay -q
+
+# Completions styling
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' menu no
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+
+# We don't want to use the default bling.sh script, we already have everything we need from that elsewhere.
+export BLING_SOURCED=1

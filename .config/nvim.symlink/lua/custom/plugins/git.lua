@@ -27,7 +27,7 @@ return {
             gs.next_hunk()
           end)
           return '<Ignore>'
-        end, { expr = true, desc = 'GitSigns: Next [c]hange' })
+        end, { expr = true, desc = 'Gitsigns: next change' })
 
         map('n', '[c', function()
           if vim.wo.diff then
@@ -37,53 +37,43 @@ return {
             gs.prev_hunk()
           end)
           return '<Ignore>'
-        end, { expr = true, desc = 'GitSigns: Previous [c]hange' })
+        end, { expr = true, desc = 'Gitsigns: previous change' })
 
         -- Actions
         -- Document key chains
         require('which-key').add {
-          { '<leader>gu', group = 'Diff h[u]nk' },
+          { '<leader>gu', group = 'Diff hunk' },
         }
-        map('n', '<leader>ga', gs.stage_hunk, { desc = 'GitSigns: [a]dd (stage) hunk' })
+        map('n', '<leader>ga', gs.stage_hunk, { desc = 'Gitsigns: add (stage) hunk' })
         map('v', '<leader>ga', function()
           gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'GitSigns: [a]dd (stage) hunk' })
-        map('n', '<leader>gx', gs.reset_hunk, { desc = 'GitSigns: reset hunk' })
+        end, { desc = 'Gitsigns: add (stage) hunk' })
+        map('n', '<leader>gx', gs.reset_hunk, { desc = 'Gitsigns: reset hunk' })
         map('v', '<leader>gx', function()
           gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'GitSigns: reset hunk' })
-        map(
-          'n',
-          '<leader>gA',
-          gs.stage_buffer,
-          { desc = 'GitSigns: [A]dd (stage) buffer' }
-        )
-        map(
-          'n',
-          '<leader>gn',
-          gs.undo_stage_hunk,
-          { desc = 'GitSigns: u[n]do stage hunk' }
-        )
-        map('n', '<leader>gX', gs.reset_buffer, { desc = 'GitSigns: reset buffer' })
-        map('n', '<leader>gv', gs.preview_hunk, { desc = 'GitSigns: [v]iew hunk' })
+        end, { desc = 'Gitsigns: reset hunk' })
+        map('n', '<leader>gA', gs.stage_buffer, { desc = 'Gitsigns: add (stage) buffer' })
+        map('n', '<leader>gn', gs.undo_stage_hunk, { desc = 'Gitsigns: undo stage hunk' })
+        map('n', '<leader>gX', gs.reset_buffer, { desc = 'Gitsigns: reset buffer' })
+        map('n', '<leader>gv', gs.preview_hunk, { desc = 'Gitsigns: view hunk' })
         map('n', '<leader>gn', function()
           gs.blame_line { full = true }
-        end, { desc = 'GitSigns: blame line' })
+        end, { desc = 'Gitsigns: blame line' })
         map(
           'n',
           '<leader>gt',
           gs.toggle_current_line_blame,
-          { desc = 'GitSigns: [t]oggle line blame' }
+          { desc = 'Gitsigns: toggle line blame' }
         )
-        -- map('n', '<leader>gud', gs.diffthis, { desc = 'GitSigns: [d]iff this' })
+        -- map('n', '<leader>gud', gs.diffthis, { desc = 'Gitsigns: diff this' })
         -- map('n', '<leader>guD', function()
         --   gs.diffthis '~'
-        -- end, { desc = 'GitSigns: [D]iff this (cached)' })
+        -- end, { desc = 'Gitsigns: diff this (cached)' })
         map(
           'n',
           '<leader>gT',
           gs.toggle_deleted,
-          { desc = 'GitSigns: [T]oggle deleted signs' }
+          { desc = 'Gitsigns: toggle deleted signs' }
         )
 
         -- Text object
@@ -100,7 +90,7 @@ return {
             vim.notify('Gitsign base changed to HEAD', 'info')
             base = 'HEAD'
           end
-        end, { desc = 'GitSigns: toggle base index|master' })
+        end, { desc = 'Gitsigns: toggle base index|master' })
       end,
     },
   },
@@ -113,12 +103,12 @@ return {
       {
         '<leader>gl',
         ':Flog<CR>',
-        desc = 'Flog: show git [l]og',
+        desc = 'Flog: show git log',
       },
       -- {
       --   '<leader>gL',
       --   ':Flog -path=%<CR>',
-      --   desc = 'Flog: show git [L]og of current file',
+      --   desc = 'Flog: show git log of current file',
       -- },
     },
   },
@@ -140,33 +130,33 @@ return {
       -- {
       --   '<leader>gs',
       --   ':Gtabedit :<CR>:set previewwindow <CR>',
-      --   desc = 'Fugitive: git [s]tatus',
+      --   desc = 'Fugitive: git status',
       -- },
       {
         '<leader>gc',
         ':vertical rightb :Git commit<CR>',
-        desc = 'Fugitive: git [c]ommit',
+        desc = 'Fugitive: git commit',
       },
       {
         '<leader>gp',
         ':Git push',
-        desc = 'Fugitive: git [p]ush',
+        desc = 'Fugitive: git push',
       },
       {
         '<leader>gr',
         ':Git rebase -i master<CR>',
-        desc = 'Fugitive: git [r]ebase -i master',
+        desc = 'Fugitive: git rebase -i master',
       },
       {
         '<leader>gb',
         ':Git blame<CR>',
-        desc = 'Fugitive: git [b]lame',
+        desc = 'Fugitive: git blame',
       },
     },
     init = function()
       local wk = require 'which-key'
       wk.add {
-        { '<leader>g', group = '[g]it' },
+        { '<leader>g', group = 'Git' },
       }
     end,
   },
@@ -180,7 +170,7 @@ return {
   --     vim.g.gh_line_blame_map_default = 0
   --     vim.g.gh_line_map = '<leader>gh'
   --     require('which-key').register {
-  --       ['<leader>gh'] = 'Git-Line: Copy [g]it [l]ine to clipboard',
+  --       ['<leader>gh'] = 'Git-Line: Copy git line to clipboard',
   --     }
   --   end,
   -- },
@@ -198,7 +188,7 @@ return {
         function()
           require('gitlinker').get_buf_range_url 'n'
         end,
-        desc = 'GitLinker: [y]ank GitHub URL',
+        desc = 'Gitlinker: yank github url',
         mode = 'n',
       },
       {
@@ -206,7 +196,7 @@ return {
         function()
           require('gitlinker').get_buf_range_url 'v'
         end,
-        desc = 'GitLinker: [y]ank GitHub URL',
+        desc = 'Gitlinker: yank github url',
         mode = 'v',
       },
     },
@@ -217,12 +207,12 @@ return {
       {
         '<leader>gm',
         ':DiffviewOpen master<CR>',
-        desc = 'Diffview: diff [m]aster',
+        desc = 'Diffview: diff master',
       },
       {
         '<leader>gh',
         ':DiffviewFileHistory %<CR>',
-        desc = 'Diffview: view current file [h]istory',
+        desc = 'Diffview: view current file history',
         mode = { 'n', 'v' },
       },
       {
@@ -259,7 +249,7 @@ return {
       mappings_disable_default = true,
       mappings = {
         submit_win = {
-          approve_review = { lhs = '<C-A>', desc = 'approve review' },
+          approve_review = { lhs = '<C-A>', desc = 'Approve review' },
         },
         review_diff = {
           add_review_comment = { lhs = '<localleader>cc', desc = 'Octo: add comment' },
@@ -279,18 +269,18 @@ return {
           add_comment = { lhs = '<space>cc', desc = 'Octo: add comment' },
         },
         file_panel = {
-          -- submit_review = { lhs = '<leader>vs', desc = 'submit review' },
-          -- discard_review = { lhs = '<leader>vd', desc = 'discard review' },
-          next_entry = { lhs = 'j', desc = 'move to next changed file' },
-          prev_entry = { lhs = 'k', desc = 'move to previous changed file' },
-          select_entry = { lhs = '<cr>', desc = 'show selected changed file diffs' },
-          refresh_files = { lhs = 'R', desc = 'refresh changed files panel' },
-          select_next_entry = { lhs = ']q', desc = 'move to next changed file' },
-          select_prev_entry = { lhs = '[q', desc = 'move to previous changed file' },
-          select_first_entry = { lhs = '[Q', desc = 'move to first changed file' },
-          select_last_entry = { lhs = ']Q', desc = 'move to last changed file' },
-          close_review_tab = { lhs = '<C-c>', desc = 'close review tab' },
-          toggle_viewed = { lhs = '<leader><space>', desc = 'toggle viewer viewed state' },
+          -- submit_review = { lhs = '<leader>vs', desc = 'Submit review' },
+          -- discard_review = { lhs = '<leader>vd', desc = 'Discard review' },
+          next_entry = { lhs = 'j', desc = 'Move to next changed file' },
+          prev_entry = { lhs = 'k', desc = 'Move to previous changed file' },
+          select_entry = { lhs = '<cr>', desc = 'Show selected changed file diffs' },
+          refresh_files = { lhs = 'R', desc = 'Refresh changed files panel' },
+          select_next_entry = { lhs = ']q', desc = 'Move to next changed file' },
+          select_prev_entry = { lhs = '[q', desc = 'Move to previous changed file' },
+          select_first_entry = { lhs = '[Q', desc = 'Move to first changed file' },
+          select_last_entry = { lhs = ']Q', desc = 'Move to last changed file' },
+          close_review_tab = { lhs = '<C-c>', desc = 'Close review tab' },
+          toggle_viewed = { lhs = '<leader><space>', desc = 'Toggle viewer viewed state' },
         },
       },
       suppress_missing_scope = {
@@ -305,7 +295,7 @@ return {
         'n',
         '<leader>so',
         ':Octo pr list<CR>',
-        { desc = 'Octo: open PR list' }
+        { desc = 'Octo: open pr list' }
       )
     end,
   },

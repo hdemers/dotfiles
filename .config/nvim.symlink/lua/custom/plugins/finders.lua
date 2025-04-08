@@ -239,7 +239,7 @@ return {
       end
       vim.keymap.set('n', '<leader>gw', function()
         show_git_branch(false)
-      end, { desc = 'Git: s[w]itch branch', silent = true })
+      end, { desc = 'Git: switch branch', silent = true })
 
       -- Show Jira issues.
 
@@ -329,11 +329,11 @@ return {
         'n',
         '<leader>sJ',
         show_jira_issues,
-        { desc = 'Jira: search [j]ira', silent = true }
+        { desc = 'Search all Jira tickets', silent = true }
       )
       vim.keymap.set('n', '<leader>sj', function()
         show_jira_issues '--mine --current-sprint'
-      end, { desc = 'Jira: search [j]ira', silent = true })
+      end, { desc = 'Search my Jira tickets', silent = true })
 
       -- Show pip list
       local function pip_list()
@@ -350,7 +350,7 @@ return {
         'n',
         '<leader>sp',
         pip_list,
-        { desc = 'Pip: search [p]ip', silent = true }
+        { desc = 'Search python packages', silent = true }
       )
     end,
   },

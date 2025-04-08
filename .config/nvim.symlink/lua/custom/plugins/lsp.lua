@@ -32,17 +32,17 @@ return {
               'n',
               keys,
               func,
-              { buffer = event.buf, desc = 'LSP: ' .. desc }
+              { buffer = event.buf, desc = 'lsp: ' .. desc }
             )
           end
 
           -- Rename the variable under your cursor
           --  Most Language Servers support renaming across files, etc.
-          map('<leader>cr', vim.lsp.buf.rename, '[r]ename')
+          map('<leader>cr', vim.lsp.buf.rename, 'Rename')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
-          map('<leader>ca', vim.lsp.buf.code_action, '[a]ction')
+          map('<leader>ca', vim.lsp.buf.code_action, 'Action')
 
           -- Opens a popup that displays documentation about the word under your cursor
           --  See `:help K` for why this keymap
@@ -50,7 +50,7 @@ return {
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header
-          map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
+          map('gD', vim.lsp.buf.declaration, 'Goto declaration')
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
@@ -97,7 +97,7 @@ return {
           then
             map('<leader>ch', function()
               vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
-            end, 'toggle inlay [h]ints')
+            end, 'Toggle inlay hints')
           end
         end,
       })
@@ -215,34 +215,34 @@ return {
     cmd = 'Trouble',
     keys = {
       {
-        '<leader>xx',
+        '<leader>cx',
         '<cmd>Trouble diagnostics toggle<cr>',
-        desc = 'Diagnostics (Trouble)',
+        desc = 'Trouble: toggle all diagnostics',
       },
       {
-        '<leader>xX',
+        '<leader>cX',
         '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
-        desc = 'Buffer Diagnostics (Trouble)',
+        desc = 'Trouble: toggle buffer diagnostics',
       },
       {
         '<leader>cs',
         '<cmd>Trouble symbols toggle focus=false win.size.width=70<cr>',
-        desc = 'Symbols (Trouble)',
+        desc = 'Trouble: show symbols',
       },
       {
-        '<leader>cl',
+        '<leader>cd',
         '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=70<cr>',
-        desc = 'LSP Definitions / references / ... (Trouble)',
+        desc = 'Trouble: lsp definitions/references/etc.',
       },
       {
-        '<leader>xL',
+        '<leader>cL',
         '<cmd>Trouble loclist toggle<cr>',
-        desc = 'Location List (Trouble)',
+        desc = 'Trouble: toggle location list',
       },
       {
-        '<leader>xQ',
+        '<leader>cQ',
         '<cmd>Trouble qflist toggle<cr>',
-        desc = 'Quickfix List (Trouble)',
+        desc = 'Trouble: toggle quickfix list',
       },
       {
         '[t',
@@ -256,7 +256,7 @@ return {
             end
           end
         end,
-        desc = 'Previous Trouble/Quickfix Item',
+        desc = 'Previous trouble/quickfix item',
       },
       {
         ']t',
@@ -270,7 +270,7 @@ return {
             end
           end
         end,
-        desc = 'Next Trouble/Quickfix Item',
+        desc = 'Next trouble/quickfix item',
       },
     },
     opts = {
@@ -285,10 +285,6 @@ return {
           },
         },
       },
-    },
-    -- Document key chains
-    require('which-key').add {
-      { '<leader>x', group = 'Trouble [X]' },
     },
   },
   -- I wish lspconfig had sqlfluff support, but it doesn't. And nvim-lint doesn't

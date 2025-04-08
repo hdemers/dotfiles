@@ -28,13 +28,13 @@ return {
       {
         '<leader>hc',
         ':GPTModelsChat<CR>',
-        desc = 'ChatGPT: [h]elp [c]hat',
+        desc = 'ChatGPT: help chat',
         mode = { 'n', 'v' },
       },
       -- {
       --   '<leader>ho',
       --   ':GPTModelsCode<CR>',
-      --   desc = 'GPTModels: [h]elp c[o]de',
+      --   desc = 'GPTModels: help code',
       --   mode = { 'n', 'v' },
       -- },
     },
@@ -174,5 +174,39 @@ return {
         mode = { 'n', 'v' },
       },
     },
+  },
+  {
+    'Davidyz/VectorCode',
+    -- version = '*', -- optional, depending on whether you're on nightly or release
+    -- build = 'uv tool upgrade vectorcode', -- optional but recommended if you set `version = "*"`
+    dependencies = { 'nvim-lua/plenary.nvim' },
+  },
+  {
+    'olimorris/codecompanion.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-treesitter/nvim-treesitter',
+      'Davidyz/VectorCode',
+    },
+    opts = {
+      strategies = {
+        chat = {
+          adapter = 'gemini',
+        },
+        inline = {
+          adapter = 'gemini',
+        },
+      },
+    },
+    config = function(_, opts)
+      -- Extends `opts` 'strategies.chat`'
+      opts.strategies.chat.tools = {
+        vectorcode = {
+          description = 'Run VectorCode to retrieve the project context.',
+          callback = require('vectorcode.integrations').codecompanion.chat.make_tool(),
+        },
+      }
+      require('codecompanion').setup(opts)
+    end,
   },
 }

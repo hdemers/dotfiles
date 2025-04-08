@@ -33,7 +33,7 @@ return {
         'n',
         '<localleader>js',
         misc.start_ipython,
-        { desc = 'start ipython', silent = true }
+        { desc = 'Start IPython', silent = true }
       )
     end,
   },

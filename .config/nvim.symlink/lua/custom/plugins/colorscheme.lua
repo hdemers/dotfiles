@@ -426,4 +426,6 @@ return {
     priority = 1000,
     -- configuration is optional!
   },
+  { 'HoNamDuong/hybrid.nvim' },
+  { 'samharju/synthweave.nvim' },
 }

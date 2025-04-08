@@ -2,14 +2,14 @@ return {
   -- Detect tabstop and shiftwidth automatically
   { 'tpope/vim-sleuth', enabled = true },
   -- This plugin adds which-key entries for vim-unimpaired, which is a dependency.
-  {
-    'afreakk/unimpaired-which-key.nvim',
-    dependencies = { 'tpope/vim-unimpaired' },
-    config = function()
-      local wk = require 'which-key'
-      wk.add(require 'unimpaired-which-key')
-    end,
-  },
+  -- {
+  --   'afreakk/unimpaired-which-key.nvim',
+  --   dependencies = { 'tpope/vim-unimpaired' },
+  --   config = function()
+  --     local wk = require 'which-key'
+  --     wk.add(require 'unimpaired-which-key')
+  --   end,
+  -- },
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VeryLazy',
@@ -21,9 +21,10 @@ return {
 
       -- Document existing key chains
       wk.add {
-        { '<leader>b', group = '[b]uffer' },
-        { '<leader>c', group = '[c]ode' },
-        { '<leader>s', group = '[s]earch' },
+        { '<leader>b', group = 'Buffer' },
+        { '<leader>c', group = 'Code' },
+        { '<leader>s', group = 'Search' },
+        { '<leader>a', group = 'AI' },
       }
     end,
     keys = {
@@ -32,7 +33,7 @@ return {
         function()
           require('which-key').show { global = false }
         end,
-        desc = 'Buffer Local Keymaps (which-key)',
+        desc = 'Buffer local keymaps (which-key)',
       },
     },
   },
@@ -45,23 +46,14 @@ return {
         function()
           require('mini.files').open()
         end,
-        desc = '[s]earch [e]xplorer',
+        desc = 'search explorer',
       },
     },
     config = function()
       -- Better Around/Inside textobjects
-      --
-      -- Examples:
-      --  - va)  - [V]isually select [A]round [)]paren
-      --  - yinq - [Y]ank [I]nside [N]ext [']quote
-      --  - ci'  - [C]hange [I]nside [']quote
       require('mini.ai').setup { n_lines = 500 }
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
-      --
-      -- - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
-      -- - sd'   - [S]urround [D]elete [']quotes
-      -- - sr)'  - [S]urround [R]eplace [)] [']
       require('mini.surround').setup {
         -- Module mappings. Use `''` (empty string) to disable one.
         mappings = {
@@ -76,6 +68,35 @@ return {
           suffix_last = 'l', -- Suffix to search with "prev" method
           suffix_next = 'n', -- Suffix to search with "next" method
         },
+      }
+      -- File explorer
+      require('mini.files').setup()
+      -- Go forward/backward with square brackets
+      require('mini.bracketed').setup {
+        -- First-level elements are tables describing behavior of a target:
+        --
+        -- - <suffix> - single character suffix. Used after `[` / `]` in mappings.
+        --   For example, with `b` creates `[B`, `[b`, `]b`, `]B` mappings.
+        --   Supply empty string `''` to not create mappings.
+        --
+        -- - <options> - table overriding target options.
+        --
+        -- See `:h MiniBracketed.config` for more info.
+
+        buffer = { suffix = 'b', options = {} },
+        comment = { suffix = 'c', options = {} },
+        conflict = { suffix = 'x', options = {} },
+        diagnostic = { suffix = 'd', options = {} },
+        file = { suffix = 'f', options = {} },
+        indent = { suffix = 'i', options = {} },
+        jump = { suffix = 'j', options = {} },
+        location = { suffix = 'l', options = {} },
+        oldfile = { suffix = 'o', options = {} },
+        quickfix = { suffix = 'q', options = {} },
+        treesitter = { suffix = '', options = {} },
+        undo = { suffix = '', options = {} },
+        window = { suffix = 'w', options = {} },
+        yank = { suffix = 'y', options = {} },
       }
 
       -- Simple and easy statusline.
@@ -108,8 +129,6 @@ return {
       statusline.section_fileinfo = function()
         return ''
       end
-
-      require('mini.files').setup()
     end,
   },
   {
@@ -139,7 +158,7 @@ return {
       { -- lazy style key map
         '<leader>su',
         '<cmd>Telescope undo<cr>',
-        desc = '[u]ndo history',
+        desc = 'Undo history',
       },
     },
     opts = {
@@ -330,20 +349,70 @@ return {
         },
       },
     },
-  -- stylua: ignore
     keys = {
-      { "<S-Enter>", function() require("noice").redirect(vim.fn.getcmdline()) end, mode = "c", desc = "Redirect Cmdline" },
-      { "<leader>snl", function() require("noice").cmd("last") end, desc = "Noice Last Message" },
-      { "<leader>sni", function() require("noice").cmd("history") end, desc = "Noice History" },
-      { "<leader>sna", function() require("noice").cmd("all") end, desc = "Noice All" },
-      { "<leader>snd", function() require("noice").cmd("dismiss") end, desc = "Dismiss All" },
-      { "<c-f>", function() if not require("noice.lsp").scroll(4) then return "<c-f>" end end, silent = true, expr = true, desc = "Scroll forward", mode = {"i", "n", "s"} },
-      { "<c-b>", function() if not require("noice.lsp").scroll(-4) then return "<c-b>" end end, silent = true, expr = true, desc = "Scroll backward", mode = {"i", "n", "s"}},
+      {
+        '<S-Enter>',
+        function()
+          require('noice').redirect(vim.fn.getcmdline())
+        end,
+        mode = 'c',
+        desc = 'Redirect Cmdline',
+      },
+      {
+        '<leader>snl',
+        function()
+          require('noice').cmd 'last'
+        end,
+        desc = 'Noice Last Message',
+      },
+      {
+        '<leader>sni',
+        function()
+          require('noice').cmd 'history'
+        end,
+        desc = 'Noice History',
+      },
+      {
+        '<leader>sna',
+        function()
+          require('noice').cmd 'all'
+        end,
+        desc = 'Noice All',
+      },
+      {
+        '<leader>snd',
+        function()
+          require('noice').cmd 'dismiss'
+        end,
+        desc = 'Dismiss All',
+      },
+      {
+        '<c-f>',
+        function()
+          if not require('noice.lsp').scroll(4) then
+            return '<c-f>'
+          end
+        end,
+        silent = true,
+        expr = true,
+        desc = 'Scroll forward',
+        mode = { 'i', 'n', 's' },
+      },
+      {
+        '<c-b>',
+        function()
+          if not require('noice.lsp').scroll(-4) then
+            return '<c-b>'
+          end
+        end,
+        silent = true,
+        expr = true,
+        desc = 'Scroll backward',
+        mode = { 'i', 'n', 's' },
+      },
     },
     init = function()
-      require('which-key').add {
-        { '<leader>sn', group = '[n]oice' },
-      }
+      require('which-key').add { { '<leader>sn', group = 'Noice' } }
     end,
   },
   {
@@ -436,19 +505,47 @@ return {
         },
       },
     },
-  -- stylua: ignore
     keys = {
       {
-        "t",
-        mode = { "n", "x", "o" },
-        function() require("flash").jump() end,
-        desc = "Flash"
+        't',
+        mode = { 'n', 'x', 'o' },
+        function()
+          require('flash').jump()
+        end,
+        desc = 'Flash',
       },
       {
-        "T", mode = { "n", "x", "o" }, function() require("flash").treesitter() end, desc = "Flash Treesitter" },
-      { "r", mode = "o", function() require("flash").remote() end, desc = "Remote Flash" },
-      { "R", mode = { "o", "x" }, function() require("flash").treesitter_search() end, desc = "Treesitter Search" },
-      { "<c-s>", mode = { "c" }, function() require("flash").toggle() end, desc = "Toggle Flash Search" },
+        'T',
+        mode = { 'n', 'x', 'o' },
+        function()
+          require('flash').treesitter()
+        end,
+        desc = 'Flash Treesitter',
+      },
+      {
+        'r',
+        mode = 'o',
+        function()
+          require('flash').remote()
+        end,
+        desc = 'Remote Flash',
+      },
+      {
+        'R',
+        mode = { 'o', 'x' },
+        function()
+          require('flash').treesitter_search()
+        end,
+        desc = 'Treesitter Search',
+      },
+      {
+        '<c-s>',
+        mode = { 'c' },
+        function()
+          require('flash').toggle()
+        end,
+        desc = 'Toggle Flash Search',
+      },
     },
   },
   {
@@ -531,7 +628,7 @@ return {
       {
         '<leader>sx',
         ':Neotree toggle<CR>',
-        desc = 'Toggle Neotree',
+        desc = 'Toggle Neo-tree',
       },
     },
   },
@@ -555,7 +652,7 @@ return {
       scroll = { enabled = true },
       picker = { enabled = true },
       indent = { enabled = false },
-      dashboard = { enabled = false },
+      dashboard = { enabled = true },
     },
     keys = {
       {
@@ -566,88 +663,81 @@ return {
         desc = 'Delete buffer',
       },
       {
-        '<leader>D',
-        function()
-          Snacks.dashboard()
-        end,
-        desc = '[d]ashboard',
-      },
-      {
         '<leader><leader>',
         function()
           Snacks.picker.buffers()
         end,
-        desc = 'buffers',
+        desc = 'Buffers',
       },
       {
         '<leader>sf',
         function()
           Snacks.picker.files()
         end,
-        desc = '[s]earch [f]iles',
+        desc = 'Search files',
       },
       {
         '<leader>sF',
         function()
           Snacks.picker.files { hidden = true }
         end,
-        desc = '[s]earch [F]iles including hidden',
+        desc = 'Search files including hidden',
       },
       {
         '<leader>si',
         function()
           Snacks.picker.git_files()
         end,
-        desc = '[s]earch g[i]t files',
+        desc = 'Search git files',
       },
       {
         '<leader>sc',
         function()
           Snacks.picker.files { cwd = vim.fn.stdpath 'config' }
         end,
-        desc = '[s]earch [c]onfig files',
+        desc = 'Search config files',
       },
       {
         '<leader>ss',
         function()
           Snacks.picker.smart()
         end,
-        desc = '[s]earch [s]mart',
+        desc = 'Search smart',
       },
       {
         '<leader>s.',
         function()
           Snacks.picker.recent()
         end,
-        desc = '[s]earch recent files ("." for repeat)',
+        desc = 'Search recent files ("." for repeat)',
       },
       {
         '<leader>sg',
         function()
           Snacks.picker.grep()
         end,
-        desc = 'search with [g]rep',
+        desc = 'Search with grep',
       },
       {
         '<leader>sG',
         function()
           Snacks.picker.grep { hidden = true }
         end,
-        desc = 'search with [G]rep including hidden',
+        desc = 'Search with grep including hidden',
       },
       {
         '<leader>s/',
         function()
           Snacks.picker.grep_buffers()
         end,
-        desc = 'search buffers with [g]rep',
+        desc = 'Search buffers with grep',
       },
       {
         '<leader>sw',
         function()
           Snacks.picker.grep_word()
         end,
-        desc = 'grep for [w]ord',
+        desc = 'Grep for word',
         mode = { 'n', 'x' },
       },
       {
@@ -662,77 +752,77 @@ return {
         function()
           Snacks.picker.colorschemes()
         end,
-        desc = '[s]earch colorschemes',
+        desc = 'Search colorschemes',
       },
       {
         '<leader>sy',
         function()
           Snacks.picker.lsp_workspace_symbols()
         end,
-        desc = 'search lsp s[y]mbols',
+        desc = 'Search lsp symbols',
       },
       {
         '<leader>sY',
         function()
           Snacks.picker.lsp_symbols()
         end,
-        desc = 'search lsp document symbols',
+        desc = 'Search lsp document symbols',
       },
       {
         '<leader>sk',
         function()
           Snacks.picker.keymaps()
         end,
-        desc = '[s]earch [k]eymaps',
+        desc = 'Search keymaps',
       },
       {
         '<leader>sh',
         function()
           Snacks.picker.help()
         end,
-        desc = '[s]earch [h]elp',
+        desc = 'Search help',
       },
       {
         '<leader>sr',
         function()
           Snacks.picker.resume()
         end,
-        desc = '[s]earch [r]esume',
+        desc = 'Search resume',
       },
       {
         '<leader>su',
         function()
           Snacks.picker.undo()
         end,
-        desc = '[s]earch [u]ndo',
+        desc = 'Search undo',
       },
       {
         '<leader>sq',
         function()
           Snacks.picker.qflist()
         end,
-        desc = '[s]earch [q]uickfix',
+        desc = 'Search quickfix',
       },
       {
         '<leader>sd',
         function()
           Snacks.picker.diagnostics()
         end,
-        desc = '[s]earch [d]iagnostics',
+        desc = 'Search diagnostics',
       },
       {
         '<leader>sD',
         function()
           Snacks.picker.diagnostics_buffer()
         end,
-        desc = '[s]earch [D]iagnostics in buffer',
+        desc = 'Search diagnostics in buffer',
       },
       {
         '<leader>snh',
         function()
           Snacks.notifier.show_history()
         end,
-        desc = '[s]how [n]otification [h]istory',
+        desc = 'Show notification history',
       },
       {
         'gr',
@@ -740,14 +830,14 @@ return {
           Snacks.picker.lsp_references()
         end,
         nowait = true,
-        desc = '[g]o to [r]eferences',
+        desc = 'Go to references',
       },
       {
         'gd',
         function()
           Snacks.picker.lsp_definitions()
         end,
-        desc = '[g]o to [d]efinition',
+        desc = 'Go to definition',
       },
     },
     init = function()
@@ -764,6 +854,10 @@ return {
           vim.print = _G.dd -- Override print to use snacks for `:=` command
 
           -- Create some toggle mappings
+          local wk = require 'which-key'
+          wk.add {
+            { '<leader>u', group = 'Toggles' },
+          }
           Snacks.toggle.option('spell', { name = 'Spelling' }):map '<leader>us'
           Snacks.toggle.option('wrap', { name = 'Wrap' }):map '<leader>uw'
           Snacks.toggle
@@ -788,5 +882,18 @@ return {
         end,
       })
     end,
+  },
+  {
+    'coffebar/transfer.nvim',
+    lazy = true,
+    cmd = {
+      'TransferInit',
+      'DiffRemote',
+      'TransferUpload',
+      'TransferDownload',
+      'TransferDirDiff',
+      'TransferRepeat',
+    },
+    opts = {},
   },
 }

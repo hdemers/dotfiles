@@ -155,14 +155,14 @@ return {
         function()
           require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
         end,
-        desc = 'Breakpoint Condition',
+        desc = 'Breakpoint condition',
       },
       {
         '<leader>db',
         function()
           require('dap').toggle_breakpoint()
         end,
-        desc = 'Toggle Breakpoint',
+        desc = 'Toggle breakpoint',
       },
       {
         '<leader>dc',
@@ -176,28 +176,28 @@ return {
         function()
           require('dap').continue { before = get_args }
         end,
-        desc = 'Run with Args',
+        desc = 'Run with args',
       },
       {
         '<leader>dC',
         function()
           require('dap').run_to_cursor()
         end,
-        desc = 'Run to Cursor',
+        desc = 'Run to cursor',
       },
       {
         '<leader>dg',
         function()
           require('dap').goto_()
         end,
-        desc = 'Go to Line (No Execute)',
+        desc = 'Go to line (no execute)',
       },
       {
         '<leader>di',
         function()
           require('dap').step_into()
         end,
-        desc = 'Step Into',
+        desc = 'Step into',
       },
       {
         '<leader>dj',
@@ -218,21 +218,21 @@ return {
         function()
           require('dap').run_last()
         end,
-        desc = 'Run Last',
+        desc = 'Run last',
       },
       {
         '<leader>dO',
         function()
           require('dap').step_out()
         end,
-        desc = 'Step Out',
+        desc = 'Step out',
       },
       {
         '<leader>do',
         function()
           require('dap').step_over()
         end,
-        desc = 'Step Over',
+        desc = 'Step over',
       },
       {
         '<leader>dp',
@@ -246,7 +246,7 @@ return {
         function()
           require('dap').repl.toggle()
         end,
-        desc = 'Toggle REPL',
+        desc = 'Toggle repl',
       },
       {
         '<leader>ds',
@@ -287,7 +287,7 @@ return {
     config = function()
       -- Document key chains
       require('which-key').add {
-        { '<leader>d', group = '[D]ebug' },
+        { '<leader>d', group = 'Debug' },
       }
 
       -- setup dap config by VSCode launch.json file
@@ -407,7 +407,7 @@ return {
     init = function()
       -- Document key chains
       require('which-key').add {
-        { '<leader>t', group = 'Unit [t]est' },
+        { '<leader>t', group = 'Unit test' },
       }
     end,
     -- stylua: ignore
@@ -472,7 +472,7 @@ return {
         'n',
         '<leader>dy',
         '',
-        { desc = 'set condition breakpoints', callback = set_exception_breakpoints }
+        { desc = 'Set condition breakpoints', callback = set_exception_breakpoints }
       )
     end,
   },

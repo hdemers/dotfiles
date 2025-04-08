@@ -38,55 +38,55 @@ return {
       {
         '<localleader>jc',
         ':QuartoActivate<CR>',
-        desc = 'Quarto: a[c]tivate',
+        desc = 'Quarto: activate',
       },
       {
         '<localleader>ja',
         function()
           require('quarto.runner').run_above()
         end,
-        desc = 'Quarto: run cell and all [a]bove',
+        desc = 'Quarto: run cell and all above',
       },
       {
         '<localleader>jb',
         function()
           require('quarto.runner').run_below()
         end,
-        desc = 'Quarto: run cell and all [b]elow',
+        desc = 'Quarto: run cell and all below',
       },
       {
         '<localleader>jA',
         function()
           require('quarto.runner').run_all()
         end,
-        desc = 'Quarto: run [A]ll cells',
+        desc = 'Quarto: run all cells',
       },
       {
         '<localleader>jl',
         function()
           require('quarto.runner').run_line()
         end,
-        desc = 'Quarto: run [l]ine',
+        desc = 'Quarto: run line',
       },
       {
         '<localleader>jp',
         ':QuartoPreview<CR>',
-        desc = 'Quarto: open [p]review',
+        desc = 'Quarto: open preview',
       },
       {
         '<localleader>jP',
         ':QuartoClosePreview<CR>',
-        desc = 'Quarto: close [p]review',
+        desc = 'Quarto: close preview',
       },
       {
         '<localleader>jj',
         "ko\rpyc<cmd>lua require('luasnip').expand()<CR>",
-        desc = 'Snippet: [n]ew cell',
+        desc = 'Snippet: new cell',
       },
       {
         '<localleader>j/',
         'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O',
-        desc = 'split cell',
+        desc = 'Split cell',
       },
     },
     config = function(_, opts)
@@ -164,7 +164,7 @@ return {
       -- )
       -- Document key chains
       require('which-key').add {
-        { '<leader>j', group = '[J]upyter' },
+        { '<leader>j', group = 'Jupyter', icon = { icon = '', color = 'blue' } },
       }
     end,
   },
@@ -224,9 +224,6 @@ return {
       vim.g.molten_auto_open_output = false
       vim.g.molten_virt_text_max_lines = 20
       vim.g.molten_auto_image_popup = true
-      -- require('which-key').register {
-      --   ['<localleader>j'] = { name = '[J]upyter', _ = 'which_key_ignore' },
-      -- }
 
       -- Clear the MoltenCell highlight
       vim.api.nvim_command 'highlight clear MoltenCell'
@@ -235,39 +232,39 @@ return {
       {
         '<localleader>je',
         ':noautocmd MoltenEnterOutput<CR>:noautocmd MoltenEnterOutput<CR>[ow',
-        desc = 'Molten: [e]nter output',
+        desc = 'Molten: enter output',
       },
-      { '<localleader>jr', ':MoltenRestart<cr>', desc = 'Molten: [r]estart' },
-      { '<localleader>ji', ':MoltenInterrupt<cr>', desc = 'Molten: [i]nterrupt' },
+      { '<localleader>jr', ':MoltenRestart<cr>', desc = 'Molten: restart' },
+      { '<localleader>ji', ':MoltenInterrupt<cr>', desc = 'Molten: interrupt' },
       {
         '<localleader>jo',
         ':MoltenImagePopup<cr>',
-        desc = 'Molten: [o]pen image',
+        desc = 'Molten: open image',
         silent = true,
       },
       --   {
       --     '<localleader>jv',
       --     ':<C-u>MoltenEvaluateVisual<cr>',
       --     mode = 'v',
-      --     desc = 'Jupyter: eval [v]isual',
+      --     desc = 'Jupyter: eval visual',
       --     silent = true,
       --   },
       --   {
       --     '<localleader>jl',
       --     ':MoltenEvaluateLine<cr>',
-      --     desc = 'Jupyter: eval [l]ine',
+      --     desc = 'Jupyter: eval line',
       --     silent = true,
       --   },
       --   {
       --     '<localleader>jr',
       --     ':MoltenReevaluateCell<cr>',
-      --     desc = 'Jupyter: [r]e-eval cell',
+      --     desc = 'Jupyter: re-eval cell',
       --     silent = true,
       --   },
       --   {
       --     '<localleader>jv',
       --     ':MoltenEvaluateVisual<cr>',
-      --     desc = 'Jupyter: eval [v]isual',
+      --     desc = 'Jupyter: eval visual',
       --     silent = true,
       --     mode = 'v',
       --   },
@@ -299,50 +296,50 @@ return {
           'r',
         },
         group = vim.api.nvim_create_augroup('yarepl', {}),
-        desc = 'set up REPL keymap',
+        desc = 'Set up repl keymap',
         callback = function()
           -- bufmap(0, 'n', '<localleader>js', '<Plug>(REPLStart-ipython)', {
-          --   desc = 'yarepl: [s]tart a repl',
+          --   desc = 'Yarepl: start a repl',
           -- })
           -- bufmap(0, 'n', '<localleader>rf', '<Plug>(REPLFocus)', {
-          --   desc = 'yarepl: [f]ocus on REPL',
+          --   desc = 'Yarepl: focus on repl',
           -- })
           -- bufmap(0, 'n', '<localleader>jv', '<CMD>Telescope REPLShow<CR>', {
-          --   desc = 'yarepl: [v]iew REPLs in Telescope',
+          --   desc = 'Yarepl: view REPLs in Telescope',
           -- })
           -- bufmap(0, 'n', '<localleader>rh', '<Plug>(REPLHide)', {
-          --   desc = 'Hide REPL',
+          --   desc = 'Hide repl',
           -- })
           bufmap(0, 'n', '<localleader>k', '<Plug>(REPLSendOperator)vic', {
-            desc = 'yarepl: send cell to repl',
+            desc = 'Yarepl: send cell to repl',
           })
           bufmap(0, 'v', '<localleader>jv', '<Plug>(REPLSendVisual-ipython)', {
-            desc = 'yarepl: send [v]isual to REPL',
+            desc = 'Yarepl: send visual to repl',
           })
           -- bufmap(0, 'n', '<localleader>s', '<Plug>(REPLSendOperator)', {
           --   desc = 'Send current line to REPL',
           -- })
           -- bufmap(0, 'n', '<localleader>re', '<Plug>(REPLExec)', {
-          --   desc = 'Execute command in REPL',
+          --   desc = 'Execute command in repl',
           --   expr = true,
           -- })
           bufmap(0, 'n', '<localleader>jq', '<Plug>(REPLClose)', {
-            desc = 'yarepl: [q]uit REPL',
+            desc = 'Yarepl: quit repl',
           })
           bufmap(0, 'n', '<localleader>ju', '<CMD>REPLCleanup<CR>', {
-            desc = 'yarepl: clean [u]p REPLs',
+            desc = 'Yarepl: clean up repls',
           })
           -- bufmap(0, 'n', '<localleader>rS', '<CMD>REPLSwap<CR>', {
-          --   desc = 'Swap REPLs.',
+          --   desc = 'Swap repls.',
           -- })
           -- bufmap(0, 'n', '<localleader>r?', '<Plug>(REPLStart)', {
-          --   desc = 'Start an REPL from available REPL metas',
+          --   desc = 'Start an repl from available repl metas',
           -- })
           bufmap(0, 'n', '<localleader>jt', '<CMD>REPLAttachBufferToREPL<CR>', {
-            desc = 'yarepl: a[t]tach current buffer to a REPL',
+            desc = 'Yarepl: attach current buffer to a repl',
           })
           -- bufmap(0, 'n', '<localleader>rd', '<CMD>REPLDetachBufferToREPL<CR>', {
-          --   desc = 'Detach current buffer to any REPL',
+          --   desc = 'Detach current buffer to any repl',
           -- })
         end,
       })
@@ -449,7 +446,8 @@ return {
     'chrisbra/csv.vim',
   },
   {
-    'kristijanhusak/vim-dadbod-ui',
+    'hdemers/vim-dadbod-ui',
+    branch = 'bind-parameters-without-quotes',
     dependencies = {
       -- { 'tpope/vim-dadbod', lazy = true },
       { 'hdemers/vim-dadbod', branch = 'add-presto-password', lazy = true },
@@ -469,7 +467,7 @@ return {
       {
         '<leader>cq',
         ':tabnew DBUI<CR>:DBUI<CR>',
-        desc = 'DBUI: Open DBUI in a new tab',
+        desc = 'DBUI: open dbui in a new tab',
       },
     },
     init = function()
@@ -482,6 +480,26 @@ return {
       require('cmp').setup.buffer {
         sources = {
           { name = 'vim-dadbod-completion' },
+        },
+      }
+    end,
+  },
+  {
+    -- 'hdemers/nvim-dbee',
+    dir = '/home/hdemers/Projets/nvim-dbee/',
+    dependencies = {
+      'MunifTanjim/nui.nvim',
+    },
+    build = function()
+      -- Install tries to automatically detect the install method.
+      -- if it fails, try calling it with one of these parameters:
+      --    "curl", "wget", "bitsadmin", "go"
+      require('dbee').install()
+    end,
+    config = function()
+      require('dbee').setup {
+        sources = {
+          require('dbee.sources').EnvSource:new 'DBEE_CONNECTIONS',
         },
       }
     end,

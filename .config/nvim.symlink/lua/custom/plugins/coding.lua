@@ -11,12 +11,12 @@ return {
         function()
           Snacks.picker.todo_comments()
         end,
-        desc = '[s]earch [t]odo comments',
+        desc = 'Search todo comments',
       },
       {
-        '<leader>xt',
+        '<leader>ct',
         '<cmd>Trouble todo toggle<cr>',
-        desc = 'Trouble: Todo',
+        desc = 'Trouble: todo',
       },
     },
   },

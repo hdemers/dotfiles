@@ -177,25 +177,25 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 --   'n',
 --   '[d',
 --   vim.diagnostic.goto_prev,
---   { desc = 'Go to previous [d]iagnostic message' }
+--   { desc = 'Go to previous diagnostic message' }
 -- )
 -- vim.keymap.set(
 --   'n',
 --   ']d',
 --   vim.diagnostic.goto_next,
---   { desc = 'Go to next [d]iagnostic message' }
+--   { desc = 'Go to next diagnostic message' }
 -- )
 vim.keymap.set(
   'n',
   '<leader>e',
   vim.diagnostic.open_float,
-  { desc = 'Show diagnostic [E]rror messages' }
+  { desc = 'Diagnostic error messages' }
 )
 vim.keymap.set(
   'n',
   '<leader>l',
   vim.diagnostic.setloclist,
-  { desc = 'Open diagnostic quickfix [L]ist' }
+  { desc = 'Diagnostic quickfix list' }
 )
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
@@ -226,16 +226,16 @@ vim.keymap.set(
   'n',
   '<leader>bz',
   ':90 wincmd | <CR>',
-  { desc = '[Z]oom in, window width to 90' }
+  { desc = 'Zoom in, window width to 90' }
 )
 vim.keymap.set(
   'n',
   '<leader>bZ',
   ':180 wincmd | <CR>',
-  { desc = '[Z]oom out, window width to 180' }
+  { desc = 'Zoom out, window width to 180' }
 )
 -- Buffer alternate file
-vim.keymap.set('n', '<leader>ba', '<C-^>', { desc = '[A]lternate file' })
+vim.keymap.set('n', '<leader>ba', '<C-^>', { desc = 'Alternate file' })
 -- Close buffers
 vim.keymap.set('n', '<leader>q', ':close <CR>', { desc = 'Close buffer' })
 vim.keymap.set('n', '<leader>w', ':tabclose <CR>', { desc = 'Close tab' })

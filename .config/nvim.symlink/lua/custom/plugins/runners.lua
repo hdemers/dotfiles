@@ -30,7 +30,7 @@ return {
             vim.cmd 'ArduinoRun'
           end
         end,
-        desc = '[d]eploy branch',
+        desc = 'Deploy branch',
       },
       {
         '<leader>rD',
@@ -44,7 +44,7 @@ return {
             vim.cmd 'ArduinoRun'
           end
         end,
-        desc = '[D]eploy',
+        desc = 'Deploy',
       },
       {
         '<leader>rc',
@@ -54,7 +54,7 @@ return {
             vim.cmd 'ArduinoStop'
           end
         end,
-        desc = '[c]ancel',
+        desc = 'Cancel',
       },
       {
         '<leader>ri',
@@ -68,34 +68,34 @@ return {
             require('overseer').run_template { name = 'compile-sketch' }
           end
         end,
-        desc = '[i]ntegrate',
+        desc = 'Integrate',
       },
       {
         '<leader>rs',
         '<cmd>OverseerToggle right<CR>',
-        desc = 'Overseer toggle [s]tatus',
+        desc = 'Overseer toggle status',
       },
       {
         '<leader>rt',
         '<cmd>OverseerRun make-test<CR>',
-        desc = 'make [t]est',
+        desc = 'Make test',
         ft = 'python',
       },
       {
         '<leader>rr',
         '<cmd>OverseerRun make-requirements<CR>',
-        desc = 'make [r]equirements',
+        desc = 'Make requirements',
         ft = 'python',
       },
       {
         '<leader>rf',
         '<cmd>OverseerRun run-file<CR>',
-        desc = 'run [f]ile',
+        desc = 'Run file',
       },
       {
         '<leader>ro',
         '<cmd>OverseerQuickAction open float<CR>',
-        desc = 'Overseer show [o]utput',
+        desc = 'Overseer show output',
       },
     },
     config = function(_, opts)
@@ -103,8 +103,9 @@ return {
     end,
     init = function()
       -- Document key chains
-      require('which-key').add {
-        { '<leader>r', group = '[R]unner' },
+      local wk = require 'which-key'
+      wk.add {
+        { '<leader>r', group = 'Runner', icon = { icon = '', color = 'green' } },
       }
 
       local overseer = require 'overseer'
@@ -118,15 +119,17 @@ return {
     end,
   },
   {
-    'OscarCreator/rsync.nvim',
-    enabled = false,
-    build = 'make',
-    dependencies = 'nvim-lua/plenary.nvim',
-    config = function()
-      require('rsync').setup {
-        sync_on_save = true,
-      }
-    end,
+    'coffebar/transfer.nvim',
+    lazy = true,
+    cmd = {
+      'TransferInit',
+      'DiffRemote',
+      'TransferUpload',
+      'TransferDownload',
+      'TransferDirDiff',
+      'TransferRepeat',
+    },
+    opts = {},
   },
   {
     'akinsho/toggleterm.nvim',

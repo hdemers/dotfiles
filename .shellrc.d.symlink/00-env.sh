@@ -78,6 +78,7 @@ if [[ -x "$(command -v secret)" ]]; then
     export ANTHROPIC_API_KEY=$(secret lookup anthropic apikey)
     export MQTTUI_USERNAME=mqtt-user
     export MQTTUI_PASSWORD=$(secret lookup mqtt password)
+    export GEMINI_API_KEY=$(secret lookup gemini apikey)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable

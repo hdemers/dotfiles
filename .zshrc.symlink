@@ -1,4 +1,5 @@
 # vim: filetype=zsh
+# zmodload zsh/zprof
 
 # History settings
 # From https://martinheinz.dev/blog/110
@@ -89,3 +90,5 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 
 # We don't want to use the default bling.sh script, we already have everything we need from that elsewhere.
 export BLING_SOURCED=1
+
+# zprof

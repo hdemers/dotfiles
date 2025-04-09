@@ -2,8 +2,13 @@ return {
   name = 'integrate',
   builder = function()
     return {
-      cmd = { 'distrobox' },
-      args = { 'enter', 'grubhub-dev', '--', 'jenkins', 'integrate' },
+      cmd = (function()
+        if os.getenv 'CONTAINER_ID' then
+          return { 'jenkins', 'integrate' }
+        else
+          return { 'distrobox', 'enter', 'grubhub-dev', '--', 'jenkins', 'integrate' }
+        end
+      end)(),
       components = {
         { 'on_exit_set_status' },
         { 'custom.on_complete_ntfy' },

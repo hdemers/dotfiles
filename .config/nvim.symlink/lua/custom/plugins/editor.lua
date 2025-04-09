@@ -82,7 +82,6 @@ return {
         -- - <options> - table overriding target options.
         --
         -- See `:h MiniBracketed.config` for more info.
-
         buffer = { suffix = 'b', options = {} },
         comment = { suffix = 'c', options = {} },
         conflict = { suffix = 'x', options = {} },

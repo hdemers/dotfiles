@@ -2,8 +2,13 @@ return {
   name = 'deploy',
   builder = function()
     return {
-      cmd = { 'distrobox' },
-      args = { 'enter', 'grubhub-dev', '--', 'jenkins', 'deploy' },
+      cmd = (function()
+        if os.getenv 'CONTAINER_ID' then
+          return { 'jenkins', 'deploy' }
+        else
+          return { 'distrobox', 'enter', 'grubhub-dev', '--', 'jenkins', 'deploy' }
+        end
+      end)(),
       components = {
         { 'on_exit_set_status' },
         { 'custom.on_complete_ntfy' },

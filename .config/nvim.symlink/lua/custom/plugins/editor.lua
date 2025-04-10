@@ -40,6 +40,7 @@ return {
 
   {
     'echasnovski/mini.nvim',
+    lazy = false,
     keys = {
       {
         '<leader>se',

@@ -29,65 +29,18 @@ return {
       --   },
       -- },
     },
+    -- stylua: ignore
     keys = {
-      {
-        '<CR>',
-        ':QuartoSend<CR>',
-        desc = 'Quarto: run cell',
-      },
-      {
-        '<localleader>jc',
-        ':QuartoActivate<CR>',
-        desc = 'Quarto: activate',
-      },
-      {
-        '<localleader>ja',
-        function()
-          require('quarto.runner').run_above()
-        end,
-        desc = 'Quarto: run cell and all above',
-      },
-      {
-        '<localleader>jb',
-        function()
-          require('quarto.runner').run_below()
-        end,
-        desc = 'Quarto: run cell and all below',
-      },
-      {
-        '<localleader>jA',
-        function()
-          require('quarto.runner').run_all()
-        end,
-        desc = 'Quarto: run all cells',
-      },
-      {
-        '<localleader>jl',
-        function()
-          require('quarto.runner').run_line()
-        end,
-        desc = 'Quarto: run line',
-      },
-      {
-        '<localleader>jp',
-        ':QuartoPreview<CR>',
-        desc = 'Quarto: open preview',
-      },
-      {
-        '<localleader>jP',
-        ':QuartoClosePreview<CR>',
-        desc = 'Quarto: close preview',
-      },
-      {
-        '<localleader>jj',
-        "ko\rpyc<cmd>lua require('luasnip').expand()<CR>",
-        desc = 'Snippet: new cell',
-      },
-      {
-        '<localleader>j/',
-        'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O',
-        desc = 'Split cell',
-      },
+      { '<CR>', ':QuartoSend<CR>', desc = 'Quarto: run cell', },
+      { '<localleader>jc', ':QuartoActivate<CR>', desc = 'Quarto: activate', },
+      { '<localleader>ja', function() require('quarto.runner').run_above() end, desc = 'Quarto: run cell and all above', },
+      { '<localleader>jb', function() require('quarto.runner').run_below() end, desc = 'Quarto: run cell and all below', },
+      { '<localleader>jA', function() require('quarto.runner').run_all() end, desc = 'Quarto: run all cells', },
+      { '<localleader>jl', function() require('quarto.runner').run_line() end, desc = 'Quarto: run line', },
+      { '<localleader>jp', ':QuartoPreview<CR>', desc = 'Quarto: open preview', },
+      { '<localleader>jP', ':QuartoClosePreview<CR>', desc = 'Quarto: close preview', },
+      { '<localleader>jj', "ko\rpyc<cmd>lua require('luasnip').expand()<CR>", desc = 'Snippet: new cell', },
+      { '<localleader>j/', 'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O', desc = 'Split cell', },
     },
     config = function(_, opts)
       local quarto = require 'quarto'

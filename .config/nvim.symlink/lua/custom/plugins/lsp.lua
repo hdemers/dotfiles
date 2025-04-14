@@ -36,14 +36,6 @@ return {
             )
           end
 
-          -- Rename the variable under your cursor
-          --  Most Language Servers support renaming across files, etc.
-          map('<leader>cr', vim.lsp.buf.rename, 'Rename')
-
-          -- Execute a code action, usually your cursor needs to be on top of an error
-          -- or a suggestion from your LSP for this to activate.
-          map('<leader>ca', vim.lsp.buf.code_action, 'Action')
-
           -- Opens a popup that displays documentation about the word under your cursor
           --  See `:help K` for why this keymap
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
@@ -213,37 +205,14 @@ return {
     'folke/trouble.nvim',
     -- branch = 'dev',
     cmd = 'Trouble',
+    -- stylua: ignore
     keys = {
-      {
-        '<leader>cx',
-        '<cmd>Trouble diagnostics toggle<cr>',
-        desc = 'Trouble: toggle all diagnostics',
-      },
-      {
-        '<leader>cX',
-        '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
-        desc = 'Trouble: toggle buffer diagnostics',
-      },
-      {
-        '<leader>cs',
-        '<cmd>Trouble symbols toggle focus=false win.size.width=70<cr>',
-        desc = 'Trouble: show symbols',
-      },
-      {
-        '<leader>cd',
-        '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=70<cr>',
-        desc = 'Trouble: lsp definitions/references/etc.',
-      },
-      {
-        '<leader>cL',
-        '<cmd>Trouble loclist toggle<cr>',
-        desc = 'Trouble: toggle location list',
-      },
-      {
-        '<leader>cQ',
-        '<cmd>Trouble qflist toggle<cr>',
-        desc = 'Trouble: toggle quickfix list',
-      },
+      { '<leader>cx', '<cmd>Trouble diagnostics toggle<cr>', desc = 'Trouble: toggle all diagnostics', },
+      { '<leader>cX', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', desc = 'Trouble: toggle buffer diagnostics', },
+      { '<leader>cs', '<cmd>Trouble symbols toggle focus=false win.size.width=70<cr>', desc = 'Trouble: show symbols', },
+      { '<leader>cd', '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=70<cr>', desc = 'Trouble: lsp definitions/references/etc.', },
+      { '<leader>cL', '<cmd>Trouble loclist toggle<cr>', desc = 'Trouble: toggle location list', },
+      { '<leader>cQ', '<cmd>Trouble qflist toggle<cr>', desc = 'Trouble: toggle quickfix list', },
       {
         '[t',
         function()

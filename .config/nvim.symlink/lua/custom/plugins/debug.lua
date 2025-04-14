@@ -149,140 +149,27 @@ return {
       },
       'nvim-neotest/neotest',
     },
+    -- stylua: ignore
     keys = {
-      {
-        '<leader>dB',
-        function()
-          require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ')
-        end,
-        desc = 'Breakpoint condition',
-      },
-      {
-        '<leader>db',
-        function()
-          require('dap').toggle_breakpoint()
-        end,
-        desc = 'Toggle breakpoint',
-      },
-      {
-        '<leader>dc',
-        function()
-          require('dap').continue()
-        end,
-        desc = 'Continue',
-      },
-      {
-        '<leader>da',
-        function()
-          require('dap').continue { before = get_args }
-        end,
-        desc = 'Run with args',
-      },
-      {
-        '<leader>dC',
-        function()
-          require('dap').run_to_cursor()
-        end,
-        desc = 'Run to cursor',
-      },
-      {
-        '<leader>dg',
-        function()
-          require('dap').goto_()
-        end,
-        desc = 'Go to line (no execute)',
-      },
-      {
-        '<leader>di',
-        function()
-          require('dap').step_into()
-        end,
-        desc = 'Step into',
-      },
-      {
-        '<leader>dj',
-        function()
-          require('dap').down()
-        end,
-        desc = 'Down',
-      },
-      {
-        '<leader>dk',
-        function()
-          require('dap').up()
-        end,
-        desc = 'Up',
-      },
-      {
-        '<leader>dl',
-        function()
-          require('dap').run_last()
-        end,
-        desc = 'Run last',
-      },
-      {
-        '<leader>dO',
-        function()
-          require('dap').step_out()
-        end,
-        desc = 'Step out',
-      },
-      {
-        '<leader>do',
-        function()
-          require('dap').step_over()
-        end,
-        desc = 'Step over',
-      },
-      {
-        '<leader>dp',
-        function()
-          require('dap').pause()
-        end,
-        desc = 'Pause',
-      },
-      {
-        '<leader>dr',
-        function()
-          require('dap').repl.toggle()
-        end,
-        desc = 'Toggle repl',
-      },
-      {
-        '<leader>ds',
-        function()
-          require('dap').session()
-        end,
-        desc = 'Session',
-      },
-      {
-        '<leader>dq',
-        function()
-          require('dap').terminate()
-        end,
-        desc = 'Terminate',
-      },
-      {
-        '<leader>dw',
-        function()
-          require('dap.ui.widgets').hover()
-        end,
-        desc = 'Widgets',
-      },
-      {
-        '<leader>dt',
-        function()
-          require('neotest').run.run { strategy = 'dap' }
-        end,
-        desc = 'Debug: nearest unit [t]est',
-      },
-      {
-        '<leader>dT',
-        function()
-          require('neotest').run.run { vim.uv.cwd(), strategy = 'dap' }
-        end,
-        desc = 'Debug: all test files',
-      },
+      { '<leader>dB', function() require('dap').set_breakpoint(vim.fn.input 'Breakpoint condition: ') end, desc = 'Breakpoint condition', },
+      { '<leader>db', function() require('dap').toggle_breakpoint() end, desc = 'Toggle breakpoint', },
+      { '<leader>dc', function() require('dap').continue() end, desc = 'Continue', },
+      { '<leader>da', function() require('dap').continue { before = get_args } end, desc = 'Run with args', },
+      { '<leader>dC', function() require('dap').run_to_cursor() end, desc = 'Run to cursor', },
+      { '<leader>dg', function() require('dap').goto_() end, desc = 'Go to line (no execute)', },
+      { '<leader>di', function() require('dap').step_into() end, desc = 'Step into', },
+      { '<leader>dj', function() require('dap').down() end, desc = 'Down', },
+      { '<leader>dk', function() require('dap').up() end, desc = 'Up', },
+      { '<leader>dl', function() require('dap').run_last() end, desc = 'Run last', },
+      { '<leader>dO', function() require('dap').step_out() end, desc = 'Step out', },
+      { '<leader>do', function() require('dap').step_over() end, desc = 'Step over', },
+      { '<leader>dp', function() require('dap').pause() end, desc = 'Pause', },
+      { '<leader>dr', function() require('dap').repl.toggle() end, desc = 'Toggle repl', },
+      { '<leader>ds', function() require('dap').session() end, desc = 'Session', },
+      { '<leader>dq', function() require('dap').terminate() end, desc = 'Terminate', },
+      { '<leader>dw', function() require('dap.ui.widgets').hover() end, desc = 'Widgets', },
+      { '<leader>dt', function() require('neotest').run.run { strategy = 'dap' } end, desc = 'Debug: nearest unit [t]est', },
+      { '<leader>dT', function() require('neotest').run.run { vim.uv.cwd(), strategy = 'dap' } end, desc = 'Debug: all test files', },
     },
     config = function()
       -- Document key chains
@@ -306,7 +193,26 @@ return {
       vscode.json_decode = function(str)
         return vim.json.decode(json.json_strip_comments(str))
       end
-      vscode.load_launchjs(nil, filetypes)
+
+      local dap = require 'dap'
+      dap.adapters.quarto = {
+        type = 'server',
+        port = 5678,
+      }
+      dap.configurations.quarto = {
+        {
+          type = 'quarto',
+          name = 'Attach to debugger from Quarto notebook',
+          request = 'attach',
+          mode = 'auto',
+          -- This is the default, but you can set it to "auto" or "manual"
+          -- to control when the debugger starts.
+          auto_open_console = true,
+          console = 'integratedTerminal',
+          use_python_path = true,
+        },
+      }
+      -- Register a keymap to attach DAP to a running Python debugger.
     end,
   },
   {
@@ -412,53 +318,14 @@ return {
     end,
     -- stylua: ignore
     keys = {
-
-      {
-        "<leader>tt",
-        function()
-          require("neotest").run.run(vim.fn.expand("%"))
-        end,
-        desc = "Neotest: run file"
-      },
-      {
-        "<leader>tT",
-        function() require("neotest").run.run(vim.uv.cwd()) end,
-        desc = "Neotest: run all test files"
-      },
-      {
-        "<leader>tr",
-        function() require("neotest").run.run() end,
-        desc = "Neotest: run nearest"
-      },
-      {
-        "<leader>tl",
-        function() require("neotest").run.run_last() end,
-        desc = "Neotest: run last"
-      },
-      {
-        "<leader>ts",
-        function() require("neotest").summary.toggle() end,
-        desc = "Neotest: [t]oggle [s]ummary"
-      },
-      {
-        "<leader>to",
-        function()
-          require("neotest").output.open({ enter = true, auto_close = true })
-        end,
-        desc = "Neotest: [t]oggle [o]utput"
-      },
-      {
-        "<leader>tO",
-        function()
-          require("neotest").output_panel.toggle()
-        end,
-        desc = "Neotest: [t]oggle [O]utput panel"
-      },
-      {
-        "<leader>tS",
-        function() require("neotest").run.stop() end,
-        desc = "Neotest: [S]top"
-      },
+      { "<leader>tt", function() require("neotest").run.run(vim.fn.expand("%")) end, desc = "Neotest: run file" },
+      { "<leader>tT", function() require("neotest").run.run(vim.uv.cwd()) end, desc = "Neotest: run all test files" },
+      { "<leader>tr", function() require("neotest").run.run() end, desc = "Neotest: run nearest" },
+      { "<leader>tl", function() require("neotest").run.run_last() end, desc = "Neotest: run last" },
+      { "<leader>ts", function() require("neotest").summary.toggle() end, desc = "Neotest: [t]oggle [s]ummary" },
+      { "<leader>to", function() require("neotest").output.open({ enter = true, auto_close = true }) end, desc = "Neotest: [t]oggle [o]utput" },
+      { "<leader>tO", function() require("neotest").output_panel.toggle() end, desc = "Neotest: [t]oggle [O]utput panel" },
+      { "<leader>tS", function() require("neotest").run.stop() end, desc = "Neotest: [S]top" },
     },
   },
   {

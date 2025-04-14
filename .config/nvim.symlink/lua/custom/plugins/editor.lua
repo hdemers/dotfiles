@@ -349,43 +349,13 @@ return {
         },
       },
     },
+    -- stylua: ignore
     keys = {
-      {
-        '<S-Enter>',
-        function()
-          require('noice').redirect(vim.fn.getcmdline())
-        end,
-        mode = 'c',
-        desc = 'Redirect Cmdline',
-      },
-      {
-        '<leader>snl',
-        function()
-          require('noice').cmd 'last'
-        end,
-        desc = 'Noice Last Message',
-      },
-      {
-        '<leader>sni',
-        function()
-          require('noice').cmd 'history'
-        end,
-        desc = 'Noice History',
-      },
-      {
-        '<leader>sna',
-        function()
-          require('noice').cmd 'all'
-        end,
-        desc = 'Noice All',
-      },
-      {
-        '<leader>snd',
-        function()
-          require('noice').cmd 'dismiss'
-        end,
-        desc = 'Dismiss All',
-      },
+      { '<S-Enter>', function() require('noice').redirect(vim.fn.getcmdline()) end, mode = 'c', desc = 'Redirect Cmdline', },
+      { '<leader>snl', function() require('noice').cmd 'last' end, desc = 'Noice Last Message', },
+      { '<leader>sni', function() require('noice').cmd 'history' end, desc = 'Noice History', },
+      { '<leader>sna', function() require('noice').cmd 'all' end, desc = 'Noice All', },
+      { '<leader>snd', function() require('noice').cmd 'dismiss' end, desc = 'Dismiss All', },
       {
         '<c-f>',
         function()
@@ -505,47 +475,13 @@ return {
         },
       },
     },
+    -- stylua: ignore
     keys = {
-      {
-        't',
-        mode = { 'n', 'x', 'o' },
-        function()
-          require('flash').jump()
-        end,
-        desc = 'Flash',
-      },
-      {
-        'T',
-        mode = { 'n', 'x', 'o' },
-        function()
-          require('flash').treesitter()
-        end,
-        desc = 'Flash Treesitter',
-      },
-      {
-        'r',
-        mode = 'o',
-        function()
-          require('flash').remote()
-        end,
-        desc = 'Remote Flash',
-      },
-      {
-        'R',
-        mode = { 'o', 'x' },
-        function()
-          require('flash').treesitter_search()
-        end,
-        desc = 'Treesitter Search',
-      },
-      {
-        '<c-s>',
-        mode = { 'c' },
-        function()
-          require('flash').toggle()
-        end,
-        desc = 'Toggle Flash Search',
-      },
+      { 't', mode = { 'n', 'x', 'o' }, function() require('flash').jump() end, desc = 'Flash', },
+      { 'T', mode = { 'n', 'x', 'o' }, function() require('flash').treesitter() end, desc = 'Flash Treesitter', },
+      { 'r', mode = 'o', function() require('flash').remote() end, desc = 'Remote Flash', },
+      { 'R', mode = { 'o', 'x' }, function() require('flash').treesitter_search() end, desc = 'Treesitter Search', },
+      { '<c-s>', mode = { 'c' }, function() require('flash').toggle() end, desc = 'Toggle Flash Search', },
     },
   },
   {
@@ -654,191 +590,34 @@ return {
       indent = { enabled = false },
       dashboard = { enabled = true },
     },
-    keys = {
-      {
-        '<leader>Q',
-        function()
-          Snacks.bufdelete()
-        end,
-        desc = 'Delete buffer',
-      },
-      {
-        '<leader><leader>',
-        function()
-          Snacks.picker.buffers()
-        end,
-        desc = 'Buffers',
-      },
-      {
-        '<leader>sf',
-        function()
-          Snacks.picker.files()
-        end,
-        desc = 'Search files',
-      },
-      {
-        '<leader>sF',
-        function()
-          Snacks.picker.files { hidden = true }
-        end,
-        desc = 'Search files including hidden',
-      },
-      {
-        '<leader>si',
-        function()
-          Snacks.picker.git_files()
-        end,
-        desc = 'Search git files',
-      },
-      {
-        '<leader>sc',
-        function()
-          Snacks.picker.files { cwd = vim.fn.stdpath 'config' }
-        end,
-        desc = 'Search config files',
-      },
-      {
-        '<leader>ss',
-        function()
-          Snacks.picker.smart()
-        end,
-        desc = 'Search smart',
-      },
-      {
-        '<leader>s.',
-        function()
-          Snacks.picker.recent()
-        end,
-        desc = 'Search recent files ("." for repeat)',
-      },
-      {
-        '<leader>sg',
-        function()
-          Snacks.picker.grep()
-        end,
-        desc = 'Search with grep',
-      },
-      {
-        '<leader>sG',
-        function()
-          Snacks.picker.grep { hidden = true }
-        end,
-        desc = 'Search with grep including hidden',
-      },
-      {
-        '<leader>s/',
-        function()
-          Snacks.picker.grep_buffers()
-        end,
-        desc = 'Search buffers with grep',
-      },
-      {
-        '<leader>sw',
-        function()
-          Snacks.picker.grep_word()
-        end,
-        desc = 'Grep for word',
-        mode = { 'n', 'x' },
-      },
-      {
-        '<leader>/',
-        function()
-          Snacks.picker.lines()
-        end,
-        desc = 'Fuzzy search of current buffer',
-      },
-      {
-        '<leader>sl',
-        function()
-          Snacks.picker.colorschemes()
-        end,
-        desc = 'Search colorschemes',
-      },
-      {
-        '<leader>sy',
-        function()
-          Snacks.picker.lsp_workspace_symbols()
-        end,
-        desc = 'Search lsp symbols',
-      },
-      {
-        '<leader>sY',
-        function()
-          Snacks.picker.lsp_symbols()
-        end,
-        desc = 'Search lsp document symbols',
-      },
-      {
-        '<leader>sk',
-        function()
-          Snacks.picker.keymaps()
-        end,
-        desc = 'Search keymaps',
-      },
-      {
-        '<leader>sh',
-        function()
-          Snacks.picker.help()
-        end,
-        desc = 'Search help',
-      },
-      {
-        '<leader>sr',
-        function()
-          Snacks.picker.resume()
-        end,
-        desc = 'Search resume',
-      },
-      {
-        '<leader>su',
-        function()
-          Snacks.picker.undo()
-        end,
-        desc = 'Search undo',
-      },
-      {
-        '<leader>sq',
-        function()
-          Snacks.picker.qflist()
-        end,
-        desc = 'Search quickfix',
-      },
-      {
-        '<leader>sd',
-        function()
-          Snacks.picker.diagnostics()
-        end,
-        desc = 'Search diagnostics',
-      },
-      {
-        '<leader>sD',
-        function()
-          Snacks.picker.diagnostics_buffer()
-        end,
-        desc = 'Search diagnostics in buffer',
-      },
-      {
-        '<leader>snh',
-        function()
-          Snacks.notifier.show_history()
-        end,
-        desc = 'Show notification history',
-      },
-      {
-        'gr',
-        function()
-          Snacks.picker.lsp_references()
-        end,
-        nowait = true,
-        desc = 'Go to references',
-      },
-      {
-        'gd',
-        function()
-          Snacks.picker.lsp_definitions()
-        end,
-        desc = 'Go to definition',
-      },
+    -- stylua: ignore
+    keys = { { '<leader>Q', function() Snacks.bufdelete() end, desc = 'Delete buffer' },
+      { '<leader><leader>', function() Snacks.picker.buffers() end, desc = 'Buffers', },
+      { '<leader>sf', function() Snacks.picker.files() end, desc = 'Search files', },
+      { '<leader>sF', function() Snacks.picker.files { hidden = true } end, desc = 'Search files including hidden', },
+      { '<leader>si', function() Snacks.picker.git_files() end, desc = 'Search git files', },
+      { '<leader>sc', function() Snacks.picker.files { cwd = vim.fn.stdpath 'config' } end, desc = 'Search config files', },
+      { '<leader>ss', function() Snacks.picker.smart() end, desc = 'Search smart', },
+      { '<leader>s.', function() Snacks.picker.recent() end, desc = 'Search recent files ("." for repeat)', },
+      { '<leader>sg', function() Snacks.picker.grep() end, desc = 'Search with grep', },
+      { '<leader>sG', function() Snacks.picker.grep { hidden = true } end, desc = 'Search with grep including hidden', },
+      { '<leader>s/', function() Snacks.picker.grep_buffers() end, desc = 'Search buffers with grep', },
+      { '<leader>sw', function() Snacks.picker.grep_word() end, desc = 'Grep for word', mode = { 'n', 'x' }, },
+      { '<leader>/', function() Snacks.picker.lines() end, desc = 'Fuzzy search of current buffer', },
+      { '<leader>sl', function() Snacks.picker.colorschemes() end, desc = 'Search colorschemes', },
+      { '<leader>sa', function() Snacks.picker.highlights() end, desc = 'Search highlights', },
+      { '<leader>sy', function() Snacks.picker.lsp_workspace_symbols() end, desc = 'Search lsp symbols', },
+      { 'gO', function() Snacks.picker.lsp_symbols() end, desc = 'Search lsp document symbols', },
+      { '<leader>sk', function() Snacks.picker.keymaps() end, desc = 'Search keymaps', },
+      { '<leader>sh', function() Snacks.picker.help() end, desc = 'Search help', },
+      { '<leader>sr', function() Snacks.picker.resume() end, desc = 'Search resume', },
+      { '<leader>su', function() Snacks.picker.undo() end, desc = 'Search undo', },
+      { '<leader>sq', function() Snacks.picker.qflist() end, desc = 'Search quickfix', },
+      { '<leader>sd', function() Snacks.picker.diagnostics() end, desc = 'Search diagnostics', },
+      { '<leader>sD', function() Snacks.picker.diagnostics_buffer() end, desc = 'Search diagnostics in buffer', },
+      { '<leader>snh', function() Snacks.notifier.show_history() end, desc = 'Show notification history', },
+      { 'grr', function() Snacks.picker.lsp_references() end, nowait = true, desc = 'Go to references', },
+      { 'gd', function() Snacks.picker.lsp_definitions() end, desc = 'Go to definition', },
     },
     init = function()
       vim.api.nvim_create_autocmd('User', {

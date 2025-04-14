@@ -9,7 +9,10 @@ end
 M.spawn_ipython_term = function()
   local box_name = os.getenv 'DBX_CONTAINER_NAME' or 'grubhub-dev'
   local Terminal = require('toggleterm.terminal').Terminal
-  local ipython_cmd = 'distrobox enter ' .. box_name .. ' -- ipython --no-autoindent'
+  local ipython_cmd = 'ipython --no-autoindent'
+  if not os.getenv 'CONTAINER_ID' then
+    ipython_cmd = 'distrobox enter ' .. box_name .. ' -- ' .. ipython_cmd
+  end
 
   M.ipython_term = nil
 
@@ -39,10 +42,15 @@ M.check_for_ipython = function()
     vim.notify('DBX_CONTAINER_NAME is not set', vim.log.levels.ERROR)
     return
   end
+
+  local cmd = 'which ipython 2>/dev/null'
+  local container_cmd = ''
+  if not os.getenv 'CONTAINER_ID' then
+    container_cmd = 'distrobox enter ' .. box_name .. ' -- '
+  end
   -- Check if ipython is available in the distrobox
   vim.notify('Checking for ipython availability in ' .. box_name, vim.log.levels.INFO)
-  local handle =
-    io.popen('distrobox enter ' .. box_name .. ' -- which ipython 2>/dev/null')
+  local handle = io.popen(container_cmd .. cmd)
   if not handle then
     vim.notify('Failed to check for ipython.', vim.log.levels.ERROR)
     return nil
@@ -58,7 +66,7 @@ M.check_for_ipython = function()
 
     if input and input:lower() == 'y' then
       local Terminal = require('toggleterm.terminal').Terminal
-      local cmd = 'distrobox enter ' .. box_name .. ' -- uv pip install ipykernel'
+      local cmd = container_cmd .. 'uv pip install ipykernel'
       Terminal
         :new({
           direction = 'float',
@@ -175,4 +183,116 @@ M.start_pyscript_kernel = function()
   })
 end
 
+M.simple_tabline = function()
+  local s = '' -- Initialize the output string
+  local current_tab = vim.fn.tabpagenr()
+  local num_tabs = vim.fn.tabpagenr '$'
+
+  -- Get colors from the existing highlight groups
+  local function get_hl_colors(group)
+    local hl = vim.api.nvim_get_hl(0, { name = group, link = false })
+    return {
+      fg = hl.fg and string.format('#%06x', hl.fg) or 'NONE',
+      bg = hl.bg and string.format('#%06x', hl.bg) or 'NONE',
+    }
+  end
+
+  local tab_sel_colors = get_hl_colors 'TabLineSel'
+  local tab_line_colors = get_hl_colors 'TabLine'
+  local tab_fill_colors = get_hl_colors 'TabLineFill'
+
+  -- Dynamically create the highlight groups each time
+  vim.cmd(
+    'highlight TabLineSelSymbol guifg='
+      .. tab_sel_colors.bg
+      .. ' guibg='
+      .. tab_fill_colors.bg
+  )
+  vim.cmd(
+    'highlight TabLineSymbol guifg='
+      .. tab_line_colors.bg
+      .. ' guibg='
+      .. tab_fill_colors.bg
+  )
+
+  -- Function to count unique normal buffers in a tab
+  local function count_normal_buffers(tab_idx)
+    local buflist = vim.fn.tabpagebuflist(tab_idx)
+    local unique_buffers = {}
+    local count = 0
+
+    for _, buf_id in ipairs(buflist) do
+      -- Only count each buffer once
+      if not unique_buffers[buf_id] and vim.api.nvim_buf_is_valid(buf_id) then
+        local buftype = vim.bo[buf_id].buftype
+        local bufhidden = vim.bo[buf_id].bufhidden
+
+        -- Count only normal buffers (not special buffers)
+        if buftype == '' and bufhidden ~= 'hide' then
+          count = count + 1
+          unique_buffers[buf_id] = true
+        end
+      end
+    end
+
+    return count
+  end
+
+  for i = 1, num_tabs do
+    -- Set highlight groups
+    local is_selected = i == current_tab
+    local tab_hl = is_selected and 'TabLineSel' or 'TabLine'
+    local symbol_hl = is_selected and 'TabLineSelSymbol' or 'TabLineSymbol'
+
+    -- Add left symbol with appropriate highlight
+    s = s .. '%#' .. symbol_hl .. '#'
+    s = s .. ' '
+
+    -- Add tab content with normal tab highlight
+    s = s .. '%#' .. tab_hl .. '#'
+
+    -- Get buffer list for the tab and the active window in that tab
+    local buflist = vim.fn.tabpagebuflist(i)
+    local winnr = vim.fn.tabpagewinnr(i)
+    local bufnr = buflist[winnr]
+
+    -- Get unique normal buffer count
+    local normal_buffer_count = count_normal_buffers(i)
+
+    -- Get buffer name and extract filename (tail)
+    local bufpath = vim.fn.bufname(bufnr)
+    local filename = vim.fn.fnamemodify(bufpath, ':t')
+
+    -- Handle buffers without a name
+    if filename == '' then
+      -- Check if buffer ID is valid before accessing buffer-local options
+      local buftype = ''
+      if bufnr and bufnr > 0 and vim.api.nvim_buf_is_valid(bufnr) then
+        buftype = vim.bo[bufnr].buftype
+      end
+
+      if buftype == 'quickfix' then
+        filename = '[Quickfix]'
+      elseif buftype == 'help' then
+        filename = '[Help]'
+      elseif buftype == 'terminal' then
+        filename = '[Terminal]'
+      else
+        filename = '[No Name]'
+      end
+    end
+
+    -- Add the filename with buffer and window count
+    s = s .. ' ' .. filename .. ' [' .. normal_buffer_count .. '] '
+
+    -- Add right symbol with appropriate highlight
+    s = s .. '%#' .. symbol_hl .. '#'
+    s = s .. ' '
+  end
+
+  -- Fill the rest of the line
+  s = s .. '%#TabLineFill#%='
+
+  return s
+end
 return M

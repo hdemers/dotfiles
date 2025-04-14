@@ -24,6 +24,7 @@ return {
   },
   {
     name = 'misc',
+    lazy = false,
     dir = '~/src/nvim/misc',
     config = function()
       local misc = require 'misc'
@@ -35,6 +36,9 @@ return {
         misc.start_ipython,
         { desc = 'Start IPython', silent = true }
       )
+
+      _G.MySimpleTabline = misc.simple_tabline
+      vim.opt.tabline = '%!v:lua.MySimpleTabline()'
     end,
   },
 }

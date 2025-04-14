@@ -111,7 +111,7 @@ return {
     },
     build = 'make tiktoken', -- Only on MacOS or Linux
     opts = {
-      -- See Configuration section for options
+      model = 'claude-3.7-sonnet-thought',
     },
     keys = {
       {
@@ -177,9 +177,10 @@ return {
   },
   {
     'Davidyz/VectorCode',
-    -- version = '*', -- optional, depending on whether you're on nightly or release
-    -- build = 'uv tool upgrade vectorcode', -- optional but recommended if you set `version = "*"`
+    version = '*', -- optional, depending on whether you're on nightly or release
+    build = 'uv tool install --upgrade vectorcode', -- optional but recommended if you set `version = "*"`
     dependencies = { 'nvim-lua/plenary.nvim' },
+    lazy = true,
   },
   {
     'olimorris/codecompanion.nvim',

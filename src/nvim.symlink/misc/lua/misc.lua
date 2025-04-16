@@ -246,6 +246,7 @@ M.simple_tabline = function()
 
     -- Add left symbol with appropriate highlight
     s = s .. '%#' .. symbol_hl .. '#'
+    -- s = s .. ' '
     s = s .. ' '
 
     -- Add tab content with normal tab highlight
@@ -283,11 +284,17 @@ M.simple_tabline = function()
     end
 
     -- Add the filename with buffer and window count
-    s = s .. ' ' .. filename .. ' [' .. normal_buffer_count .. '] '
+    if normal_buffer_count > 1 then
+      s = s .. ' ' .. filename .. ' [' .. normal_buffer_count .. '] '
+    else
+      s = s .. ' ' .. filename .. ' '
+    end
 
     -- Add right symbol with appropriate highlight
     s = s .. '%#' .. symbol_hl .. '#'
+    -- s = s .. ' '
     s = s .. ' '
+    -- s = s .. ' '
   end
 
   -- Fill the rest of the line

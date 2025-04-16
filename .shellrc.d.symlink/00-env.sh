@@ -70,6 +70,10 @@ fi
 
 # Try to execute the command `secret` and if there are no error, execute the following.
 if [[ -x "$(command -v secret)" ]]; then
+    if [[ -n "$CONTAINER_ID" ]]; then
+        alias secret="distrobox-host-exec /home/hdemers/.local/bin/secret"
+    fi
+
     export GITHUB_TOKEN=$(secret lookup github token)
     export TODOIST_API_TOKEN=$(secret lookup todoist token)
     export JIRA_API_TOKEN=$(secret lookup jira token)

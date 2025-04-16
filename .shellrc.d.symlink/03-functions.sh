@@ -83,6 +83,8 @@ rfv() {
         --line-number \
         --no-heading \
         --smart-case \
+        --glob !'*.{venv,ruff_cache,pytest_cache,mypy_cache,tox}' \
+        --glob !'{__pycache__}' \
         --hidden \
         "${*}" \
             | \

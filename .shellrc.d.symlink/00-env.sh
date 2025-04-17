@@ -34,14 +34,6 @@ export PATH=$HOME/local/bin:$PATH
 #   eval "$(rbenv init -)"
 # fi
 
-# Check if the USER environment variable is not equal to 'sagemaker-user'
-if [ "$USER" != "sagemaker-user" ]; then
-    # There's no virtuelenv on SageMaker, so that's useless there.
-    export PIP_REQUIRE_VIRTUALENV=true
-fi
-# For the functions defined in .bash_aliases
-export SLACK_API_URL=https://slack.com/api
-
 # GrubHub project directory
 export GRUBHUB_DIR=$HOME/Projets/grubhub
 
@@ -70,10 +62,6 @@ fi
 
 # Try to execute the command `secret` and if there are no error, execute the following.
 if [[ -x "$(command -v secret)" ]]; then
-    if [[ -n "$CONTAINER_ID" ]]; then
-        alias secret="distrobox-host-exec /home/hdemers/.local/bin/secret"
-    fi
-
     export GITHUB_TOKEN=$(secret lookup github token)
     export TODOIST_API_TOKEN=$(secret lookup todoist token)
     export JIRA_API_TOKEN=$(secret lookup jira token)

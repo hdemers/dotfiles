@@ -63,8 +63,6 @@ stop_ec2() {
     ec2_instance_from_tag $1
     # Stop instance
     aws ec2 stop-instances --instance-ids $ec2_instance_id
-    # TODO: Remove Slack reminder
-    #wget -q -O - "$SLACK_API_URL/users.info?token=$SLACK_TOKEN&user=U0763TLKD" >/dev/null 2>&1
 }
 
 start_ec2() {

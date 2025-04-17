@@ -31,16 +31,12 @@
 # <Super>KP_1,pidgin,Pidgin,/^((?!Buddy List).)*$/
 
 
-# Have the mail always at numpad-click.
-
 <Super>4,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,hdemers@grubhub.com
 <Super>6,gtk-launch tmux-vim.desktop,,vim
-
 <Super>m,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,Gmail,hdemers@gmail.com
-
-<Super><Shift>m,gtk-launch com.google.Chrome.flextop.chrome-pjibgclleladliembfgfagdaldikeohf-Default.desktop,,Spotify
-<Super><Shift>k,flatpak run org.keepassxc.KeePassXC,org.keepassxc.KeePassXC,KeePassXC 
-
+<Super><Shift>m,flatpak run com.spotify.Client,Spotify,Spotify
+<Super><Shift>k,flatpak run org.keepassxc.KeePassXC,org.keepassxc.KeePassXC,KeePassXC
+<Super><Shift>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*grubhub-dev.*/
 # =============
 # Run only form
 # =============

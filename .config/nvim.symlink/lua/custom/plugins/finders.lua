@@ -337,7 +337,7 @@ return {
 
       -- Show pip list
       local function pip_list()
-        fzflua.fzf_exec('pip list --disable-pip-version-check', {
+        fzflua.fzf_exec('uv pip list --disable-pip-version-check', {
           fzf_opts = {
             ['--header-lines'] = '2',
           },

@@ -2,6 +2,7 @@ return {
   {
     'github/copilot.vim',
     lazy = false,
+    enabled = false,
     init = function()
       -- Set the highlight group for copilot suggestions
       local apply_highlight = function()
@@ -15,6 +16,25 @@ return {
         group = vim.api.nvim_create_augroup('CustomColorscheme', { clear = false }),
         callback = apply_highlight,
       })
+    end,
+  },
+  {
+    'zbirenbaum/copilot.lua',
+    cmd = 'Copilot',
+    event = 'InsertEnter',
+    opts = {
+      panel = {
+        auto_refresh = true,
+      },
+      suggestion = {
+        auto_trigger = true,
+        keymap = {
+          accept = '<Tab>',
+        },
+      },
+    },
+    config = function(_, opts)
+      require('copilot').setup(opts)
     end,
   },
   {
@@ -96,12 +116,6 @@ return {
       --   ft = { 'markdown', 'Avante' },
       -- },
     },
-    init = function()
-      -- Document key chains
-      require('which-key').add {
-        { '<leader>a', group = '[A]I' },
-      }
-    end,
   },
   {
     'CopilotC-Nvim/CopilotChat.nvim',
@@ -112,18 +126,43 @@ return {
     build = 'make tiktoken', -- Only on MacOS or Linux
     opts = {
       model = 'claude-3.7-sonnet-thought',
+      mappings = {
+        reset = {
+          normal = '',
+          insert = '',
+        },
+        complete = {
+          insert = '<S-Tab>',
+        },
+      },
+      prompts = {
+        ReviewLibraryStagedChanges = {
+          prompt = 'This code is part of a library. The API should not be broken. Review the staged files for any breaking changes and other issues. #git:staged',
+          description = 'Review staged files for breaking changes',
+          mapping = '<leader>ab',
+        },
+        BetterNames = {
+          prompt = 'Please provide better names for the following variables and functions.',
+          description = 'Improve names of variables and functions.',
+          mapping = '<leader>an',
+        },
+        Wording = {
+          prompt = 'Please improve the grammar and wording of the following text.',
+          description = 'Improve the grammar and wording.',
+          mapping = '<leader>aw',
+        },
+      },
     },
     -- stylua: ignore
     keys = {
-      { '<leader>aa', ':CopilotChat<CR>', desc = 'Copilot: ch[a]t', mode = { 'n', 'v' }, },
-      { '<leader>al', ':CopilotChatToggle<CR>', desc = 'Copilot: togg[l]e', },
-      { '<leader>ae', ':CopilotChatExplain<CR>', desc = 'Copilot: [e]xplain', mode = { 'n', 'v' }, },
-      { '<leader>ac', ':CopilotChatCommit<CR>', desc = 'Copilot: [c]ommit', mode = { 'n', 'v' }, },
-      { '<leader>ad', ':CopilotChatDocs<CR>', desc = 'Copilot: [d]ocument', mode = { 'n', 'v' }, },
-      { '<leader>af', ':CopilotChatFix<CR>', desc = 'Copilot: [f]ix', mode = { 'n', 'v' }, },
-      { '<leader>ao', ':CopilotChatOptimize<CR>', desc = 'Copilot: [o]ptimize', mode = { 'n', 'v' }, },
-      { '<leader>ar', ':CopilotChatReview<CR>', desc = 'Copilot: [r]eview', mode = { 'n', 'v' }, },
-      { '<leader>at', ':CopilotChatTests<CR>', desc = 'Copilot: [t]ests', mode = { 'n', 'v' }, },
+      { '<leader>aa', ':CopilotChatToggle<CR>', desc = 'Copilot: toggle chat', },
+      { '<leader>ae', ':CopilotChatExplain<CR>', desc = 'Copilot: explain', mode = { 'n', 'v' }, },
+      { '<leader>ac', ':CopilotChatCommit<CR>', desc = 'Copilot: commit', mode = { 'n', 'v' }, },
+      { '<leader>ad', ':CopilotChatDocs<CR>', desc = 'Copilot: document', mode = { 'n', 'v' }, },
+      { '<leader>af', ':CopilotChatFix<CR>', desc = 'Copilot: fix', mode = { 'n', 'v' }, },
+      { '<leader>ao', ':CopilotChatOptimize<CR>', desc = 'Copilot: optimize', mode = { 'n', 'v' }, },
+      { '<leader>ar', ':CopilotChatReview<CR>', desc = 'Copilot: review', mode = { 'n', 'v' }, },
+      { '<leader>at', ':CopilotChatTests<CR>', desc = 'Copilot: tests', mode = { 'n', 'v' }, },
       { '<leader>ax', ':CopilotChatReset<CR>', desc = 'Copilot: reset', mode = { 'n', 'v' }, },
     },
   },

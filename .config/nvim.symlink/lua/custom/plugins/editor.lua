@@ -597,7 +597,7 @@ return {
       { '<leader>/', function() Snacks.picker.lines() end, desc = 'Fuzzy search of current buffer', },
       { '<leader>sl', function() Snacks.picker.colorschemes() end, desc = 'Search colorschemes', },
       { '<leader>sa', function() Snacks.picker.highlights() end, desc = 'Search highlights', },
-      { '<leader>sy', function() Snacks.picker.lsp_workspace_symbols() end, desc = 'Search lsp symbols', },
+      { 'gW', function() Snacks.picker.lsp_workspace_symbols() end, desc = 'Search lsp symbols', },
       { 'gO', function() Snacks.picker.lsp_symbols() end, desc = 'Search lsp document symbols', },
       { '<leader>sk', function() Snacks.picker.keymaps() end, desc = 'Search keymaps', },
       { '<leader>sh', function() Snacks.picker.help() end, desc = 'Search help', },

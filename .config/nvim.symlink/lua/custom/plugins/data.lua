@@ -147,7 +147,6 @@ return {
       {
         'neovim/nvim-lspconfig',
         'nvim-treesitter/nvim-treesitter',
-        'hrsh7th/nvim-cmp',
       },
     },
     opts = {
@@ -300,7 +299,7 @@ return {
   },
   {
     'Vigemus/iron.nvim',
-    enabled = true,
+    enabled = false,
     config = function()
       require('iron.core').setup {
         config = {

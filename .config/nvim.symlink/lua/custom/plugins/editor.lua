@@ -83,20 +83,20 @@ return {
         -- - <options> - table overriding target options.
         --
         -- See `:h MiniBracketed.config` for more info.
-        buffer = { suffix = 'b', options = {} },
-        comment = { suffix = 'c', options = {} },
+        buffer = { suffix = '', options = {} },
+        comment = { suffix = '', options = {} },
         conflict = { suffix = 'x', options = {} },
-        diagnostic = { suffix = 'd', options = {} },
-        file = { suffix = 'f', options = {} },
-        indent = { suffix = 'i', options = {} },
-        jump = { suffix = 'j', options = {} },
-        location = { suffix = 'l', options = {} },
+        diagnostic = { suffix = '', options = {} },
+        file = { suffix = '', options = {} },
+        indent = { suffix = '', options = {} },
+        jump = { suffix = '', options = {} },
+        location = { suffix = '', options = {} },
         oldfile = { suffix = 'o', options = {} },
-        quickfix = { suffix = 'q', options = {} },
+        quickfix = { suffix = '', options = {} },
         treesitter = { suffix = '', options = {} },
         undo = { suffix = '', options = {} },
-        window = { suffix = 'w', options = {} },
-        yank = { suffix = 'y', options = {} },
+        window = { suffix = '', options = {} },
+        yank = { suffix = '', options = {} },
       }
 
       -- Simple and easy statusline.
@@ -181,10 +181,6 @@ return {
       require('telescope').setup(opts)
       require('telescope').load_extension 'undo'
     end,
-  },
-  {
-    'stevearc/dressing.nvim',
-    opts = {},
   },
   {
     'rcarriga/nvim-notify',
@@ -351,7 +347,7 @@ return {
     },
     -- stylua: ignore
     keys = {
-      { '<S-Enter>', function() require('noice').redirect(vim.fn.getcmdline()) end, mode = 'c', desc = 'Redirect Cmdline', },
+      -- { '<S-Enter>', function() require('noice').redirect(vim.fn.getcmdline()) end, mode = 'c', desc = 'Redirect Cmdline', },
       { '<leader>snl', function() require('noice').cmd 'last' end, desc = 'Noice Last Message', },
       { '<leader>sni', function() require('noice').cmd 'history' end, desc = 'Noice History', },
       { '<leader>sna', function() require('noice').cmd 'all' end, desc = 'Noice All', },
@@ -393,20 +389,6 @@ return {
       -- vim.keymap.set({ 'n', 'x', 'o' }, 'F', '<Plug>(leap-backward)')
       vim.keymap.set({ 'n', 'x', 'o' }, 'gl', '<Plug>(leap-from-window)')
     end,
-  },
-  {
-    'folke/zen-mode.nvim',
-    opts = {
-      -- this will change the font size on alacritty when in zen mode
-      -- requires  Alacritty Version 0.10.0 or higher
-      -- uses `alacritty msg` subcommand to change font size
-      plugins = {
-        wezterm = {
-          enabled = true,
-          font = '+2', -- font size
-        },
-      },
-    },
   },
   {
     'tzachar/highlight-undo.nvim',
@@ -586,7 +568,16 @@ return {
       statuscolumn = { enabled = true },
       words = { enabled = true },
       scroll = { enabled = true },
-      picker = { enabled = true },
+      picker = {
+        win = {
+          -- input window
+          input = {
+            keys = {
+              ['<C-\\>'] = { { 'pick_win', 'jump' }, mode = { 'n', 'i' } },
+            },
+          },
+        },
+      },
       indent = { enabled = false },
       dashboard = { enabled = true },
     },

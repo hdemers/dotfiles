@@ -87,7 +87,6 @@ return {
       'echasnovski/mini.pick',
       'ibhagwan/fzf-lua',
       'nvim-telescope/telescope.nvim',
-      'hrsh7th/nvim-cmp',
       'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
       'zbirenbaum/copilot.lua', -- for providers='copilot'
       {

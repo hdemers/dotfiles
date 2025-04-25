@@ -10,21 +10,25 @@ local font_family = "Sudo"
 
 if font_family == "Sudo" then
 	config.font_size = 13
-	config.line_height = 1.1
-	config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
+	-- config.line_height = 1.1
+	-- config.harfbuzz_features = { "calt=1", "clig=0", "liga=0" }
 	config.allow_square_glyphs_to_overflow_width = "Never"
 elseif font_family == "Hack" then
-	config.font_size = 10
+	config.font_size = 11
 	config.line_height = 1.00
 elseif font_family == "FiraCode Nerd Font" then
-	config.font_size = 9
-elseif font_family == "JetBrains Mono" then
-	config.font_size = 9
-elseif font_family == "GeistMono" then
 	config.font_size = 10
+elseif font_family == "JetBrains Mono" then
+	config.font_size = 10
+elseif font_family == "GeistMono" then
+	config.font_size = 11
 elseif font_family == "Iosevka Nerd Font" then
-	config.font_size = 12
+	config.font_size = 13
 	-- config.line_height = 1.05
+elseif string.match(font_family, "^Monaspace") then
+	config.font_size = 10
+	config.harfbuzz_features =
+		{ "calt", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09", "liga" }
 else
 	config.font_size = 12
 end
@@ -51,33 +55,6 @@ local mux = wezterm.mux
 wezterm.on("gui-startup", function(cmd)
 	local _, _, window = mux.spawn_window(cmd or {})
 	window:gui_window():maximize()
-end)
-
--- The following is needed for nvim zen-mode plugin to increase the size of the
--- font in ZenMode.
-wezterm.on("user-var-changed", function(window, pane, name, value)
-	local overrides = window:get_config_overrides() or {}
-	if name == "ZEN_MODE" then
-		local incremental = value:find("+")
-		local number_value = tonumber(value)
-		if incremental ~= nil then
-			while number_value > 0 do
-				window:perform_action(wezterm.action.IncreaseFontSize, pane)
-				number_value = number_value - 1
-			end
-			overrides.enable_tab_bar = false
-			-- window:set_inner_size(2160, 500)
-		elseif number_value < 0 then
-			window:perform_action(wezterm.action.ResetFontSize, pane)
-			overrides.font_size = nil
-			overrides.enable_tab_bar = true
-			-- window:set_inner_size(2160, 3840)
-		else
-			overrides.font_size = number_value
-			overrides.enable_tab_bar = false
-		end
-	end
-	window:set_config_overrides(overrides)
 end)
 
 -- Wezterm doesn't do layout persisting and application restore like tmux-resurrect does.

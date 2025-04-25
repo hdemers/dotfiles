@@ -41,4 +41,9 @@ return {
       vim.opt.tabline = '%!v:lua.MySimpleTabline()'
     end,
   },
+  {
+    name = 'fidget-spinner',
+    dir = '~/src/nvim/misc',
+    dependencies = { 'j-hui/fidget.nvim' },
+  },
 }

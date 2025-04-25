@@ -1,24 +1,5 @@
 return {
   {
-    'github/copilot.vim',
-    lazy = false,
-    enabled = false,
-    init = function()
-      -- Set the highlight group for copilot suggestions
-      local apply_highlight = function()
-        vim.api.nvim_set_hl(0, 'CopilotSuggestion', {
-          link = 'Whitespace',
-        })
-      end
-      apply_highlight()
-      vim.api.nvim_create_autocmd('ColorScheme', {
-        pattern = 'solarized',
-        group = vim.api.nvim_create_augroup('CustomColorscheme', { clear = false }),
-        callback = apply_highlight,
-      })
-    end,
-  },
-  {
     'zbirenbaum/copilot.lua',
     cmd = 'Copilot',
     event = 'InsertEnter',
@@ -38,43 +19,46 @@ return {
     end,
   },
   {
-    'Aaronik/GPTModels.nvim',
-    enabled = false,
-    dependencies = {
-      'MunifTanjim/nui.nvim',
-      'nvim-telescope/telescope.nvim',
-    },
-    keys = {
-      {
-        '<leader>hc',
-        ':GPTModelsChat<CR>',
-        desc = 'ChatGPT: help chat',
-        mode = { 'n', 'v' },
-      },
-      -- {
-      --   '<leader>ho',
-      --   ':GPTModelsCode<CR>',
-      --   desc = 'GPTModels: help code',
-      --   mode = { 'n', 'v' },
-      -- },
-    },
-  },
-  {
     'yetone/avante.nvim',
-    enabled = false,
+    enabled = true,
     event = 'VeryLazy',
     lazy = false,
     version = false, -- set this if you want to always pull the latest change
+    keys = {
+      { '<leader>ava', ':AvanteAsk<CR>', desc = 'Avante: ask', mode = { 'n', 'v' } },
+      { '<leader>avl', ':AvanteToggle<CR>', desc = 'Avante: toggle' },
+      { '<leader>avc', ':AvanteChat<CR>', desc = 'Avante: chat' },
+      { '<leader>avs', ':AvanteStop<CR>', desc = 'Avante: stop' },
+      { '<leader>avn', ':AvanteChatNew<CR>', desc = 'Avante: new chat' },
+      { '<leader>avf', ':AvanteFocus<CR>', desc = 'Avante: focus sidebar' },
+      { '<leader>avm', ':AvanteModels<CR>', desc = 'Avante: model list' },
+      { '<leader>avp', ':AvanteShowRepoMap<CR>', desc = 'Avante: show repo map' },
+      { '<leader>avh', ':AvanteHistory<CR>', desc = 'Avante: show chat history' },
+      { '<leader>avx', ':AvanteClear<CR>', desc = 'Avante: reset' },
+    },
     opts = {
       provider = 'copilot',
-      vendors = {
-        ollama = {
-          __inherited_from = 'openai',
-          api_key_name = '',
-          endpoint = 'http://127.0.0.1:11434/v1',
-          model = 'deepseek-r1:8b',
-        },
+      cursor_applying_provider = 'copilot',
+      disable_tools = true,
+      copilot = {
+        model = 'claude-3.7-sonnet-thought',
+        disable_tools = true,
       },
+      behaviour = {
+        auto_set_keymaps = false,
+        enable_cursor_planning_mode = true,
+      },
+      hints = { enabled = false },
+      system_prompt = function()
+        local hub = require('mcphub').get_hub_instance()
+        return hub:get_active_servers_prompt()
+      end,
+      -- The custom_tools type supports both a list and a function that returns a list. Using a function here prevents requiring mcphub before it's loaded
+      custom_tools = function()
+        return {
+          require('mcphub.extensions.avante').mcp_tool(),
+        }
+      end,
     },
     -- if you want to build from source then do `make BUILD_FROM_SOURCE=true`
     build = 'make',
@@ -84,37 +68,39 @@ return {
       'stevearc/dressing.nvim',
       'nvim-lua/plenary.nvim',
       'MunifTanjim/nui.nvim',
-      'echasnovski/mini.pick',
       'ibhagwan/fzf-lua',
-      'nvim-telescope/telescope.nvim',
       'nvim-tree/nvim-web-devicons', -- or echasnovski/mini.icons
       'zbirenbaum/copilot.lua', -- for providers='copilot'
-      {
-        -- support for image pasting
-        'HakonHarnes/img-clip.nvim',
-        event = 'VeryLazy',
+      'ravitemer/mcphub.nvim',
+      { -- This is the blink-cmp-avante plugin. The dependency is reversed
+        -- because it needs to be loaded before blink.cmp.
+        'saghen/blink.cmp',
+        dependencies = {
+          'Kaiser-Yang/blink-cmp-avante',
+          -- ... Other dependencies
+        },
         opts = {
-          -- recommended settings
-          default = {
-            embed_image_as_base64 = false,
-            prompt_for_file_name = false,
-            drag_and_drop = {
-              insert_mode = true,
+          sources = {
+            -- Add 'avante' to the list
+            default = { 'avante', 'lsp', 'path', 'luasnip', 'buffer' },
+            providers = {
+              avante = {
+                module = 'blink-cmp-avante',
+                name = 'Avante',
+                opts = {
+                  -- options for blink-cmp-avante
+                },
+              },
             },
-            -- required for Windows users
-            use_absolute_path = true,
           },
         },
       },
-      -- {
-      --   -- Make sure to set this up properly if you have lazy=true
-      --   'MeanderingProgrammer/render-markdown.nvim',
-      --   opts = {
-      --     file_types = { 'markdown', 'Avante', 'quarto', 'rmd' },
-      --   },
-      --   ft = { 'markdown', 'Avante' },
-      -- },
     },
+    init = function()
+      require('which-key').add {
+        { '<leader>av', group = 'Avante' },
+      }
+    end,
   },
   {
     'CopilotC-Nvim/CopilotChat.nvim',
@@ -154,50 +140,109 @@ return {
     },
     -- stylua: ignore
     keys = {
-      { '<leader>aa', ':CopilotChatToggle<CR>', desc = 'Copilot: toggle chat', },
-      { '<leader>ae', ':CopilotChatExplain<CR>', desc = 'Copilot: explain', mode = { 'n', 'v' }, },
-      { '<leader>ac', ':CopilotChatCommit<CR>', desc = 'Copilot: commit', mode = { 'n', 'v' }, },
-      { '<leader>ad', ':CopilotChatDocs<CR>', desc = 'Copilot: document', mode = { 'n', 'v' }, },
-      { '<leader>af', ':CopilotChatFix<CR>', desc = 'Copilot: fix', mode = { 'n', 'v' }, },
-      { '<leader>ao', ':CopilotChatOptimize<CR>', desc = 'Copilot: optimize', mode = { 'n', 'v' }, },
-      { '<leader>ar', ':CopilotChatReview<CR>', desc = 'Copilot: review', mode = { 'n', 'v' }, },
-      { '<leader>at', ':CopilotChatTests<CR>', desc = 'Copilot: tests', mode = { 'n', 'v' }, },
-      { '<leader>ax', ':CopilotChatReset<CR>', desc = 'Copilot: reset', mode = { 'n', 'v' }, },
+      { '<leader>aca', ':CopilotChat<CR>', desc = 'Copilot: chat', mode = { 'n', 'v' }, },
+      { '<leader>acl', ':CopilotChatToggle<CR>', desc = 'Copilot: toggle', },
+      { '<leader>ace', ':CopilotChatExplain<CR>', desc = 'Copilot: explain', mode = { 'n', 'v' }, },
+      { '<leader>acc', ':CopilotChatCommit<CR>', desc = 'Copilot: commit', mode = { 'n', 'v' }, },
+      { '<leader>acd', ':CopilotChatDocs<CR>', desc = 'Copilot: document', mode = { 'n', 'v' }, },
+      { '<leader>acf', ':CopilotChatFix<CR>', desc = 'Copilot: fix', mode = { 'n', 'v' }, },
+      { '<leader>aco', ':CopilotChatOptimize<CR>', desc = 'Copilot: optimize', mode = { 'n', 'v' }, },
+      { '<leader>acp', ':CopilotChatReview<CR>', desc = 'Copilot: review', mode = { 'n', 'v' }, },
+      { '<leader>acu', ':CopilotChatTests<CR>', desc = 'Copilot: tests', mode = { 'n', 'v' }, },
+      { '<leader>acx', ':CopilotChatReset<CR>', desc = 'Copilot: reset', mode = { 'n', 'v' }, },
     },
-  },
-  {
-    'Davidyz/VectorCode',
-    version = '*', -- optional, depending on whether you're on nightly or release
-    build = 'uv tool install --upgrade vectorcode', -- optional but recommended if you set `version = "*"`
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    lazy = true,
+    init = function()
+      require('which-key').add {
+        { '<leader>ac', group = 'CopilotChat' },
+      }
+    end,
   },
   {
     'olimorris/codecompanion.nvim',
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
-      'Davidyz/VectorCode',
+      'ravitemer/mcphub.nvim',
+    },
+    -- stylua: ignore
+    keys = {
+      { '<leader>aoa', '<cmd>CodeCompanionChat<CR>', desc = 'CodeCompanion: chat', mode = { 'n', 'v' }, },
+      { '<leader>aol', '<cmd>CodeCompanionChat Toggle<CR>', desc = 'CodeCompanion: toggle', },
+      { '<leader>aoa', '<cmd>CodeCompanionChat AddCR>', desc = 'CodeCompanion: add selected code to chat', mode = { 'v' } },
     },
     opts = {
+      adapters = {
+        copilot = function()
+          return require('codecompanion.adapters').extend('copilot', {
+            schema = {
+              model = {
+                default = 'claude-3.7-sonnet-thought',
+                -- default = 'gemini-2.0-flash-001',
+              },
+            },
+          })
+        end,
+      },
       strategies = {
         chat = {
-          adapter = 'gemini',
+          adapter = 'copilot',
+          tools = {
+            ['mcp'] = {
+              callback = function()
+                return require 'mcphub.extensions.codecompanion'
+              end,
+              description = 'Call tools and resources from the MCP Servers',
+              opts = {
+                user_approval = true,
+              },
+            },
+          },
         },
         inline = {
-          adapter = 'gemini',
+          adapter = 'copilot',
         },
       },
     },
     config = function(_, opts)
-      -- Extends `opts` 'strategies.chat`'
-      opts.strategies.chat.tools = {
-        vectorcode = {
-          description = 'Run VectorCode to retrieve the project context.',
-          callback = require('vectorcode.integrations').codecompanion.chat.make_tool(),
-        },
-      }
       require('codecompanion').setup(opts)
+      require('which-key').add {
+        { '<leader>ao', group = 'CodeCompanion' },
+      }
+    end,
+    init = function()
+      require('fidget-spinner'):init()
+    end,
+  },
+  {
+    'ravitemer/mcphub.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      -- 'yetone/avante.nvim',
+      -- 'olimorris/codecompanion.nvim',
+    },
+    -- comment the following line to ensure hub will be ready at the earliest
+    -- cmd = 'MCPHub', -- lazy load by default
+    build = 'npm install -g mcp-hub@latest', -- Installs required mcp-hub npm module
+    -- uncomment this if you don't want mcp-hub to be available globally or can't use -g
+    -- build = "bundled_build.lua",  -- Use this and set use_bundled_binary = true in opts  (see Advanced configuration)
+    opts = {
+      auto_approve = true, -- Auto approve mcp tool calls
+      auto_toggle_mcp_servers = true, -- Let LLMs start and stop MCP servers automatically
+      extensions = {
+        avante = {
+          make_slash_commands = true, -- make /slash commands from MCP server prompts
+        },
+        codecompanion = {
+          -- Show the mcp tool result in the chat buffer
+          -- NOTE:if the result is markdown with headers, content after the headers wont be sent by codecompanion
+          show_result_in_chat = false,
+          make_vars = true, -- make chat #variables from MCP server resources
+          make_slash_commands = true, -- make /slash commands from MCP server prompts
+        },
+      },
+    },
+    config = function(_, opts)
+      require('mcphub').setup(opts)
     end,
   },
 }

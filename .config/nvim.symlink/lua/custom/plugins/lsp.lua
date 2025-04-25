@@ -107,9 +107,9 @@ return {
         underline = { severity = vim.diagnostic.severity.ERROR },
         signs = vim.g.have_nerd_font and {
           text = {
-            [vim.diagnostic.severity.ERROR] = '󰅚 ',
-            [vim.diagnostic.severity.WARN] = '󰀪 ',
-            [vim.diagnostic.severity.INFO] = '󰋽 ',
+            [vim.diagnostic.severity.ERROR] = '✘ ',
+            [vim.diagnostic.severity.WARN] = '▲ ',
+            [vim.diagnostic.severity.INFO] = 'ℹ ',
             [vim.diagnostic.severity.HINT] = '󰌶 ',
           },
         } or {},
@@ -152,19 +152,25 @@ return {
             end
           end,
         },
-        pyright = {
+        basedpyright = {
           settings = {
-            pyright = {
+            basedpyright = {
               -- Using Ruff's import organizer
               disableOrganizeImports = true,
-            },
-            python = {
               analysis = {
-                -- Ignore all files for analysis to exclusively use Ruff for linting
-                ignore = { '*' },
-                typeCheckingMode = 'off',
+                diagnosticMode = 'workspace',
+                inlayHints = {
+                  callArguments = true,
+                },
               },
             },
+            -- python = {
+            --   analysis = {
+            --     -- Ignore all files for analysis to exclusively use Ruff for linting
+            --     -- ignore = { '*' },
+            --     diagnosticMode = 'workspace',
+            --   },
+            -- },
           },
         },
         -- beancount = {},
@@ -219,13 +225,6 @@ return {
           end,
         },
       }
-      -- Change the LSP diagnostic symbols
-      local signs =
-        { Error = ' ', Warning = ' ', Hint = ' ', Information = ' ' }
-      for type, icon in pairs(signs) do
-        local hl = 'LspDiagnosticsSign' .. type
-        vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = '' })
-      end
     end,
   },
   {

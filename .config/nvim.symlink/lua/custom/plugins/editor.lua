@@ -468,7 +468,7 @@ return {
   },
   {
     'OXY2DEV/markview.nvim',
-    enabled = true,
+    enabled = false,
     lazy = false, -- Recommended
     dependencies = {
       -- You will not need this if you installed the
@@ -484,7 +484,7 @@ return {
     },
     opts = {
       preview = {
-        filetypes = { 'markdown', 'quarto', 'rmd', 'Avante' },
+        filetypes = { 'markdown', 'quarto', 'rmd', 'Avante', 'codecompanion' },
         modes = { 'n', 'i', 'no', 'c' },
         callbacks = {
           on_enable = function(_, win)
@@ -534,6 +534,30 @@ return {
     end,
   },
   {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+    ---@module 'render-markdown'
+    ---@type render.md.UserConfig
+    opts = {
+      file_types = {
+        'markdown',
+        'quarto',
+        'rmd',
+        'codecompanion',
+        'copilot-chat',
+        'Avante',
+      },
+      code = {
+        -- style = 'normal',
+        language_name = false,
+        language_icon = false,
+        language_pad = 0,
+        sign = false,
+        border = 'thin',
+      },
+    },
+  },
+  {
     'nvim-neo-tree/neo-tree.nvim',
     branch = 'v3.x',
     dependencies = {
@@ -547,6 +571,12 @@ return {
         '<leader>sx',
         ':Neotree toggle<CR>',
         desc = 'Toggle Neo-tree',
+      },
+    },
+    opts = {
+      filesystem = {
+        follow_current_file = true,
+        use_libuv_file_watcher = true,
       },
     },
   },

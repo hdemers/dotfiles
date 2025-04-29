@@ -96,7 +96,8 @@ return {
         },
       },
     },
-    init = function()
+    config = function(_, opts)
+      require('avante').setup(opts)
       require('which-key').add {
         { '<leader>av', group = 'Avante' },
       }
@@ -124,17 +125,17 @@ return {
         ReviewLibraryStagedChanges = {
           prompt = 'This code is part of a library. The API should not be broken. Review the staged files for any breaking changes and other issues. #git:staged',
           description = 'Review staged files for breaking changes',
-          mapping = '<leader>ab',
+          mapping = '<leader>acb',
         },
         BetterNames = {
           prompt = 'Please provide better names for the following variables and functions.',
           description = 'Improve names of variables and functions.',
-          mapping = '<leader>an',
+          mapping = '<leader>acn',
         },
         Wording = {
           prompt = 'Please improve the grammar and wording of the following text.',
           description = 'Improve the grammar and wording.',
-          mapping = '<leader>aw',
+          mapping = '<leader>acw',
         },
       },
     },
@@ -151,7 +152,9 @@ return {
       { '<leader>acu', ':CopilotChatTests<CR>', desc = 'Copilot: tests', mode = { 'n', 'v' }, },
       { '<leader>acx', ':CopilotChatReset<CR>', desc = 'Copilot: reset', mode = { 'n', 'v' }, },
     },
-    init = function()
+    config = function(_, opts)
+      require('CopilotChat').setup(opts)
+
       require('which-key').add {
         { '<leader>ac', group = 'CopilotChat' },
       }
@@ -200,6 +203,11 @@ return {
         },
         inline = {
           adapter = 'copilot',
+        },
+      },
+      display = {
+        action_palette = {
+          provider = 'default',
         },
       },
     },

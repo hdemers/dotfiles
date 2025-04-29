@@ -106,12 +106,6 @@ return {
     },
   },
   {
-    'numToStr/Comment.nvim',
-    opts = {
-      -- add any options here
-    },
-  },
-  {
     'andythigpen/nvim-coverage',
     dependencies = 'nvim-lua/plenary.nvim',
     config = function()

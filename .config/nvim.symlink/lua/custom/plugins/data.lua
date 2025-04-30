@@ -439,6 +439,7 @@ return {
   {
     -- 'hdemers/nvim-dbee',
     dir = '/home/hdemers/Projets/nvim-dbee/',
+    enabled = false,
     dependencies = {
       'MunifTanjim/nui.nvim',
     },

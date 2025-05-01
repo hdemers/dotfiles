@@ -302,4 +302,60 @@ M.simple_tabline = function()
 
   return s
 end
+
+M.rsync_current_file = function(destination, opts)
+  -- Set default options
+  opts = opts or {}
+  local rsync_flags = opts.flags or '-avz'
+
+  -- Get the current buffer's file path
+  local filepath = vim.api.nvim_buf_get_name(0)
+
+  if filepath == '' then
+    vim.notify('Current buffer has no file', vim.log.levels.ERROR)
+    return false
+  end
+
+  -- Check if file exists
+  if vim.fn.filereadable(filepath) == 0 then
+    vim.notify('File not readable: ' .. filepath, vim.log.levels.ERROR)
+    return false
+  end
+
+  -- If no destination provided, prompt for one
+  if not destination or destination == '' then
+    destination = vim.fn.input 'Rsync destination (user@host:path): '
+    if destination == '' then
+      vim.notify('No destination provided', vim.log.levels.WARN)
+      return false
+    end
+  end
+
+  -- Construct the rsync command
+  local cmd = { 'rsync', rsync_flags, filepath, destination }
+
+  vim.notify(
+    'Syncing ' .. filepath .. ' to ' .. destination .. '...',
+    vim.log.levels.INFO
+  )
+
+  -- Execute rsync
+  vim.system(
+    cmd,
+    { text = true },
+    vim.schedule_wrap(function(obj)
+      if obj.code == 0 then
+        vim.notify('File synced successfully to ' .. destination, vim.log.levels.INFO)
+      else
+        vim.notify(
+          'Rsync failed: ' .. (obj.stderr or 'Unknown error'),
+          vim.log.levels.ERROR
+        )
+      end
+    end)
+  )
+
+  return true
+end
+
 return M

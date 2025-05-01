@@ -82,7 +82,7 @@ return {
         opts = {
           sources = {
             -- Add 'avante' to the list
-            default = { 'avante', 'lsp', 'path', 'luasnip', 'buffer' },
+            default = { 'avante', 'lsp', 'path', 'buffer' },
             providers = {
               avante = {
                 module = 'blink-cmp-avante',

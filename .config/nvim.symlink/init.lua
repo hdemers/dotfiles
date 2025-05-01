@@ -342,7 +342,7 @@ require('lazy').setup({
   {
     import = 'custom.plugins.local-only',
     cond = function()
-      if not string.find(vim.env.HOSTNAME or '', 'asdf') then
+      if not string.find(vim.env.HOSTNAME or '', 'neptune') then
         return false
       end
       return true

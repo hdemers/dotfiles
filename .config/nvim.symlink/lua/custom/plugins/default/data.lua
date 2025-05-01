@@ -39,7 +39,7 @@ return {
       { '<localleader>jl', function() require('quarto.runner').run_line() end, desc = 'Quarto: run line', },
       { '<localleader>jp', ':QuartoPreview<CR>', desc = 'Quarto: open preview', },
       { '<localleader>jP', ':QuartoClosePreview<CR>', desc = 'Quarto: close preview', },
-      { '<localleader>jj', "ko\rpyc<cmd>lua require('luasnip').expand()<CR>", desc = 'Snippet: new cell', },
+      -- { '<localleader>jj', "ko\rpyc<cmd>lua require('luasnip').expand()<CR>", desc = 'Snippet: new cell', },
       { '<localleader>j/', 'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O', desc = 'Split cell', },
     },
     config = function(_, opts)

@@ -252,7 +252,10 @@ js() {
         --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
         --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
         --bind 'ctrl-h:reload(jira issues)+clear-query' \
-        --bind 'ctrl-e:reload(jira issues --epics-only)'
+        --bind 'ctrl-e:reload(jira issues --epics-only)' \
+        --border-label-pos=5:bottom \
+        --border='rounded' \
+        --border-label='  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: in epic | ctrl-h: all | '
 }
 
 jsc() {

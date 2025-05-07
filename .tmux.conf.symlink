@@ -36,13 +36,15 @@ bind-key s split-window -v
 set-option -s set-clipboard off
 
 # Copy mode, dependent on X11 or Wayland.
-if-shell 'which xclip' \
-    "bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'xclip -in -selection clipboard'" \
-    "bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'wl-copy'"
-# Copy mode vi
 bind-key -T copy-mode-vi 'v' send -X begin-selection
 bind-key -T copy-mode-vi 'C-v' send -X rectangle-toggle
-unbind -T copy-mode-vi Enter
+# Then configure the copy command
+if-shell "which xclip" \
+    "bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'xclip -in -selection clipboard'" \
+    "bind-key -T copy-mode-vi 'y' send -X copy-pipe-and-cancel 'wl-copy'"
+if-shell "which xclip" \
+    "bind-key -T copy-mode-vi Enter send -X copy-pipe-and-cancel 'xclip -in -selection clipboard'" \
+    "bind-key -T copy-mode-vi Enter send -X copy-pipe-and-cancel 'wl-copy'"
 
 # Vim-like pane switching bindings
 bind-key j select-pane -D
@@ -99,7 +101,7 @@ set -g @minimal-tmux-left-arrow ""
 # /tmp/.mount_nvim1QOO9k/usr/bin/nvim, with the string 'nvim'.
 resurrect_dir="$HOME/.local/share/tmux/resurrect"
 set -g @resurrect-dir $resurrect_dir
-set -g @resurrect-processes 'nvim "~distrobox enter -- nvim"'
+set -g @resurrect-processes 'nvim "~distrobox enter -- nvim->distrobox enter -- nvim"'
 # set -g @resurrect-hook-post-save-all 'sed -i "s/\/tmp.*nvim/nvim/" $resurrect_dir/last'
 
 # Automatic resurrect when tmux starts

@@ -33,3 +33,5 @@ make -j install
 
 echo 'export PATH=$PATH:$HOME/.local/bin' >> $HOME/.bashrc
 
+git clone https://github.com/tmux-plugins/tpm $HOME/.tmux/plugins/tpm
+

@@ -31,12 +31,42 @@
 # <Super>KP_1,pidgin,Pidgin,/^((?!Buddy List).)*$/
 
 
-<Super>4,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,hdemers@grubhub.com
-<Super>6,gtk-launch tmux-vim.desktop,,vim
-<Super>m,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,Gmail,hdemers@gmail.com
-<Super><Shift>m,flatpak run com.spotify.Client,Spotify,Spotify
-<Super><Shift>k,flatpak run org.keepassxc.KeePassXC,org.keepassxc.KeePassXC,KeePassXC
-<Super><Shift>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*grubhub-dev.*/
+# Grubhub mail
+<Super>m,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
+
+# Tmux-vim
+<Super>e,gtk-launch tmux-vim.desktop,,vim
+
+# GMail
+<Super>4,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@gmail.com.*/
+
+# Spotify
+<Super>s,flatpak run com.spotify.Client,Spotify,Spotify
+
+# KeePassXC
+<Super>p,flatpak run org.keepassxc.KeePassXC,org.keepassxc.KeePassXC,KeePassXC
+
+# Google-Chrome - Grubhub
+<Super>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*grubhub-dev.*/
+
+# Google-Chrome
+<Super><Shift>c,gtk-launch com.google.Chrome.desktop,,/.*Google Chrome$/
+
+# Gemini
+<Super>g,gtk-launch com.google.Chrome.flextop.chrome-mojogeknlbnppmajemmkcfkilgaapppk-Default.desktop,,Google AI Studio
+
+# Messages
+<Super>i,gtk-launch com.google.Chrome.flextop.chrome-hpfldicfbfomlpcikngkocigghgafkph-Default.desktop,,Messages for web
+
+# Google Calendar
+<Super>a,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Week of
+
+# Firefox
+<Super>f,gtk-launch org.mozilla.firefox.desktop,org.mozilla.firefox,
+
+# Terminal
+<Super>t,gtk-launch org.gnome.Ptyxis.desktop,org.gnome.Ptyxis,
+
 # =============
 # Run only form
 # =============

@@ -254,7 +254,7 @@ return {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
-            ['--border-label'] = 'ctrl-t: transition | ctrl-i: new | ctrl-w: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update',
+            ['--border-label'] = 'ctrl-t: transition | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },

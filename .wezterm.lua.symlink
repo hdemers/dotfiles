@@ -6,10 +6,10 @@ local wezterm = require("wezterm")
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-local font_family = "Sudo"
+local font_family = "Hack"
 
 if font_family == "Sudo" then
-	config.font_size = 13
+	config.font_size = 14
 	-- config.line_height = 1.1
 	-- config.harfbuzz_features = { "calt=1", "clig=0", "liga=0" }
 	config.allow_square_glyphs_to_overflow_width = "Never"
@@ -19,14 +19,14 @@ elseif font_family == "Hack" then
 elseif font_family == "FiraCode Nerd Font" then
 	config.font_size = 10
 elseif font_family == "JetBrains Mono" then
-	config.font_size = 10
+	config.font_size = 11
 elseif font_family == "GeistMono" then
 	config.font_size = 11
 elseif font_family == "Iosevka Nerd Font" then
-	config.font_size = 13
+	config.font_size = 11
 	-- config.line_height = 1.05
 elseif string.match(font_family, "^Monaspace") then
-	config.font_size = 10
+	config.font_size = 11
 	config.harfbuzz_features =
 		{ "calt", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09", "liga" }
 else

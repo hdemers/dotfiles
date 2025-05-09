@@ -240,22 +240,35 @@ gb() {
 
 
 js() {
-    jira issues \
-        | fzf \
+    local url="${JIRA_SERVER_URL}/browse"
+    local container_name="${DBX_CONTAINER_NAME}"
+    local cmd='xdg-open'
+    if [ -n "$container_name" ]; then
+        if [ -n "$CONTAINER_ID" ]; then
+            cmd="gtk-launch google-chrome.desktop"
+        else
+            cmd="gtk-launch ${container_name}-google-chrome.desktop"
+        fi
+    fi
+
+    jira issues --current-sprint --mine  \
+        | fzf-tmux -p 90% \
         --ansi \
-        --height=60% \
-        --preview='jira describe {1}' \
-        --preview-window='top,50%' \
-        --header-lines=1 \
-        --scheme=history \
+        --preview 'jira describe {1}' \
+        --preview-window 'top,50%' \
+        --header-lines 1 \
+        --scheme history \
+        --bind 'enter:execute(wl-copy {1})+abort' \
         --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
         --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
-        --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
+        --bind 'ctrl-l:reload(jira issues --in-epic {1})+clear-query' \
         --bind 'ctrl-h:reload(jira issues)+clear-query' \
         --bind 'ctrl-e:reload(jira issues --epics-only)' \
-        --border-label-pos=5:bottom \
-        --border='rounded' \
-        --border-label='  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: in epic | ctrl-h: all | '
+        --bind "ctrl-w:execute(wl-copy ${url}/{1})" \
+        --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
+        --border-label-pos 5:bottom \
+        --border 'rounded' \
+        --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: in epic | ctrl-h: all | ctrl-w: copy url | ctrl-o: open url'
 }
 
 jsc() {

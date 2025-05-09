@@ -20,8 +20,6 @@ set-option -g set-titles on
 if-shell 'which zsh' 'set -g default-shell /bin/zsh'
 # set -g default-command "reattach-to-user-namespace -l zsh"
 
-# emacs key bindings in tmux command prompt (prefix + :) are better than
-# vi keys, even for vim users
 set-option -g mode-keys vi
 set-option -g status-keys vi
 set-option -g history-limit 50000
@@ -51,6 +49,10 @@ bind-key j select-pane -D
 bind-key k select-pane -U
 bind-key h select-pane -L
 bind-key l select-pane -R
+
+# Window swapping
+bind-key ( swap-window -t -1\; select-window -t -1
+bind-key ) swap-window -t +1\; select-window -t +1
 
 # Prompt navigation in copy mode
 bind-key -T copy-mode-vi C-k send -X previous-prompt

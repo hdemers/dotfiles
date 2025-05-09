@@ -7,7 +7,7 @@ M.setup = function()
 end
 
 M.spawn_ipython_term = function()
-  local box_name = os.getenv 'DBX_CONTAINER_NAME' or 'grubhub-dev'
+  local box_name = os.getenv 'DBX_CONTAINER_NAME'
   local Terminal = require('toggleterm.terminal').Terminal
   local ipython_cmd = 'ipython --no-autoindent'
   if not os.getenv 'CONTAINER_ID' then
@@ -356,6 +356,19 @@ M.rsync_current_file = function(destination, opts)
   )
 
   return true
+end
+
+M.open_url = function(url)
+  local container_name = os.getenv 'DBX_CONTAINER_NAME'
+  local cmd = string.format('xdg-open %s', url)
+
+  if container_name then
+    cmd = string.format('gtk-launch %s-google-chrome.desktop "%s"', container_name, url)
+  end
+
+  vim.notify('Opening URL: ' .. url, vim.log.levels.INFO)
+  vim.fn.jobstart(cmd)
+  vim.notify('Opening in browser: ' .. url, vim.log.levels.INFO)
 end
 
 return M

@@ -6,7 +6,8 @@ return {
         if os.getenv 'CONTAINER_ID' then
           return { 'jenkins', 'integrate' }
         else
-          return { 'distrobox', 'enter', 'grubhub-dev', '--', 'jenkins', 'integrate' }
+          local container_name = os.getenv 'DBX_CONTAINER_NAME'
+          return { 'distrobox', 'enter', container_name, '--', 'jenkins', 'integrate' }
         end
       end)(),
       components = {

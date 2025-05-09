@@ -118,6 +118,7 @@ return {
     },
     init = function()
       local fzflua = require 'fzf-lua'
+      local misc = require 'misc'
 
       -- Show git branches and allow switching between them.
 
@@ -254,7 +255,7 @@ return {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
-            ['--border-label'] = 'ctrl-t: transition | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update',
+            ['--border-label'] = 'ctrl-t: transition | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-w: web link | ctrl-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
@@ -285,6 +286,7 @@ return {
               -- Store `selected` in the system clipboard
               local key = vim.split(selected[1], ' ', { trimempty = true })[1]
               vim.fn.setreg('+', key)
+              vim.notify('Copied issue key: ' .. key, vim.log.levels.INFO)
             end,
             ['ctrl-e'] = {
               function(_)
@@ -302,6 +304,25 @@ return {
               function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
                 show_jira_issues(string.format(' --in-epic %s', key))
+              end,
+              fzflua.actions.resume,
+            },
+            ['ctrl-w'] = {
+              function(selected)
+                local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                local server_url = vim.fn.getenv 'JIRA_SERVER_URL'
+                local issue_url = server_url .. '/browse/' .. key
+                vim.fn.setreg('+', issue_url)
+                vim.notify('Copied issue URL: ' .. issue_url, vim.log.levels.INFO)
+              end,
+              fzflua.actions.resume,
+            },
+            ['ctrl-o'] = {
+              function(selected)
+                local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                local server_url = vim.fn.getenv 'JIRA_SERVER_URL'
+                local issue_url = server_url .. '/browse/' .. key
+                misc.open_url(issue_url)
               end,
               fzflua.actions.resume,
             },

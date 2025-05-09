@@ -298,104 +298,24 @@ return {
     end,
   },
   {
-    'Vigemus/iron.nvim',
-    enabled = false,
-    config = function()
-      require('iron.core').setup {
-        config = {
-          scratch_repl = true,
-          repl_open_cmd = 'vertical botright 80 split',
-          -- repl_open_cmd = 'ToggleTerm',
-          repl_definition = {
-            python = {
-              command = function(meta)
-                local container_name = os.getenv 'DBX_CONTAINER_NAME' or 'grubhub-dev'
-                -- Check if ipython is available in the distrobox
-                local handle = io.popen(
-                  'distrobox enter ' .. container_name .. ' -- which ipython 2>/dev/null'
-                )
-                if not handle then
-                  vim.notify('Failed to check for ipython.', vim.log.levels.ERROR)
-                  return nil
-                end
-                local result = handle:read '*a'
-                handle:close()
-                if result == '' then
-                  -- Prompt user to install ipykernel
-                  vim.notify(
-                    'ipython is not available. Asking for input.',
-                    vim.log.levels.ERROR
-                  )
-                  local input = vim.fn
-                    .input('Confirm', 'ipython not found. Install ipykernel? [y/N]: ')
-                    :sub(-1)
-
-                  vim.notify('input: ' .. input)
-                  if input and input:lower() == 'y' then
-                    local Terminal = require('toggleterm.terminal').Terminal
-                    -- Create a function that returns a promise-like object
-                    local function wait_for_terminal(cmd)
-                      local done = false
-
-                      local term = Terminal:new {
-                        direction = 'float',
-                        cmd = cmd,
-                        hidden = false,
-                        float_opts = { width = 100, height = 40 },
-                        on_exit = function()
-                          done = true
-                        end,
-                      }
-
-                      term:open()
-
-                      -- Wait for the terminal to finish
-                      vim.wait(30000, function()
-                        return done
-                      end, 100)
-
-                      -- Give a small delay for cleanup
-                      vim.defer_fn(function()
-                        term:close()
-                      end, 5000)
-                    end
-
-                    local cmd = 'distrobox enter '
-                      .. container_name
-                      .. ' -- uv pip install ipykernel'
-
-                    -- Use the waiting terminal
-                    wait_for_terminal(cmd)
-                  end
-                end
-                -- Return ipython command if available
-                return {
-                  'distrobox',
-                  'enter',
-                  container_name,
-                  '--',
-                  'ipython',
-                  '--no-autoindent',
-                }
-              end,
-            },
-            quarto = {
-              command = {
-                'distrobox',
-                'enter',
-                'grubhub-dev',
-                '--',
-                'ipython',
-                '--no-autoindent',
-              },
-            },
-          },
-        },
-      }
-    end,
-  },
-  {
-    'chrisbra/csv.vim',
+    'hat0uma/csvview.nvim',
+    opts = {
+      parser = { comments = { '#', '//' } },
+      keymaps = {
+        -- Text objects for selecting fields
+        textobject_field_inner = { 'if', mode = { 'o', 'x' } },
+        textobject_field_outer = { 'af', mode = { 'o', 'x' } },
+        -- Excel-like navigation:
+        -- Use <Tab> and <S-Tab> to move horizontally between fields.
+        -- Use <Enter> and <S-Enter> to move vertically between rows and place the cursor at the end of the field.
+        -- Note: In terminals, you may need to enable CSI-u mode to use <S-Tab> and <S-Enter>.
+        jump_next_field_end = { '<Tab>', mode = { 'n', 'v' } },
+        jump_prev_field_end = { '<S-Tab>', mode = { 'n', 'v' } },
+        jump_next_row = { '<Enter>', mode = { 'n', 'v' } },
+        jump_prev_row = { '<S-Enter>', mode = { 'n', 'v' } },
+      },
+    },
+    cmd = { 'CsvViewEnable', 'CsvViewDisable', 'CsvViewToggle' },
   },
   {
     'hdemers/vim-dadbod-ui',

@@ -6,7 +6,8 @@ return {
         if os.getenv 'CONTAINER_ID' then
           return { 'make', 'requirements.txt' }
         else
-          return { 'distrobox', 'enter', 'grubhub-dev', '--', 'make', 'requirements.txt' }
+          local container_name = os.getenv 'DBX_CONTAINER_NAME'
+          return { 'distrobox', 'enter', container_name, '--', 'make', 'requirements.txt' }
         end
       end)(),
       components = {

@@ -43,6 +43,13 @@ return {
       vim.api.nvim_create_user_command('RsyncFile', function(opts)
         misc.rsync_current_file(opts.args, {})
       end, { nargs = '?', desc = 'Rsync current file to destination' })
+
+      vim.keymap.set(
+        'n',
+        '<localleader>bi',
+        ':tabnew scratch/scratch.qmd | <CR>',
+        { desc = 'Open interactive Quarto notebook', silent = true }
+      )
     end,
   },
   {

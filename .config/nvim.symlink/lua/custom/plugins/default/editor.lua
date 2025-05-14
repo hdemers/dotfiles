@@ -677,9 +677,21 @@ return {
             :map '<leader>ub'
           Snacks.toggle.inlay_hints():map '<leader>uh'
           Snacks.toggle.indent():map '<leader>ug'
-          Snacks.toggle.dim():map '<leader>uD'
+          Snacks.toggle.dim():map '<leader>um'
           Snacks.toggle.zen():map '<leader>uz'
+          Snacks.toggle
+            .option('cursorcolumn', { name = 'Cursor column' })
+            :map '<leader>uo'
+          Snacks.toggle.option('cursorline', { name = 'Cursor line' }):map '<leader>ur'
         end,
+
+        vim.keymap.set('n', '<leader>uD', function()
+          local bufnr = vim.api.nvim_get_current_buf()
+          vim.diagnostic.enable(
+            not vim.diagnostic.is_enabled { bufnr = bufnr },
+            { bufnr = bufnr }
+          )
+        end, { desc = 'Toggle diagnostics for current buffer' }),
       })
     end,
   },

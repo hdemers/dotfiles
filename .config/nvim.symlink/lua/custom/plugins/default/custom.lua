@@ -51,6 +51,16 @@ return {
         { desc = 'Open interactive Quarto notebook', silent = true }
       )
     end,
+    init = function()
+      vim.keymap.set('n', '<leader>go', function()
+        local Terminal = require('toggleterm.terminal').Terminal
+        Terminal:new({
+          direction = 'vertical',
+          cmd = 'gh pr create',
+          hidden = false,
+        }):open()
+      end, { desc = 'Open PR' })
+    end,
   },
   {
     name = 'fidget-spinner',

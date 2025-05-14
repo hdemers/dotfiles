@@ -313,7 +313,7 @@ return {
         },
         null_ls.builtins.diagnostics.bean_check,
         null_ls.builtins.formatting.bean_format,
-        null_ls.builtins.diagnostics.mypy.with(mypy_opts),
+        -- null_ls.builtins.diagnostics.mypy.with(mypy_opts),
       }
 
       null_ls.setup { sources = sources, debug = true }

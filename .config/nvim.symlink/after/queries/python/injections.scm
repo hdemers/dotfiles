@@ -5,7 +5,7 @@
 ((assignment
   left: (identifier)
   right: (string (string_content) @injection.content
-  (#match? @injection.content "select.*from")
+  (#vim-match? @injection.content "\\cselect.*from")
 ))
 (#set! injection.language "sql")
 )
@@ -15,7 +15,7 @@
 ((assignment
   left: (identifier)
   right: (call (attribute (string (string_content) @injection.content))
-  (#match? @injection.content "select.*from")
+  (#vim-match? @injection.content "\\cselect.*from")
 ))
 (#set! injection.language "sql")
 )

@@ -39,16 +39,28 @@ return {
     opts = {
       provider = 'copilot',
       cursor_applying_provider = 'copilot',
-      disable_tools = true,
+      disabled_tools = {
+        'list_files',
+        'search_files',
+        'read_file',
+        'create_file',
+        'rename_file',
+        'delete_file',
+        'create_dir',
+        'rename_dir',
+        'delete_dir',
+        'bash',
+      },
       copilot = {
-        model = 'claude-3.7-sonnet-thought',
-        disable_tools = true,
+        model = 'claude-3.7-sonnet',
+        -- disable_tools = true,
       },
       behaviour = {
         auto_set_keymaps = false,
         enable_cursor_planning_mode = true,
       },
       hints = { enabled = false },
+      -- The system_prompt type supports both a string and a function that returns a string. Using a function here allows dynamically updating the prompt with mcphub
       system_prompt = function()
         local hub = require('mcphub').get_hub_instance()
         return hub:get_active_servers_prompt()
@@ -166,12 +178,13 @@ return {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
       'ravitemer/mcphub.nvim',
+      'saghen/blink.cmp',
     },
     -- stylua: ignore
     keys = {
       { '<leader>aoa', '<cmd>CodeCompanionChat<CR>', desc = 'CodeCompanion: chat', mode = { 'n', 'v' }, },
       { '<leader>aol', '<cmd>CodeCompanionChat Toggle<CR>', desc = 'CodeCompanion: toggle', },
-      { '<leader>aoa', '<cmd>CodeCompanionChat AddCR>', desc = 'CodeCompanion: add selected code to chat', mode = { 'v' } },
+      { '<leader>aod', '<cmd>CodeCompanionChat AddCR>', desc = 'CodeCompanion: add selected code to chat', mode = { 'v' } },
     },
     opts = {
       adapters = {
@@ -179,9 +192,7 @@ return {
           return require('codecompanion.adapters').extend('copilot', {
             schema = {
               model = {
-                -- default = 'claude-3.7-sonnet',
-                default = 'claude-3.7-sonnet-thought',
-                -- default = 'gpt-4.1',
+                default = 'claude-3.7-sonnet',
               },
             },
           })
@@ -199,17 +210,7 @@ return {
       strategies = {
         chat = {
           adapter = 'copilot',
-          tools = {
-            ['mcp'] = {
-              callback = function()
-                return require 'mcphub.extensions.codecompanion'
-              end,
-              description = 'Call tools and resources from the MCP Servers',
-              opts = {
-                user_approval = true,
-              },
-            },
-          },
+          tools = {},
         },
         inline = {
           adapter = 'copilot',
@@ -220,15 +221,33 @@ return {
           provider = 'default',
         },
       },
+      extensions = {
+        mcphub = {
+          callback = 'mcphub.extensions.codecompanion',
+          opts = {
+            make_vars = true,
+            make_slash_commands = true,
+            show_result_in_chat = true,
+          },
+        },
+      },
+      send = {
+        callback = function(chat)
+          vim.cmd 'stopinsert'
+          chat:add_buf_message { role = 'llm', content = '' }
+          chat:submit()
+        end,
+        index = 1,
+        description = 'Send',
+      },
     },
     config = function(_, opts)
       require('codecompanion').setup(opts)
       require('which-key').add {
         { '<leader>ao', group = 'CodeCompanion' },
       }
-    end,
-    init = function()
-      require('fidget-spinner'):init()
+      require('codecompanion-processing-spinner'):init()
+      require('codecompanion-fidget-spinner'):init()
     end,
   },
   {
@@ -249,13 +268,6 @@ return {
       auto_toggle_mcp_servers = true, -- Let LLMs start and stop MCP servers automatically
       extensions = {
         avante = {
-          make_slash_commands = true, -- make /slash commands from MCP server prompts
-        },
-        codecompanion = {
-          -- Show the mcp tool result in the chat buffer
-          -- NOTE:if the result is markdown with headers, content after the headers wont be sent by codecompanion
-          show_result_in_chat = false,
-          make_vars = true, -- make chat #variables from MCP server resources
           make_slash_commands = true, -- make /slash commands from MCP server prompts
         },
       },

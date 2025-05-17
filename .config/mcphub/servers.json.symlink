@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "git": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-git",
+        "--repository",
+        "."
+      ]
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      }
+    }
+  },
+  "nativeMCPServers": {
+    "mcphub": {
+      "disabled_prompts": []
+    },
+    "neovim": {
+      "disabled": true,
+      "disabled_tools": []
+    }
+  }
+}

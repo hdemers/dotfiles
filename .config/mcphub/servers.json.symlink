@@ -1,5 +1,29 @@
 {
   "mcpServers": {
+    "fetch": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-fetch"
+      ]
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/github": {
+      "command": "npx",
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
+      },
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ]
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/var/home/hdemers"
+      ]
+    },
     "git": {
       "command": "uvx",
       "args": [
@@ -7,25 +31,15 @@
         "--repository",
         "."
       ]
-    },
-    "github.com/modelcontextprotocol/servers/tree/main/src/github": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
-      }
     }
   },
   "nativeMCPServers": {
+    "neovim": {
+      "disabled": false,
+      "disabled_tools": []
+    },
     "mcphub": {
       "disabled_prompts": []
-    },
-    "neovim": {
-      "disabled": true,
-      "disabled_tools": []
     }
   }
 }

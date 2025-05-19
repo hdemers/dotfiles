@@ -174,6 +174,7 @@ return {
   },
   {
     'olimorris/codecompanion.nvim',
+    lazy = false,
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
@@ -210,7 +211,12 @@ return {
       strategies = {
         chat = {
           adapter = 'copilot',
-          tools = {},
+          tools = {
+            opts = {
+              auto_submit_errors = true,
+              auto_submit_success = true,
+            },
+          },
         },
         inline = {
           adapter = 'copilot',
@@ -239,6 +245,65 @@ return {
         end,
         index = 1,
         description = 'Send',
+      },
+      prompt_library = {
+        ['Commit Staged'] = {
+          strategy = 'chat',
+          description = 'Commit the staged files',
+          opts = {
+            mapping = '<leader>aoc',
+            auto_submit = true,
+            user_prompt = false,
+            short_name = 'commit',
+          },
+          prompts = {
+            {
+              role = 'system',
+              content = 'You are an expert at writing conventional commit messages. Follow the user instructions closely.',
+            },
+            {
+              role = 'user',
+              content = function(_)
+                local repo = vim.fn.system 'git rev-parse --show-toplevel'
+                return '1. Write a commit message for the staged files in repository '
+                  .. repo
+                  .. '2. Ask the user for the Jira commit ticket number. \n'
+                  .. '3. Add the ticket number on a line of its own at the end of the commit message. \n'
+                  .. '4. Ask the user to review the commit message. \n'
+                  .. ' @mcp'
+              end,
+            },
+          },
+        },
+        ['Open PR'] = {
+          strategy = 'chat',
+          description = 'Open PR',
+          opts = {
+            mapping = '<leader>aop',
+            auto_submit = true,
+            user_prompt = false,
+            short_name = 'pr',
+          },
+          prompts = {
+            {
+              role = 'system',
+              content = 'You are an expert at writing good PR description. Follow the user instructions closely.',
+            },
+            {
+              role = 'user',
+              content = function(_)
+                local remote_url = vim.fn.system 'git config --get remote.origin.url'
+                return 'Open a PR for this branch on Github (the remote origin URL being '
+                  .. remote_url
+                  .. '). \n'
+                  .. '2. Consider all commits up to, but excluding master/main.\n'
+                  .. '3. If there is a file .github/PULL_REQUEST_TEMPLATE.md use it as template for the PR.\n'
+                  .. '4. Make sure to fill each section and answer all questions as best you can, except the checklist, if any.\n'
+                  .. '5. Before opening the PR, stop and have the user revise the description.\n @mcp'
+              end,
+            },
+          },
+        },
       },
     },
     config = function(_, opts)

@@ -121,12 +121,6 @@ return {
         },
       }
 
-      -- LSP servers and clients are able to communicate to each other what features they support.
-      --  By default, Neovim doesn't support everything that is in the LSP specification.
-      --  When you add blink.cmp, luasnip, etc. Neovim now has *more* capabilities.
-      --  So, we create new capabilities with blink.cmp, and then broadcast that to the servers.
-      local capabilities = require('blink.cmp').get_lsp_capabilities()
-
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
       --
@@ -140,18 +134,13 @@ return {
         ruff = {
           on_attach = function(client)
             if client.name == 'ruff' then
-              -- Disable hover in favor of Pyright
+              -- Disable hover in favor of baesdpyright
               client.server_capabilities.hoverProvider = false
             end
           end,
         },
-        ty = {
-          cmd = { 'ty', 'server' },
-          filetypes = { 'python' },
-          root_markers = { 'ty.toml', 'pyproject.toml', '.git' },
-        },
         basedpyright = {
-          enable = false,
+          enable = true,
           settings = {
             basedpyright = {
               -- Using Ruff's import organizer
@@ -159,17 +148,18 @@ return {
               analysis = {
                 diagnosticMode = 'openFilesOnly',
                 inlayHints = {
-                  callArguments = true,
+                  callArguments = false,
                 },
+                -- We use ty for type checking. See below.
+                typeCheckingMode = 'off',
               },
             },
-            -- python = {
-            --   analysis = {
-            --     -- Ignore all files for analysis to exclusively use Ruff for linting
-            --     -- ignore = { '*' },
-            --     diagnosticMode = 'workspace',
-            --   },
-            -- },
+            python = {
+              analysis = {
+                -- Ignore all files for analysis to exclusively use Ruff for linting
+                ignore = { '*' },
+              },
+            },
           },
         },
         -- beancount = {},
@@ -205,16 +195,25 @@ return {
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      -- Installed LSPs are configured and enabled automatically with mason-lspconfig
-      -- The loop below is for overriding the default configuration of LSPs with the ones in the servers table
-      for server_name, config in pairs(servers) do
-        -- Override the default configuration with the one found in .neoconf.json, if it exists.
-        if neoconf.get('lspconfig.' .. server_name) then
-          config = neoconf.get('lspconfig.' .. server_name)
-          vim.lsp.config(server_name, config)
-        else
-          vim.lsp.config(server_name, config)
+      -- Mason doesn't have a server for ty yet, so we have to install it
+      -- manually and add to it to `servers` here, after mason-tool-installer's
+      -- setup.
+      servers['ty'] = {
+        cmd = { 'ty', 'server' },
+        filetypes = { 'python' },
+        root_markers = { 'ty.toml', 'pyproject.toml', '.git' },
+      }
+
+      -- Override the default configuration with the one found in .neoconf.json.
+      local project_servers = neoconf.get 'lspconfig'
+      if project_servers then
+        for server_name, config in pairs(project_servers) do
+          servers[server_name] = config
         end
+      end
+
+      for server_name, config in pairs(servers) do
+        vim.lsp.config(server_name, config)
         -- Enable all servers, unless `enable` is explicitly set, in which case we enable only if `true`.
         if config.enable ~= false then
           vim.lsp.enable(server_name)

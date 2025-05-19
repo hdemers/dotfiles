@@ -4,10 +4,18 @@ return {
     return {
       cmd = (function()
         if os.getenv 'CONTAINER_ID' then
-          return { 'make', 'requirements.txt' }
+          return { 'make', 'requirements.txt', 'dev-requirements.txt' }
         else
           local container_name = os.getenv 'DBX_CONTAINER_NAME'
-          return { 'distrobox', 'enter', container_name, '--', 'make', 'requirements.txt' }
+          return {
+            'distrobox',
+            'enter',
+            container_name,
+            '--',
+            'make',
+            'requirements.txt',
+            'dev-requirements.txt',
+          }
         end
       end)(),
       components = {

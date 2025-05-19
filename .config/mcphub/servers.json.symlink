@@ -1,45 +1,47 @@
 {
-  "mcpServers": {
-    "fetch": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-fetch"
-      ]
+  "nativeMCPServers": {
+    "mcphub": {
+      "disabled_prompts": []
     },
-    "github.com/modelcontextprotocol/servers/tree/main/src/github": {
-      "command": "npx",
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${env:GITHUB_TOKEN}"
-      },
+    "neovim": {
+      "disabled_tools": [],
+      "disabled": false
+    }
+  },
+  "mcpServers": {
+    "git": {
       "args": [
-        "-y",
-        "@modelcontextprotocol/server-github"
-      ]
+        "mcp-server-git"
+      ],
+      "command": "uvx"
     },
     "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
-      "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "/var/home/hdemers"
-      ]
+      ],
+      "command": "npx"
     },
-    "git": {
-      "command": "uvx",
+    "fetch": {
       "args": [
-        "mcp-server-git",
-        "--repository",
-        "."
-      ]
-    }
-  },
-  "nativeMCPServers": {
-    "neovim": {
-      "disabled": false,
-      "disabled_tools": []
+        "mcp-server-fetch"
+      ],
+      "command": "uvx"
     },
-    "mcphub": {
-      "disabled_prompts": []
+    "github": {
+      "command": "podman",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
     }
   }
 }

@@ -71,6 +71,10 @@ if [[ -x "$(command -v secret)" ]]; then
     export MQTTUI_USERNAME=mqtt-user
     export MQTTUI_PASSWORD=$(secret lookup mqtt password)
     export GEMINI_API_KEY=$(secret lookup gemini apikey)
+    export PLAID_CLIENT_ID=$(secret lookup plaid-sandbox client_id)
+    export SANDBOX_PLAID_SECRET=$(secret lookup plaid-sandbox secret)
+    export PLAID_SECRET=$(secret lookup plaid secret)
+    export PLAID_ACCESS_TOKEN=$(secret lookup plaid access_token)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable

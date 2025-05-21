@@ -117,6 +117,7 @@ return {
   },
   {
     'CopilotC-Nvim/CopilotChat.nvim',
+    enabled = false,
     dependencies = {
       { 'github/copilot.vim' }, -- or zbirenbaum/copilot.lua
       { 'nvim-lua/plenary.nvim', branch = 'master' }, -- for curl, log and async functions
@@ -178,16 +179,24 @@ return {
     dependencies = {
       'nvim-lua/plenary.nvim',
       'nvim-treesitter/nvim-treesitter',
-      'ravitemer/mcphub.nvim',
       'saghen/blink.cmp',
+      'folke/snacks.nvim',
+      'ravitemer/mcphub.nvim',
     },
     -- stylua: ignore
     keys = {
       { '<leader>aoa', '<cmd>CodeCompanionChat<CR>', desc = 'CodeCompanion: chat', mode = { 'n', 'v' }, },
       { '<leader>aol', '<cmd>CodeCompanionChat Toggle<CR>', desc = 'CodeCompanion: toggle', },
-      { '<leader>aod', '<cmd>CodeCompanionChat AddCR>', desc = 'CodeCompanion: add selected code to chat', mode = { 'v' } },
+      { '<leader>aod', '<cmd>CodeCompanionChat Add<CR>', desc = 'CodeCompanion: add selected code to chat', mode = { 'v' } },
+      { '<leader>aoo', '<cmd>CodeCompanionActions<CR>', desc = 'CodeCompanion: open actions menu' },
+      { '<leader>aoc', function() require("codecompanion").prompt("commit_staged") end, desc = 'CodeCompanion: commit staged files'},
     },
     opts = {
+      display = {
+        action_palette = {
+          provider = 'default',
+        },
+      },
       adapters = {
         copilot = function()
           return require('codecompanion.adapters').extend('copilot', {
@@ -222,18 +231,13 @@ return {
           adapter = 'copilot',
         },
       },
-      display = {
-        action_palette = {
-          provider = 'default',
-        },
-      },
       extensions = {
         mcphub = {
           callback = 'mcphub.extensions.codecompanion',
           opts = {
-            make_vars = true,
-            make_slash_commands = true,
-            show_result_in_chat = true,
+            show_result_in_chat = true, -- Show mcp tool results in chat
+            make_vars = true, -- Convert resources to #variables
+            make_slash_commands = true, -- Add prompts as /slash commands
           },
         },
       },
@@ -251,10 +255,9 @@ return {
           strategy = 'chat',
           description = 'Commit the staged files',
           opts = {
-            mapping = '<leader>aoc',
             auto_submit = true,
             user_prompt = false,
-            short_name = 'commit',
+            short_name = 'commit_staged',
           },
           prompts = {
             {
@@ -331,14 +334,29 @@ return {
       use_bundled_binary = true,
       auto_approve = true, -- Auto approve mcp tool calls
       auto_toggle_mcp_servers = true, -- Let LLMs start and stop MCP servers automatically
-      extensions = {
-        avante = {
-          make_slash_commands = true, -- make /slash commands from MCP server prompts
-        },
-      },
+      -- extensions = {
+      --   avante = {
+      --     make_slash_commands = true, -- make /slash commands from MCP server prompts
+      --   },
+      --   codecompanion = {
+      --     make_slash_commands = true, -- make /slash commands from MCP server prompts
+      --   },
+      -- },
     },
     config = function(_, opts)
       require('mcphub').setup(opts)
+    end,
+  },
+  {
+    'Davidyz/VectorCode',
+    version = '*',
+    build = 'distrobox enter -- uv tool upgrade "vectorcode[mcp,lsp]"',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    opts = {
+      async_backend = 'lsp',
+    },
+    config = function(_, opts)
+      require('vectorcode').setup(opts)
     end,
   },
 }

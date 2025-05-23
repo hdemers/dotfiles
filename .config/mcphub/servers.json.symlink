@@ -1,20 +1,17 @@
 {
   "nativeMCPServers": {
+    "neovim": {
+      "disabled": false,
+      "disabled_tools": [
+        "replace_in_file",
+        "write_file"
+      ]
+    },
     "mcphub": {
       "disabled_prompts": []
-    },
-    "neovim": {
-      "disabled_tools": [],
-      "disabled": false
     }
   },
   "mcpServers": {
-    "git": {
-      "args": [
-        "mcp-server-git"
-      ],
-      "command": "uvx"
-    },
     "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
       "args": [
         "-y",
@@ -23,14 +20,31 @@
       ],
       "command": "npx"
     },
+    "vectorcode": {
+      "command": "vectorcode-mcp-server"
+    },
+    "make": {
+      "args": [
+        "mcp-server-make"
+      ],
+      "command": "uvx"
+    },
     "fetch": {
       "args": [
         "mcp-server-fetch"
       ],
       "command": "uvx"
     },
+    "git": {
+      "args": [
+        "mcp-server-git"
+      ],
+      "command": "uvx"
+    },
     "github": {
-      "command": "podman",
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
       "args": [
         "run",
         "-i",
@@ -39,9 +53,7 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN",
         "ghcr.io/github/github-mcp-server"
       ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
+      "command": "podman"
     }
   }
 }

@@ -182,6 +182,8 @@ return {
       'saghen/blink.cmp',
       'folke/snacks.nvim',
       'ravitemer/mcphub.nvim',
+      'Davidyz/VectorCode',
+      -- 'ravitemer/codecompanion-history.nvim',
     },
     -- stylua: ignore
     keys = {
@@ -195,6 +197,9 @@ return {
       display = {
         action_palette = {
           provider = 'default',
+        },
+        chat = {
+          show_header_separator = true,
         },
       },
       adapters = {
@@ -220,6 +225,11 @@ return {
       strategies = {
         chat = {
           adapter = 'copilot',
+          opts = {
+            prompt_decorator = function(message, adapter, context)
+              return string.format([[<prompt>%s</prompt>]], message)
+            end,
+          },
           tools = {
             opts = {
               auto_submit_errors = true,
@@ -240,6 +250,40 @@ return {
             make_slash_commands = true, -- Add prompts as /slash commands
           },
         },
+        vectorcode = {
+          opts = { add_tool = true, add_slash_command = true, tool_opts = {} },
+        },
+        -- history = {
+        --   enabled = true,
+        --   opts = {
+        --     -- Keymap to open history from chat buffer (default: gh)
+        --     keymap = 'gh',
+        --     -- Keymap to save the current chat manually (when auto_save is disabled)
+        --     save_chat_keymap = 'sc',
+        --     -- Save all chats by default (disable to save only manually using 'sc')
+        --     auto_save = true,
+        --     -- Number of days after which chats are automatically deleted (0 to disable)
+        --     expiration_days = 0,
+        --     -- Picker interface ("telescope" or "snacks" or "fzf-lua" or "default")
+        --     picker = 'telescope',
+        --     ---Automatically generate titles for new chats
+        --     auto_generate_title = true,
+        --     title_generation_opts = {
+        --       ---Adapter for generating titles (defaults to active chat's adapter)
+        --       adapter = nil, -- e.g "copilot"
+        --       ---Model for generating titles (defaults to active chat's model)
+        --       model = nil, -- e.g "gpt-4o"
+        --     },
+        --     ---On exiting and entering neovim, loads the last chat on opening chat
+        --     continue_last_chat = false,
+        --     ---When chat is cleared with `gx` delete the chat from history
+        --     delete_on_clearing_chat = false,
+        --     ---Directory path to save the chats
+        --     dir_to_save = vim.fn.stdpath 'data' .. '/codecompanion-history',
+        --     ---Enable detailed logging for history extension
+        --     enable_logging = false,
+        --   },
+        -- },
       },
       send = {
         callback = function(chat)
@@ -268,9 +312,12 @@ return {
               role = 'user',
               content = function(_)
                 local repo = vim.fn.system 'git rev-parse --show-toplevel'
-                return '1. Write a commit message for the staged files in repository '
+                local branch = vim.fn.system 'git rev-parse --abbrev-ref HEAD'
+                return '1. Write a commit message (DO NOT COMMIT) for the files staged in repository '
                   .. repo
-                  .. '2. Ask the user for the Jira commit ticket number. \n'
+                  .. ' on branch '
+                  .. branch
+                  .. '2. Ask the user for the Jira commit ticket number. (DO NOT COMMIT)\n'
                   .. '3. Add the ticket number on a line of its own at the end of the commit message. \n'
                   .. '4. Ask the user to review the commit message. \n'
                   .. ' @mcp'
@@ -334,23 +381,21 @@ return {
       use_bundled_binary = true,
       auto_approve = true, -- Auto approve mcp tool calls
       auto_toggle_mcp_servers = true, -- Let LLMs start and stop MCP servers automatically
-      -- extensions = {
-      --   avante = {
-      --     make_slash_commands = true, -- make /slash commands from MCP server prompts
-      --   },
-      --   codecompanion = {
-      --     make_slash_commands = true, -- make /slash commands from MCP server prompts
-      --   },
-      -- },
+      level = vim.log.levels.DEBUG,
+      to_file = true,
+      file_path = vim.fn.expand '~/mcphub.log',
     },
     config = function(_, opts)
       require('mcphub').setup(opts)
+      -- Initialize custom MCP servers
+      require('custom.mcp_servers').setup()
     end,
   },
   {
     'Davidyz/VectorCode',
+    enabled = true,
     version = '*',
-    build = 'distrobox enter -- uv tool upgrade "vectorcode[mcp,lsp]"',
+    build = 'uv tool upgrade "vectorcode[mcp,lsp]"',
     dependencies = { 'nvim-lua/plenary.nvim' },
     opts = {
       async_backend = 'lsp',

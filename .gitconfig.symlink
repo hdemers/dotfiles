@@ -98,9 +98,6 @@
 [merge]
     conflictstyle = diff3
 
-[diff]
-    external = difft
-
 [difftool]
     prompt = false
 

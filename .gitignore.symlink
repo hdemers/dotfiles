@@ -70,3 +70,6 @@ lightning_logs
 .aider*
 
 .neoconf.json
+
+# Code Index MCP cache directory
+.code_indexer/

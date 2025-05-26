@@ -252,10 +252,11 @@ js() {
     fi
 
     jira issues --current-sprint --mine  \
-        | fzf-tmux -p 90% \
+        | fzf \
+        --height 90% \
         --ansi \
         --preview 'jira describe {1}' \
-        --preview-window 'top,50%' \
+        --preview-window 'top,60%' \
         --header-lines 1 \
         --scheme history \
         --bind 'enter:execute(wl-copy {1})+abort' \

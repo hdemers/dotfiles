@@ -20,15 +20,6 @@
       ],
       "command": "npx"
     },
-    "vectorcode": {
-      "command": "vectorcode-mcp-server"
-    },
-    "make": {
-      "args": [
-        "mcp-server-make"
-      ],
-      "command": "uvx"
-    },
     "fetch": {
       "args": [
         "mcp-server-fetch"
@@ -54,6 +45,19 @@
         "ghcr.io/github/github-mcp-server"
       ],
       "command": "podman"
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ]
+    },
+    "code-index": {
+      "command": "uvx",
+      "args": [
+        "code-index-mcp"
+      ]
     }
   }
 }

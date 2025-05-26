@@ -1,5 +1,0 @@
-{
-	"db_url": "http://localhost:8000",
-	"db_path": "~/.local/share/vectorcode/chromadb/",
-	"db_log_path": "~/.local/share/vectorcode/",
-}

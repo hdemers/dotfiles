@@ -192,6 +192,7 @@ return {
       { '<leader>aod', '<cmd>CodeCompanionChat Add<CR>', desc = 'CodeCompanion: add selected code to chat', mode = { 'v' } },
       { '<leader>aoo', '<cmd>CodeCompanionActions<CR>', desc = 'CodeCompanion: open actions menu' },
       { '<leader>aoc', function() require("codecompanion").prompt("commit_staged") end, desc = 'CodeCompanion: commit staged files'},
+      { '<leader>aop', function() require("codecompanion").prompt("open_pr") end, desc = 'CodeCompanion: open PR'},
     },
     opts = {
       display = {
@@ -207,7 +208,7 @@ return {
           return require('codecompanion.adapters').extend('copilot', {
             schema = {
               model = {
-                default = 'claude-3.7-sonnet',
+                default = 'claude-sonnet-4',
               },
             },
           })
@@ -329,10 +330,9 @@ return {
           strategy = 'chat',
           description = 'Open PR',
           opts = {
-            mapping = '<leader>aop',
             auto_submit = true,
             user_prompt = false,
-            short_name = 'pr',
+            short_name = 'open_pr',
           },
           prompts = {
             {

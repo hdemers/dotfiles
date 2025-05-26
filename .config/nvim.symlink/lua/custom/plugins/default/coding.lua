@@ -90,6 +90,7 @@ return {
         width = 50,
         relative_width = false,
         auto_close = true,
+        auto_jump = true,
       },
       providers = {
         priority = { 'markdown', 'lsp', 'coc', 'norg' },

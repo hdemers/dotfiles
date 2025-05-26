@@ -146,7 +146,7 @@ return {
               -- Using Ruff's import organizer
               disableOrganizeImports = true,
               analysis = {
-                diagnosticMode = 'openFilesOnly',
+                diagnosticMode = 'workspace',
                 inlayHints = {
                   callArguments = false,
                 },
@@ -294,7 +294,6 @@ return {
         },
         null_ls.builtins.diagnostics.bean_check,
         null_ls.builtins.formatting.bean_format,
-        -- null_ls.builtins.diagnostics.mypy.with(mypy_opts),
       }
 
       null_ls.setup { sources = sources, debug = true }

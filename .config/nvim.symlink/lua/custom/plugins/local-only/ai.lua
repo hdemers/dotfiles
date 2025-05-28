@@ -314,13 +314,14 @@ return {
               content = function(_)
                 local repo = vim.fn.system 'git rev-parse --show-toplevel'
                 local branch = vim.fn.system 'git rev-parse --abbrev-ref HEAD'
-                return '1. Write a commit message (DO NOT COMMIT) for the files staged in repository '
+                return '1. Write a commit message (DO NOT COMMIT just yet) for the files staged in repository '
                   .. repo
                   .. ' on branch '
                   .. branch
-                  .. '2. Ask the user for the Jira commit ticket number. (DO NOT COMMIT)\n'
+                  .. '2. Ask the user for the Jira commit ticket number. (DO NOT COMMIT just yet)\n'
                   .. '3. Add the ticket number on a line of its own at the end of the commit message. \n'
                   .. '4. Ask the user to review the commit message. \n'
+                  .. '5. If the user approves the message, commit it!\n'
                   .. ' @mcp'
               end,
             },
@@ -342,14 +343,29 @@ return {
             {
               role = 'user',
               content = function(_)
+                local repo = vim.fn.system 'git rev-parse --show-toplevel'
                 local remote_url = vim.fn.system 'git config --get remote.origin.url'
-                return 'Open a PR for this branch on Github (the remote origin URL being '
-                  .. remote_url
-                  .. '). \n'
-                  .. '2. Consider all commits up to, but excluding master/main.\n'
-                  .. '3. If there is a file .github/PULL_REQUEST_TEMPLATE.md use it as template for the PR.\n'
-                  .. '4. Make sure to fill each section and answer all questions as best you can, except the checklist, if any.\n'
-                  .. '5. Before opening the PR, stop and have the user revise the description.\n @mcp'
+                local main_branch_name =
+                  vim.fn.system 'git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@"'
+                local branch = vim.fn.system 'git rev-parse --abbrev-ref HEAD'
+                return string.format(
+                  [[
+Open a PR for branch '%s' in repository _%s_ (remote URL: %s). 
+
+Follow these instructions closely:
+
+1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.
+2. The commits part of this PR are those between HEAD and %s, use the `git_log_from_to` tool.
+3. Use the commit's messages part of this PR as the basis for the PR description.
+4. Ask the user for approval before opening the PR.
+
+@mcp
+]],
+                  branch,
+                  repo,
+                  remote_url,
+                  main_branch_name
+                )
               end,
             },
           },

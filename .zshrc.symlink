@@ -69,10 +69,11 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 source "${ZINIT_HOME}/zinit.zsh"
 
 # Zinit plugins
-zinit load zsh-users/zsh-syntax-highlighting
-zinit load zsh-users/zsh-completions
-zinit load zsh-users/zsh-autosuggestions
-zinit load Aloxaf/fzf-tab
+zinit ice blockf atpull'zinit creinstall -q .'
+zinit light zdharma-continuum/fast-syntax-highlighting
+zinit light zsh-users/zsh-completions
+zinit light zsh-users/zsh-autosuggestions
+# zinit light Aloxaf/fzf-tab
 
 # Load completions
 # zstyle :compinstall filename '$HOME/.zshrc'

@@ -31,7 +31,6 @@ return {
     return {
       cmd = (function()
         if os.getenv 'CONTAINER_ID' then
-          -- return { 'jenkins', 'integrate' }
           return { 'jenkins', 'integrate' }
         else
           local container_name = os.getenv 'DBX_CONTAINER_NAME'

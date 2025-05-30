@@ -19,6 +19,17 @@ return {
         local constants = require 'overseer.constants'
         local STATUS = constants.STATUS
 
+        vim.notify(
+          'Task ' .. task.name .. ' completed with status: ' .. status,
+          vim.log.levels.INFO
+        )
+
+        vim.notify('Task metadata: ' .. vim.inspect(task.metadata), vim.log.levels.DEBUG)
+        vim.notify(
+          'Ticket is: ' .. (task.metadata.ticket or 'None'),
+          vim.log.levels.DEBUG
+        )
+
         if status == STATUS.SUCCESS and task.metadata.ticket then
           local output = vim.fn.system 'jira close ' .. task.metadata.ticket
 
@@ -26,7 +37,7 @@ return {
             vim.notify('Failed to close ticket: ' .. output, vim.log.levels.ERROR)
           else
             vim.notify(
-              'Ticket closed successfully: ' .. task.metadata.ticket,
+              'Ticket ' .. task.metadata.ticket .. ' closed successfully.',
               vim.log.levels.INFO
             )
           end

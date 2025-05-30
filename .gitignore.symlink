@@ -73,3 +73,5 @@ lightning_logs
 
 # Code Index MCP cache directory
 .code_indexer/
+
+scratch.*

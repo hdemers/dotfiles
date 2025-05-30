@@ -10,6 +10,7 @@
   "blink.cmp": { "branch": "main", "commit": "022521a8910a5543b0251b21c9e1a1e989745796" },
   "bluloco.nvim": { "branch": "main", "commit": "29322e83d4e5a1577c20532fee7173a9e7c9bd2b" },
   "catppucin": { "branch": "main", "commit": "8162a4bd9afb42837a655e404d1f937a87ba95e6" },
+  "codecompanion-history.nvim": { "branch": "main", "commit": "36f1a611a2bed70b57a50c877ffc50bdb74c9d23" },
   "codecompanion.nvim": { "branch": "main", "commit": "df4459401180612bc5b7b167eff7133324e85f1c" },
   "conform.nvim": { "branch": "master", "commit": "6feb2f28f9a9385e401857b21eeac3c1b66dd628" },
   "copilot.lua": { "branch": "master", "commit": "96e1bb1963f351700bf6737ef3695e8a0b90b12a" },

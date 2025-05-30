@@ -255,7 +255,7 @@ return {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
-            ['--border-label'] = 'ctrl-t: transition | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-w: web link | ctrl-o: open',
+            ['--border-label'] = 'ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-w: web link | ctrl-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
@@ -273,6 +273,23 @@ return {
                 on_close = fzflua.actions.resume,
               }):open()
             end,
+            ['ctrl-d'] = {
+              function(selected)
+                local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                local cmd = 'jira close ' .. key
+                local output = vim.fn.system(cmd)
+                if vim.v.shell_error ~= 0 then
+                  vim.notify(
+                    'Failed to close ticket ' .. key .. ': ' .. output,
+                    vim.log.levels.ERROR
+                  )
+                  vim.notify('Comman was: ' .. cmd, vim.log.levels.WARN)
+                else
+                  vim.notify('Closed ticket ' .. key .. '.', vim.log.levels.INFO)
+                end
+              end,
+              fzflua.actions.resume,
+            },
             ['ctrl-i'] = function()
               Terminal:new({
                 direction = 'float',

@@ -266,7 +266,7 @@ return {
         --     -- Number of days after which chats are automatically deleted (0 to disable)
         --     expiration_days = 0,
         --     -- Picker interface ("telescope" or "snacks" or "fzf-lua" or "default")
-        --     picker = 'telescope',
+        --     picker = 'snacks',
         --     ---Automatically generate titles for new chats
         --     auto_generate_title = true,
         --     title_generation_opts = {
@@ -318,10 +318,13 @@ return {
                   .. repo
                   .. ' on branch '
                   .. branch
-                  .. '2. Ask the user for the Jira commit ticket number. (DO NOT COMMIT just yet)\n'
-                  .. '3. Add the ticket number on a line of its own at the end of the commit message. \n'
-                  .. '4. Ask the user to review the commit message. \n'
-                  .. '5. If the user approves the message, commit it!\n'
+                  .. '2. Follow the conventional commit format.\n'
+                  .. '3. Ask the user for the Jira commit ticket number. (DO NOT COMMIT just yet)\n'
+                  .. '4. Add the ticket number on a line of its own at the end of the commit message. \n'
+                  .. '5. Ask the user to review the commit message. \n'
+                  .. '6. If the user approves the message, commit it!\n'
+                  .. '7. Next, try pushing the branch to the remote\n'
+                  .. '8. If the push fails, stop right there, do not try to resolve the error, inform the user.\n'
                   .. ' @mcp'
               end,
             },
@@ -357,7 +360,9 @@ Follow these instructions closely:
 1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.
 2. The commits part of this PR are those between HEAD and %s, use the `git_log_from_to` tool.
 3. Use the commit's messages part of this PR as the basis for the PR description.
-4. Ask the user for approval before opening the PR.
+4. Use Markdown formatting for the PR description.
+5. Ask the user for approval before opening the PR.
+6. Once the PR has been opened, transition the associated ticket to "In Review".
 
 @mcp
 ]],

@@ -1,22 +1,61 @@
 {
-  "nativeMCPServers": {
-    "neovim": {
-      "disabled": false,
-      "disabled_tools": [
-        "replace_in_file",
-        "write_file"
-      ]
-    },
-    "mcphub": {
-      "disabled_prompts": []
-    }
-  },
   "mcpServers": {
+    "git": {
+      "args": [
+        "mcp-server-git"
+      ],
+      "command": "uvx"
+    },
+    "context7": {
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "command": "npx"
+    },
+    "sequentialthinking": {
+      "args": [
+        "run",
+        "--rm",
+        "-i",
+        "mcp/sequentialthinking"
+      ],
+      "command": "docker"
+    },
+    "code-index": {
+      "custom_instructions": {
+        "text": "Always set the project path to the current working directory, pwd."
+      },
+      "args": [
+        "code-index-mcp"
+      ],
+      "command": "uvx"
+    },
     "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
+      "custom_instructions": {
+        "text": ""
+      },
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/var/home/hdemers"
+        "/var/home/hdemers",
+        "/run/host/var/home/hdemers/"
+      ],
+      "command": "npx"
+    },
+    "tree_sitter": {
+      "env": {
+        "MCP_TS_LOG_LEVEL": "DEBUG"
+      },
+      "args": [
+        "mcp-server-tree-sitter"
+      ],
+      "command": "uvx"
+    },
+    "memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
       ],
       "command": "npx"
     },
@@ -26,13 +65,11 @@
       ],
       "command": "uvx"
     },
-    "git": {
-      "args": [
-        "mcp-server-git"
-      ],
-      "command": "uvx"
-    },
     "github": {
+      "custom_instructions": {
+        "text": "If a github tool has a perPage argument, always set it to 5 or less. Then paginate as needed, but no more."
+      },
+      "command": "podman",
       "env": {
         "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
       },
@@ -46,43 +83,62 @@
         "GITHUB_PERSONAL_ACCESS_TOKEN",
         "ghcr.io/github/github-mcp-server"
       ],
-      "command": "podman"
-    },
-    "context7": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
+      "disabled_tools": [
+        "merge_pull_request"
       ]
     },
-    "code-index": {
-      "command": "uvx",
-      "args": [
-        "code-index-mcp"
-      ]
-    },
-    "memory": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-memory"
-      ]
-    },
-    "sequentialthinking": {
-      "command": "docker",
+    "mcp-trino": {
+      "env": {
+        "TRINO_HOST": "${PRESTO_HOST}",
+        "TRINO_USER": "${USERNAME}",
+        "TRINO_PASSWORD": "${OKTA_PASSWORD}"
+      },
       "args": [
         "run",
         "--rm",
         "-i",
-        "mcp/sequentialthinking"
-      ]
+        "-e",
+        "TRINO_HOST",
+        "-e",
+        "TRINO_PORT=443",
+        "-e",
+        "TRINO_USER",
+        "-e",
+        "TRINO_PASSWORD",
+        "-e",
+        "TRINO_SCHEME=https",
+        "-e",
+        "TRINO_CATALOG=hive",
+        "--network",
+        "container:grubhub-vpn",
+        "ghcr.io/tuannvm/mcp-trino:latest"
+      ],
+      "command": "podman"
     },
     "mcp-compass": {
-      "command": "npx",
       "args": [
         "-y",
         "@liuyoshio/mcp-compass"
-      ]
+      ],
+      "command": "npx"
+    }
+  },
+  "nativeMCPServers": {
+    "jira": {
+      "custom_instructions": {
+        "text": "When creating a ticket, use the following template for the description:\n\n{*}Brief description{*}:\n\n* Work needed\n\n{*}Expected work product{*}:\n\n* Document? Metric? Code/Repo?\n\n{*}Dependencies{*}:\n\n* Meetings? Another ticket? Peer review?\n\n{*}Any background context you want to provide{*}:\n\n* Detail that supports work needed"
+      }
+    },
+    "neovim": {
+      "disabled_tools": [
+        "replace_in_file",
+        "write_file"
+      ],
+      "disabled": false
+    },
+    "mcphub": {
+      "disabled_prompts": []
     }
   }
 }
+

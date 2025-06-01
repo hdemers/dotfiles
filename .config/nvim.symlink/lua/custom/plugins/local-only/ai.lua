@@ -384,6 +384,51 @@ Follow these instructions closely:
       }
       require('codecompanion-processing-spinner'):init()
       require('codecompanion-fidget-spinner'):init()
+
+      -- Add keymap for write, stage, diff, and CodeCompanion chat
+      vim.keymap.set('n', '<leader>gd', function()
+        -- Write the current buffer
+        vim.cmd 'write'
+
+        -- Stage the current file using fugitive
+        vim.cmd 'Gwrite'
+
+        -- Get the diff of the staged file
+        local diff_output =
+          vim.fn.system('git diff --cached ' .. vim.fn.shellescape(vim.fn.expand '%'))
+
+        -- Store changes in local variable
+        local changes = diff_output
+        local filename = vim.fn.expand '%:t'
+
+        -- Get context for the current buffer
+        local context =
+          require('codecompanion.utils.context').get(vim.api.nvim_get_current_buf(), {})
+
+        -- Custom prompt for CodeCompanion
+        local prompt = 'Create a checkpoint commit message for the file '
+          .. filename
+          .. ' having the following changes:\n\n'
+          .. '```diff'
+          .. changes
+          .. '```\n\n'
+          .. 'Then commit the changes and push the branch to the remote repository. '
+          .. 'Do not interrupt the user. @mcp \n\n'
+
+        -- Create chat with proper message structure for auto_submit
+        local chat = require('codecompanion.strategies.chat').new {
+          context = context,
+          messages = {
+            {
+              role = require('codecompanion.config').constants.USER_ROLE,
+              content = prompt,
+            },
+          },
+          auto_submit = true,
+        }
+
+        vim.notify('AI checkpoint commit initiated in background', vim.log.levels.INFO)
+      end, { desc = 'Git: stage and review changes with AI' })
     end,
   },
   {

@@ -38,7 +38,7 @@
 <Super>m,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
 
 # Tmux-vim
-<Super>e,gtk-launch tmux-vim.desktop,,vim
+<Super>e,gtk-launch zellij-nvim.desktop,org.wezfurlong.wezterm,/.*zellij.*/
 
 # Spotify
 <Super>s,flatpak run com.spotify.Client,Spotify,Spotify
@@ -73,6 +73,10 @@
 # Slack
 <Super>u,flatpak run com.slack.Slack,Slack,,
 
+# Btop
+<Super>b,gtk-launch btop.desktop,,/.*btop.*/
+
+#
 # =============
 # Run only form
 # =============

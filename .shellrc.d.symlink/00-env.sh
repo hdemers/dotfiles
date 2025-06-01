@@ -62,29 +62,18 @@ fi
 
 # Try to execute the command `secret` and if there are no error, execute the following.
 if [[ -x "$(command -v secret)" ]]; then
-    # First, do a single secret lookup to unlock the keyring
-    if secret lookup github token >/dev/null 2>&1; then
-        # Now that keyring is unlocked, run parallel lookups
-        {
-            (echo "GITHUB_TOKEN=$(secret lookup github token)") &
-            (echo "TODOIST_API_TOKEN=$(secret lookup todoist token)") &
-            (echo "JIRA_API_TOKEN=$(secret lookup jira token)") &
-            (echo "OPENAI_API_KEY=$(secret lookup openai apikey)") &
-            (echo "NTFY_NEPTUNE_CHANNEL=$(secret lookup ntfy neptune)") &
-            (echo "ANTHROPIC_API_KEY=$(secret lookup anthropic apikey)") &
-            (echo "GEMINI_API_KEY=$(secret lookup gemini apikey)") &
-            (echo "PLAID_CLIENT_ID=$(secret lookup plaid-sandbox client_id)") &
-            (echo "SANDBOX_PLAID_SECRET=$(secret lookup plaid-sandbox secret)") &
-            (echo "PLAID_SECRET=$(secret lookup plaid secret)") &
-            (echo "PLAID_ACCESS_TOKEN=$(secret lookup plaid access_token)") &
-            (echo "MQTTUI_PASSWORD=$(secret lookup mqtt password)") &
-            wait
-        } | while IFS='=' read -r var_name var_value; do
-            export "$var_name"="$var_value"
-        done
-        
-        export MQTTUI_USERNAME=mqtt-user
-    fi
+    export GITHUB_TOKEN=$(secret lookup github token)
+    export TODOIST_API_TOKEN=$(secret lookup todoist token)
+    export JIRA_API_TOKEN=$(secret lookup jira token)
+    export OPENAI_API_KEY=$(secret lookup openai apikey)
+    export NTFY_NEPTUNE_CHANNEL=$(secret lookup ntfy neptune)
+    export ANTHROPIC_API_KEY=$(secret lookup anthropic apikey)
+    export MQTTUI_PASSWORD=$(secret lookup mqtt password)
+    export GEMINI_API_KEY=$(secret lookup gemini apikey)
+    export PLAID_CLIENT_ID=$(secret lookup plaid-sandbox client_id)
+    export SANDBOX_PLAID_SECRET=$(secret lookup plaid-sandbox secret)
+    export PLAID_SECRET=$(secret lookup plaid secret)
+    export PLAID_ACCESS_TOKEN=$(secret lookup plaid access_token)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable
@@ -94,3 +83,6 @@ fi
 
 export DBX_CONTAINER_NAME=ubuntu
 export DISTROBOX_NAME=$DBX_CONTAINER_NAME
+
+export MQTTUI_USERNAME=mqtt-user
+export PLAID_USER=hdemers

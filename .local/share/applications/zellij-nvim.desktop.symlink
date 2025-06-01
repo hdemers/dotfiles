@@ -1,0 +1,16 @@
+# vim: set ft=desktop:
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=zellij-nvim
+GenericName=Neovim in Zellij
+Comment=Neovim running in Zellij running in a terminal
+Icon=/var/home/hdemers/.local/share/icons/neovim.svg
+Exec=/home/linuxbrew/.linuxbrew/bin/wezterm start zsh -i -c "/home/linuxbrew/.linuxbrew/bin/zellij attach -c nvim"
+
+StartupNotify=true
+Terminal=false
+Categories=Utility;ConsoleOnly;
+Keywords=editor;vim;terminal;tmux
+StartupNotify=true
+StartupWMClass=zellij-nvim

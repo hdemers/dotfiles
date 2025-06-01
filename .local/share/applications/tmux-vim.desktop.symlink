@@ -13,4 +13,4 @@ Terminal=false
 Categories=Utility;ConsoleOnly;
 Keywords=editor;vim;terminal;tmux
 StartupNotify=true
-# StartupWMClass=tmuxvim
+StartupWMClass=tmuxvim

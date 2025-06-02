@@ -393,31 +393,21 @@ Follow these instructions closely:
         -- Stage the current file using fugitive
         vim.cmd 'Gwrite'
 
-        -- Get the diff of the staged file
-        local diff_output =
-          vim.fn.system('git diff --cached ' .. vim.fn.shellescape(vim.fn.expand '%'))
-
-        -- Store changes in local variable
-        local changes = diff_output
-        local filename = vim.fn.expand '%:t'
-
-        -- Get context for the current buffer
-        local context =
-          require('codecompanion.utils.context').get(vim.api.nvim_get_current_buf(), {})
+        local repo = vim.fn.system 'git rev-parse --show-toplevel'
 
         -- Custom prompt for CodeCompanion
-        local prompt = 'Create a checkpoint commit message for the file '
-          .. filename
-          .. ' having the following changes:\n\n'
-          .. '```diff'
-          .. changes
-          .. '```\n\n'
-          .. 'Then commit the changes and push the branch to the remote repository. '
+        local prompt = 'Commit the staged file from repository '
+          .. repo
+          .. '\n'
+          .. ' 1. Write a conventional commit message for the staged changes.\n'
+          .. ' 2. The type of the conventional message has to be "wip".\n'
+          .. ' 3. Commit the changes with the message. DO NOT INTERRUPT THE USER.\n'
+          .. ' 4. Push the commit to the remote repository.\n'
           .. 'Do not interrupt the user. @mcp \n\n'
 
         -- Create chat with proper message structure for auto_submit
         local chat = require('codecompanion.strategies.chat').new {
-          context = context,
+          context = {},
           messages = {
             {
               role = require('codecompanion.config').constants.USER_ROLE,
@@ -427,8 +417,15 @@ Follow these instructions closely:
           auto_submit = true,
         }
 
-        vim.notify('AI checkpoint commit initiated in background', vim.log.levels.INFO)
-      end, { desc = 'Git: stage and review changes with AI' })
+        -- Immediately hide the chat buffer after creation
+        vim.schedule(function()
+          if chat and chat.ui and chat.ui:is_visible() then
+            chat.ui:hide()
+          end
+        end)
+
+        vim.notify('Checkpoint commit initiated in background', vim.log.levels.INFO)
+      end, { desc = 'Git: stage and review changes with AI (background)' })
     end,
   },
   {
@@ -446,7 +443,7 @@ Follow these instructions closely:
     opts = {
       use_bundled_binary = true,
       auto_approve = true, -- Auto approve mcp tool calls
-      auto_toggle_mcp_servers = true, -- Let LLMs start and stop MCP servers automatically
+      auto_toggle_mcp_servers = false, -- Let LLMs start and stop MCP servers automatically
       level = vim.log.levels.DEBUG,
       to_file = true,
       file_path = vim.fn.expand '~/mcphub.log',

@@ -1,9 +1,7 @@
 {
   "nativeMCPServers": {
     "mcphub": {
-      "disabled_prompts": [
-        
-      ]
+      "disabled_prompts": []
     },
     "jira": {
       "custom_instructions": {
@@ -20,34 +18,6 @@
     }
   },
   "mcpServers": {
-    "mcp-trino": {
-      "args": [
-        "run",
-        "--rm",
-        "-i",
-        "-e",
-        "TRINO_HOST",
-        "-e",
-        "TRINO_PORT=443",
-        "-e",
-        "TRINO_USER",
-        "-e",
-        "TRINO_PASSWORD",
-        "-e",
-        "TRINO_SCHEME=https",
-        "-e",
-        "TRINO_CATALOG=hive",
-        "--network",
-        "container:grubhub-vpn",
-        "ghcr.io/tuannvm/mcp-trino:latest"
-      ],
-      "command": "podman",
-      "env": {
-        "TRINO_PASSWORD": "${OKTA_PASSWORD}",
-        "TRINO_HOST": "${PRESTO_HOST}",
-        "TRINO_USER": "${USERNAME}"
-      }
-    },
     "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
       "args": [
         "-y",
@@ -148,3 +118,4 @@
     }
   }
 }
+

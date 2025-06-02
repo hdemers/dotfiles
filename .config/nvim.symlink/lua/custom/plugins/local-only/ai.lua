@@ -318,7 +318,7 @@ return {
                   .. repo
                   .. ' on branch '
                   .. branch
-                  .. '2. Follow the conventional commit format.\n'
+                  .. '2. Follow the conventional commit format. Keep the title at 52 characters and the body at 72.\n'
                   .. '3. Ask the user for the Jira commit ticket number. (DO NOT COMMIT just yet)\n'
                   .. '4. Add the ticket number on a line of its own at the end of the commit message. \n'
                   .. '5. Ask the user to review the commit message. \n'
@@ -401,8 +401,9 @@ Follow these instructions closely:
           .. '\n'
           .. ' 1. Write a conventional commit message for the staged changes.\n'
           .. ' 2. The type of the conventional message has to be "wip".\n'
-          .. ' 3. Commit the changes with the message. DO NOT INTERRUPT THE USER.\n'
-          .. ' 4. Push the commit to the remote repository.\n'
+          .. ' 3. Keep the title at 52 characters wide and the body at 72.\n'
+          .. ' 4. Commit the changes with the message. DO NOT INTERRUPT THE USER.\n'
+          .. ' 5. Push the commit to the remote repository.\n'
           .. 'Do not interrupt the user. @mcp \n\n'
 
         -- Create chat with proper message structure for auto_submit

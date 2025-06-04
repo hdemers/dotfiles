@@ -6,7 +6,7 @@ local function setup_jira_server()
 
   mcphub.add_tool('jira', {
     name = 'transition_ticket',
-    description = 'Transition a Jira ticket. Transition chain is: New -> Refined -> In Dev -> In Review -> Merged -> Closed',
+    description = 'Transition a Jira ticket. Transition chain is: New -> Refined -> InDev -> InR2eview -> Merged -> Closed',
     inputSchema = {
       type = 'object',
       properties = {
@@ -78,21 +78,24 @@ local function setup_jira_server()
         .. req.params.summary
         .. '" '
         .. '--points '
-        .. req.params.points
-        .. ' '
-        .. '--sprint '
-        .. (req.params.sprint or '')
+        .. (req.params.points or 'None')
         .. ' '
         .. '--epic '
         .. (req.params.epic or '')
         .. ' '
-        .. '--assignee '
-        .. (req.params.assignee or '')
-        .. ' '
         .. '--description "'
-        .. req.params.description
+        .. (req.params.description or '')
         .. '"'
 
+      if req.params.assignee and req.params.assignee ~= '' then
+        cmd = cmd .. ' --assignee ' .. req.params.assignee
+      end
+
+      if req.params.sprint and req.params.sprint ~= '' then
+        cmd = cmd .. ' --sprint ' .. req.params.sprint
+      end
+
+      vim.notify('Executing command: ' .. cmd)
       local output = vim.fn.system(cmd)
 
       -- Check if command was successful
@@ -101,6 +104,92 @@ local function setup_jira_server()
       end
 
       return res:text(output):send()
+    end,
+  })
+
+  mcphub.add_tool('jira', {
+    name = 'update_ticket',
+    description = 'Update an existing Jira ticket',
+    inputSchema = {
+      type = 'object',
+      properties = {
+        ticket = {
+          type = 'string',
+          description = 'The Jira ticket to update',
+        },
+        summary = {
+          type = 'string',
+          description = 'The summary of the Jira ticket',
+        },
+        points = {
+          type = 'string',
+          description = 'The story points, can be None, 0, 0.5, 1, 2, 3, 5, 8',
+        },
+        sprint = {
+          type = 'string',
+          description = 'The sprint to assign the Jira ticket to, can be empty',
+        },
+        epic = {
+          type = 'string',
+          description = 'The epic to assign the Jira ticket to, can be empty',
+        },
+        assignee = {
+          type = 'string',
+          description = 'The assignee of the Jira ticket, either "me" or empty',
+        },
+        description = {
+          type = 'string',
+          description = 'The description of the Jira ticket',
+        },
+      },
+      required = { 'ticket' },
+    },
+    handler = function(req, res)
+    local cmd = { 'jira', 'update', req.params.ticket }
+
+      if req.params.summary and req.params.summary ~= '' then
+        table.insert(cmd, '--summary')
+        table.insert(cmd, req.params.summary)
+      end
+
+      if req.params.description and req.params.description ~= '' then
+        table.insert(cmd, '--description')
+        table.insert(cmd, req.params.description)
+      end
+
+      if req.params.points and req.params.points ~= '' then
+        table.insert(cmd, '--points')
+        table.insert(cmd, req.params.points)
+      end
+
+      if req.params.epic and req.params.epic ~= '' then
+        table.insert(cmd, '--epic')
+        table.insert(cmd, req.params.epic)
+      end
+
+      if req.params.assignee and req.params.assignee ~= '' then
+        table.insert(cmd, '--assignee')
+        table.insert(cmd, req.params.assignee)
+      end
+
+      if req.params.sprint and req.params.sprint ~= '' then
+        table.insert(cmd, '--sprint')
+        table.insert(cmd, req.params.sprint)
+      end
+
+      -- Use vim.system for proper argument handling instead of shell concatenation
+      vim.notify('Executing jira update for ticket: ' .. req.params.ticket)
+      local result = vim.system(cmd, { text = true }):wait()
+
+      -- Check if command was successful
+      if result.code ~= 0 then
+        return res:error(
+          'Failed to update ticket: '
+            .. (result.stderr or result.stdout or 'Unknown error')
+        )
+      end
+
+      return res:text(result.stdout or 'Ticket updated successfully'):send()
     end,
   })
 

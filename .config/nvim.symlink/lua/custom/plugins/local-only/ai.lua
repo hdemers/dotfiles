@@ -325,7 +325,7 @@ return {
                   .. '6. If the user approves the message, commit it!\n'
                   .. '7. Next, try pushing the branch to the remote\n'
                   .. '8. If the push fails, stop right there, do not try to resolve the error, inform the user.\n'
-                  .. ' @mcp'
+                  .. ' @mcp #neovim://workspace/info '
               end,
             },
           },
@@ -364,7 +364,7 @@ Follow these instructions closely:
 5. Ask the user for approval before opening the PR.
 6. Once the PR has been opened, transition the associated ticket to "In Review".
 
-@mcp
+@mcp #neovim://workspace/info
 ]],
                   branch,
                   repo,

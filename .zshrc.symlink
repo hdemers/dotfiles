@@ -69,25 +69,25 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 source "${ZINIT_HOME}/zinit.zsh"
 
 # Zinit plugins
-zinit ice blockf atpull'zinit creinstall -q .'
-zinit light zdharma-continuum/fast-syntax-highlighting
-zinit light zsh-users/zsh-completions
-zinit light zsh-users/zsh-autosuggestions
+# zinit ice blockf atpull'zinit creinstall -q .'
+# zinit light zdharma-continuum/fast-syntax-highlighting
+# zinit light zsh-users/zsh-completions
+# zinit light zsh-users/zsh-autosuggestions
 # zinit light Aloxaf/fzf-tab
 
 # Load completions
 # zstyle :compinstall filename '$HOME/.zshrc'
-autoload -Uz compinit && compinit
+# autoload -Uz compinit && compinit
 
-bindkey '^y' autosuggest-accept
+# bindkey '^y' autosuggest-accept
 
-zinit cdreplay -q
+# zinit cdreplay -q
 
 # Completions styling
-zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
-zstyle ':completion:*' menu no
-zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
+# zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+# zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+# zstyle ':completion:*' menu no
+# zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 
 # We don't want to use the default bling.sh script, we already have everything we need from that elsewhere.
 export BLING_SOURCED=1

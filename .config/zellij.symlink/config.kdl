@@ -225,6 +225,14 @@ keybinds clear-defaults=true {
     renamepane {
         bind "esc" { UndoRenamePane; SwitchToMode "pane"; }
     }
+    shared_except "locked" {
+        bind "y" {
+            LaunchOrFocusPlugin "zellij_forgot" {
+                floating true
+            }
+        }
+    }
+
 }
 
 // Plugin aliases - can be used to change the implementation of Zellij
@@ -244,6 +252,7 @@ plugins {
     welcome-screen location="zellij:session-manager" {
         welcome_screen true
     }
+    zellij_forgot location="file:/home/hdemers/.config/zellij/plugins/zellij_forgot.wasm"
 }
 
 // Plugins to load in the background when a new session starts

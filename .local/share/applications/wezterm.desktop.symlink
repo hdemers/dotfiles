@@ -1,0 +1,15 @@
+# vim: set ft=desktop:
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Wezterm
+GenericName=Wezterm Terminal
+Comment=Wezterm terminal emulator
+Exec=/home/linuxbrew/.linuxbrew/bin/wezterm
+
+StartupNotify=true
+Terminal=false
+Categories=Utility;ConsoleOnly;
+Keywords=terminal
+StartupNotify=true
+StartupWMClass=wezterm

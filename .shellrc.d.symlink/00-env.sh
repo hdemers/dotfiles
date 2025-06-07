@@ -62,18 +62,7 @@ fi
 
 # Try to execute the command `secret` and if there are no error, execute the following.
 if [[ -x "$(command -v secret)" ]]; then
-    export GITHUB_TOKEN=$(secret lookup github token)
-    export TODOIST_API_TOKEN=$(secret lookup todoist token)
-    export JIRA_API_TOKEN=$(secret lookup jira token)
-    export OPENAI_API_KEY=$(secret lookup openai apikey)
-    export NTFY_NEPTUNE_CHANNEL=$(secret lookup ntfy neptune)
-    export ANTHROPIC_API_KEY=$(secret lookup anthropic apikey)
-    export MQTTUI_PASSWORD=$(secret lookup mqtt password)
-    export GEMINI_API_KEY=$(secret lookup gemini apikey)
-    export PLAID_CLIENT_ID=$(secret lookup plaid-sandbox client_id)
-    export SANDBOX_PLAID_SECRET=$(secret lookup plaid-sandbox secret)
-    export PLAID_SECRET=$(secret lookup plaid secret)
-    export PLAID_ACCESS_TOKEN=$(secret lookup plaid access_token)
+    eval "$(secret export ~/.secrets-conf.yaml)"
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable

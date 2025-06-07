@@ -10,6 +10,7 @@ function M.setup()
   require('custom.mcp_servers.prompts').setup()
   require('custom.mcp_servers.git').setup()
   require('custom.mcp_servers.pytest').setup()
+  require('custom.mcp_servers.notify').setup()
 
   -- Add more custom MCP servers here as needed
   -- require('custom.mcp_servers.another_server').setup()

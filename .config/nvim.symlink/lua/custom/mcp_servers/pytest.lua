@@ -26,8 +26,14 @@ local function setup_pytest_server()
 
       local args = path
       if expression_filter ~= '' then
-        args = ' -k ' .. expression_filter .. ' ' .. path
+        args = ' -k ' .. expression_filter
       end
+
+      args = args
+        .. ' '
+        .. '--tb=line --no-header --maxfail=3 -rN --disable-warnings -q'
+        .. ' '
+        .. path
 
       local cmd = 'pytest ' .. args
       local output = vim.fn.system(cmd)

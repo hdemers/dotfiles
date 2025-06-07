@@ -31,6 +31,14 @@ return {
   },
   {
     'nvim-treesitter/nvim-treesitter-context',
+    opts = {
+      enable = true,
+    },
+    config = function(_, opts)
+      require('treesitter-context').setup {
+        opts,
+      }
+    end,
   },
   {
     'nvim-treesitter/nvim-treesitter-textobjects',

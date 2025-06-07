@@ -217,7 +217,7 @@ return {
           return require('codecompanion.adapters').extend('gemini', {
             schema = {
               model = {
-                default = 'gemini-2.5-pro',
+                default = 'gemini-2.5-flash-preview-05-20',
               },
             },
           })
@@ -246,7 +246,7 @@ return {
         mcphub = {
           callback = 'mcphub.extensions.codecompanion',
           opts = {
-            show_result_in_chat = true, -- Show mcp tool results in chat
+            show_result_in_chat = false, -- Show mcp tool results in chat
             make_vars = true, -- Convert resources to #variables
             make_slash_commands = true, -- Add prompts as /slash commands
           },
@@ -346,31 +346,36 @@ return {
             {
               role = 'user',
               content = function(_)
-                local repo = vim.fn.system 'git rev-parse --show-toplevel'
-                local remote_url = vim.fn.system 'git config --get remote.origin.url'
-                local main_branch_name =
-                  vim.fn.system 'git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@"'
-                local branch = vim.fn.system 'git rev-parse --abbrev-ref HEAD'
-                return string.format(
-                  [[
-Open a PR for branch '%s' in repository _%s_ (remote URL: %s). 
+                local repo = vim.fn.system('git rev-parse --show-toplevel'):gsub('\n', '')
+                local remote_url =
+                  vim.fn.system('git config --get remote.origin.url'):gsub('\n', '')
+                local main_branch_name = vim.fn
+                  .system(
+                    'git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@"'
+                  )
+                  :gsub('\n', '')
 
-Follow these instructions closely:
+                local branch =
+                  vim.fn.system('git rev-parse --abbrev-ref HEAD'):gsub('\n', '')
 
-1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.
-2. The commits part of this PR are those between HEAD and %s, use the `git_log_from_to` tool.
-3. Use the commit's messages part of this PR as the basis for the PR description.
-4. Use Markdown formatting for the PR description.
-5. Ask the user for approval before opening the PR.
-6. Once the PR has been opened, transition the associated ticket to "In Review".
-
-@mcp #neovim://workspace/info
-]],
-                  branch,
-                  repo,
-                  remote_url,
-                  main_branch_name
-                )
+                return "Open a PR for branch '"
+                  .. branch
+                  .. "' in repository "
+                  .. repo
+                  .. ' (remote URL: '
+                  .. remote_url
+                  .. ').\n\n'
+                  .. 'Follow these instructions closely:\n'
+                  .. "1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.\n"
+                  .. '2. The commits part of this PR are those between HEAD and '
+                  .. main_branch_name
+                  .. ', use the `git_log_from_to` tool.\n'
+                  .. "3. Use the commit's messages part of this PR as the basis for the PR description.\n"
+                  .. '4. Use Markdown formatting for the PR description.\n'
+                  .. '5. Ask the user for approval before opening the PR.\n'
+                  .. '6. Once the PR has been opened, transition the associated ticket to InReview, going through all intermediate states if necessary\n'
+                  .. '\n'
+                  .. '@mcp #neovim://workspace/info'
               end,
             },
           },
@@ -399,12 +404,13 @@ Follow these instructions closely:
         local prompt = 'Commit the staged file from repository '
           .. repo
           .. '\n'
-          .. ' 1. Write a conventional commit message for the staged changes.\n'
+          .. ' 1. Write a conventional commit message for the staged changes and only the staged changes.\n'
           .. ' 2. The type of the conventional message has to be "wip".\n'
           .. ' 3. Keep the title at 52 characters wide and the body at 72.\n'
           .. ' 4. Commit the changes with the message. DO NOT INTERRUPT THE USER.\n'
-          .. ' 5. Push the commit to the remote repository.\n'
-          .. 'Do not interrupt the user. @mcp \n\n'
+          .. ' 5. Push the commit to the remote repository. If the push is rejected: stop right there and warn the user with the `notify` tool.\n'
+          .. ' 6. If everything was successful, inform the user with the `notify` tool.\n'
+          .. ' @mcp \n\n'
 
         -- Create chat with proper message structure for auto_submit
         local chat = require('codecompanion.strategies.chat').new {

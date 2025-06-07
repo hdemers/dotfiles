@@ -6,7 +6,7 @@ local function setup_jira_server()
 
   mcphub.add_tool('jira', {
     name = 'transition_ticket',
-    description = 'Transition a Jira ticket. Transition chain is: New -> Refined -> InDev -> InR2eview -> Merged -> Closed',
+    description = 'Transition a Jira ticket. Transition chain is: New -> Refined -> InDev -> InReview -> Merged -> Closed',
     inputSchema = {
       type = 'object',
       properties = {
@@ -25,7 +25,7 @@ local function setup_jira_server()
       local ticket = req.params.ticket
       local transition = req.params.transition
 
-      local cmd = 'jira transition-to ' .. ticket .. ' ' .. transition
+      local cmd = 'jira transition-to ' .. ticket .. ' ' .. '"' .. transition .. '"'
       local output = vim.fn.system(cmd)
 
       -- Check if command was successful
@@ -92,7 +92,7 @@ local function setup_jira_server()
       end
 
       if req.params.sprint and req.params.sprint ~= '' then
-        cmd = cmd .. ' --sprint ' .. req.params.sprint
+        cmd = cmd .. ' --sprint "' .. req.params.sprint .. '"'
       end
 
       vim.notify('Executing command: ' .. cmd)
@@ -145,7 +145,7 @@ local function setup_jira_server()
       required = { 'ticket' },
     },
     handler = function(req, res)
-    local cmd = { 'jira', 'update', req.params.ticket }
+      local cmd = { 'jira', 'update', req.params.ticket }
 
       if req.params.summary and req.params.summary ~= '' then
         table.insert(cmd, '--summary')
@@ -174,7 +174,7 @@ local function setup_jira_server()
 
       if req.params.sprint and req.params.sprint ~= '' then
         table.insert(cmd, '--sprint')
-        table.insert(cmd, req.params.sprint)
+        table.insert(cmd, '"' .. req.params.sprint .. '"')
       end
 
       -- Use vim.system for proper argument handling instead of shell concatenation

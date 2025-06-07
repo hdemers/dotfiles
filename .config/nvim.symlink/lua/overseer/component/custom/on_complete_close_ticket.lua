@@ -31,7 +31,8 @@ return {
         )
 
         if status == STATUS.SUCCESS and task.metadata.ticket then
-          local output = vim.fn.system 'jira close ' .. task.metadata.ticket
+          local cmd = 'jira close ' .. task.metadata.ticket
+          local output = vim.fn.system(cmd)
 
           if vim.v.shell_error ~= 0 then
             vim.notify('Failed to close ticket: ' .. output, vim.log.levels.ERROR)

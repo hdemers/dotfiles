@@ -60,6 +60,26 @@ return {
           hidden = false,
         }):open()
       end, { desc = 'Open PR' })
+
+      -- Function to rename zellij tab based on current directory
+      local function rename_zellij_tab()
+        local cwd = vim.fn.getcwd()
+        local title = vim.fn.fnamemodify(cwd, ':t') -- Get just the directory name
+        local cmd = string.format(
+          'nohup zellij action rename-tab %s >/dev/null 2>&1',
+          vim.fn.shellescape(title)
+        )
+        vim.fn.system(cmd)
+      end
+
+      -- Rename tab on startup
+      vim.defer_fn(rename_zellij_tab, 100)
+
+      -- Rename tab when directory changes
+      vim.api.nvim_create_autocmd('DirChanged', {
+        callback = rename_zellij_tab,
+        desc = 'Rename zellij tab when directory changes',
+      })
     end,
   },
   {

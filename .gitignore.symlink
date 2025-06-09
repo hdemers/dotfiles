@@ -67,7 +67,7 @@ lightning_logs
 
 .tox
 
-.aider*
+.aider/
 
 .neoconf.json
 

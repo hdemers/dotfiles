@@ -1,0 +1,8 @@
+model: openai/claude-3.7-sonnet
+notifications: true
+editor: nvim
+dark-mode: true
+attribute-author: false
+attribute-committer: false
+lint-cmd: ruff check --fix
+code-theme: material

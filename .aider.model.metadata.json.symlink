@@ -1,0 +1,17 @@
+{
+  "openai/claude-3.7-sonnet": {
+    "max_tokens": 4096,
+    "max_input_tokens": 80000,
+    "max_output_tokens": 4096
+  },
+  "openai/claude-sonnet-4-20250514": {
+    "max_tokens": 4096,
+    "max_input_tokens": 80000,
+    "max_output_tokens": 4096
+  },
+  "openai/gpt-4.1": {
+    "max_tokens": 4096,
+    "max_input_tokens": 80000,
+    "max_output_tokens": 4096
+  }
+}

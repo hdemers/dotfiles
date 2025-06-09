@@ -1,0 +1,4 @@
+- name: openai/claude-3.7-sonnet
+  extra_params:
+    max_tokens: 80000
+

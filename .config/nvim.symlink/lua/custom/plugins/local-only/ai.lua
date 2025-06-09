@@ -383,6 +383,17 @@ return {
       },
     },
     config = function(_, opts)
+      -- Dynamically set adapter based on current working directory
+      local cwd = vim.fn.getcwd()
+      local adapter = 'gemini' -- default
+      if string.find(cwd, 'grubhub', 1, true) then
+        adapter = 'copilot'
+      end
+
+      -- Set the adapter for both chat and inline strategies
+      opts.strategies.chat.adapter = adapter
+      opts.strategies.inline.adapter = adapter
+
       require('codecompanion').setup(opts)
       require('which-key').add {
         { '<leader>ao', group = 'CodeCompanion' },
@@ -459,19 +470,6 @@ return {
       require('mcphub').setup(opts)
       -- Initialize custom MCP servers
       require('custom.mcp_servers').setup()
-    end,
-  },
-  {
-    'Davidyz/VectorCode',
-    enabled = true,
-    version = '*',
-    build = 'uv tool upgrade "vectorcode[mcp,lsp]"',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-    opts = {
-      async_backend = 'lsp',
-    },
-    config = function(_, opts)
-      require('vectorcode').setup(opts)
     end,
   },
 }

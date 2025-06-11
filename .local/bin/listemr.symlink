@@ -1,0 +1,103 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = [
+#     "pandas",
+#     "lxml",
+#     "click",
+# ]
+# ///
+
+
+import os
+import pandas as pd
+import click
+
+pd.set_option("display.width", 10000)
+pd.set_option("display.max_columns", None)
+pd.set_option("display.max_rows", None)
+pd.set_option("display.max_colwidth", None)
+pd.set_option("display.max_seq_item", None)
+
+URL = f"https://{os.getenv('CMDASH_HOST')}/?running=on"
+
+
+def get_dataframe():
+    dfs = pd.read_html(URL)
+    df = pd.concat(
+        [
+            dfs[0].Name,
+            pd.concat(df.set_index(0).T for df in dfs[1:]).reset_index(drop=True),
+        ],
+        axis=1,
+    )
+    renames = {
+        "Name": "name",
+        "Cluster type": "cluster type",
+        "Cluster up time hours": "up",
+        "Ip address": "ip",
+        "Core node type": "instance",
+        "Worker node count": "workers",
+        "Creation time": "created",
+        "Last updated time": "updated",
+        "Cluster status": "status",
+        "Cluster id": "id",
+        "Instance state": "state",
+        "Instance id": "instance id",
+        "Instance profile arn": "arn",
+        "User name": "user",
+        "Is static cluster": "static",
+        "Log path": "log path",
+        "Role arn": "role",
+        "Ami": "ami",
+        "Manager dns": "dns",
+        "Max node count": "max nodes",
+        "Service type": "service",
+        "App id": "app",
+        "Manager node type": "manager",
+        "Termination code": "termination",
+        "Termination message": "reason",
+    }
+    return df.rename(columns=renames)
+
+
+@click.group(invoke_without_command=True)
+@click.pass_context
+def cli(ctx):
+    """Command line interface for listing and describing EMR clusters."""
+    if ctx.invoked_subcommand is None:
+        ls()
+
+
+def list_():
+    df = get_dataframe()
+    cols = ["name", "cluster type", "up", "ip", "workers", "instance"]
+    return df[cols].fillna("").to_string(index=False)
+
+
+@cli.command()
+def ls():
+    """List all EMR clusters with basic information."""
+    print(list_())
+
+
+@cli.command()
+@click.argument("name")
+def describe(name):
+    """Describe a specific EMR cluster by name."""
+    custom_url = f"{URL}&name={name}"
+    dfs = pd.read_html(custom_url)
+    df = pd.concat(
+        [
+            dfs[0].Name,
+            pd.concat(df.set_index(0).T for df in dfs[1:]).reset_index(drop=True),
+        ],
+        axis=1,
+    )
+    print(df.fillna("").T.__repr__())
+
+
+if __name__ == "__main__":
+    cli()
+
+
+# vim:ft=python

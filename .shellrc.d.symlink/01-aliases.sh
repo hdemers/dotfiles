@@ -153,3 +153,13 @@ alias dtr="env FORCE_COLOR=true budget latest | \
     --height 100% \
     --multi \
     --bind='enter:execute(echo {9})+abort' "
+
+alias lsemr="listemr | \
+    fzf \
+    --header-lines=1 \
+    --preview='listemr describe {1}' \
+    --preview-window=up:50% \
+    --bind='ctrl-o:execute(browse http://{4}:8088 > /dev/null)' \
+    --bind='enter:execute(echo {4} | tr -d \"\\n\" | xsel --clipboard --input)+abort' \
+    --height 50%
+    "

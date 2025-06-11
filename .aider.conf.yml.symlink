@@ -6,3 +6,4 @@ attribute-author: false
 attribute-committer: false
 lint-cmd: ruff check --fix
 code-theme: material
+no-gitignore: false

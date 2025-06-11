@@ -1,5 +1,144 @@
 {
+  "nativeMCPServers": {
+    "jira": {
+      "custom_instructions": {
+        "text": "When creating a ticket, use the following template for the\ndescription:\n\n{*}Brief description{*}:\n\n* Work needed\n\n{*}Expected work product{*}:\n\n* Document? Metric? Code/Repo?\n\n{*}Dependencies{*}:\n\n* Meetings? Another ticket? Peer review?\n\n{*}Any background context you want to provide{*}:\n\n* Detail that supports work needed"
+      }
+    },
+    "mcphub": {
+      "disabled_prompts": []
+    },
+    "neovim": {
+      "disabled_tools": [
+        "replace_in_file",
+        "write_file",
+        "read_file"
+      ],
+      "disabled": false
+    }
+  },
   "mcpServers": {
+    "time": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-time",
+        "--local-timezone",
+        "America/Montreal"
+      ]
+    },
+    "context7": {
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "command": "npx",
+      "custom_instructions": {
+        "text": "Never retrieve more than 10000 tokens at a time from the get-library-docs tool.\nAlways search for a specific topic when using the get-library-docs tools."
+      }
+    },
+    "tree_sitter": {
+      "args": [
+        "mcp-server-tree-sitter"
+      ],
+      "command": "uvx",
+      "env": {
+        "MCP_TS_LOG_LEVEL": "DEBUG"
+      }
+    },
+    "fetch": {
+      "args": [
+        "mcp-server-fetch"
+      ],
+      "command": "uvx"
+    },
+    "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
+      "custom_instructions": {
+        "text": ""
+      },
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/var/home/hdemers",
+        "/run/host/var/home/hdemers/"
+      ],
+      "disabled_tools": [],
+      "command": "npx",
+      "disabled": false
+    },
+    "trino": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--name",
+        "trino-mcp-server",
+        "-v",
+        "/home/hdemers/.cache/fastmcp/trino:/app/.cache/fastmcp/trino",
+        "-e",
+        "PRESTO_PASSWORD",
+        "-e",
+        "PRESTO_USERNAME",
+        "-e",
+        "PRESTO_HOST",
+        "-e",
+        "PRESTO_PORT",
+        "-e",
+        "PRESTO_CATALOG",
+        "--network",
+        "container:grubhub-vpn",
+        "integrations:latest",
+        "trinomcp"
+      ],
+      "env": {
+        "PRESTO_HOST": "",
+        "PRESTO_USERNAME": "",
+        "PRESTO_CATALOG": "",
+        "PRESTO_PASSWORD": "",
+        "PRESTO_PORT": ""
+      },
+      "command": "podman",
+      "disabled_resources": [
+        "trino://table/"
+      ]
+    },
+    "mcp-compass": {
+      "args": [
+        "-y",
+        "@liuyoshio/mcp-compass"
+      ],
+      "command": "npx"
+    },
+    "code-index": {
+      "args": [
+        "code-index-mcp"
+      ],
+      "command": "uvx",
+      "custom_instructions": {
+        "text": "Always set the project path to the current working directory, pwd."
+      }
+    },
+    "github": {
+      "custom_instructions": {
+        "text": "If a github tool has a perPage argument, always set it to 5 or less. Then paginate as needed, but no more."
+      },
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--name",
+        "github-mcp-server",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      },
+      "command": "podman",
+      "disabled_tools": [
+        "merge_pull_request"
+      ]
+    },
     "git": {
       "args": [
         "mcp-server-git"
@@ -15,140 +154,12 @@
       ],
       "command": "docker"
     },
-    "mcp-compass": {
-      "args": [
-        "-y",
-        "@liuyoshio/mcp-compass"
-      ],
-      "command": "npx"
-    },
-    "fetch": {
-      "args": [
-        "mcp-server-fetch"
-      ],
-      "command": "uvx"
-    },
-    "context7": {
-      "custom_instructions": {
-        "text": "Never retrieve more than 10000 tokens at a time from the get-library-docs tool.\nAlways search for a specific topic when using the get-library-docs tools."
-      },
-      "command": "npx",
-      "args": [
-        "-y",
-        "@upstash/context7-mcp"
-      ]
-    },
-    "trinomcp": {
-      "command": "podman",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "--name",
-        "trino-mcp-server",
-        "-v",
-        "/home/hdemers/.cache/fastmcp/trino:/app/.cache/fastmcp/trino",
-        "-e",
-        "OKTA_PASSWORD",
-        "-e",
-        "OKTA_USERNAME",
-        "-e",
-        "PRESTO_HOST",
-        "-e",
-        "PRESTO_PORT",
-        "-e",
-        "PRESTO_CATALOG",
-        "--network",
-        "container:grubhub-vpn",
-        "integrations:latest",
-        "trinomcp"
-      ],
-      "env": {
-        "OKTA_PASSWORD": "",
-        "OKTA_USERNAME": "${USERNAME}",
-        "PRESTO_HOST": "",
-        "PRESTO_PORT": "",
-        "PRESTO_CATALOG": ""
-      }
-    },
-    "github": {
-      "command": "podman",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "--name",
-        "github-mcp-server",
-        "-e",
-        "GITHUB_PERSONAL_ACCESS_TOKEN",
-        "ghcr.io/github/github-mcp-server"
-      ],
-      "custom_instructions": {
-        "text": "If a github tool has a perPage argument, always set it to 5 or less. Then paginate as needed, but no more."
-      },
-      "disabled_tools": [
-        "merge_pull_request"
-      ],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
-      }
-    },
-    "code-index": {
-      "custom_instructions": {
-        "text": "Always set the project path to the current working directory, pwd."
-      },
-      "command": "uvx",
-      "args": [
-        "code-index-mcp"
-      ]
-    },
-    "tree_sitter": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-tree-sitter"
-      ],
-      "env": {
-        "MCP_TS_LOG_LEVEL": "DEBUG"
-      }
-    },
     "memory": {
       "args": [
         "-y",
         "@modelcontextprotocol/server-memory"
       ],
       "command": "npx"
-    },
-    "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-filesystem",
-        "/var/home/hdemers",
-        "/run/host/var/home/hdemers/"
-      ],
-      "custom_instructions": {
-        "text": ""
-      },
-      "disabled_tools": [],
-      "disabled": false
-    }
-  },
-  "nativeMCPServers": {
-    "mcphub": {
-      "disabled_prompts": []
-    },
-    "jira": {
-      "custom_instructions": {
-        "text": "When creating a ticket, use the following template for the\ndescription:\n\n{*}Brief description{*}:\n\n* Work needed\n\n{*}Expected work product{*}:\n\n* Document? Metric? Code/Repo?\n\n{*}Dependencies{*}:\n\n* Meetings? Another ticket? Peer review?\n\n{*}Any background context you want to provide{*}:\n\n* Detail that supports work needed"
-      }
-    },
-    "neovim": {
-      "disabled": false,
-      "disabled_tools": [
-        "replace_in_file",
-        "write_file",
-        "read_file"
-      ]
     }
   }
 }

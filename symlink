@@ -121,7 +121,11 @@ def symlink(overwrite_all=False, backup_all=False, create_paths=False):
 
             if backup or backup_all:
                 if not dryrun:
-                    os.rename(link_name, f"{link_name}.backup")
+                    try:
+                        os.rename(link_name, f"{link_name}.backup")
+                    except OSError as error:
+                        if error.errno != 30:  # Read-only file system
+                            raise
                 log.info(f"renamed {link_name} -> {link_name}.backup")
 
             if overwrite or overwrite_all:

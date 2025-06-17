@@ -136,30 +136,6 @@ if [[ -n "$ZSH_VERSION" ]]; then
 fi
 
 
-checkoutworktree() {
-    # Checkout a worktree from a branch
-    if [ -z "$1" ]; then
-        echo "Usage: checkoutworktree <branch>"
-        return 1
-    fi
-
-    # Check there is a worktrees directory in the current directory.
-    if [ ! -d worktrees ]; then
-        echo "No worktrees directory found. Please create one first."
-        return 1
-    fi
-
-    local branch=$1
-
-    # If the `branch` does not start with origin/, prepend it.
-    if [[ ! $branch == origin/* ]]; then
-        branch="origin/${branch}"
-    fi
-
-    echo 'Checking out worktree for branch:' ${branch}
-    echo ${branch} | awk -F'/' '{print $2}' | xargs -I {} git worktree add --track -b {} worktrees/{} origin/{}
-}
-
 rpq() {
     if ! command -v duckdb &> /dev/null; then
         echo "duckdb is not installed. Please install it first."
@@ -270,33 +246,6 @@ js() {
         --border-label-pos 5:bottom \
         --border 'rounded' \
         --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: in epic | ctrl-h: all | ctrl-w: copy url | ctrl-o: open url'
-}
-
-jsc() {
-    jira issues --current-sprint --mine \
-        | fzf \
-        --ansi \
-        --height=40% \
-        --preview='jira describe {1}' \
-        --preview-window='top,80%' \
-        --header-lines=1 \
-        --scheme=history
-}
-
-jse() {
-    jira issues --epics-only \
-        | fzf \
-        --ansi \
-        --height=60% \
-        --preview='jira describe {1}' \
-        --preview-window='top,60%' \
-        --header-lines=1 \
-        --scheme=history \
-        --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
-        --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
-        --bind 'ctrl-l:reload(jira issues -i {1})+clear-query' \
-        --bind 'ctrl-h:reload(jira issues)+clear-query' \
-        --bind 'ctrl-e:reload(jira issues --epics-only)'
 }
 
 gwa() {

@@ -1,0 +1,14 @@
+## Coding standards
+
+Most projects, unless otherwise stated, should:
+
+1. If is a Python project, use [Ruff](https://docs.astral.sh/ruff/) to lint and format: `ruff check` and `ruff format`.
+3. Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) to write commit messages.
+4. Limit the title of commit messages to 50 characters and the body to 79.
+5. Use [semantic versioning](https://semver.org/).
+6. Use [conventional comments](https://conventionalcomments.org) when reviewing PRs.
+7. Use the PR template if one exists.
+8. When writing commit messages and PR descriptions, avoid superlatives like
+   comprehensive, major, etc.
+
+<!-- vim: set filetype=markdown: -->

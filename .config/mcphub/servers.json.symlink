@@ -51,7 +51,7 @@
       ],
       "command": "uvx"
     },
-    "github.com/modelcontextprotocol/servers/tree/main/src/filesystem": {
+    "filesystem": {
       "custom_instructions": {
         "text": ""
       },

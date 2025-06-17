@@ -200,18 +200,6 @@ vim.api.nvim_create_autocmd('FileType', {
   end,
 })
 
--- Filetype patterns
-vim.filetype.add {
-  filename = {
-    ['.todo'] = 'txt',
-    ['dev-requirements.txt'] = 'requirements',
-  },
-  pattern = {
-    ['requirements.*.txt'] = 'requirements',
-    ['requirements.*.in'] = 'requirements',
-  },
-}
-
 -- Auto-reload
 vim.go.autoread = true
 vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold', 'CursorHoldI', 'BufEnter' }, {
@@ -225,6 +213,26 @@ vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold', 'CursorHoldI', 'BufEn
   end,
 })
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- [[ New filetypes ]]
+
+-- Filetype patterns
+vim.filetype.add {
+  filename = {
+    ['.todo'] = 'txt',
+    ['dev-requirements.txt'] = 'requirements',
+  },
+  pattern = {
+    ['requirements.*.txt'] = 'requirements',
+    ['requirements.*.in'] = 'requirements',
+  },
+}
+
+vim.filetype.add {
+  extension = {
+    mdc = 'markdown',
+  },
+}
 -- ─────────────────────────────────────────────────────────────────────────────
 -- [[ Install `lazy.nvim` plugin manager ]]
 

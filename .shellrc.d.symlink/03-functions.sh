@@ -298,3 +298,81 @@ jse() {
         --bind 'ctrl-h:reload(jira issues)+clear-query' \
         --bind 'ctrl-e:reload(jira issues --epics-only)'
 }
+
+gwa() {
+    # Git Worktree Add (gwa)
+    # This function adds a new worktree for a given branch. If the branch
+    # already exists, it will add the worktree without creating a new branch.
+    # If no branch is provided, it will use gum to present a choice of branches.
+
+    if [ ! -d worktrees ]; then
+        echo "No worktrees directory found. Please create one first."
+        return 1
+    fi
+
+    local branch="$1"
+
+    # If no branch provided, use gum to select one
+    if [ -z "$branch" ]; then
+        if ! command -v gum &> /dev/null; then
+            echo "gum is not installed. Please provide a branch name or install gum."
+            echo "Usage: gwa <branch>"
+            return 1
+        fi
+        
+        # Get all branches (local and remote) and let user choose
+        branch=$(git branch -a --format="%(refname:short)" | grep -v HEAD | sed 's|origin/||' | sort -u | gum choose --header="Select a branch to create worktree for:")
+        
+        if [ -z "$branch" ]; then
+            echo "No branch selected."
+            return 1
+        fi
+    fi
+
+    if git rev-parse --verify --quiet "$branch"; then
+        echo "Branch '$branch' already exists. Adding worktree without creating a new branch."
+        git worktree add "worktrees/${branch}"
+    else
+        echo "Branch '$branch' does not exist. Creating new branch and adding worktree."
+        git worktree add "worktrees/${branch}" -b "${branch}"
+    fi
+}
+
+gwr() {
+    # Git Worktree Remove (gwr)
+    # This function removes a worktree for a given branch. If the branch does not
+    # exist, it will print an error message.
+    # If no branch is provided, it will use gum to present a choice of existing worktrees.
+
+    local branch="$1"
+
+    # If no branch provided, use gum to select one from existing worktrees
+    if [ -z "$branch" ]; then
+        if ! command -v gum &> /dev/null; then
+            echo "gum is not installed. Please provide a branch name or install gum."
+            echo "Usage: gwr <branch>"
+            return 1
+        fi
+        
+        # Check if worktrees directory exists and has any worktrees
+        if [ ! -d worktrees ] || [ -z "$(ls -A worktrees 2>/dev/null)" ]; then
+            echo "No worktrees found to remove."
+            return 1
+        fi
+        
+        # Get existing worktrees and let user choose
+        branch=$(ls worktrees/ | gum choose --header="Select a worktree to remove:")
+        
+        if [ -z "$branch" ]; then
+            echo "No worktree selected."
+            return 1
+        fi
+    fi
+
+    if [ ! -d "worktrees/${branch}" ]; then
+        echo "Worktree for branch '$branch' does not exist."
+        return 1
+    fi
+
+    git worktree remove "worktrees/${branch}"
+}

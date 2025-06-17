@@ -36,6 +36,8 @@ Create well-formatted commits with conventional commit messages and emojis.
 7. Add body for complex changes explaining why
 5. Exclude Claude co-authorship footer from commits
 8. Execute commit
+9. Push the changes to the remote.
+10. If the push is rejected, stop there, do not try to fix, notify the user using the `notify` tool.
 
 ## Best Practices:
 - Keep commits atomic and focused

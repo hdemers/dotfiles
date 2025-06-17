@@ -33,17 +33,18 @@ if command -v exa &> /dev/null
 then
     alias ls='exa'
     alias ll='exa -l --git -s time'
-    alias la='exa -la --git -s time'
     alias l='exa -l --git -s time'
-    alias lg='exa -Tl --git --git-ignore -s time'
+    alias la='exa -la --git -s time'
+    alias lt='exa -lT --git --git-ignore -s time'
     alias lz='exa -lZ --git -s time'
 fi
 
 if [ "$(command -v eza)" ]; then
     alias ll='eza -la --git --icons=auto --sort newest'
     alias l.='eza -d .*'
-    alias ls='eza'
-    alias l1='eza -1'
+    alias l='eza -l --git --icons=auto -s time'
+    alias ls='eza --icons=auto'
+    alias l1='eza -1 --icons=auto'
     alias lt='eza -lT --git --icons=auto'
     alias lz='eza -laZ --git --icons=auto --sort newest'
 fi
@@ -163,3 +164,5 @@ alias lsemr="listemr | \
     --bind='enter:execute(echo {4} | tr -d \"\\n\" | xsel --clipboard --input)+abort' \
     --height 50%
     "
+
+alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/Justfile"

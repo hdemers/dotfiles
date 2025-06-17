@@ -351,7 +351,7 @@ pane_frames false
 // Examples:
 //
 // copy_command "xclip -selection clipboard" // x11
-// copy_command "wl-copy"                    // wayland
+copy_command "wl-copy"                    // wayland
 // copy_command "pbcopy"                     // osx
 // 
 // copy_command "pbcopy"
@@ -372,7 +372,7 @@ pane_frames false
  
 // Path to the default editor to use to edit pane scrollbuffer
 // Default: $EDITOR or $VISUAL
-// scrollback_editor "/usr/bin/vim"
+scrollback_editor "/home/linuxbrew/.linuxbrew/bin/nvim"
  
 // A fixed name to always give the Zellij session.
 // Consider also setting `attach_to_session true,`

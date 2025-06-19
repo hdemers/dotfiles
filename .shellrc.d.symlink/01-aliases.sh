@@ -167,4 +167,5 @@ alias lsemr="listemr | \
 
 alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/Justfile"
 
-alias clauded="claude --dangerously-skip-permissions"
+alias clauded="claude --dangerously-skip-permissions --mcp-config $HOME/.claude/mcp.json"
+alias claude="claude --mcp-config $HOME/.claude/mcp.json"

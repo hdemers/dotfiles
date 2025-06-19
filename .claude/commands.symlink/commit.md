@@ -20,7 +20,7 @@ Create well-formatted commits with conventional commit messages and emojis.
 - 🎨 style: Code formatting, missing semicolons, etc.
 - ⚡️ perf: Performance improvements
 - ✅ test: Adding or correcting tests
-- 🧑‍💻 chore: Tooling, configuration, maintenance
+- 💤 chore: Tooling, configuration, maintenance
 - 🚧 wip: Work in progress
 - 🔥 remove: Removing code or files
 - 🚑 hotfix: Critical fixes

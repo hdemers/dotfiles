@@ -257,11 +257,11 @@ require('lazy').setup({
     {
       import = 'custom.plugins.local-only',
       cond = function()
-        local hostname = vim.fn.system('hostname'):gsub('%s+$', '')
-        if not string.find(hostname or '', 'neptune') then
-          return false
+        local hostname = vim.fn.system('hostname'):gsub('%s+$', '') or ''
+        if string.find(hostname, 'neptune') or string.find(hostname, 'devpod') then
+          return true
         end
-        return true
+        return false
       end,
     },
   },
@@ -289,3 +289,4 @@ require('lazy').setup({
 })
 
 -- vim: ts=2 sts=2 sw=2 et
+

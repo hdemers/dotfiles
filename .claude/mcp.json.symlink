@@ -1,0 +1,39 @@
+{
+  "mcpServers": {
+    "context7": {
+      "args": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "command": "npx",
+      "custom_instructions": {
+        "text": "Never retrieve more than 10000 tokens at a time from the get-library-docs tool.\nAlways search for a specific topic when using the get-library-docs tools."
+      }
+    },
+    "tree_sitter": {
+      "args": [
+        "mcp-server-tree-sitter"
+      ],
+      "command": "uvx",
+      "env": {
+        "MCP_TS_LOG_LEVEL": "DEBUG"
+      }
+    },
+    "mymcp": {
+      "args": [
+        "--from",
+        "git+ssh://git@github.com/hdemers/integrations.git",
+        "mymcp"
+      ],
+      "env": {},
+      "command": "uvx"
+    },
+    "memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "npx"
+    }
+  }
+}

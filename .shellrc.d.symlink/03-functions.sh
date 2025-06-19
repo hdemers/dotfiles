@@ -250,15 +250,12 @@ js() {
 
 gwa() {
     # Git Worktree Add (gwa)
-    # This function adds a new worktree for a given branch. If the branch
-    # already exists, it will add the worktree without creating a new branch.
+    # This function adds a new worktree for a given branch in the parent directory.
+    # The worktree will be named <repo-name>-<branch>-claude.
+    # If the branch already exists, it will add the worktree without creating a new branch.
     # If no branch is provided, it will use gum to present a choice of branches.
 
-    if [ ! -d worktrees ]; then
-        echo "No worktrees directory found. Please create one first."
-        return 1
-    fi
-
+    local repo_name=$(basename $(git rev-parse --show-toplevel))
     local branch="$1"
 
     # If no branch provided, use gum to select one
@@ -269,8 +266,8 @@ gwa() {
             return 1
         fi
         
-        # Get all branches (local and remote) and let user choose
-        branch=$(git branch -a --format="%(refname:short)" | grep -v HEAD | sed 's|origin/||' | sort -u | gum choose --header="Select a branch to create worktree for:")
+        # Get local branches sorted by commit date (similar to git rb alias)
+        branch=$(git for-each-ref --sort=-committerdate refs/heads --format='%(refname:short)' | gum choose --header="Select a branch to create worktree for:")
         
         if [ -z "$branch" ]; then
             echo "No branch selected."
@@ -278,21 +275,24 @@ gwa() {
         fi
     fi
 
+    local worktree_path="../${repo_name}-${branch}-claude"
+
     if git rev-parse --verify --quiet "$branch"; then
         echo "Branch '$branch' already exists. Adding worktree without creating a new branch."
-        git worktree add "worktrees/${branch}"
+        git worktree add "$worktree_path" "${branch}"
     else
         echo "Branch '$branch' does not exist. Creating new branch and adding worktree."
-        git worktree add "worktrees/${branch}" -b "${branch}"
+        git worktree add "$worktree_path" -b "${branch}"
     fi
 }
 
 gwr() {
     # Git Worktree Remove (gwr)
-    # This function removes a worktree for a given branch. If the branch does not
-    # exist, it will print an error message.
+    # This function removes a worktree for a given branch from the parent directory.
+    # The worktree should be named <repo-name>-<branch>-claude.
     # If no branch is provided, it will use gum to present a choice of existing worktrees.
 
+    local repo_name=$(basename $(git rev-parse --show-toplevel))
     local branch="$1"
 
     # If no branch provided, use gum to select one from existing worktrees
@@ -303,14 +303,17 @@ gwr() {
             return 1
         fi
         
-        # Check if worktrees directory exists and has any worktrees
-        if [ ! -d worktrees ] || [ -z "$(ls -A worktrees 2>/dev/null)" ]; then
+        # Check if there are any worktrees matching our pattern
+        if ! ls -d ../${repo_name}-*-claude 2>/dev/null | head -1 > /dev/null; then
             echo "No worktrees found to remove."
             return 1
         fi
         
-        # Get existing worktrees and let user choose
-        branch=$(ls worktrees/ | gum choose --header="Select a worktree to remove:")
+        # Get existing worktrees and extract branch names
+        # Use basename and strip the repo name and -claude suffix
+        branch=$(ls -d ../${repo_name}-*-claude 2>/dev/null | while read dir; do
+            basename "$dir" | sed "s/^${repo_name}-//; s/-claude$//"
+        done | gum choose --header="Select a worktree to remove:")
         
         if [ -z "$branch" ]; then
             echo "No worktree selected."
@@ -318,10 +321,12 @@ gwr() {
         fi
     fi
 
-    if [ ! -d "worktrees/${branch}" ]; then
-        echo "Worktree for branch '$branch' does not exist."
+    local worktree_path="../${repo_name}-${branch}-claude"
+
+    if [ ! -d "$worktree_path" ]; then
+        echo "Worktree for branch '$branch' does not exist at $worktree_path."
         return 1
     fi
 
-    git worktree remove "worktrees/${branch}"
+    git worktree remove "$worktree_path"
 }

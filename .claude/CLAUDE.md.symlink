@@ -1,5 +1,4 @@
 ## Coding standards
-
 Most projects, unless otherwise stated, should:
 
 1. If is a Python project, use [Ruff](https://docs.astral.sh/ruff/) to lint and format: `ruff check` and `ruff format`.
@@ -10,5 +9,13 @@ Most projects, unless otherwise stated, should:
 7. Use the PR template if one exists.
 8. When writing commit messages and PR descriptions, avoid superlatives like
    comprehensive, major, etc.
+
+## Implementation
+When implementing code:
+
+1. Try keeping things as simple as possible, but no simpler.
+2. Favor functions over classes.
+4. Follow established codebase patterns.
+3. After having modified/added a function, commit using the conventional commit style with type `🚧 wip`. Then push.
 
 <!-- vim: set filetype=markdown: -->

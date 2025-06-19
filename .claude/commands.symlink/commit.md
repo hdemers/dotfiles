@@ -45,3 +45,4 @@ Create well-formatted commits with conventional commit messages and emojis.
 - Explain why, not just what
 - Reference issues/PRs when relevant
 - Split unrelated changes into separate commits
+- Exclude Claude co-authorship footer from commits

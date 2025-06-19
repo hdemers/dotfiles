@@ -166,3 +166,5 @@ alias lsemr="listemr | \
     "
 
 alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/Justfile"
+
+alias clauded="claude --dangerously-skip-permissions"

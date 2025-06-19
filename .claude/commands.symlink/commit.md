@@ -29,15 +29,17 @@ Create well-formatted commits with conventional commit messages and emojis.
 ## Process:
 1. Check for staged changes (`git status`)
 2. If no staged changes, review and stage appropriate files
-3. Run pre-commit checks (unless --no-verify)
-4. Analyze changes to determine commit type
-5. Generate descriptive commit message
-6. Include scope if applicable: `type(scope): description`
-7. Add body for complex changes explaining why
-5. Exclude Claude co-authorship footer from commits
-8. Execute commit
-9. Push the changes to the remote.
-10. If the push is rejected, stop there, do not try to fix, notify the user using the `notify` tool.
+3. If staged changes, use those exclusively
+4. Run pre-commit checks (unless --no-verify)
+5. Analyze changes to determine commit type
+6. Generate descriptive commit message
+7. Include scope if applicable: `type(scope): description`
+8. Add body for complex changes explaining why
+9. Exclude Claude co-authorship footer from commits
+10. Seek approval from user.
+11. Execute commit
+12. Push the changes to the remote.
+13. If the push is rejected, stop there, do not try to fix, notify the user using the `notify` tool.
 
 ## Best Practices:
 - Keep commits atomic and focused

@@ -1,4 +1,13 @@
-## Coding standards
+## Contributing
+When contributing code:
+
+1. Try keeping things as simple as possible, but no simpler.
+2. Favor functions over classes.
+3. Follow established codebase patterns.
+4. After having modified/added a function, and before modyfing/adding the next
+   one, commit using the instructions found below.
+
+### Coding standards
 Most projects, unless otherwise stated, should:
 
 1. If is a Python project, use [Ruff](https://docs.astral.sh/ruff/) to lint and format: `ruff check` and `ruff format`.
@@ -10,12 +19,8 @@ Most projects, unless otherwise stated, should:
 8. When writing commit messages and PR descriptions, avoid superlatives like
    comprehensive, major, etc.
 
-## Implementation
-When implementing code:
 
-1. Try keeping things as simple as possible, but no simpler.
-2. Favor functions over classes.
-4. Follow established codebase patterns.
-3. After having modified/added a function, commit using the conventional commit style with type `🚧 wip`. Then push.
+### Commiting
+@commands/commit.md
 
 <!-- vim: set filetype=markdown: -->

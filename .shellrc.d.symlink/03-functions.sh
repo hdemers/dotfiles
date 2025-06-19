@@ -275,7 +275,7 @@ gwa() {
         fi
     fi
 
-    local worktree_path="../${repo_name}-${branch}-claude"
+    local worktree_path="../${branch}"
 
     if git rev-parse --verify --quiet "$branch"; then
         echo "Branch '$branch' already exists. Adding worktree without creating a new branch."
@@ -288,45 +288,37 @@ gwa() {
 
 gwr() {
     # Git Worktree Remove (gwr)
-    # This function removes a worktree for a given branch from the parent directory.
-    # The worktree should be named <repo-name>-<branch>-claude.
-    # If no branch is provided, it will use gum to present a choice of existing worktrees.
+    # This function removes a worktree situated in a directory above the current one.
+    # If no worktree path is provided, it will use gum to present a choice of existing worktrees.
 
-    local repo_name=$(basename $(git rev-parse --show-toplevel))
-    local branch="$1"
+    local worktree_to_remove="$1"
 
-    # If no branch provided, use gum to select one from existing worktrees
-    if [ -z "$branch" ]; then
+    # If no worktree path provided, use gum to select one from existing worktrees
+    if [ -z "$worktree_to_remove" ]; then
         if ! command -v gum &> /dev/null; then
-            echo "gum is not installed. Please provide a branch name or install gum."
-            echo "Usage: gwr <branch>"
+            echo "gum is not installed. Please provide a worktree path or install gum."
+            echo "Usage: gwr <worktree_path>"
             return 1
         fi
-        
-        # Check if there are any worktrees matching our pattern
-        if ! ls -d ../${repo_name}-*-claude 2>/dev/null | head -1 > /dev/null; then
-            echo "No worktrees found to remove."
-            return 1
-        fi
-        
-        # Get existing worktrees and extract branch names
-        # Use basename and strip the repo name and -claude suffix
-        branch=$(ls -d ../${repo_name}-*-claude 2>/dev/null | while read dir; do
-            basename "$dir" | sed "s/^${repo_name}-//; s/-claude$//"
-        done | gum choose --header="Select a worktree to remove:")
-        
-        if [ -z "$branch" ]; then
+
+        # Get existing worktrees and extract only the path (first column)
+        # Skip the main worktree (current directory) and show only additional worktrees
+        local current_worktree=$(git rev-parse --show-toplevel)
+        worktree_to_remove=$(\
+            git worktree list | \
+            awk -v current="$current_worktree" '$1 != current {print $1}' | \
+            gum choose --header="Select a worktree to remove:")
+
+        if [ -z "$worktree_to_remove" ]; then
             echo "No worktree selected."
             return 1
         fi
     fi
 
-    local worktree_path="../${repo_name}-${branch}-claude"
-
-    if [ ! -d "$worktree_path" ]; then
-        echo "Worktree for branch '$branch' does not exist at $worktree_path."
+    if [ ! -d "$worktree_to_remove" ]; then
+        echo "Worktree '$worktree_to_remove' does not exist."
         return 1
     fi
 
-    git worktree remove "$worktree_path"
+    git worktree remove "$worktree_to_remove"
 }

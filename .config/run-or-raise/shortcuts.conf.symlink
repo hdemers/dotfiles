@@ -33,12 +33,11 @@
 
 # GMail
 <Super>r,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@gmail.com.*/
-
 # Grubhub mail
-<Super>m,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
+<Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
 
 # Tmux-vim
-<Super>e,gtk-launch zellij-nvim.desktop,,/.*Zellij.*nvim.*/
+<Super>k,gtk-launch zellij-nvim.desktop,,/.*Zellij.*nvim.*/
 
 # Spotify
 <Super>s,flatpak run com.spotify.Client,Spotify,Spotify
@@ -60,6 +59,8 @@
 
 # Google Calendar
 <Super>a,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Week of
+# Grubhub Calendar
+<Super>x,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Profile_3.desktop,,Google Calendar - Grubhub - Calendar
 
 # Firefox
 <Super>f,gtk-launch org.mozilla.firefox.desktop,org.mozilla.firefox,

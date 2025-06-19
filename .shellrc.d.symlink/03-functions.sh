@@ -56,9 +56,9 @@ ntfy() {
 
 notify() {
     error_code=$?
-
-    cmd=$(history | tail -n1 | sed -e 's/^\s*[0-9]\+\s*//;s/[;&|]\s*notify$//')
-
+    # Use fc (history) command - more reliable than history
+    cmd=$(fc -ln -1 | sed 's/[;&|]*\s*notify\s*$//')
+    
     if [ ${error_code} -eq 0 ]; then
         ntfy "${cmd}" -H "X-Title: Success" -H "Tags: heavy_check_mark"
     else
@@ -180,7 +180,7 @@ gb() {
         --ansi \
         --height=60% \
         --header-lines=1 \
-        --border-label='  ctrl-r: toggle remote | ctrl-e: delete | ctrl-w: open web | ctrl-t: add as worktree | ctrl-i: show graph | ctrl-s: show ticket | ctrl-m: show message' \
+        --border-label='  ctrl-r: toggle remote | ctrl-e: delete | ctrl-w: open web | ctrl-t: add as worktree | ctrl-i: show graph | ctrl-s: show ticket | ctrl-g: show message' \
         --border-label-pos=5:bottom \
         --border='rounded' \
         --preview='GH_FORCE_TTY="100%" gh pr view --comments $(echo {1} | \
@@ -188,18 +188,12 @@ gb() {
             sed "s|^origin/||") || \
             git show --stat --color=always $(echo {1} | tr -d "*" | sed "s|^origin/||")' \
         --preview-window=border-none,top,75% \
-        --bind 'enter:execute(\
-            echo {1} | \
-            tr -d "*" | \
-            sed "s|^origin/||" | \
-            xargs --no-run-if-empty git sw )+abort' \
+        --bind 'enter:execute(echo {1} | tr -d "*" | sed "s|^origin/||" | xargs --no-run-if-empty git sw )+reload(git rb)' \
         --bind 'ctrl-e:execute-silent(git br -D {1})+reload(git rb)' \
         --bind 'ctrl-r:transform:[[ ! $FZF_PROMPT =~ "Local" ]] &&
               echo "change-prompt(Local Branches> )+reload(git rb)" ||
               echo "change-prompt(All Branches> )+reload(git rba)"' \
-        --bind 'ctrl-t:execute(\
-            awk -F"/" '"'"'{print \$NF}'"'"' <<< {1} | \
-            xargs -I {} git worktree add --track -b {} worktrees/{} origin/{})+abort' \
+        --bind 'ctrl-t:execute(gwa)+abort' \
         --bind 'ctrl-w:execute-silent(gh pr view --web)' \
         --bind 'ctrl-i:preview(git log \
             --color=always \
@@ -211,7 +205,7 @@ gb() {
             --remotes \
             )' \
         --bind "ctrl-s:preview($story)" \
-        --bind 'ctrl-m:preview(git show --stat --color=always $(echo {1} | tr -d "*" | sed "s|^origin/||"))'
+        --bind 'ctrl-g:preview(git show --stat --color=always $(echo {1} | tr -d "*" | sed "s|^origin/||"))'
 }
 
 

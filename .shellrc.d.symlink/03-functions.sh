@@ -253,17 +253,17 @@ gwa() {
     local branch="$1"
 
     # If no branch provided, use gum to select one
-    if [ -z "$branch" ]; then
+    if [ -z "${branch}" ]; then
         if ! command -v gum &> /dev/null; then
             echo "gum is not installed. Please provide a branch name or install gum."
             echo "Usage: gwa <branch>"
             return 1
         fi
-        
+
         # Get local branches sorted by commit date (similar to git rb alias)
         branch=$(git for-each-ref --sort=-committerdate refs/heads --format='%(refname:short)' | gum choose --header="Select a branch to create worktree for:")
-        
-        if [ -z "$branch" ]; then
+
+        if [ -z "${branch}" ]; then
             echo "No branch selected."
             return 1
         fi
@@ -271,12 +271,21 @@ gwa() {
 
     local worktree_path="../${branch}"
 
-    if git rev-parse --verify --quiet "$branch"; then
-        echo "Branch '$branch' already exists. Adding worktree without creating a new branch."
-        git worktree add "$worktree_path" "${branch}"
+    if git rev-parse --verify --quiet "${branch}"; then
+        echo "Branch '${branch}' already exists. Adding worktree without creating a new branch."
+        git worktree add "${worktree_path}" "${branch}"
     else
-        echo "Branch '$branch' does not exist. Creating new branch and adding worktree."
-        git worktree add "$worktree_path" -b "${branch}"
+        echo "Branch '${branch}' does not exist. Creating new branch and adding worktree."
+        git worktree add "${worktree_path}" -b "${branch}"
+    fi
+    cd "${worktree_path}" || return 1
+    # Copy .envrc from the main worktree if it exists
+    if [ -f "${OLDPWD}/.envrc" ]; then
+        cp "${OLDPWD}/.envrc" .
+        echo ".envrc copied to new worktree."
+        direnv allow .
+    else
+        echo "No .envrc file found in the main worktree."
     fi
 }
 
@@ -288,7 +297,7 @@ gwr() {
     local worktree_to_remove="$1"
 
     # If no worktree path provided, use gum to select one from existing worktrees
-    if [ -z "$worktree_to_remove" ]; then
+    if [ -z "${worktree_to_remove}" ]; then
         if ! command -v gum &> /dev/null; then
             echo "gum is not installed. Please provide a worktree path or install gum."
             echo "Usage: gwr <worktree_path>"
@@ -300,19 +309,19 @@ gwr() {
         local current_worktree=$(git rev-parse --show-toplevel)
         worktree_to_remove=$(\
             git worktree list | \
-            awk -v current="$current_worktree" '$1 != current {print $1}' | \
+            awk -v current="${current_worktree}" '$1 != current {print $1}' | \
             gum choose --header="Select a worktree to remove:")
 
-        if [ -z "$worktree_to_remove" ]; then
+        if [ -z "${worktree_to_remove}" ]; then
             echo "No worktree selected."
             return 1
         fi
     fi
 
-    if [ ! -d "$worktree_to_remove" ]; then
-        echo "Worktree '$worktree_to_remove' does not exist."
+    if [ ! -d "${worktree_to_remove}" ]; then
+        echo "Worktree '${worktree_to_remove}' does not exist."
         return 1
     fi
 
-    git worktree remove "$worktree_to_remove"
+    git worktree remove "${worktree_to_remove}"
 }

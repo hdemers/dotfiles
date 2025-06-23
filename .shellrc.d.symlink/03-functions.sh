@@ -105,11 +105,12 @@ rfv() {
 custom-atuin-history-widget() {
   local selected
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-  selected=$(atuin search --reverse --format "{relativetime}\t{host}\t{command}" \
+  selected=$(atuin search --reverse --format "{relativetime}\t{host}\t{exit}\t{command}" \
       | awk -F'\t' '{ 
           time=sprintf("%-5s", $1);
           host=sprintf("%-20s", $2);
-          printf "\033[36m%s\033[0m\t\033[33m%s\033[0m\t%s\n", time, host, $3
+          exit_code=sprintf("%-5s", $3);
+          printf "\033[36m%s\t\033[33m%s\t\033[32m%s\t\033[35m%s\033[0m\n", time, host, exit_code, $4
         }' \
       | fzf --ansi --delimiter='\t' \
           --bind 'tab:execute-silent(echo paste)+abort' \
@@ -249,7 +250,7 @@ gwa() {
     # If the branch already exists, it will add the worktree without creating a new branch.
     # If no branch is provided, it will use gum to present a choice of branches.
 
-    local repo_name=$(basename $(git rev-parse --show-toplevel))
+    local repo_name=$(basename $(jj workspace root))
     local branch="$1"
 
     # If no branch provided, use gum to select one
@@ -261,7 +262,7 @@ gwa() {
         fi
 
         # Get local branches sorted by commit date (similar to git rb alias)
-        branch=$(git for-each-ref --sort=-committerdate refs/heads --format='%(refname:short)' | gum choose --header="Select a branch to create worktree for:")
+        branch=$(jj branch list --local | awk '{print $1}' | gum choose --header="Select a branch to create worktree for:")
 
         if [ -z "${branch}" ]; then
             echo "No branch selected."
@@ -271,12 +272,12 @@ gwa() {
 
     local worktree_path="../${branch}"
 
-    if git rev-parse --verify --quiet "${branch}"; then
+    if jj branch list --local | grep -q "^${branch}$"; then
         echo "Branch '${branch}' already exists. Adding worktree without creating a new branch."
-        git worktree add "${worktree_path}" "${branch}"
+        jj worktree add "${worktree_path}" "${branch}"
     else
         echo "Branch '${branch}' does not exist. Creating new branch and adding worktree."
-        git worktree add "${worktree_path}" -b "${branch}"
+        jj worktree add "${worktree_path}" -b "${branch}"
     fi
     cd "${worktree_path}" || return 1
     # Copy .envrc from the main worktree if it exists
@@ -290,6 +291,84 @@ gwa() {
 }
 
 gwr() {
+    # Git Worktree Remove (gwr)
+    # This function removes a worktree situated in a directory above the current one.
+    # If no worktree path is provided, it will use gum to present a choice of existing worktrees.
+
+    local worktree_to_remove="$1"
+
+    # If no worktree path provided, use gum to select one from existing worktrees
+    if [ -z "${worktree_to_remove}" ]; then
+        if ! command -v gum &> /dev/null; then
+            echo "gum is not installed. Please provide a worktree path or install gum."
+            echo "Usage: gwr <worktree_path>"
+            return 1
+        fi
+
+        # Get existing worktrees and extract only the path (first column)
+        # Skip the main worktree (current directory) and show only additional worktrees
+        local current_worktree=$(git rev-parse --show-toplevel)
+        worktree_to_remove=$(\
+            git worktree list | \
+            awk -v current="${current_worktree}" '$1 != current {print $1}' | \
+            gum choose --header="Select a worktree to remove:")
+
+        if [ -z "${worktree_to_remove}" ]; then
+            echo "No worktree selected."
+            return 1
+        fi
+    fi
+
+    if [ ! -d "${worktree_to_remove}" ]; then
+        echo "Worktree '${worktree_to_remove}' does not exist."
+        return 1
+    fi
+
+    git worktree remove "${worktree_to_remove}"
+}
+
+jwa() {
+    local repo_name=$(basename $(jj workspace root))
+    local branch="$1"
+
+    # If no branch provided, use gum to select one
+    if [ -z "${branch}" ]; then
+        if ! command -v gum &> /dev/null; then
+            echo "gum is not installed. Please provide a branch name or install gum."
+            echo "Usage: jwa <branch>"
+            return 1
+        fi
+
+        # Get local branches sorted by commit date
+        branch=$(jj bookmark list | awk '{print $1}' | gum choose --header="Select a branch to create worktree for:")
+
+        if [ -z "${branch}" ]; then
+            echo "No branch selected."
+            return 1
+        fi
+    fi
+
+    local worktree_path="../${branch}"
+
+    if jj bookmark list | grep -q "^${branch}$"; then
+        echo "Branch '${branch}' already exists. Adding worktree without creating a new branch."
+        jj worktree add "${worktree_path}" "${branch}"
+    else
+        echo "Branch '${branch}' does not exist. Creating new branch and adding worktree."
+        jj worktree add "${worktree_path}" -b "${branch}"
+    fi
+    cd "${worktree_path}" || return 1
+    # Copy .envrc from the main worktree if it exists
+    if [ -f "${OLDPWD}/.envrc" ]; then
+        cp "${OLDPWD}/.envrc" .
+        echo ".envrc copied to new worktree."
+        direnv allow .
+    else
+        echo "No .envrc file found in the main worktree."
+    fi
+}
+
+jwr() {
     # Git Worktree Remove (gwr)
     # This function removes a worktree situated in a directory above the current one.
     # If no worktree path is provided, it will use gum to present a choice of existing worktrees.

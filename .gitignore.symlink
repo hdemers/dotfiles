@@ -76,6 +76,9 @@ lightning_logs
 # Code Index MCP cache directory
 .code_indexer/
 
-scratch.*
+scratch*
 
 .analyses
+
+# Ignore everything that starts with a comma
+,*

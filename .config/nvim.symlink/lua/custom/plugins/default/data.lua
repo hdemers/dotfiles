@@ -32,15 +32,15 @@ return {
     -- stylua: ignore
     keys = {
       { '<CR>', ':QuartoSend<CR>', desc = 'Quarto: run cell', },
-      { '<localleader>jc', ':QuartoActivate<CR>', desc = 'Quarto: activate', },
-      { '<localleader>ja', function() require('quarto.runner').run_above() end, desc = 'Quarto: run cell and all above', },
-      { '<localleader>jb', function() require('quarto.runner').run_below() end, desc = 'Quarto: run cell and all below', },
-      { '<localleader>jA', function() require('quarto.runner').run_all() end, desc = 'Quarto: run all cells', },
-      { '<localleader>jl', function() require('quarto.runner').run_line() end, desc = 'Quarto: run line', },
-      { '<localleader>jp', ':QuartoPreview<CR>', desc = 'Quarto: open preview', },
-      { '<localleader>jP', ':QuartoClosePreview<CR>', desc = 'Quarto: close preview', },
-      -- { '<localleader>jj', "ko\rpyc<cmd>lua require('luasnip').expand()<CR>", desc = 'Snippet: new cell', },
-      { '<localleader>j/', 'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O', desc = 'Split cell', },
+      { '<localleader>hc', ':QuartoActivate<CR>', desc = 'Quarto: activate', },
+      { '<localleader>ha', function() require('quarto.runner').run_above() end, desc = 'Quarto: run cell and all above', },
+      { '<localleader>hb', function() require('quarto.runner').run_below() end, desc = 'Quarto: run cell and all below', },
+      { '<localleader>hA', function() require('quarto.runner').run_all() end, desc = 'Quarto: run all cells', },
+      { '<localleader>hl', function() require('quarto.runner').run_line() end, desc = 'Quarto: run line', },
+      { '<localleader>hp', ':QuartoPreview<CR>', desc = 'Quarto: open preview', },
+      { '<localleader>hP', ':QuartoClosePreview<CR>', desc = 'Quarto: close preview', },
+      -- { '<localleader>hj', "ko\rpyc<cmd>lua require('luasnip').expand()<CR>", desc = 'Snippet: new cell', },
+      { '<localleader>h/', 'O```\r\r```{python}<ESC>/```<ESC><cmd>nohlsearch<CR>O', desc = 'Split cell', },
     },
     config = function(_, opts)
       local quarto = require 'quarto'
@@ -111,13 +111,13 @@ return {
 
       -- vim.keymap.set(
       --   'v',
-      --   '<localleader>jv',
+      --   '<localleader>hv',
       --   runner.run_range,
       --   { desc = 'Quarto: run [v]isual range', silent = true }
       -- )
       -- Document key chains
       require('which-key').add {
-        { '<leader>j', group = 'Jupyter', icon = { icon = '', color = 'blue' } },
+        { '<leader>h', group = 'Jupyter', icon = { icon = '', color = 'blue' } },
       }
     end,
   },
@@ -182,39 +182,39 @@ return {
     end,
     keys = {
       {
-        '<localleader>je',
+        '<localleader>he',
         ':noautocmd MoltenEnterOutput<CR>:noautocmd MoltenEnterOutput<CR>[ow',
         desc = 'Molten: enter output',
       },
-      { '<localleader>jr', ':MoltenRestart<cr>', desc = 'Molten: restart' },
-      { '<localleader>ji', ':MoltenInterrupt<cr>', desc = 'Molten: interrupt' },
+      { '<localleader>hr', ':MoltenRestart<cr>', desc = 'Molten: restart' },
+      { '<localleader>hi', ':MoltenInterrupt<cr>', desc = 'Molten: interrupt' },
       {
-        '<localleader>jo',
+        '<localleader>ho',
         ':MoltenImagePopup<cr>',
         desc = 'Molten: open image',
         silent = true,
       },
       --   {
-      --     '<localleader>jv',
+      --     '<localleader>hv',
       --     ':<C-u>MoltenEvaluateVisual<cr>',
       --     mode = 'v',
       --     desc = 'Jupyter: eval visual',
       --     silent = true,
       --   },
       --   {
-      --     '<localleader>jl',
+      --     '<localleader>hl',
       --     ':MoltenEvaluateLine<cr>',
       --     desc = 'Jupyter: eval line',
       --     silent = true,
       --   },
       --   {
-      --     '<localleader>jr',
+      --     '<localleader>hr',
       --     ':MoltenReevaluateCell<cr>',
       --     desc = 'Jupyter: re-eval cell',
       --     silent = true,
       --   },
       --   {
-      --     '<localleader>jv',
+      --     '<localleader>hv',
       --     ':MoltenEvaluateVisual<cr>',
       --     desc = 'Jupyter: eval visual',
       --     silent = true,
@@ -250,13 +250,13 @@ return {
         group = vim.api.nvim_create_augroup('yarepl', {}),
         desc = 'Set up repl keymap',
         callback = function()
-          -- bufmap(0, 'n', '<localleader>js', '<Plug>(REPLStart-ipython)', {
+          -- bufmap(0, 'n', '<localleader>hs', '<Plug>(REPLStart-ipython)', {
           --   desc = 'Yarepl: start a repl',
           -- })
           -- bufmap(0, 'n', '<localleader>rf', '<Plug>(REPLFocus)', {
           --   desc = 'Yarepl: focus on repl',
           -- })
-          -- bufmap(0, 'n', '<localleader>jv', '<CMD>Telescope REPLShow<CR>', {
+          -- bufmap(0, 'n', '<localleader>hv', '<CMD>Telescope REPLShow<CR>', {
           --   desc = 'Yarepl: view REPLs in Telescope',
           -- })
           -- bufmap(0, 'n', '<localleader>rh', '<Plug>(REPLHide)', {
@@ -265,7 +265,7 @@ return {
           bufmap(0, 'n', '<localleader>k', '<Plug>(REPLSendOperator)vic', {
             desc = 'Yarepl: send cell to repl',
           })
-          bufmap(0, 'v', '<localleader>jv', '<Plug>(REPLSendVisual-ipython)', {
+          bufmap(0, 'v', '<localleader>hv', '<Plug>(REPLSendVisual-ipython)', {
             desc = 'Yarepl: send visual to repl',
           })
           -- bufmap(0, 'n', '<localleader>s', '<Plug>(REPLSendOperator)', {
@@ -275,10 +275,10 @@ return {
           --   desc = 'Execute command in repl',
           --   expr = true,
           -- })
-          bufmap(0, 'n', '<localleader>jq', '<Plug>(REPLClose)', {
+          bufmap(0, 'n', '<localleader>hq', '<Plug>(REPLClose)', {
             desc = 'Yarepl: quit repl',
           })
-          bufmap(0, 'n', '<localleader>ju', '<CMD>REPLCleanup<CR>', {
+          bufmap(0, 'n', '<localleader>hu', '<CMD>REPLCleanup<CR>', {
             desc = 'Yarepl: clean up repls',
           })
           -- bufmap(0, 'n', '<localleader>rS', '<CMD>REPLSwap<CR>', {
@@ -287,7 +287,7 @@ return {
           -- bufmap(0, 'n', '<localleader>r?', '<Plug>(REPLStart)', {
           --   desc = 'Start an repl from available repl metas',
           -- })
-          bufmap(0, 'n', '<localleader>jt', '<CMD>REPLAttachBufferToREPL<CR>', {
+          bufmap(0, 'n', '<localleader>ht', '<CMD>REPLAttachBufferToREPL<CR>', {
             desc = 'Yarepl: attach current buffer to a repl',
           })
           -- bufmap(0, 'n', '<localleader>rd', '<CMD>REPLDetachBufferToREPL<CR>', {

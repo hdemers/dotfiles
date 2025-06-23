@@ -7,3 +7,22 @@ email = "hdemers@gmail.com"
 [ui]
 default-command = "log"
 diff-editor = ["nvim", "-c", "DiffEditor $left $right $output"]
+
+[merge-tools.diffconflicts]
+program = "nvim"
+merge-args = [
+    "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
+    "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
+]
+merge-tool-edits-conflict-markers = true
+
+[revset-aliases]
+'bases' = 'dev'
+'downstream(x,y)' = '(x::y) & y'
+'branches' = 'downstream(trunk(), bookmarks()) & mine()'
+'branchesandheads' = 'branches | (heads(trunk()::) & mine())'
+'curbranch' = 'latest(branches::@- & branches)'
+'nextbranch' = 'roots(@:: & branchesandheads)'
+
+
+# vim: set filetype=toml:

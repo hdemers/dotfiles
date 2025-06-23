@@ -6,11 +6,12 @@ email = "hdemers@gmail.com"
 
 [ui]
 default-command = "log"
-diff-editor = ["nvim", "-c", "DiffEditor $left $right $output"]
+# diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
 
 [merge-tools.diffconflicts]
 program = "nvim"
 merge-args = [
+    "-n",
     "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
     "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
 ]
@@ -23,6 +24,9 @@ merge-tool-edits-conflict-markers = true
 'branchesandheads' = 'branches | (heads(trunk()::) & mine())'
 'curbranch' = 'latest(branches::@- & branches)'
 'nextbranch' = 'roots(@:: & branchesandheads)'
+
+[git]
+push-new-bookmarks = true
 
 
 # vim: set filetype=toml:

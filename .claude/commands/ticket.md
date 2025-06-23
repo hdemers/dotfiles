@@ -1,12 +1,19 @@
 # Create/Update/Transition a ticket
 
-Create or update or transition a ticket.
+Create or update or transition a ticket using the `ticket` mcp tool.
 
 ## Usage:
 - `/ticket create <parameters>` - Create a new ticket
 - `/ticket update <ticket> <parameters` - Update an existing ticket
 - `/ticket transition <ticket> <state>` - Transition an existing ticket.
 
+### Parameters
+- Epic: The epic of that ticket, if not specified, leave blank.
+- Sprint: current sprint if not specified
+- Assignee: if not specified: me
+- Point: the number of points, if not specified, leave blank.
+- Description: if the user does not provide a description, observed the changes
+  made on the current branch and use that as the basis for the description.
 
 ## Template:
 {*}Brief description{*}:
@@ -26,13 +33,12 @@ Create or update or transition a ticket.
 * Detail that supports work needed
 
 ## Creation Process:
-1. Check for changes from HEAD to master.
-2. Use the template.
-3. Use future tense.
-4. Use Markdown formatting where appropriate.
-5. Write the ticket as if the work is to be done.
-6. The summary of the ticket should be prefixed with `[repo-name]`.
-7. If the user has provided an epic, a sprint, a number of points, etc., use those.
+1. Use the template.
+2. Use future tense.
+3. Use Markdown formatting where appropriate.
+4. Write the ticket as if the work is to be done.
+5. The summary of the ticket should be prefixed with `[repo-name]`.
+6. If the user has provided an epic, a sprint, a number of points, etc., use those.
 
 ## Update process:
 1. Update the provided parameters for that ticket.

@@ -19,8 +19,14 @@ Most projects, unless otherwise stated, should:
 8. When writing commit messages and PR descriptions, avoid superlatives like
    comprehensive, major, etc.
 
-
 ### Commiting
 @commands/commit.md
+
+## Version Control System
+Some projects use Git while others use Jujutsu. 
+
+Reference commands for Jujutsu:
+
+- `jj diff -r master..<branch>`: will show the changes on that branch.
 
 <!-- vim: set filetype=markdown: -->

@@ -82,3 +82,7 @@ scratch*
 
 # Ignore everything that starts with a comma
 ,*
+
+# Claude Code related files
+CLAUDE.local.md
+.claude/settings.local.json

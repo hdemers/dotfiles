@@ -339,8 +339,9 @@ jwa() {
             return 1
         fi
 
-        # Get local branches sorted by commit date
-        branch=$(jj bookmark list | awk '{print $1}' | gum choose --header="Select a branch to create worktree for:")
+        # Get bookmarks, clean up trailing '*', and present with gum
+        branch=$(jj log -r "bookmarks() ~ master ~ dev" --no-graph -T 'self.bookmarks() ++ "\n"' \
+            | sed 's/[[:space:]]*$//' | sed 's/\*$//' | grep -v '^$' | gum choose --header="Select a branch to create worktree for:")
 
         if [ -z "${branch}" ]; then
             echo "No branch selected."
@@ -348,17 +349,12 @@ jwa() {
         fi
     fi
 
-    local worktree_path="../${branch}"
+    local workspace_path="../${branch}"
 
-    if jj bookmark list | grep -q "^${branch}$"; then
-        echo "Branch '${branch}' already exists. Adding worktree without creating a new branch."
-        jj worktree add "${worktree_path}" "${branch}"
-    else
-        echo "Branch '${branch}' does not exist. Creating new branch and adding worktree."
-        jj worktree add "${worktree_path}" -b "${branch}"
-    fi
-    cd "${worktree_path}" || return 1
-    # Copy .envrc from the main worktree if it exists
+    jj workspace add -r "${branch}" "${workspace_path}"
+
+    cd "${workspace_path}" || return 1
+    # Copy .envrc from the main workspace if it exists
     if [ -f "${OLDPWD}/.envrc" ]; then
         cp "${OLDPWD}/.envrc" .
         echo ".envrc copied to new worktree."
@@ -369,38 +365,39 @@ jwa() {
 }
 
 jwr() {
-    # Git Worktree Remove (gwr)
-    # This function removes a worktree situated in a directory above the current one.
-    # If no worktree path is provided, it will use gum to present a choice of existing worktrees.
+    # Git Worktree Remove (jwr)
+    # Removes a worktree above the current one, using jj workspace list for selection.
 
-    local worktree_to_remove="$1"
+    local workspace_to_remove="$1"
 
-    # If no worktree path provided, use gum to select one from existing worktrees
-    if [ -z "${worktree_to_remove}" ]; then
+    # If no worktree path provided, use gum to select one from existing workspaces
+    if [ -z "${workspace_to_remove}" ]; then
         if ! command -v gum &> /dev/null; then
             echo "gum is not installed. Please provide a worktree path or install gum."
-            echo "Usage: gwr <worktree_path>"
+            echo "Usage: jwr <worktree_path>"
             return 1
         fi
 
-        # Get existing worktrees and extract only the path (first column)
-        # Skip the main worktree (current directory) and show only additional worktrees
-        local current_worktree=$(git rev-parse --show-toplevel)
-        worktree_to_remove=$(\
-            git worktree list | \
-            awk -v current="${current_worktree}" '$1 != current {print $1}' | \
-            gum choose --header="Select a worktree to remove:")
+        # Get workspace names, exclude 'default', and present with gum
+        workspace_to_remove=$(jj workspace list \
+            | awk -F: '{print $1}' \
+            | grep -v '^default$' \
+            | grep -v '^[[:space:]]*$' \
+            | gum choose --header="Select a worktree to remove:")
 
-        if [ -z "${worktree_to_remove}" ]; then
+        if [ -z "${workspace_to_remove}" ]; then
             echo "No worktree selected."
             return 1
         fi
     fi
 
-    if [ ! -d "${worktree_to_remove}" ]; then
-        echo "Worktree '${worktree_to_remove}' does not exist."
+    local workspace_path="../${workspace_to_remove}"
+
+    if [ ! -d "${workspace_path}" ]; then
+        echo "Workspace directory '${workspace_path}' does not exist."
         return 1
     fi
 
-    git worktree remove "${worktree_to_remove}"
+    jj workspace forget "${workspace_to_remove}" && \
+        rm -rf "${workspace_path}"
 }

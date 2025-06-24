@@ -394,14 +394,22 @@ return {
       -- Load a dir-specific session when we open Neovim, save it when we exit.
       vim.api.nvim_create_autocmd('VimEnter', {
         callback = function()
-          -- Only load the session if nvim was started with no args
-          if vim.fn.argc(-1) == 0 then
-            -- Save these to a different directory, so our manual sessions don't get polluted
+          local argc = vim.fn.argc(-1)
+          local argv = vim.v.argv
+          local has_options = false
+          for i = 2, #argv do
+            if argv[i]:sub(1, 1) == '-' and argv[i] ~= '--embed' then
+              has_options = true
+              break
+            end
+          end
+          if argc == 0 and not has_options then
             resession.load(vim.fn.getcwd(), { dir = 'dirsession', silence_errors = true })
           end
         end,
         nested = true,
       })
+
       vim.api.nvim_create_autocmd('VimLeavePre', {
         callback = function()
           resession.save(vim.fn.getcwd(), { dir = 'dirsession', notify = false })

@@ -6,7 +6,7 @@ email = "hdemers@gmail.com"
 
 [ui]
 default-command = "log"
-# diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
+diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
 
 [merge-tools.diffconflicts]
 program = "nvim"

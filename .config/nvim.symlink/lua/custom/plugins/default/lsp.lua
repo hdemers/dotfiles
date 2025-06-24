@@ -171,6 +171,16 @@ return {
           },
         },
         clangd = {},
+        harper_ls = {
+          settings = {
+            ['harper-ls'] = {
+              linters = {
+                SentenceCapitalization = false,
+                SpellCheck = false,
+              },
+            },
+          },
+        },
         jdtls = {}, -- Add Java language server
         jsonls = {},
         lua_ls = {

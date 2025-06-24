@@ -27,6 +27,11 @@ Some projects use Git while others use Jujutsu.
 
 Reference commands for Jujutsu:
 
-- `jj diff -r master..<branch>`: will show the changes on that branch.
+- `jj log -r master..@ --template description`: to get the commit messages
+  between master and @.
+- `jj diff --git -r master..@`: to get the diff of all commits between master
+  and @.
+- `jj log -r @ -T "self.bookmarks()" --no-graph`: to determine the current
+  bookmark (aka branch in git), remove the * at the end, if any.
 
 <!-- vim: set filetype=markdown: -->

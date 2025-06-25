@@ -1,0 +1,4 @@
+[ui]
+  highlight_light = "#a0a0a0"
+  highlight_dark = "#151515"
+  auto_refresh_interval = 0

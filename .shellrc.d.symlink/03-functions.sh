@@ -340,8 +340,8 @@ jwa() {
         fi
 
         # Get bookmarks, clean up trailing '*', and present with gum
-        branch=$(jj log -r "bookmarks() ~ master ~ dev" --no-graph -T 'self.bookmarks() ++ "\n"' \
-            | sed 's/[[:space:]]*$//' | sed 's/\*$//' | grep -v '^$' | gum choose --header="Select a branch to create worktree for:")
+        branch=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
+            | uniq | gum choose --header="Select a branch to create worktree for:")
 
         if [ -z "${branch}" ]; then
             echo "No branch selected."

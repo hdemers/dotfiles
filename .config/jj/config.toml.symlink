@@ -27,8 +27,9 @@ merge-tool-edits-conflict-markers = true
 
 [git]
 push-new-bookmarks = true
+# private-commits = "dev+"
 
 [aliases]
-rdev = ["rebase", "-s", "dev", "-d", "all:(tracked_remote_bookmarks() ~ master)"]
+rdev = ["rebase", "-s", "dev", "-d", "all:(bookmarks() ~ dev ~ heads(dev::))"]
 
 # vim: set filetype=toml:

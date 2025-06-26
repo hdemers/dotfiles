@@ -68,26 +68,45 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 [ ! -d $ZINIT_HOME/.git ] && git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 source "${ZINIT_HOME}/zinit.zsh"
 
+# Performance optimizations
+DISABLE_AUTO_UPDATE="true"
+DISABLE_MAGIC_FUNCTIONS="true"
+DISABLE_COMPFIX="true"
+
 # Zinit plugins
-# zinit ice blockf atpull'zinit creinstall -q .'
-# zinit light zdharma-continuum/fast-syntax-highlighting
-# zinit light zsh-users/zsh-completions
-# zinit light zsh-users/zsh-autosuggestions
-# zinit light Aloxaf/fzf-tab
+
+# Installs fzf and fzf-tab with completion configuration, disabling sorting
+# when completing git checkout.
+# zinit for fzf
+zinit light Aloxaf/fzf-tab
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# preview directory's content with exa when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'exa -1 --color=always $realpath'
+# switch group using `,` and `.`
+zstyle ':fzf-tab:*' switch-group ',' '.'
+# zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+# zstyle ':completion:*' menu no
+
+# General ZSH syntax highlighting, completions, and suggestions.
+zinit wait lucid for \
+  atinit"ZINIT[COMPINIT_OPTS]=-C; zicompinit; zicdreplay" \
+     zdharma/fast-syntax-highlighting \
+  blockf \
+     zsh-users/zsh-completions \
+  atload"!_zsh_autosuggest_start" \
+     zsh-users/zsh-autosuggestions
 
 # Load completions
-# zstyle :compinstall filename '$HOME/.zshrc'
-# autoload -Uz compinit && compinit
+zstyle :compinstall filename '$HOME/.zshrc'
+autoload -Uz compinit && compinit
 
 # bindkey '^y' autosuggest-accept
 
 # zinit cdreplay -q
-
-# Completions styling
-# zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
-# zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
-# zstyle ':completion:*' menu no
-# zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls --color $realpath'
 
 # We don't want to use the default bling.sh script, we already have everything we need from that elsewhere.
 export BLING_SOURCED=1

@@ -4,16 +4,8 @@ Create or update or transition a ticket using the `ticket` mcp tool.
 
 ## Usage:
 - `/ticket create <parameters>` - Create a new ticket
-- `/ticket update <ticket> <parameters` - Update an existing ticket
+- `/ticket update <ticket> <parameters>` - Update an existing ticket
 - `/ticket transition <ticket> <state>` - Transition an existing ticket.
-
-### Parameters
-- Epic: The epic of that ticket, if not specified, leave blank.
-- Sprint: active sprint if not specified
-- Assignee: if not specified: me
-- Point: the number of points, if not specified, leave blank.
-- Description: if the user does not provide a description, observed the changes
-  made on the current branch and use that as the basis for the description.
 
 ## Template:
 {*}Brief description{*}:
@@ -32,13 +24,14 @@ Create or update or transition a ticket using the `ticket` mcp tool.
 
 * Detail that supports work needed
 
-## Creation Process:
+## Create process:
 1. Use the template.
 2. Use future tense.
 3. Use Markdown formatting where appropriate.
 4. Write the ticket as if the work is to be done.
 5. The summary of the ticket should be prefixed with `[repo-name]`.
 6. If the user has provided an epic, a sprint, a number of points, etc., use those.
+7. If the user has not provided a description, use the diff: `jj diff -r master..@ --git`
 
 ## Update process:
 1. Update the provided parameters for that ticket.

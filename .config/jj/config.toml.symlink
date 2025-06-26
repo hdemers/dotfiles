@@ -30,6 +30,6 @@ push-new-bookmarks = true
 # private-commits = "dev+"
 
 [aliases]
-rdev = ["rebase", "-s", "dev", "-d", "all:(bookmarks() ~ dev ~ heads(dev::))"]
+rdev = ["rebase", "-s", "dev", "-d", "all:(bookmarks() ~ dev ~ heads(dev::) ~ hdemers-wip)"]
 
 # vim: set filetype=toml:

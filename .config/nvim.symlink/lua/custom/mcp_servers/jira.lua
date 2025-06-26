@@ -6,7 +6,7 @@ local function setup_jira_server()
 
   mcphub.add_tool('jira', {
     name = 'transition_ticket',
-    description = 'Transition a Jira ticket. Transition chain is: New -> Refined -> InDev -> InReview -> Merged -> Closed',
+    description = 'Transition a Jira ticket. Transition chain is: New -> Refined -> In Dev -> In Review -> Merged -> Closed',
     inputSchema = {
       type = 'object',
       properties = {

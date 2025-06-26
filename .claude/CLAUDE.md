@@ -1,3 +1,5 @@
+# Memory
+
 ## Contributing
 When contributing code:
 
@@ -19,13 +21,15 @@ Most projects, unless otherwise stated, should:
 8. When writing commit messages and PR descriptions, avoid superlatives like
    comprehensive, major, etc.
 
-### Commiting
-@commands/commit.md
-
-## Version Control System
+### Version Control System
 Some projects use Git while others use Jujutsu. 
 
-Reference commands for Jujutsu:
+#### VCS Determination Process
+1. Check if there is a .jj directory
+  1. Yes: this is a Jujutsu repository
+  2. No: this is Git repository
+
+#### Reference commands for Jujutsu:
 
 - `jj log -r master..@ --template description`: to get the commit messages
   between master and @.
@@ -33,5 +37,8 @@ Reference commands for Jujutsu:
   and @.
 - `jj log -r @ -T "self.bookmarks()" --no-graph`: to determine the current
   bookmark (aka branch in git), remove the * at the end, if any.
+
+### Commiting
+@commands/commit.md
 
 <!-- vim: set filetype=markdown: -->

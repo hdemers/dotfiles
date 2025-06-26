@@ -9,7 +9,7 @@ Create or update or transition a ticket using the `ticket` mcp tool.
 
 ### Parameters
 - Epic: The epic of that ticket, if not specified, leave blank.
-- Sprint: current sprint if not specified
+- Sprint: active sprint if not specified
 - Assignee: if not specified: me
 - Point: the number of points, if not specified, leave blank.
 - Description: if the user does not provide a description, observed the changes
@@ -46,5 +46,5 @@ Create or update or transition a ticket using the `ticket` mcp tool.
 
 ## Transition process:
 1. The transitions are:
-    New -> Refined -> InDev -> InReview -> Merged -> Closed
+    New -> Refined -> In Dev -> In Review -> Merged -> Closed
 2. You need to go through each in turn.

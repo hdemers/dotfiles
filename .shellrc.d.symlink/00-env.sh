@@ -75,3 +75,5 @@ export DISTROBOX_NAME=$DBX_CONTAINER_NAME
 
 export MQTTUI_USERNAME=mqtt-user
 export PLAID_USER=hdemers
+
+export UV_LINK_MODE=symlink

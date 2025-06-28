@@ -54,18 +54,51 @@ ntfy() {
         > /dev/null
 }
 
-notify() {
-    error_code=$?
-    # Use fc (history) command - more reliable than history
-    cmd=$(fc -ln -1 | sed 's/[;&|]*\s*notify\s*$//')
-    
-    if [ ${error_code} -eq 0 ]; then
-        ntfy "${cmd}" -H "X-Title: Success" -H "Tags: heavy_check_mark"
-    else
-        ntfy "${cmd}" -H "X-Title: Fail" -H "Tags: x"
-    fi
-    return $error_code
-}
+if [[ $CURRENT_SHELL = "zsh" ]]; then
+    NOTIFY_THRESHOLD=120
+
+    notify_preexec() {
+        export CMD_START_TIME=$EPOCHSECONDS
+        export CMD_TO_NOTIFY="$1"
+    }
+
+    notify_precmd() {
+        export LAST_EXIT_CODE=$?
+        if [[ -n "$CMD_START_TIME" && -n "$CMD_TO_NOTIFY" ]]; then
+            local elapsed=$((EPOCHSECONDS - CMD_START_TIME))
+            if (( elapsed > NOTIFY_THRESHOLD )); then
+                local cmd=$(echo "$CMD_TO_NOTIFY" | sed -E 's/([;&|]\s*)?notify\s*$//')
+                notify "$cmd" "$LAST_EXIT_CODE"
+            fi
+            unset CMD_START_TIME CMD_TO_NOTIFY
+        fi
+    }
+
+    add-zsh-hook preexec notify_preexec
+    add-zsh-hook precmd notify_precmd
+
+    notify() {
+        local error_code="$?"
+        local cmd
+        if [[ -n "$1" ]]; then
+            cmd="$1"
+            error_code="${2:-$error_code}"
+        else
+            cmd="$CMD_TO_NOTIFY"
+            # Remove trailing notify invocation if present
+            cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?notify\s*$//')
+        fi
+        if [ "$error_code" -eq 0 ]; then
+            ntfy "$cmd" -H "X-Title: Success" -H "Tags: heavy_check_mark"
+        else
+            ntfy "$cmd" -H "X-Title: Fail" -H "Tags: x"
+        fi
+        return "$error_code"
+    }
+else
+    notify() {
+    }
+fi
 
 # 1. Search for text in files using Ripgrep
 # 2. Interactively narrow down the list using fzf

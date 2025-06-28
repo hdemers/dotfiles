@@ -20,7 +20,7 @@ return {
   },
   {
     'yetone/avante.nvim',
-    enabled = true,
+    enabled = false,
     event = 'VeryLazy',
     lazy = false,
     version = false, -- set this if you want to always pull the latest change
@@ -182,7 +182,6 @@ return {
       'saghen/blink.cmp',
       'folke/snacks.nvim',
       'ravitemer/mcphub.nvim',
-      'Davidyz/VectorCode',
       'ravitemer/codecompanion-history.nvim',
     },
     -- stylua: ignore
@@ -251,9 +250,6 @@ return {
             make_vars = true, -- Convert resources to #variables
             make_slash_commands = true, -- Add prompts as /slash commands
           },
-        },
-        vectorcode = {
-          opts = { add_tool = true, add_slash_command = true, tool_opts = {} },
         },
         history = {
           enabled = true,

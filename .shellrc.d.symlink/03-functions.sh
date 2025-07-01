@@ -2,7 +2,6 @@
 #
 # Function definitions
 
-
 tailf() {
     # tail -f with color (through batcat)
     tail -f $1 | bat --paging=never -l log
@@ -94,9 +93,6 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
             ntfy "$cmd" -H "X-Title: Fail" -H "Tags: x"
         fi
         return "$error_code"
-    }
-else
-    notify() {
     }
 fi
 
@@ -228,7 +224,7 @@ gb() {
               echo "change-prompt(Local Branches> )+reload(git rb)" ||
               echo "change-prompt(All Branches> )+reload(git rba)"' \
         --bind 'ctrl-t:execute(gwa)+abort' \
-        --bind 'ctrl-w:execute-silent(gh pr view --web)' \
+        --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
         --bind 'ctrl-i:preview(git log \
             --color=always \
             --graph \
@@ -433,4 +429,65 @@ jwr() {
 
     jj workspace forget "${workspace_to_remove}" && \
         rm -rf "${workspace_path}"
+}
+
+jb(){
+    local combined_preview='
+    if echo "$FZF_PROMPT" | grep -q "Pull"; then
+        jj log --color always -r master..{3} --stat -T builtin_log_detailed ;
+        printf "\033[38;5;242m";
+        printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g";
+        printf "\033[0m\n";
+        env GH_FORCE_TTY=1 gh pr view {1}
+    else
+        jj log -T builtin_log_compact_full_description -r master..{3} \
+            | grep -oE "[A-Z]+-[0-9]+" \
+            | uniq \
+            | xargs -I % jira describe %
+    fi'
+
+    local width=${COLUMNS:-$(tput cols)}
+    local title_width=$((width * 40 / 100))    # 40% for title
+    local branch_width=$((width * 25 / 100))   # 25% for branch
+    local time_width=12                        # Fixed width for time
+    local author_width=20                      # Fixed width for author
+
+    env GH_FORCE_TTY="100%" gh pr list \
+    --json number,title,headRefName,updatedAt,author \
+    --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\n" .number .title .headRefName (timeago .updatedAt) .author.name}}{{end}}' \
+    | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v timew="$time_width" -v aw="$author_width" '{
+        # Color codes
+        reset = "\033[0m"
+        pr_color = "\033[1;36m"      # Bright cyan for PR numbers
+        title_color = "\033[1;37m"   # Bright white for titles
+        branch_color = "\033[1;33m"  # Bright yellow for branches
+        time_color = "\033[0;32m"    # Green for timestamps
+        author_color = "\033[0;35m"  # Magenta for authors
+
+        # Truncate and pad fields
+        title = (length($2) > tw) ? substr($2, 1, tw-1) "…" : $2
+        branch = (length($3) > bw) ? substr($3, 1, bw-1) "…" : $3
+        author = (length($5) > aw) ? substr($5, 1, aw-1) "…" : $5
+
+        # Format with fixed widths and preserve tabs
+        printf "%s#%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n", 
+               pr_color, $1, reset,
+               title_color, tw, title, reset,
+               branch_color, bw, branch, reset,
+               time_color, timew, $4, reset,
+               author_color, aw, author, reset
+    }' \
+    | fzf \
+        --ansi \
+        --preview-window 'top,90%' \
+        --height 100% \
+        --delimiter '\t' \
+        --preview "$combined_preview" \
+        --bind 'ctrl-i:become(gum confirm "Integrate {3}?" && jenkins integrate -p {1})' \
+        --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
+        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
+        --prompt 'Pull Request> ' \
+        --border-label-pos 5:bottom \
+        --border 'rounded' \
+        --border-label '  ctrl-i: integrate | ctrl-w: web | ctrl-s: toggle view'
 }

@@ -428,4 +428,5 @@ return {
   },
   { 'HoNamDuong/hybrid.nvim' },
   { 'samharju/synthweave.nvim' },
+  { 'Yazeed1s/oh-lucy.nvim' },
 }

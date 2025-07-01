@@ -31,7 +31,7 @@ Create or update or transition a ticket using the `ticket` mcp tool.
 4. Write the ticket as if the work is to be done.
 5. The summary of the ticket should be prefixed with `[repo-name]`.
 6. If the user has provided an epic, a sprint, a number of points, etc., use those.
-7. If the user has not provided a description, use the diff: `jj diff -r master..@ --git`
+7. If the user has not provided a description, use the diff: `jj diff -r master..<bookmark> --git`
 
 ## Update process:
 1. Update the provided parameters for that ticket.

@@ -8,14 +8,14 @@ email = "hdemers@gmail.com"
 default-command = "log"
 diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
 
-[merge-tools.diffconflicts]
-program = "nvim"
-merge-args = [
-    "-n",
-    "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
-    "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
-]
-merge-tool-edits-conflict-markers = true
+# [merge-tools.diffconflicts]
+# program = "nvim"
+# merge-args = [
+#     "-n",
+#     "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
+#     "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
+# ]
+# merge-tool-edits-conflict-markers = true
 
 [revset-aliases]
 'bases' = 'dev'
@@ -25,11 +25,18 @@ merge-tool-edits-conflict-markers = true
 'curbranch' = 'latest(branches::@- & branches)'
 'nextbranch' = 'roots(@:: & branchesandheads)'
 
+'remotebranch(x)' = 'fork_point(x | trunk())+::x'
+
 [git]
 push-new-bookmarks = true
 # private-commits = "dev+"
 
 [aliases]
 rdev = ["rebase", "-s", "dev", "-d", "all:(bookmarks() ~ dev ~ heads(dev::) ~ hdemers-wip)"]
+ls = ["log", "--summary"]
+ll = ["log", "--stat"]
+lll = ["log", "--stat", "-T", "builtin_log_detailed"]
+wip = ['bookmark', 'move', 'hdemers-wip', '--to', '@']
+
 
 # vim: set filetype=toml:

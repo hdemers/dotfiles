@@ -37,7 +37,7 @@
 <Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
 
 # Tmux-vim
-<Super>k,gtk-launch zellij-nvim.desktop,,/.*Zellij.*nvim.*/
+<Super>j,gtk-launch zellij-nvim.desktop,,/.*Zellij.*nvim.*/
 
 # Spotify
 <Super>s,flatpak run com.spotify.Client,Spotify,Spotify

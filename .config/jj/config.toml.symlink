@@ -7,7 +7,11 @@ email = "hdemers@gmail.com"
 [ui]
 default-command = "log"
 diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
+# diff-formatter = "git"
 
+[colors]
+"diff removed token" = { fg = "bright red", bg = "black", underline = false }
+"diff added token" = { fg = "bright green", bg = "black", underline = false }
 # [merge-tools.diffconflicts]
 # program = "nvim"
 # merge-args = [
@@ -32,11 +36,27 @@ push-new-bookmarks = true
 # private-commits = "dev+"
 
 [aliases]
-rdev = ["rebase", "-s", "dev", "-d", "all:(bookmarks() ~ dev ~ heads(dev::) ~ hdemers-wip)"]
+rdev = ["rebase", "-s", "dev", "-d", "all:(dev- | trunk() | heads(trunk():: ~dev:: ~untracked_remote_bookmarks()))"]
+ralldev = ["rebase", "-s", "dev", "-d", "all:(dev- | trunk() | heads(trunk():: ~dev::))"]
 ls = ["log", "--summary"]
+l = ["log", "-r", "ancestors(reachable(@, mutable()), 2)"]
 ll = ["log", "--stat"]
 lll = ["log", "--stat", "-T", "builtin_log_detailed"]
 wip = ['bookmark', 'move', 'hdemers-wip', '--to', '@']
+hist = ["log", "--stat", "-T", "builtin_log_detailed", "-r", "::trunk()"]
+d = ["log", "-T", 'bookmarks ++ ":\n" ++ description', "--no-graph"]
 
+# The following shows a ◇ symbol to indicate a mutable commit that's an
+# ancestor of a bookmark ("on a branch" in Git terms). This helps me see which
+# commits might be pushed with jj git push.
+[template-aliases]
+"in_branch(commit)" = 'commit.contained_in("immutable_heads()..bookmarks()")'
 
+[templates]
+log_node = '''
+if(self && !current_working_copy && !immutable && !conflict && in_branch(self),
+  "◇",
+  builtin_log_node
+)
+'''
 # vim: set filetype=toml:

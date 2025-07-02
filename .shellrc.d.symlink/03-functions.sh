@@ -391,6 +391,11 @@ jwa() {
     else
         echo "No .envrc file found in the main worktree."
     fi
+    # Copy CLAUDE.local.md from the main workspace if it exists
+    if [ -f "${OLDPWD}/CLAUDE.local.md" ]; then
+        cp "${OLDPWD}/CLAUDE.local.md" .
+        echo "CLAUDE.local.md copied to new worktree."
+    fi
 }
 
 jwr() {
@@ -432,19 +437,32 @@ jwr() {
 }
 
 jb(){
+    local ticket='
+        jj log -T builtin_log_compact_full_description -r master..{3} \
+            | grep -oE "[A-Z]+-[0-9]+" \
+            | uniq'
+
     local combined_preview='
     if echo "$FZF_PROMPT" | grep -q "Pull"; then
-        jj log --color always -r master..{3} --stat -T builtin_log_detailed ;
+        base=$(gh pr view {1} --json baseRefName -q .baseRefName);
+        jj log --color always -r ${base}..{3} --stat -T builtin_log_detailed ;
         printf "\033[38;5;242m";
         printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g";
         printf "\033[0m\n";
-        env GH_FORCE_TTY=1 gh pr view {1}
+        env GH_FORCE_TTY=1 gh pr view --comments {1}
     else
-        jj log -T builtin_log_compact_full_description -r master..{3} \
-            | grep -oE "[A-Z]+-[0-9]+" \
-            | uniq \
-            | xargs -I % jira describe %
+        '"$ticket"' | xargs -I % jira describe %
     fi'
+
+    local integrate="
+    ticket=\$(jj log -T builtin_log_compact_full_description -r master..{3} | grep -oE \"[A-Z]+-[0-9]+\" | uniq);
+    if [ \$(jj log -r \"{3} & ~remote_bookmarks()\" --no-graph | wc -l) -gt 0 ]; then
+        gum confirm \"Bookmark {3} needs push first. Now?\" && jj git push -b {3} && \\
+        jenkins integrate -p {1}
+    else
+        gum confirm \"Integrate {3}?\" && jenkins integrate -p {1} && jira close \$ticket
+    fi
+    "
 
     local width=${COLUMNS:-$(tput cols)}
     local title_width=$((width * 40 / 100))    # 40% for title
@@ -470,7 +488,7 @@ jb(){
         author = (length($5) > aw) ? substr($5, 1, aw-1) "…" : $5
 
         # Format with fixed widths and preserve tabs
-        printf "%s#%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n", 
+        printf "%s%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n", 
                pr_color, $1, reset,
                title_color, tw, title, reset,
                branch_color, bw, branch, reset,
@@ -483,11 +501,45 @@ jb(){
         --height 100% \
         --delimiter '\t' \
         --preview "$combined_preview" \
-        --bind 'ctrl-i:become(gum confirm "Integrate {3}?" && jenkins integrate -p {1})' \
+        --bind "ctrl-i:become($integrate)" \
         --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
         --prompt 'Pull Request> ' \
         --border-label-pos 5:bottom \
         --border 'rounded' \
         --border-label '  ctrl-i: integrate | ctrl-w: web | ctrl-s: toggle view'
+}
+
+jh() {
+    # If an argument is provided, use it as the root commit. Default to 'trunk()'. If all is provided, root should be an empty string.
+
+    local change_id='echo {} | grep -oE  "\\b[k-z]+\\b" | head -1'
+    local ticket='
+        jj log -T description --no-graph -r '"$change_id"' \
+            | grep -oE "[A-Z]+-[0-9]+" \
+            | uniq'
+
+    local preview='
+    if echo "$FZF_PROMPT" | grep -q '::'; then
+        '"$change_id"' | xargs -I % jj lll -r % --color always
+    else
+        '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
+            | grep -oE "[A-Z]+-[0-9]+" \
+            | uniq \
+            | xargs -I % jira describe %
+    fi'
+
+    jj log -T \
+        'change_id.short(8) ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d") ++ "|" ++ if(tags, tags.join(" ") ++ "|", "|") ++ commit_id.short(8) ++ "|" ++ if(description, description.first_line() ++ " ", "") ++ if(bookmarks, "(" ++ bookmarks.join(", ") ++ ")", "") ++ "\n"'\
+        --color always \
+        -r "::" \
+    | column -t -s '|'\
+    | fzf \
+        --ansi \
+        --preview "$preview" \
+        --preview-window 'top,40%' \
+        --height 100% \
+        --reverse \
+        --prompt "::> " \
+        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "::"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
 }

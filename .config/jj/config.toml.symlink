@@ -36,7 +36,7 @@ push-new-bookmarks = true
 # private-commits = "dev+"
 
 [aliases]
-rdev = ["rebase", "-s", "dev", "-d", "all:(dev- | trunk() | heads(trunk():: ~dev:: ~untracked_remote_bookmarks()))"]
+rdev = ["rebase", "-s", "dev", "-d", "all:(heads(trunk()::) & mine()) ~ dev:: | dev-"]
 ralldev = ["rebase", "-s", "dev", "-d", "all:(dev- | trunk() | heads(trunk():: ~dev::))"]
 ls = ["log", "--summary"]
 l = ["log", "-r", "ancestors(reachable(@, mutable()), 2)"]

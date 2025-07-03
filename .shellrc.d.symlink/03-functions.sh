@@ -135,11 +135,20 @@ custom-atuin-history-widget() {
   local selected
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
   selected=$(atuin search --reverse --format "{relativetime}\t{host}\t{exit}\t{command}" \
-      | awk -F'\t' '{ 
+      | awk -F'\t' -v cols="$(tput cols)" '{ 
           time=sprintf("%-5s", $1);
           host=sprintf("%-20s", $2);
-          exit_code=sprintf("%-5s", $3);
-          printf "\033[36m%s\t\033[33m%s\t\033[32m%s\t\033[35m%s\033[0m\n", time, host, exit_code, $4
+          exit_code=sprintf("%-3s", $3);
+          # Calculate remaining space: total width - time(5) - host(20) - exit(3) - tabs(3) - margin(2)
+          remaining = cols - 35;
+          if (remaining < 10) remaining = 10;  # Minimum width for command
+          
+          cmd = $4;
+          if (length(cmd) > remaining) {
+              cmd = substr(cmd, 1, remaining - 3) "...";
+          }
+          
+          printf "\033[36m%s\t\033[33m%s\t\033[32m%s\t\033[35m%s\033[0m\n", time, host, exit_code, cmd
         }' \
       | fzf --ansi --delimiter='\t' \
           --bind 'tab:execute-silent(echo paste)+abort' \
@@ -515,13 +524,13 @@ jh() {
 
     local change_id='echo {} | grep -oE  "\\b[k-z]+\\b" | head -1'
     local ticket='
-        jj log -T description --no-graph -r '"$change_id"' \
+        '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
             | grep -oE "[A-Z]+-[0-9]+" \
             | uniq'
 
     local preview='
     if echo "$FZF_PROMPT" | grep -q '::'; then
-        '"$change_id"' | xargs -I % jj lll -r % --color always
+        '"$change_id"' | xargs --no-run-if-empty -I % jj lll -r % --color always
     else
         '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
             | grep -oE "[A-Z]+-[0-9]+" \
@@ -542,4 +551,9 @@ jh() {
         --reverse \
         --prompt "::> " \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "::"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
+        --bind 'ctrl-x:execute('"$ticket"' | xargs -I % jira close %)' \
+        --bind 'ctrl-d:preview('"$change_id"' | xargs -I % jj diff --tool difft -r %)' \
+        --preview-label-pos 5:bottom \
+        --border 'rounded' \
+        --preview-label '  ctrl-d: diff | ctrl-w: web | ctrl-s: toggle ticket | ctrl-x: close ticket'
 }

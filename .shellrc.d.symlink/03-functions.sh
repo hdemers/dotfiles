@@ -441,8 +441,7 @@ jwr() {
         return 1
     fi
 
-    jj workspace forget "${workspace_to_remove}" && \
-        rm -rf "${workspace_path}"
+    jj workspace forget "${workspace_to_remove}"
 }
 
 jb(){

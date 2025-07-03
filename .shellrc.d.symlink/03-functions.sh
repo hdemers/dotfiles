@@ -390,6 +390,11 @@ jwa() {
     local workspace_path="../${branch}"
 
     jj workspace add -r "${branch}" "${workspace_path}"
+    # Return if the workspace already exists
+    if [ $? -ne 0 ]; then
+        echo "Workspace '${workspace_path}' already exists. Skipping creation."
+        return 1
+    fi
 
     cd "${workspace_path}" || return 1
     # Copy .envrc from the main workspace if it exists

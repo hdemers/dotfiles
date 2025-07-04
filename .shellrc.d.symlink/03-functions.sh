@@ -561,3 +561,8 @@ jh() {
         --border 'rounded' \
         --preview-label '  ctrl-d: diff | ctrl-w: web | ctrl-s: toggle ticket | ctrl-x: close ticket'
 }
+
+bcheck() {
+    local bookmark="$1"
+    jj diff --name-only -r "trunk()::${bookmark}" | grep -E ".py" | xargs ruff check
+}

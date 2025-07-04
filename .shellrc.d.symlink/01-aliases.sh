@@ -165,6 +165,7 @@ alias lsemr="listemr | \
     --height 50%
     "
 
-alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/Justfile"
+alias gjust="/usr/bin/just --justfile $HOME/src/containers/devpod/gh-ai-sandbox.Justfile"
+alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/ai-sandbox.Justfile"
 
-alias clauded="claude --dangerously-skip-permissions"
+alias clc="claude --dangerously-skip-permissions"

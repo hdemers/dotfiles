@@ -165,6 +165,7 @@ keybinds clear-defaults=true {
         bind "Alt n" { NewTab; }
         bind "Alt i" { MoveTab "left"; }
         bind "Alt o" { MoveTab "right"; }
+        bind "Alt z" { ToggleFocusFullscreen;}
     }
     shared_except "locked" "renametab" "renamepane" {
         bind "Ctrl g" { SwitchToMode "locked"; }

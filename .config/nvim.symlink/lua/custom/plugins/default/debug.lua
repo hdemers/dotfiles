@@ -212,7 +212,34 @@ return {
           use_python_path = true,
         },
       }
-      -- Register a keymap to attach DAP to a running Python debugger.
+
+      dap.configurations.python = {
+        {
+          type = 'python',
+          request = 'attach',
+          name = 'Attach to running process',
+          connect = {
+            port = 5678,
+            host = '0.0.0.0',
+          },
+          pathMappings = {
+            {
+              localRoot = '/run/host/var/home/hdemers',
+              remoteRoot = '/var/home/hdemers',
+            },
+          },
+          justMyCode = false,
+          -- logToFile = true,
+          -- debugOptions = { 'RedirectOutput' },
+        },
+        {
+          type = 'python',
+          request = 'attach',
+          name = 'Attach to process by PID',
+          processId = require('dap.utils').pick_process,
+          justMyCode = false,
+        },
+      }
     end,
   },
   {

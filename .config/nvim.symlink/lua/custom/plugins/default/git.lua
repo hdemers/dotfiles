@@ -210,6 +210,11 @@ return {
         desc = 'Diffview: diff master',
       },
       {
+        '<leader>gM',
+        ':DiffviewOpen dev<CR>',
+        desc = 'Diffview: diff dev',
+      },
+      {
         '<leader>gh',
         ':DiffviewFileHistory %<CR>',
         desc = 'Diffview: view current file history',

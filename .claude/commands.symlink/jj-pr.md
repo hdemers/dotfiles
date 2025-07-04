@@ -14,11 +14,12 @@ Open a PR on Github. Important: this is a Jujutsu repository.
    - Command: `jj diff --git -r "trunk()..<branch>"`
 6. Use Markdown formatting for the PR description.
 7. Have the user review the PR description before creating it.
-8. When calling `gh pr create` you need to specify the `--head`, otherwise this will fail.
-9. Once the PR has been successfully opened, transition the associated ticket
+8. Push the branch:
+   - Command: `jj git push --bookmark <branch>`
+9. When calling `gh pr create` you need to specify the `--head`, otherwise this will fail.
+10. Once the PR has been successfully opened, transition the associated ticket
    to "In Review", going through all intermediate states if necessary. Use the
    `ticket` mcp server.
-10. Notify the user once this is done, use the `notify` tool.
 
 ## Best practices
 1. Do not use superlative words like comprehensive, major, several, etc.

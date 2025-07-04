@@ -1,6 +1,6 @@
 # Context Prime
 
-Prime Claude with comprehensive project understanding.
+Prime for comprehensive project understanding.
 
 ## Standard Context Loading:
 1. Read README.md for project overview

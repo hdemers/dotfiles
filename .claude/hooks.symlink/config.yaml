@@ -3,37 +3,37 @@ languages:
     linters:
       - "ruff format"
       - "ruff check --fix" 
-  
+
   javascript:
     linters:
       - "eslint"
       - "prettier --check"
-  
+
   typescript:
     linters:
       - "eslint"
       - "tsc --noEmit"
       - "prettier --check"
-  
+
   rust:
     linters:
       - "cargo clippy"
       - "cargo fmt --check"
-  
+
   go:
     linters:
       - "go fmt"
       - "go vet"
       - "golint"
-  
+
   shell:
     linters:
       - "shellcheck"
-  
+
   yaml:
     linters:
       - "yamllint"
-  
+
   dockerfile:
     linters:
       - "hadolint"

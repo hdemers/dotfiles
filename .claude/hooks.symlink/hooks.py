@@ -364,7 +364,7 @@ def run_linters_for_language(
             console.print(f"Running [bold]{language}[/bold] linters in {directory}")
 
     results = []
-    overall_success = True
+    agent_continue = True
     missing_tools = []
     ran_linters = []
 
@@ -400,13 +400,10 @@ def run_linters_for_language(
             ran_linters.append(linter_cmd)
 
             if result.returncode != 0:
-                overall_success = False
+                agent_continue = False
 
             if not json_output:
-                if result.returncode == 0:
-                    console.print("[green]✓ Passed[/green]")
-                else:
-                    error_console.print("[red]✗ Failed[/red]")
+                if result.returncode != 0:
                     if result.stdout:
                         error_console.print(
                             f"[dim]stdout:[/dim] {result.stdout.strip()}"
@@ -426,10 +423,10 @@ def run_linters_for_language(
             }
             results.append(linter_result)
             ran_linters.append(linter_cmd)
-            overall_success = False
+            agent_continue = True
 
             if not json_output:
-                error_console.print("[red]✗ Timed out[/red]")
+                console.print("[red]✗ Timed out[/red]")
 
         except FileNotFoundError:
             # Graceful degradation - track missing tools but don't fail overall
@@ -455,8 +452,9 @@ def run_linters_for_language(
         output = {
             "language": language,
             "directory": directory,
-            "success": overall_success,
-            "results": results,
+            "continue": agent_continue,
+            "stopReason": results,
+            "suppressOutput": False,
             "missing_tools": missing_tools,
             "ran_linters": len(ran_linters),
             "total_linters": len(linters),
@@ -471,14 +469,18 @@ def run_linters_for_language(
             )
 
         if ran_linters:
-            if overall_success:
+            if agent_continue:
                 console.print(
+                    f"\n[green]All available linters passed! ✓ ({len(ran_linters)}/{len(linters)} ran)[/green]"
+                )
+                error_console.print(
                     f"\n[green]All available linters passed! ✓ ({len(ran_linters)}/{len(linters)} ran)[/green]"
                 )
             else:
                 error_console.print(
                     f"\n[red]Some linters failed! ✗ ({len(ran_linters)}/{len(linters)} ran)[/red]"
                 )
+                error_console.print("\n[red]STOP and FIX[/red]")
         else:
             console.print(
                 "\n[yellow]No linters were able to run - all tools missing[/yellow]"
@@ -487,13 +489,13 @@ def run_linters_for_language(
     # Only exit with error if linters actually ran and failed
     # Don't fail if tools are just missing (graceful degradation)
     if ran_linters:
-        if not overall_success:
+        if not agent_continue:
             sys.exit(2)
     else:
         # All tools missing but don't block the agent
         pass
 
-    return overall_success
+    return agent_continue
 
 
 @click.group()

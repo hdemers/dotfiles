@@ -3,23 +3,24 @@
 Open a PR on Github. Important: this is a Jujutsu repository.
 
 ## Usage:
-- `/jj-pr <branch>` - Open a PR for the given Jujutsu branch/bookmark.
+- `/jj-pr <branch> <base>` - Open a PR for the given Jujutsu branch/bookmark.
 
 ## Process
 1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.
-2. The commits part of this PR are those between `master` and `@`.
-3. Use the commit's messages part of this PR as the basis for the PR description.
+2. If `<base>` is not specified use `master`.
+3. The commits part of this PR are those between `base` and `@`.
+4. Use the commit's messages part of this PR as the basis for the PR description.
    - Command: `jj log -r "trunk()..<branch>" --template description --no-graph`
-4. Also use the commit's diffs as the basis for the PR description.
+5. Also use the commit's diffs as the basis for the PR description.
    - Command: `jj diff --git -r "trunk()..<branch>"`
 6. Use Markdown formatting for the PR description.
 7. Have the user review the PR description before creating it.
-8. Push the branch:
+8. Ask the user if there are any specific reviewers.
+9. Push the branch:
    - Command: `jj git push --bookmark <branch>`
-9. When calling `gh pr create` you need to specify the `--head`, otherwise this will fail.
-10. Once the PR has been successfully opened, transition the associated ticket
-   to "In Review", going through all intermediate states if necessary. Use the
-   `ticket` mcp server.
+10. Specify the `--head` when calling `gh pr create`.
+11. Once the PR has been successfully opened, close the associated ticket:
+   - Command: `jira close <ticket>`
 
 ## Best practices
 1. Do not use superlative words like comprehensive, major, several, etc.

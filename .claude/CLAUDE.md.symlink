@@ -40,6 +40,10 @@ about this architecture before proposing a solution."
 Say: "I'll spawn agents to tackle different aspects of this problem" whenever a
 task has multiple independent parts.
 
+### Optimize Parallel Tool Calling
+For maximum efficiency, whenever you need to perform multiple independent
+operations, invoke all relevant tools simultaneously rather than sequentially.
+
 ### Reality Checkpoints
 **Stop and validate** at these moments:
 - After implementing a complete feature

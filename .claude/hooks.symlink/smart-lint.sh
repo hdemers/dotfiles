@@ -110,7 +110,7 @@ detect_project_type() {
 get_modified_files() {
     if [[ -d .jj ]] && command_exists jj; then
         # Use jj if available
-        jj diff --name-only -r p 2>/dev/null || true
+        jj diff --name-only -r @ 2>/dev/null || true
     elif [[ -d .git ]] && command_exists git; then
         # Get files modified in the last commit or currently staged/modified
         git diff --name-only HEAD 2>/dev/null || true
@@ -213,24 +213,25 @@ lint_python() {
         return 0
     fi
 
-    log_debug "Modified files:\n$(get_modified_files)"
+    local modified_files=$(get_modified_files | grep -E '\.py$' | grep -vE '(\.venv|\.env|__pycache__|\.egg-info|\.git|\.jj)' || true)
+    log_debug "Modified files:\n${modified_files}"
 
-    log_info 'Running `ruff format`'
+    log_info "Running 'ruff format' on $(echo $modified_files | wc -w) files..."
     # Ruff formatting
     if command_exists ruff; then
         # Apply formatting and capture any errors
         local format_output
-        if ! format_output=$(get_modified_files | xargs -I % ruff format % 2>&1); then
+        if ! format_output=$(echo ${modified_files} | xargs -I % ruff format % 2>&1); then
             add_error "Ruff formatting failed"
             echo "$format_output" >&2
         fi
     fi
 
     # Linting
-    log_info 'Running `ruff check --fix`'
+    log_info "Running 'ruff check --fix' on $(echo $modified_files | wc -w) files..."
     if command_exists ruff; then
         local ruff_output
-        if ! ruff_output=$(get_modified_files | xargs -I % ruff check --fix % 2>&1); then
+        if ! ruff_output=$(echo ${modified_files} | xargs -I % ruff check --fix % 2>&1); then
             add_error "Ruff found issues"
             echo "$ruff_output" >&2
         fi
@@ -311,8 +312,6 @@ main() {
                 "go") lint_go ;;
                 "python") lint_python ;;
                 "javascript") lint_javascript ;;
-                "rust") lint_rust ;;
-                "nix") lint_nix ;;
             esac
 
             # Fail fast if configured
@@ -326,8 +325,6 @@ main() {
             "go") lint_go ;;
             "python") lint_python ;;
             "javascript") lint_javascript ;;
-            "rust") lint_rust ;;
-            "nix") lint_nix ;;
             "unknown") 
                 log_info "No recognized project type, skipping checks"
                 ;;

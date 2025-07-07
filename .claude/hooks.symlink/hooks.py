@@ -20,7 +20,6 @@ import click
 import requests
 import yaml
 from rich.console import Console
-from rich.panel import Panel
 
 console = Console()
 error_console = Console(stderr=True)
@@ -45,19 +44,20 @@ LANGUAGE_PATTERNS = {
 }
 
 
-def load_config(config_path: str = "hooks_config.yaml") -> Optional[Dict]:
+def load_config(config_path: str = "config.yaml") -> Optional[Dict]:
     """Load configuration from YAML file."""
-    config_file = Path(config_path)
+    # Get the directory of the current file
+    config_file = Path(__file__).parent / config_path
 
     if not config_file.exists():
-        console.print(f"[red]Config file {config_path} not found[/red]")
+        console.print(f"[red]Config file {config_file} not found[/red]")
         return None
 
     try:
         with open(config_file, "r") as f:
             config = yaml.safe_load(f)
             if not config:
-                console.print(f"[red]Config file {config_path} is empty[/red]")
+                console.print(f"[red]Config file {config_file} is empty[/red]")
                 return None
             return config
     except Exception as e:
@@ -208,34 +208,28 @@ def commit_git(message: str, modified_files: List[str], dry_run: bool) -> Dict:
             "vcs": "git",
             "message": message,
             "modified_files": modified_files,
-            "commands": ["git add -A", f'git commit -m "{message}"']
+            "commands": ["git add -A", f'git commit -m "{message}"'],
         }
-    
+
     try:
         # Stage all changes
         stage_result = subprocess.run(
-            ["git", "add", "-A"],
-            capture_output=True,
-            text=True,
-            timeout=30
+            ["git", "add", "-A"], capture_output=True, text=True, timeout=30
         )
-        
+
         if stage_result.returncode != 0:
             return {
                 "success": False,
                 "vcs": "git",
                 "error": f"Failed to stage files: {stage_result.stderr}",
-                "modified_files": modified_files
+                "modified_files": modified_files,
             }
-        
+
         # Create commit
         commit_result = subprocess.run(
-            ["git", "commit", "-m", message],
-            capture_output=True,
-            text=True,
-            timeout=30
+            ["git", "commit", "-m", message], capture_output=True, text=True, timeout=30
         )
-        
+
         if commit_result.returncode != 0:
             # Handle "nothing to commit" case gracefully
             if "nothing to commit" in commit_result.stdout.lower():
@@ -244,41 +238,41 @@ def commit_git(message: str, modified_files: List[str], dry_run: bool) -> Dict:
                     "vcs": "git",
                     "message": message,
                     "modified_files": modified_files,
-                    "info": "No changes to commit"
+                    "info": "No changes to commit",
                 }
             else:
                 return {
                     "success": False,
                     "vcs": "git",
                     "error": f"Failed to create commit: {commit_result.stderr}",
-                    "modified_files": modified_files
+                    "modified_files": modified_files,
                 }
-        
+
         # Extract commit hash from output
         commit_hash = None
-        for line in commit_result.stdout.split('\n'):
-            if '[' in line and ']' in line:
+        for line in commit_result.stdout.split("\n"):
+            if "[" in line and "]" in line:
                 # Look for pattern like "[main abc123f] commit message"
-                parts = line.split(']')[0].split()
+                parts = line.split("]")[0].split()
                 if len(parts) >= 2:
                     commit_hash = parts[-1]
                     break
-        
+
         return {
             "success": True,
             "vcs": "git",
             "message": message,
             "commit_hash": commit_hash,
             "modified_files": modified_files,
-            "files_committed": len(modified_files)
+            "files_committed": len(modified_files),
         }
-        
+
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
         return {
             "success": False,
             "vcs": "git",
             "error": f"Git command failed: {str(e)}",
-            "modified_files": modified_files
+            "modified_files": modified_files,
         }
 
 
@@ -291,66 +285,63 @@ def commit_jujutsu(message: str, modified_files: List[str], dry_run: bool) -> Di
             "vcs": "jujutsu",
             "message": message,
             "modified_files": modified_files,
-            "commands": [f'jj describe -r @ -m "{message}"', "jj new"]
+            "commands": [f'jj describe -r @ -m "{message}"', "jj new"],
         }
-    
+
     try:
         # Describe current commit
         describe_result = subprocess.run(
             ["jj", "describe", "-r", "@", "-m", message],
             capture_output=True,
             text=True,
-            timeout=30
+            timeout=30,
         )
-        
+
         if describe_result.returncode != 0:
             return {
                 "success": False,
                 "vcs": "jujutsu",
                 "error": f"Failed to describe commit: {describe_result.stderr}",
-                "modified_files": modified_files
+                "modified_files": modified_files,
             }
-        
+
         # Create new working commit
         new_result = subprocess.run(
-            ["jj", "new"],
-            capture_output=True,
-            text=True,
-            timeout=30
+            ["jj", "new"], capture_output=True, text=True, timeout=30
         )
-        
+
         if new_result.returncode != 0:
             return {
                 "success": False,
                 "vcs": "jujutsu",
                 "error": f"Failed to create new commit: {new_result.stderr}",
-                "modified_files": modified_files
+                "modified_files": modified_files,
             }
-        
+
         # Extract commit ID from jj new output if possible
         commit_id = None
-        for line in new_result.stderr.split('\n'):
-            if 'Working copy now at:' in line:
+        for line in new_result.stderr.split("\n"):
+            if "Working copy now at:" in line:
                 parts = line.split()
                 if len(parts) >= 4:
                     commit_id = parts[4]  # Usually the commit ID
                     break
-        
+
         return {
             "success": True,
             "vcs": "jujutsu",
             "message": message,
             "commit_id": commit_id,
             "modified_files": modified_files,
-            "files_committed": len(modified_files)
+            "files_committed": len(modified_files),
         }
-        
+
     except (FileNotFoundError, subprocess.TimeoutExpired) as e:
         return {
             "success": False,
             "vcs": "jujutsu",
             "error": f"Jujutsu command failed: {str(e)}",
-            "modified_files": modified_files
+            "modified_files": modified_files,
         }
 
 
@@ -367,14 +358,10 @@ def run_linters_for_language(
     if not json_output:
         if target_files:
             console.print(
-                Panel(
-                    f"Running [bold]{language}[/bold] linters on {len(target_files)} file(s)"
-                )
+                f"Running [bold]{language}[/bold] linters on {len(target_files)} file(s)"
             )
         else:
-            console.print(
-                Panel(f"Running [bold]{language}[/bold] linters in {directory}")
-            )
+            console.print(f"Running [bold]{language}[/bold] linters in {directory}")
 
     results = []
     overall_success = True
@@ -518,7 +505,7 @@ def cli():
 
 @cli.command()
 @click.option("--language", "-l", help="Programming language to lint")
-@click.option("--config", "-c", default="hooks_config.yaml", help="Config file path")
+@click.option("--config", "-c", default="config.yaml", help="Config file path")
 @click.option("--directory", "-d", default=".", help="Directory to lint")
 @click.option("--json-output", is_flag=True, help="Output results as JSON for hooks")
 @click.option(
@@ -629,7 +616,7 @@ def lint(
 
             # Show summary of what we found
             if not json_output:
-                console.print(Panel("Linting Modified Files"))
+                console.print("Linting Modified Files")
                 for lang, files in languages_map.items():
                     if lang in config_data.get("languages", {}):
                         console.print(f"• {len(files)} {lang} file(s)")
@@ -658,25 +645,25 @@ def lint(
 @click.option("--json-output", is_flag=True, help="Output results as JSON for hooks")
 def commit(message: str, dry_run: bool, json_output: bool):
     """Create automated checkpoint commit."""
-    
+
     # Reuse existing function to get modified files
     modified_files = get_modified_files()
-    
+
     # Check if there are files to commit
     if not modified_files:
         result = {
             "success": True,
             "message": "No modified files to commit",
             "modified_files": [],
-            "vcs": detect_vcs()
+            "vcs": detect_vcs(),
         }
-        
+
         if json_output:
             click.echo(json.dumps(result))
         else:
             console.print("[yellow]No modified files to commit[/yellow]")
         sys.exit(0)
-    
+
     # Detect VCS
     vcs = detect_vcs()
     if not vcs:
@@ -686,22 +673,22 @@ def commit(message: str, dry_run: bool, json_output: bool):
         else:
             console.print(f"[red]{error_msg}[/red]")
         sys.exit(1)
-    
+
     # Show what will be committed (for both dry-run and normal execution)
     if not json_output:
         if dry_run:
-            console.print(Panel("🤖 Would create checkpoint commit"))
-            console.print(f"• Message: \"{message}\"")
+            console.print("🤖 Would create checkpoint commit")
+            console.print(f'• Message: "{message}"')
             console.print(f"• VCS: {vcs}")
             console.print(f"• Files to commit ({len(modified_files)}):")
             for file in modified_files:
                 console.print(f"  - {file}")
         else:
-            console.print(Panel("🤖 Creating checkpoint commit"))
+            console.print("🤖 Creating checkpoint commit")
             console.print(f"Files to commit ({len(modified_files)}):")
             for file in modified_files:
                 console.print(f"  • {file}")
-    
+
     # Call appropriate VCS-specific function
     if vcs == "git":
         result = commit_git(message, modified_files, dry_run)
@@ -709,14 +696,16 @@ def commit(message: str, dry_run: bool, json_output: bool):
         result = commit_jujutsu(message, modified_files, dry_run)
     else:
         result = {"success": False, "error": f"Unsupported VCS: {vcs}"}
-    
+
     # Handle output
     if json_output:
         click.echo(json.dumps(result, indent=2))
     else:
         if result["success"]:
             if dry_run:
-                console.print("\n[green]✓ Dry run completed - no actual commit made[/green]")
+                console.print(
+                    "\n[green]✓ Dry run completed - no actual commit made[/green]"
+                )
                 if "commands" in result:
                     console.print("Commands that would run:")
                     for cmd in result["commands"]:
@@ -727,16 +716,18 @@ def commit(message: str, dry_run: bool, json_output: bool):
                 else:
                     commit_id = result.get("commit_hash") or result.get("commit_id")
                     if commit_id:
-                        console.print(f"[green]✓ Created commit: {message} ({commit_id})[/green]")
+                        console.print(
+                            f"[green]✓ Created commit: {message} ({commit_id})[/green]"
+                        )
                     else:
                         console.print(f"[green]✓ Created commit: {message}[/green]")
-                    
+
                     if vcs == "jujutsu":
                         console.print("[green]✓ Created new working commit[/green]")
         else:
             error_console.print(f"[red]✗ {result['error']}[/red]")
             sys.exit(1)
-    
+
     sys.exit(0)
 
 

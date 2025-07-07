@@ -772,7 +772,9 @@ def get_ntfy_channel() -> Optional[str]:
 
 
 @cli.command()
-@click.argument("message")
+@click.option(
+    "--message", "-m", default="Message from Claude", help="Notification message"
+)
 @click.option(
     "--priority",
     "-p",
@@ -780,7 +782,7 @@ def get_ntfy_channel() -> Optional[str]:
     type=click.Choice(["min", "low", "default", "high", "max"]),
     help="Notification priority",
 )
-@click.option("--title", "-t", help="Notification title")
+@click.option("--title", "-t", help="🤖 Claude says...")
 @click.option("--tags", help="Comma-separated tags")
 def notify(message: str, priority: str, title: Optional[str], tags: Optional[str]):
     """Send notification via ntfy.sh."""

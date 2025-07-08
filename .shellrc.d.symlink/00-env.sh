@@ -78,4 +78,4 @@ export PLAID_USER=hdemers
 
 export UV_LINK_MODE=symlink
 
-export UV_CACHE_DIR=/var/home/hdemers/.cache/uv
+export UV_CACHE_DIR=/home/hdemers/.cache/uv

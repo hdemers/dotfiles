@@ -1,12 +1,12 @@
 {
   "hooks": {
-    "PostToolUse": [
+    "SubagentStop": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/smart-lint.sh"
+            "command": "~/.claude/hooks/hooks.py notify --message \"Claude subagent has stopped\""
           }
         ]
       }
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/notifier.sh notification"
+            "command": "~/.claude/hooks/hooks.py notify"
           }
         ]
       }
@@ -28,18 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "~/.claude/hooks/notifier.sh stop"
-          }
-        ]
-      }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/notifier.sh stop"
+            "command": "~/.claude/hooks/hooks.py notify --message \"Claude has stopped\""
           }
         ]
       }

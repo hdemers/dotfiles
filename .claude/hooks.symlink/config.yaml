@@ -2,7 +2,7 @@ languages:
   python:
     linters:
       - "ruff format"
-      - "ruff check --fix" 
+      - "ruff check --fix --output-format concise" 
 
   javascript:
     linters:

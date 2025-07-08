@@ -19,8 +19,10 @@ Open a PR on Github. Important: this is a Jujutsu repository.
 9. Push the branch:
    - Command: `jj git push --bookmark <branch>`
 10. Specify the `--head` when calling `gh pr create`.
-11. Once the PR has been successfully opened, close the associated ticket:
-   - Command: `jira close <ticket>`
+11. Once the PR has been successfully opened, transition the associated ticket
+   to "In Review", going through all intermediate states if necessary
+   (New -> Refined -> "In Dev" -> "In Review" -> Merged -> Closed)
+   - Command: `jira transition-to <ticket> <state>`
 
 ## Best practices
 1. Do not use superlative words like comprehensive, major, several, etc.

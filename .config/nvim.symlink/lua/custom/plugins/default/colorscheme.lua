@@ -428,5 +428,24 @@ return {
   },
   { 'HoNamDuong/hybrid.nvim' },
   { 'samharju/synthweave.nvim' },
-  { 'Yazeed1s/oh-lucy.nvim' },
+  {
+    'vague2k/vague.nvim',
+    config = function()
+      -- NOTE: you do not need to call setup if you don't want to.
+      require('vague').setup {
+        -- optional configuration here
+      }
+    end,
+  },
+  {
+    'ray-x/aurora',
+    init = function()
+      vim.g.aurora_italic = 1
+      vim.g.aurora_transparent = 1
+      vim.g.aurora_bold = 1
+    end,
+    config = function()
+      vim.api.nvim_set_hl(0, '@number', { fg = '#e933e3' })
+    end,
+  },
 }

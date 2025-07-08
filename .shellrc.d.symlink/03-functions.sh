@@ -410,6 +410,19 @@ jwa() {
         cp "${OLDPWD}/CLAUDE.local.md" .
         echo "CLAUDE.local.md copied to new workspace."
     fi
+
+    if [ -d "${OLDPWD}/.claude" ]; then
+        # If the main workspace has a .claude directory, copy it to the new workspace
+        cp -r "${OLDPWD}/.claude" .
+        echo ".claude directory copied to new workspace."
+    fi
+
+    if gum confirm "Do you want to run 'make install' in the new workspace?"; then
+        make install
+    else
+        echo "'make install' skipped."
+    fi
+
 }
 
 jwr() {
@@ -446,8 +459,7 @@ jwr() {
         return 1
     fi
 
-    jj workspace forget "${workspace_to_remove}" && \
-    rip ${workspace_path}
+    jj workspace forget "${workspace_to_remove}"
 }
 
 jb(){

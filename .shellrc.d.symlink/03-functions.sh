@@ -379,7 +379,7 @@ jwa() {
 
         # Get bookmarks, clean up trailing '*', and present with gum
         branch=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
-            | uniq | gum choose --header="Select a branch to create worktree for:")
+            | uniq | gum choose --header="Select a branch to create workspace for:")
 
         if [ -z "${branch}" ]; then
             echo "No branch selected."
@@ -400,29 +400,29 @@ jwa() {
     # Copy .envrc from the main workspace if it exists
     if [ -f "${OLDPWD}/.envrc" ]; then
         cp "${OLDPWD}/.envrc" .
-        echo ".envrc copied to new worktree."
+        echo ".envrc copied to new workspace."
         direnv allow .
     else
-        echo "No .envrc file found in the main worktree."
+        echo "No .envrc file found in the main workspace."
     fi
     # Copy CLAUDE.local.md from the main workspace if it exists
     if [ -f "${OLDPWD}/CLAUDE.local.md" ]; then
         cp "${OLDPWD}/CLAUDE.local.md" .
-        echo "CLAUDE.local.md copied to new worktree."
+        echo "CLAUDE.local.md copied to new workspace."
     fi
 }
 
 jwr() {
-    # Git Worktree Remove (jwr)
-    # Removes a worktree above the current one, using jj workspace list for selection.
+    # Git workspace Remove (jwr)
+    # Removes a workspace above the current one, using jj workspace list for selection.
 
     local workspace_to_remove="$1"
 
-    # If no worktree path provided, use gum to select one from existing workspaces
+    # If no workspace path provided, use gum to select one from existing workspaces
     if [ -z "${workspace_to_remove}" ]; then
         if ! command -v gum &> /dev/null; then
-            echo "gum is not installed. Please provide a worktree path or install gum."
-            echo "Usage: jwr <worktree_path>"
+            echo "gum is not installed. Please provide a workspace path or install gum."
+            echo "Usage: jwr <workspace_path>"
             return 1
         fi
 
@@ -431,10 +431,10 @@ jwr() {
             | awk -F: '{print $1}' \
             | grep -v '^default$' \
             | grep -v '^[[:space:]]*$' \
-            | gum choose --header="Select a worktree to remove:")
+            | gum choose --header="Select a workspace to remove:")
 
         if [ -z "${workspace_to_remove}" ]; then
-            echo "No worktree selected."
+            echo "No workspace selected."
             return 1
         fi
     fi
@@ -446,7 +446,8 @@ jwr() {
         return 1
     fi
 
-    jj workspace forget "${workspace_to_remove}"
+    jj workspace forget "${workspace_to_remove}" && \
+    rip ${workspace_path}
 }
 
 jb(){

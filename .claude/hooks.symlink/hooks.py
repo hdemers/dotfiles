@@ -374,24 +374,26 @@ def checkpoint(message: str):
 
 def get_ntfy_channel() -> Optional[str]:
     """Get ntfy channel from secret command or environment variable."""
-    try:
-        result = subprocess.run(
-            ["secret", "lookup", "ntfy", "neptune"],
-            capture_output=True,
-            text=True,
-            timeout=10,
-        )
-
-        if result.returncode:
-            console.print(
-                f"[yellow]Could not retrieve ntfy channel: {result.stderr.strip()}[/yellow]"
+    channel = os.getenv("NTFY_NEPTUNE_CHANNEL")
+    if not channel:
+        try:
+            result = subprocess.run(
+                ["secret", "lookup", "ntfy", "neptune"],
+                capture_output=True,
+                text=True,
+                timeout=10,
             )
-            channel = os.getenv("NTFY_NEPTUNE_CHANNEL")
-        else:
-            channel = result.stdout.strip()
 
-    except Exception as e:
-        console.print(f"[yellow]Failed to retrieve ntfy channel: {str(e)}[/yellow]")
+            if result.returncode:
+                console.print(
+                    "[yellow]Could not retrieve ntfy channel from secrets: "
+                    + f"{result.stderr.strip()}[/yellow]"
+                )
+            else:
+                channel = result.stdout.strip()
+
+        except Exception as e:
+            console.print(f"[yellow]Failed to retrieve ntfy channel: {str(e)}[/yellow]")
 
     return channel
 

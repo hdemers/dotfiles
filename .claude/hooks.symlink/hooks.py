@@ -276,9 +276,15 @@ def _lint(
                 if result.stderr:
                     error_console.print(f"\n{result.stderr.strip()}")
 
-        except subprocess.TimeoutExpired:
+        except FileNotFoundError:
             return_code = 1
-            error_console.print("[red]Timed out[/red]")
+            error_console.print(
+                f"[red]Skipping linting {language} files as "
+                + f"command not found: {linter_cmd}[/red]"
+            )
+        except Exception as error:
+            return_code = 1
+            error_console.print(f"[red]Error while linting: {str(error)}[/red]")
 
     if return_code:
         error_console.print(

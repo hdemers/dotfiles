@@ -4,11 +4,10 @@ Create well-formatted description for a Jujutsu commits with conventional
 commit messages and emojis.
 
 ## Usage:
-- `/describe <commit_id>` - Describe the given commit.
+- `/describe <id> <ticket>` - Describe the given commit.
 
 ##  Features
 - Uses conventional commit format with descriptive emojis
-- Suggests splitting commits for different concerns
 
 ## Commit Types:
 - ✨feat: New features
@@ -24,26 +23,16 @@ commit messages and emojis.
 - 🚑hotfix: Critical fixes
 - 🔒security: Security improvements
 
-## Process:
-1. Run pre-commit checks, see below
-2. Analyze changes to determine commit type: `jj diff -r master..@`
-3. Generate descriptive commit message
-4. Include scope in summary: `type(scope): summary`
-5. Add body for complex changes explaining why
-6. Exclude Claude co-authorship footer from commits
-7. Seek approval from user.
-8. Execute: `jj describe <commit> -m <description>`
-
-## Pre-commit checks
-1. Runs pre-commit checks by default. For python code run:
-    1. `jj diff -r master..@ --name-only | xargs ruff format`
-    2. `jj diff -r master..@ --name-only | xargs ruff check`
-
+## TODOs:
+1. Analyze changes to determine commit type: `jj diff -r <id>`
+2. Generate descriptive commit message
+3. Include scope in summary: `type(scope): summary`
+4. Add body for complex changes explaining why
+5. If provided, at the `<ticket>` at the end of the body, on a line of its own.
+5. Seek approval from user.
+6. Execute: `jj describe -r <id> -m <description>`
 
 ## Best Practices:
-- Keep commits atomic and focused
 - Write in imperative mood ("Add feature" not "Added feature")
 - Explain why, not just what
-- Reference issues/PRs when relevant
-- Split unrelated changes into separate commits
 - Exclude Claude co-authorship footer from commits

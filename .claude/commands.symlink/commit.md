@@ -10,7 +10,15 @@ Create well-formatted commits with conventional commit messages and emojis.
 - Uses conventional commit format with descriptive emojis
 - Suggests splitting commits for different concerns
 
-## Commit Types:
+## Message format
+1. Use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) to write commit messages.
+2. Limit the title of commit messages to 50 characters and the body to 79.
+3. Use [semantic versioning](https://semver.org/).
+4. Use [conventional comments](https://conventionalcomments.org) when reviewing PRs.
+6. Avoid superlatives like comprehensive, major, etc.
+
+
+### Commit Types:
 - ✨feat: New features
 - 🐛fix: Bug fixes
 - 📝docs: Documentation changes
@@ -39,7 +47,7 @@ Create well-formatted commits with conventional commit messages and emojis.
 ## Pre-commit checks
 1. Runs pre-commit checks by default. For python code run:
     1. `ruff format`
-    2. `ruff check`
+    2. `ruff check --fix`
     3. `basedpyright` (if available)
     4. `ty` (if available)
 

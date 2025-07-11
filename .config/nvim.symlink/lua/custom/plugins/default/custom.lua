@@ -102,4 +102,13 @@ return {
     dir = '~/src/nvim/misc',
     dependencies = { 'j-hui/fidget.nvim' },
   },
+  {
+    name = 'jujutsu',
+    lazy = false,
+    dir = '~/src/nvim/misc',
+    config = function()
+      local jujutsu = require 'jujutsu'
+      jujutsu.setup()
+    end,
+  },
 }

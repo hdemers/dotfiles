@@ -611,6 +611,8 @@ return {
       { '<leader>snh', function() Snacks.notifier.show_history() end, desc = 'Show notification history', },
       { 'grr', function() Snacks.picker.lsp_references() end, nowait = true, desc = 'Go to references', },
       { 'gd', function() Snacks.picker.lsp_definitions() end, desc = 'Go to definition', },
+      { "<leader>bs",  function() Snacks.scratch.open({ft='markdown'}) end, desc = "Open Markdown Scratch Buffer" },
+      { "<leader>bss",  function() Snacks.scratch.select() end, desc = "Select Scratch Buffer" },
     },
     init = function()
       vim.api.nvim_create_autocmd('User', {

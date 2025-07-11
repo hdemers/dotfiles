@@ -98,6 +98,8 @@ vim.opt.fillchars = {
 -- installed.
 vim.g.python3_host_prog = vim.env.HOME .. '/.virtualenvs/nvim/bin/python'
 
+vim.o.shell = '/usr/bin/zsh'
+
 -- ┌────────────────────────────────────────────────────────────────────────────
 -- │ Keymaps
 
@@ -289,4 +291,3 @@ require('lazy').setup({
 })
 
 -- vim: ts=2 sts=2 sw=2 et
-

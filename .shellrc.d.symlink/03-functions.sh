@@ -284,7 +284,6 @@ js() {
 gwa() {
     # Git Worktree Add (gwa)
     # This function adds a new worktree for a given branch in the parent directory.
-    # The worktree will be named <repo-name>-<branch>-claude.
     # If the branch already exists, it will add the worktree without creating a new branch.
     # If no branch is provided, it will use gum to present a choice of branches.
 

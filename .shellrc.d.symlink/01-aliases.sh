@@ -169,3 +169,5 @@ alias gjust="/usr/bin/just --justfile $HOME/src/containers/devpod/gh-ai-sandbox.
 alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/ai-sandbox.Justfile"
 
 alias clc="claude --dangerously-skip-permissions"
+
+alias jjup="jj rall && jj rdev && jj git push -r branches"

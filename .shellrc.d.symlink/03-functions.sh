@@ -288,7 +288,7 @@ gwa() {
     # If the branch already exists, it will add the worktree without creating a new branch.
     # If no branch is provided, it will use gum to present a choice of branches.
 
-    local repo_name=$(basename $(jj workspace root))
+    local repo_name=$(basename $(git rev-parse --show-toplevel))
     local branch="$1"
 
     # If no branch provided, use gum to select one
@@ -300,7 +300,7 @@ gwa() {
         fi
 
         # Get local branches sorted by commit date (similar to git rb alias)
-        branch=$(jj branch list --local | awk '{print $1}' | gum choose --header="Select a branch to create worktree for:")
+        branch=$(git for-each-ref --sort=-committerdate refs/heads --format='%(refname:short)' | gum choose --header="Select a branch to create worktree for:")
 
         if [ -z "${branch}" ]; then
             echo "No branch selected."
@@ -310,12 +310,12 @@ gwa() {
 
     local worktree_path="../${branch}"
 
-    if jj branch list --local | grep -q "^${branch}$"; then
+    if git rev-parse --verify --quiet "${branch}"; then
         echo "Branch '${branch}' already exists. Adding worktree without creating a new branch."
-        jj worktree add "${worktree_path}" "${branch}"
+        git worktree add "${worktree_path}" "${branch}"
     else
         echo "Branch '${branch}' does not exist. Creating new branch and adding worktree."
-        jj worktree add "${worktree_path}" -b "${branch}"
+        git worktree add "${worktree_path}" -b "${branch}"
     fi
     cd "${worktree_path}" || return 1
     # Copy .envrc from the main worktree if it exists
@@ -332,7 +332,6 @@ gwr() {
     # Git Worktree Remove (gwr)
     # This function removes a worktree situated in a directory above the current one.
     # If no worktree path is provided, it will use gum to present a choice of existing worktrees.
-
     local worktree_to_remove="$1"
 
     # If no worktree path provided, use gum to select one from existing worktrees
@@ -348,7 +347,6 @@ gwr() {
         local current_worktree=$(git rev-parse --show-toplevel)
         worktree_to_remove=$(\
             git worktree list | \
-            awk -v current="${current_worktree}" '$1 != current {print $1}' | \
             gum choose --header="Select a worktree to remove:")
 
         if [ -z "${worktree_to_remove}" ]; then
@@ -548,34 +546,61 @@ jh() {
     local preview='
     if echo "$FZF_PROMPT" | grep -q '::'; then
         '"$change_id"' | xargs --no-run-if-empty -I % jj lll -r % --color always
-    else
+    elif echo "$FZF_PROMPT" | grep -q "Ticket"; then
         '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
             | grep -oE "[A-Z]+-[0-9]+" \
             | uniq \
             | xargs -I % jira describe %
+    elif echo "$FZF_PROMPT" | grep -q "Diff"; then
+        '"$change_id"' | xargs -I % jj diff --tool difft -r %
     fi'
 
     jj log -T \
-        'change_id.short(8) ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d") ++ "|" ++ if(tags, tags.join(" ") ++ "|", "|") ++ commit_id.short(8) ++ "|" ++ if(description, description.first_line() ++ " ", "") ++ if(bookmarks, "(" ++ bookmarks.join(", ") ++ ")", "") ++ "\n"'\
+        'change_id.shortest(8) ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d") ++ "|" ++ if(tags, tags.join(" ") ++ "|", "|") ++ commit_id.short(8) ++ "|" ++ if(description, description.first_line() ++ " ", "") ++ if(bookmarks, "(" ++ bookmarks.join(", ") ++ ")", "") ++ "\n"'\
         --color always \
         -r "::" \
     | column -t -s '|'\
     | fzf \
         --ansi \
         --preview "$preview" \
-        --preview-window 'top,40%' \
+        --preview-window 'top,60%' \
         --height 100% \
         --reverse \
         --prompt "::> " \
-        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "::"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
+        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -qv "Ticket"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
         --bind 'ctrl-x:execute('"$ticket"' | xargs -I % jira close %)' \
-        --bind 'ctrl-d:preview('"$change_id"' | xargs -I % jj diff --tool difft -r %)' \
+        --bind 'ctrl-d:transform:if echo "$FZF_PROMPT" | grep -qv "Diff"; then echo "change-prompt(Diff> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
         --preview-label-pos 5:bottom \
         --border 'rounded' \
-        --preview-label '  ctrl-d: diff | ctrl-w: web | ctrl-s: toggle ticket | ctrl-x: close ticket'
+        --preview-label '  ctrl-d: diff | ctrl-w: web | ctrl-s: toggle ticket | ctrl-x: close ticket' \
+        --color='fg:#f8f8f2,bg:#282a36,hl:#bd93f9' \
+        --color='fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9' \
+        --color='info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6' \
+        --color='marker:#ff79c6,spinner:#ffb86c,header:#6272a4'
 }
 
 bcheck() {
     local bookmark="$1"
     jj diff --name-only -r "trunk()::${bookmark}" | grep -E ".py" | xargs ruff check
+}
+
+jop() {
+    jj op log \
+        -T 'self.id().short() ++ " " ++ self.time().start().ago() ++ " " ++ self.description() ++ "\n" ++ self.tags() ++ "\0"' \
+        --color always \
+        --no-graph \
+        | fzf \
+        --read0 \
+        --ansi \
+        --highlight-line \
+        --preview 'jj op show {1} --summary --color always' \
+        --bind 'ctrl-r:become(jj op restore {1})' \
+        --border-label 'ctrl-r: restore' \
+        --border-label-pos 5:bottom \
+        --border rounded \
+        --preview-border left \
+        --color='fg:#f8f8f2,bg:#282a36,hl:#bd93f9' \
+        --color='fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9' \
+        --color='info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6' \
+        --color='marker:#ff79c6,spinner:#ffb86c,header:#6272a4'
 }

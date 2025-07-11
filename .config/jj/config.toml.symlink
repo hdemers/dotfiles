@@ -8,10 +8,14 @@ email = "hdemers@gmail.com"
 default-command = "log"
 diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
 # diff-formatter = "git"
+# Use Difftastic by default
+diff-formatter = ["difft", "--color=always", "--syntax-highlight=on", "$left", "$right"]
+# Use tool named "<name>" (see below)
+# diff-formatter = "<name>"
 
 [colors]
-"diff removed token" = { fg = "bright red", bg = "black", underline = false }
-"diff added token" = { fg = "bright green", bg = "black", underline = false }
+# "diff removed token" = { fg = "bright red", bg = "black", underline = false }
+# "diff added token" = { fg = "bright green", bg = "black", underline = false }
 # [merge-tools.diffconflicts]
 # program = "nvim"
 # merge-args = [
@@ -24,10 +28,13 @@ diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
 [revset-aliases]
 'bases' = 'dev'
 'downstream(x,y)' = '(x::y) & y'
-'branches' = 'downstream(trunk(), bookmarks()) & mine()'
+'branches' = 'downstream(trunk(), bookmarks() & ~dev:: & ~trunk())'
+'trunkandbranches' = 'downstream(trunk(), bookmarks() & ~dev::)'
+'mybranches' = 'downstream(trunk(), bookmarks()) & mine()'
 'branchesandheads' = 'branches | (heads(trunk()::) & mine())'
 'curbranch' = 'latest(branches::@- & branches)'
 'nextbranch' = 'roots(@:: & branchesandheads)'
+'roots' = 'roots(trunk()..dev)'
 
 'remotebranch(x)' = 'fork_point(x | trunk())+::x'
 
@@ -36,8 +43,10 @@ push-new-bookmarks = true
 # private-commits = "dev+"
 
 [aliases]
-rdev = ["rebase", "-s", "dev", "-d", "all:(heads(trunk()::) & mine()) ~ dev:: | dev-"]
+rdev = ["rebase", "-s", "dev", "-d", "all:trunkandbranches"]
 ralldev = ["rebase", "-s", "dev", "-d", "all:(dev- | trunk() | heads(trunk():: ~dev::))"]
+rtrunk = ["rebase", "-s", "dev", "-d", "all:(visible_heads() & mutable() ~ dev::)"]
+rall = ["rebase", "-b", "dev", "-d", "trunk()"]
 ls = ["log", "--summary"]
 l = ["log", "-r", "ancestors(reachable(@, mutable()), 2)"]
 ll = ["log", "--stat"]

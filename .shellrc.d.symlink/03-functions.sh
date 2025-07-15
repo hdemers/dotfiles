@@ -387,9 +387,10 @@ jwa() {
     local workspace_path="../${branch}"
 
     jj workspace add -r "${branch}" "${workspace_path}"
+    gum log -sl info "Workspace ${branch} created at ${workspace_path}"
     # Return if the workspace already exists
     if [ $? -ne 0 ]; then
-        echo "Workspace '${workspace_path}' already exists. Skipping creation."
+        gum log -sl error "Workspace '${workspace_path}' already exists. Skipping creation."
         return 1
     fi
 
@@ -397,27 +398,27 @@ jwa() {
     # Copy .envrc from the main workspace if it exists
     if [ -f "${OLDPWD}/.envrc" ]; then
         cp "${OLDPWD}/.envrc" .
-        echo ".envrc copied to new workspace."
+        gum log -sl info "file '.envrc' copied to new workspace."
         direnv allow .
     else
-        echo "No .envrc file found in the main workspace."
+        gum log -sl warn "No '.envrc' file found in the main workspace."
     fi
     # Copy CLAUDE.local.md from the main workspace if it exists
     if [ -f "${OLDPWD}/CLAUDE.local.md" ]; then
         cp "${OLDPWD}/CLAUDE.local.md" .
-        echo "CLAUDE.local.md copied to new workspace."
+        gum log -sl info "file 'CLAUDE.local.md' copied to new workspace."
     fi
 
     if [ -d "${OLDPWD}/.claude" ]; then
         # If the main workspace has a .claude directory, copy it to the new workspace
         cp -r "${OLDPWD}/.claude" .
-        echo ".claude directory copied to new workspace."
+        gum log -sl info "'.claude' directory copied to new workspace."
     fi
 
     if gum confirm "Do you want to run 'make install' in the new workspace?"; then
         make install
     else
-        echo "'make install' skipped."
+        gum log -sl warn "'make install' skipped."
     fi
 
 }
@@ -444,7 +445,7 @@ jwr() {
             | gum choose --header="Select a workspace to remove:")
 
         if [ -z "${workspace_to_remove}" ]; then
-            echo "No workspace selected."
+            gum log -sl error "No workspace selected."
             return 1
         fi
     fi
@@ -452,11 +453,13 @@ jwr() {
     local workspace_path="../${workspace_to_remove}"
 
     if [ ! -d "${workspace_path}" ]; then
-        echo "Workspace directory '${workspace_path}' does not exist."
+        gum log -sl error "Workspace directory '${workspace_path}' does not exist."
         return 1
     fi
 
     jj workspace forget "${workspace_to_remove}"
+    gum log -sl info "Workspace '${workspace_to_remove}' removed."
+    gum log -sl info "Directory '${workspace_path}' was not deleted."
 }
 
 jb(){
@@ -533,9 +536,16 @@ jb(){
         --border-label '  ctrl-i: integrate | ctrl-w: web | ctrl-s: toggle view'
 }
 
-jh() {
-    # If an argument is provided, use it as the root commit. Default to 'trunk()'. If all is provided, root should be an empty string.
+function _jjhistory() {
+    jj log -T \
+        'change_id.shortest(8) ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d") ++ "|" ++ if(tags, tags.join(" ") ++ "|", "|") ++ commit_id.short(8) ++ "|" ++ if(description, description.first_line() ++ " ", "") ++ if(bookmarks, "(" ++ bookmarks.join(", ") ++ ")", "") ++ "\n"'\
+        --color always \
+        -r "::" \
+    | column -t -s '|'
+}
 
+
+jh() {
     local change_id='echo {} | grep -oE  "\\b[k-z]+\\b" | head -1'
     local ticket='
         '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
@@ -553,13 +563,9 @@ jh() {
     elif echo "$FZF_PROMPT" | grep -q "Diff"; then
         '"$change_id"' | xargs -I % jj diff --tool difft -r %
     fi'
-
-    jj log -T \
-        'change_id.shortest(8) ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d") ++ "|" ++ if(tags, tags.join(" ") ++ "|", "|") ++ commit_id.short(8) ++ "|" ++ if(description, description.first_line() ++ " ", "") ++ if(bookmarks, "(" ++ bookmarks.join(", ") ++ ")", "") ++ "\n"'\
-        --color always \
-        -r "::" \
-    | column -t -s '|'\
-    | fzf \
+    
+    _jjhistory \
+    | fzf  \
         --ansi \
         --preview "$preview" \
         --preview-window 'top,60%' \
@@ -569,9 +575,12 @@ jh() {
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -qv "Ticket"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
         --bind 'ctrl-x:execute('"$ticket"' | xargs -I % jira close %)' \
         --bind 'ctrl-d:transform:if echo "$FZF_PROMPT" | grep -qv "Diff"; then echo "change-prompt(Diff> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
+        --bind 'ctrl-e:execute(jj describe $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
+        --bind 'ctrl-/:execute(jj split -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
         --preview-label-pos 5:bottom \
         --border 'rounded' \
-        --preview-label '  ctrl-d: diff | ctrl-w: web | ctrl-s: toggle ticket | ctrl-x: close ticket' \
+        --preview-label '  ctrl-d: diff | ctrl-e: describe | ctrl-w: web | ctrl-s: toggle ticket | ctrl-x: close ticket' \
+        --highlight-line \
         --color='fg:#f8f8f2,bg:#282a36,hl:#bd93f9' \
         --color='fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9' \
         --color='info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6' \
@@ -597,9 +606,24 @@ jop() {
         --border-label 'ctrl-r: restore' \
         --border-label-pos 5:bottom \
         --border rounded \
+        --border-label 'Jujutsu Op Log' \
+        --border-label-pos 5:top \
         --preview-border left \
         --color='fg:#f8f8f2,bg:#282a36,hl:#bd93f9' \
         --color='fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9' \
         --color='info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6' \
         --color='marker:#ff79c6,spinner:#ffb86c,header:#6272a4'
+}
+
+lsemr() {
+    local ip=$(listemr | \
+    fzf \
+    --header-lines=1 \
+    --preview='listemr describe {1}' \
+    --preview-window=up:50% \
+    --bind='ctrl-o:execute(browse http://{4}:8088 > /dev/null)' \
+    --bind='enter:execute(echo {4} | tr -d \"\\n\" | xsel --clipboard --input)+become(echo {4})' \
+    --height 50%)
+
+    export GDP_SPARK_CLUSTER_IP="$ip"
 }

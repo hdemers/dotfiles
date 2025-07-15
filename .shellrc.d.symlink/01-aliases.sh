@@ -155,19 +155,11 @@ alias dtr="env FORCE_COLOR=true budget latest | \
     --multi \
     --bind='enter:execute(echo {9})+abort' "
 
-alias lsemr="listemr | \
-    fzf \
-    --header-lines=1 \
-    --preview='listemr describe {1}' \
-    --preview-window=up:50% \
-    --bind='ctrl-o:execute(browse http://{4}:8088 > /dev/null)' \
-    --bind='enter:execute(echo {4} | tr -d \"\\n\" | xsel --clipboard --input)+abort' \
-    --height 50%
-    "
-
 alias gjust="/usr/bin/just --justfile $HOME/src/containers/devpod/gh-ai-sandbox.Justfile"
 alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/ai-sandbox.Justfile"
 
 alias clc="claude --dangerously-skip-permissions"
 
 alias jjup="jj rall && jj rdev && jj git push -r branches"
+
+alias jjre="jj log --color always -r 'remote_bookmarks()' -T 'bookmarks ++ \"|\" ++ author.name() ++ \"|\" ++ committer.timestamp().local().format(\"%Y-%m-%d %H:%M\") ++ \"|\" ++ description.first_line() ++ \"\\n\"' --no-graph | column -t -s \"|\" | grep -v \"Hugues\" | grep -v \"master\" | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-limit --no-strip-ansi | cut -d ' ' -f 1 | xargs --no-run-if-empty printf ' -d %s' | xargs --no-run-if-empty jj rdev"

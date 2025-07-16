@@ -573,13 +573,18 @@ jh() {
         --reverse \
         --prompt "::> " \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -qv "Ticket"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
-        --bind 'ctrl-x:execute('"$ticket"' | xargs -I % jira close %)' \
+        --bind 'ctrl-c:execute('"$ticket"' | xargs -I % jira close %)' \
         --bind 'ctrl-d:transform:if echo "$FZF_PROMPT" | grep -qv "Diff"; then echo "change-prompt(Diff> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
         --bind 'ctrl-e:execute(jj describe $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
         --bind 'ctrl-/:execute(jj split -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
+        --bind 'ctrl-x:execute(jj abandon -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
+        --bind 'ctrl-w:execute(jj new -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
+        --bind 'ctrl-t:execute(jj edit -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
+        --bind 'ctrl-u:execute(jj undo)+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
+        --bind 'enter:execute(echo $('"$change_id"') | tr -d '\n' | xsel --clipboard --input)+abort' \
         --preview-label-pos 5:bottom \
         --border 'rounded' \
-        --preview-label '  ctrl-d: diff | ctrl-e: describe | ctrl-w: web | ctrl-s: toggle ticket | ctrl-x: close ticket' \
+        --preview-label '  ctrl-d: diff | ctrl-e: describe | ctrl-x: abandon | ctrl-u: undo | ctrl-t: edit | ctrl-w: new | ctrl-/: split | ctrl-w: web | ctrl-s: toggle ticket | ctrl-c: close ticket' \
         --highlight-line \
         --color='fg:#f8f8f2,bg:#282a36,hl:#bd93f9' \
         --color='fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9' \

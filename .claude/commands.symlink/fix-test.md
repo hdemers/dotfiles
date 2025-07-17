@@ -7,7 +7,7 @@ Unit test fixing workflow.
 
 ## Process:
 
-@context-prime.md
+@~/.claude/commands/context-prime.md
 
 ## Plan
 1. Run the failing test file.

@@ -162,7 +162,15 @@ return {
             },
           },
         },
-        -- beancount = {},
+        ty = {},
+        beancount = {
+          settings = {
+            init_options = {
+              journal_file = '/var/home/hdemers/Projets/budget/src/budget/data/hugues/preamble.beancount',
+            },
+          },
+        },
+        beanhub_cli = {},
         arduino_language_server = {
           cmd = {
             'arduino-language-server',
@@ -194,15 +202,6 @@ return {
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
-
-      -- Mason doesn't have a server for ty yet, so we have to install it
-      -- manually and add to it to `servers` here, after mason-tool-installer's
-      -- setup.
-      servers['ty'] = {
-        cmd = { 'ty', 'server' },
-        filetypes = { 'python' },
-        root_markers = { 'ty.toml', 'pyproject.toml', '.git' },
-      }
 
       -- Override the default configuration with the one found in .neoconf.json.
       local project_servers = neoconf.get 'lspconfig'

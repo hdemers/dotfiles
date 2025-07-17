@@ -670,19 +670,6 @@ return {
     end,
   },
   {
-    'coffebar/transfer.nvim',
-    lazy = true,
-    cmd = {
-      'TransferInit',
-      'DiffRemote',
-      'TransferUpload',
-      'TransferDownload',
-      'TransferDirDiff',
-      'TransferRepeat',
-    },
-    opts = {},
-  },
-  {
     -- Complement to https://github.com/hiasr/vim-zellij-navigator
     'swaits/zellij-nav.nvim',
     enabled = false,

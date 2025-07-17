@@ -3,7 +3,7 @@
 Comprehensive pull request review.
 
 ## Usage:
-- `/pr-review <#PR | None>`
+- `/review-pr-git <#PR | None>`
 
 ## Parameters
 - `#PR` is the PR number. If not provided, the PR associated with the current

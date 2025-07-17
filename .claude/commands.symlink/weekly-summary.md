@@ -3,20 +3,16 @@
 Summarize the work done in this repository over a specific time horizon.
 
 ## Usage:
-`/weekly-summary <date | since >`
-
-## Parameters:
-- `<date | since>`: either a date in the past or a number of days to look back.
-
-## Examples:
-- `/weekly-summary June 10th, 2025`
-- `/weekly-summary 8 days`
+`/weekly-summary <date>`
 
 ## Process:
 0. This is a Jujutsu repository, but ONLY use `git ...` comamnds. It will work.
 2. Separate the narrative in two: 'Completed Work' and 'Active Development'.
-3. Work is considered completed if it was merged into master (commits are
-   before master)
+3. Completed work is:
+      `git diff <oldest-since>..master`
+   where `<oldest-since>` can be found with:
+      `git log --since="<date>" --reverse --format="%H" | head -1`
+4. Active development work
 4. Look at the remote branches for the active development part.
 5. Get approval from user.
 6. Write the summary as a Markdown formatted document.

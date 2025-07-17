@@ -2,6 +2,8 @@
 
 Create or update or transition a ticket using the `ticket` mcp tool.
 
+Note: this is a Jujutsu repo.
+
 ## Usage:
 - `/ticket create <parameters>` - Create a new ticket
 - `/ticket update <ticket> <parameters>` - Update an existing ticket
@@ -32,11 +34,13 @@ Create or update or transition a ticket using the `ticket` mcp tool.
 5. The summary of the ticket should be prefixed with `[repo-name]`.
 6. If the user has provided an epic, a sprint, a number of points, etc., use those.
 7. If the user has NOT provided a parameter, leave blank. Do NOT guess.
-8. Use the commit's messages and diffs as the basis for the ticket description:
-   - commit messages: `jj log -r "trunk()..<branch>" --template description --no-graph`
-   - commit diffs: `jj diff --git -r "trunk()..<branch>"`
-9. Have the user review the ticket.
-10. Create the ticket.
+8. Read the commit messages:
+   - Command: `jj log -r "trunk()..<branch>" -T description --no-graph`
+9. Understand the changes by looking at the diff:
+   - Command: `jj diff --git -r "trunk()..<branch>"`
+10. Use the messages and the diffs as the basis for the description of the ticket.
+11. Have the user review the ticket.
+12. Create the ticket.
 
 ## Update process:
 1. Update the provided parameters for that ticket.

@@ -1,9 +1,11 @@
 # Open PR
 
-Open a PR on Github. Important: this is a Jujutsu repository.
+Open a PR on Github.
+
+Note: this is a Jujutsu repository.
 
 ## Usage:
-- `/jj-pr <branch>` - Open a PR for the given Jujutsu branch/bookmark.
+- `/create-pr-jj <branch>` - Open a PR for the given Jujutsu branch/bookmark.
 
 ## TODOs:
 1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.

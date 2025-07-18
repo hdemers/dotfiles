@@ -14,6 +14,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+from time import sleep
 from typing import Dict, List, Optional
 
 import click
@@ -222,6 +223,7 @@ def commit_jujutsu(message: str) -> int:
             error_console.print("[red]Failed to describe commit[/red]")
             return_code = 1
 
+        sleep(1)
         # Create new working commit
         result = subprocess.run(
             ["jj", "new"], capture_output=True, text=True, timeout=30
@@ -242,7 +244,7 @@ def _lint(
     language: str,
     target_files: List[str],
     config_data: Dict,
-) -> bool:
+) -> int:
     """Run linters for a specific language on target files."""
     linters = config_data["languages"][language]["linters"]
 
@@ -323,7 +325,7 @@ def lint(
     # No language specified: auto-detect and lint all modified languages
     languages_map = get_all_modified_languages()
     if not languages_map:
-        error_console.print("[yellow]No modified files found[/yellow]")
+        error_console.print("[yellow]No lintable files found[/yellow]")
         sys.exit(1)
 
     return_codes = []
@@ -338,44 +340,35 @@ def lint(
 @click.option("--message", "-m", default="wip: 🤖 checkpoint", help="Commit message")
 def checkpoint(message: str):
     """Create automated checkpoint commit."""
-
+    return_code = 0
     # Reuse existing function to get modified files
     modified_files = get_modified_files()
 
     # Check if there are files to commit
     if not modified_files:
-        result = {
-            "success": True,
-            "message": "No modified files to commit",
-            "modified_files": [],
-            "vcs": detect_vcs(),
-        }
-
-        console.print("[yellow]No modified files to commit[/yellow]")
-        sys.exit(0)
+        error_console.print("[yellow]No modified files found to commit[/yellow]")
+        return_code = 1
 
     # Detect VCS
     vcs = detect_vcs()
     if not vcs:
-        error_msg = "No version control system detected"
-        console.print(f"[red]{error_msg}[/red]")
-        sys.exit(1)
+        error_console.print("[red]No version control system detected[/red]")
+        return_code = 1
 
     # Call appropriate VCS-specific function
     if vcs == "git":
-        result = commit_git(message, modified_files)
+        return_code = commit_git(message, modified_files)
     elif vcs == "jujutsu":
-        result = commit_jujutsu(message)
+        return_code = commit_jujutsu(message)
     else:
-        result = {"success": False, "error": f"Unsupported VCS: {vcs}"}
+        error_console.print(f"[red]Unsupported VCS: {vcs}[/red]")
+        return_code = 1
 
     # Handle output
-    if result:
-        error_console.print("[red]Could not checkpoint[/red]")
-    else:
+    if not return_code:
         console.print("[green]Checkpoint commit created successfully![/green]")
 
-    sys.exit(result)
+    sys.exit(return_code)
 
 
 def get_ntfy_channel() -> Optional[str]:
@@ -422,7 +415,11 @@ def get_ntfy_channel() -> Optional[str]:
 @click.option("--title", "-t", default="Message from Claude", help="Notification title")
 @click.option("--tags", default="robot", help="Comma-separated tags")
 def notify(
-    input: str, message: str, priority: str, title: Optional[str], tags: Optional[str]
+    input: str,
+    message: str,
+    priority: str,
+    title: Optional[str],
+    tags: Optional[str],
 ):
     """Send notification via ntfy.sh."""
 
@@ -437,8 +434,8 @@ def notify(
         console.print("     Example: export NTFY_NEPTUNE_CHANNEL=your-topic-name")
         sys.exit(1)
 
-    input = json.loads(input) if input else {}
-    message = input.get("message", message)
+    input_dict = json.loads(input) if input else {}
+    message = input_dict.get("message", message)
 
     # Prepare notification payload
     headers = {"Content-Type": "text/plain; charset=utf-8"}

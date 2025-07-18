@@ -31,7 +31,7 @@ Upon invocation, read this, then ask the user: "What feature should we implement
    ```
    ### Feature Name {#FEAT-0001 authority=system}
 
-   WHEN [condition] the system SHALL:
+   WHEN [condition] the system SHALL|SHOULD|MAY:
    - [expected behavior] [^REQ-0001]
    - [another expected behavior] [^REQ-0002]
 

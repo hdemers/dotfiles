@@ -211,6 +211,21 @@ def commit_jujutsu(message: str) -> int:
     """Handle Jujutsu commits."""
     return_code = 0
     try:
+        # Make sure that the current revision has changes
+        result = subprocess.run(
+            ["jj", "status"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode != 0:
+            error_console.print("[red]Failed to check Jujutsu status[/red]")
+            return 1
+
+        if "the working copy has no changes" in result.stdout.lower():
+            error_console.print("[yellow]The working copy has no changes.")
+            return 1
+
         # Describe current commit
         result = subprocess.run(
             ["jj", "describe", "-r", "@", "-m", message],
@@ -221,7 +236,7 @@ def commit_jujutsu(message: str) -> int:
 
         if result.returncode != 0:
             error_console.print("[red]Failed to describe commit[/red]")
-            return_code = 1
+            return 1
 
         sleep(1)
         # Create new working commit
@@ -231,7 +246,7 @@ def commit_jujutsu(message: str) -> int:
 
         if result.returncode != 0:
             error_console.print("[red]Failed to create new working commit[/red]")
-            return_code = 1
+            return 1
 
     except Exception as e:
         error_console.print(f"[red]Jujutsu command failed: {str(e)}[/red]")
@@ -347,13 +362,13 @@ def checkpoint(message: str):
     # Check if there are files to commit
     if not modified_files:
         error_console.print("[yellow]No modified files found to commit[/yellow]")
-        return_code = 1
+        sys.exit(1)
 
     # Detect VCS
     vcs = detect_vcs()
     if not vcs:
         error_console.print("[red]No version control system detected[/red]")
-        return_code = 1
+        sys.exit(1)
 
     # Call appropriate VCS-specific function
     if vcs == "git":
@@ -365,8 +380,7 @@ def checkpoint(message: str):
         return_code = 1
 
     # Handle output
-    if not return_code:
-        console.print("[green]Checkpoint commit created successfully![/green]")
+    console.print("[green]Checkpoint commit created successfully![/green]")
 
     sys.exit(return_code)
 

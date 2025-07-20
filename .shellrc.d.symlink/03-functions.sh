@@ -445,7 +445,7 @@ jwr() {
             | gum choose --header="Select a workspace to remove:")
 
         if [ -z "${workspace_to_remove}" ]; then
-            gum log -sl error "No workspace selected."
+            gum log -sl info "No workspace selected."
             return 1
         fi
     fi

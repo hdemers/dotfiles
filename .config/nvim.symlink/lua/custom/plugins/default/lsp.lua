@@ -288,11 +288,9 @@ return {
       require('mason').setup()
       local null_ls = require 'null-ls'
       local sources = {
-        null_ls.builtins.formatting.sqlfluff.with {
-          extra_args = { '--dialect', 'trino' }, -- change to your dialect
-        },
-        null_ls.builtins.diagnostics.bean_check,
-        null_ls.builtins.formatting.bean_format,
+        null_ls.builtins.formatting.sqlfluff,
+        -- null_ls.builtins.diagnostics.bean_check,
+        -- null_ls.builtins.formatting.bean_format,
       }
 
       null_ls.setup { sources = sources, debug = true }

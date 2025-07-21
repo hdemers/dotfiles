@@ -9,13 +9,18 @@
 # ]
 # ///
 
+import atexit
+import hashlib
 import json
 import os
 import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 from time import sleep
 from typing import Dict, List, Optional
+from functools import wraps
 
 import click
 import requests
@@ -24,6 +29,73 @@ from rich.console import Console
 
 console = Console()
 error_console = Console(stderr=True)
+
+
+def single_instance(func):
+    """Decorator to ensure only one instance of the function runs at a time."""
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Generate a unique lock file name based on current working directory
+        cwd_hash = hashlib.md5(os.getcwd().encode()).hexdigest()[:8]
+        lock_file = Path(tempfile.gettempdir()) / f".claude-checkpoint-{cwd_hash}.lock"
+
+        def cleanup_lock():
+            """Clean up lock file on exit."""
+            try:
+                if lock_file.exists():
+                    lock_file.unlink()
+            except Exception:
+                pass
+
+        def is_process_alive(pid):
+            """Check if a process is still running."""
+            try:
+                # Check if /proc/pid exists (Linux/Unix)
+                return Path(f"/proc/{pid}").exists()
+            except Exception:
+                # Fallback: try to send signal 0
+                try:
+                    os.kill(pid, 0)
+                    return True
+                except (OSError, ProcessLookupError):
+                    return False
+
+        # Check if lock file exists and process is alive
+        if lock_file.exists():
+            try:
+                lock_data = json.loads(lock_file.read_text())
+                if is_process_alive(lock_data["pid"]):
+                    error_console.print(
+                        "[red]Another checkpoint instance is already running[/red]"
+                    )
+                    sys.exit(1)
+                else:
+                    # Stale lock, remove it
+                    lock_file.unlink()
+            except (json.JSONDecodeError, KeyError, Exception):
+                # Corrupted lock file, remove it
+                try:
+                    lock_file.unlink()
+                except Exception:
+                    pass
+
+        # Create lock file
+        try:
+            lock_data = {"pid": os.getpid(), "timestamp": int(time.time())}
+            lock_file.write_text(json.dumps(lock_data))
+            atexit.register(cleanup_lock)
+        except Exception as e:
+            error_console.print(f"[red]Failed to create lock file: {e}[/red]")
+            sys.exit(1)
+
+        try:
+            return func(*args, **kwargs)
+        finally:
+            cleanup_lock()
+
+    return wrapper
+
 
 # Language file patterns for filtering
 LANGUAGE_PATTERNS = {
@@ -353,6 +425,7 @@ def lint(
 
 @cli.command()
 @click.option("--message", "-m", default="wip: 🤖 checkpoint", help="Commit message")
+@single_instance
 def checkpoint(message: str):
     """Create automated checkpoint commit."""
     return_code = 0

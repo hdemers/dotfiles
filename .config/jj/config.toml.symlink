@@ -54,6 +54,14 @@ lll = ["log", "--stat", "-T", "builtin_log_detailed"]
 wip = ['bookmark', 'move', 'hdemers-wip', '--to', '@']
 hist = ["log", "--stat", "-T", "builtin_log_detailed", "-r", "::trunk()"]
 d = ["log", "-T", 'bookmarks ++ ":\n" ++ description', "--no-graph"]
+precommit = [
+  "util",
+  "exec",
+  "--",
+  "bash",
+  "-c",
+  "jj diff $1 $2 --name-only --no-pager | xargs pre-commit run --files", ""
+]
 
 # The following shows a ◇ symbol to indicate a mutable commit that's an
 # ancestor of a bookmark ("on a branch" in Git terms). This helps me see which

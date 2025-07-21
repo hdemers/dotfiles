@@ -634,4 +634,5 @@ lsemr() {
     --height 50%)
 
     export GDP_SPARK_CLUSTER_IP="$ip"
+    export REMOTE_SPARK_IP="$ip"
 }

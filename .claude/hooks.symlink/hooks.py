@@ -109,6 +109,7 @@ LANGUAGE_PATTERNS = {
     "shell": ["*.sh", "*.bash", "*.zsh", "*.fish"],
     "yaml": ["*.yml", "*.yaml"],
     "dockerfile": ["Dockerfile*", "*.dockerfile", ".dockerignore"],
+    "sql": ["*.sql"],
 }
 
 
@@ -285,7 +286,7 @@ def commit_jujutsu(message: str) -> int:
     try:
         # Make sure that the current revision has changes
         result = subprocess.run(
-            ["jj", "status"],
+            ["jj", "diff", "-r", "@"],
             capture_output=True,
             text=True,
             timeout=10,
@@ -294,7 +295,7 @@ def commit_jujutsu(message: str) -> int:
             error_console.print("[red]Failed to check Jujutsu status[/red]")
             return 1
 
-        if "the working copy has no changes" in result.stdout.lower():
+        if not result.stdout.lower():
             error_console.print("[yellow]The working copy has no changes.")
             return 1
 

@@ -2,7 +2,7 @@ languages:
   python:
     linters:
       - "ruff format"
-      - "ruff check --fix --output-format concise" 
+      - "ruff check --output-format concise" 
 
   javascript:
     linters:
@@ -37,3 +37,7 @@ languages:
   dockerfile:
     linters:
       - "hadolint"
+  sql:
+    linters:
+      - "sqlfluff format"
+      - "sqlfluff lint"

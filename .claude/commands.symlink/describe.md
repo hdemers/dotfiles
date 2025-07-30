@@ -1,15 +1,20 @@
+---
+allowed-tools: Bash(jj describe:*), Bash(jj diff:*), Bash(jj log:*)
+description: Describe a Jujutsu commit
+---
 # Describe Jujutsu commit
 
 Create well-formatted description for Jujutsu commits with conventional
 commit messages and emojis.
 
-## Usage:
-- `/describe <revset> <ticket>` - Describe the given commit.
+## Context
+- Current description: !`jj log -r $CLAUDE_REVSET`
+- Current diff: !`jj diff --git -r $CLAUDE_REVSET`
 
 ##  Features
 - Uses conventional commit format with descriptive emojis
 
-## Commit Types:
+## Commit Types
 - ✨feat: New features
 - 🐛fix: Bug fixes
 - 📝docs: Documentation changes
@@ -24,14 +29,10 @@ commit messages and emojis.
 - 🔒security: Security improvements
 
 ## TODOs:
-1. Analyze changes to determine commit type.
-    - Command: `jj diff --git -r <revset>`
-2. Generate descriptive commit message
-3. Include scope in summary: `type(scope): summary`
-4. Add body for complex changes explaining why
-5. If provided, at the `<ticket>` at the end of the body, on a line of its own.
-5. Seek approval from user.
-6. Execute: `jj describe -r <revset> -m <description>`
+1. Based on the above context, generate a descriptive commit message
+2. Include scope in summary: `type(scope): summary`
+3. Add body for complex changes explaining why
+6. Execute: `jj describe -r $ARGUMENT -m <description>`
 
 ## Best Practices:
 - Limit the title of commit messages to 50 characters and the body to 79.

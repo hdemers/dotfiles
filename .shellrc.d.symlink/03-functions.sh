@@ -537,11 +537,20 @@ jb(){
 }
 
 function _jjhistory() {
+    local del='" "'
+    local nl='"\n"'
+    local null='"\0"'
     jj log -T \
-        'change_id.shortest(8) ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d") ++ "|" ++ if(tags, tags.join(" ") ++ "|", "|") ++ commit_id.short(8) ++ "|" ++ if(description, description.first_line() ++ " ", "") ++ if(bookmarks, "(" ++ bookmarks.join(", ") ++ ")", "") ++ "\n"'\
+        "change_id.shortest(8) ++ ${del} ++ \
+        author.name() ++ ${del} ++ \
+        committer.timestamp().local().format('%Y-%m-%d %H:%M:%S') ++ ${del} ++ \
+        if(tags, tags.join(' ') ++ ${del}, ${del}) ++ \
+        commit_id.shortest(8) ++ ${del} ++ \
+        if(bookmarks, bookmarks.join(' '), '') ++ ${nl} ++ \
+        if(self.empty(), '(empty)', '') ++ ${del} ++ \
+        if(description, description.first_line() ++ ' ', '(no description set)') ++ ${null}" \
         --color always \
-        -r "::" \
-    | column -t -s '|'
+        -r "::"
 }
 
 
@@ -567,6 +576,7 @@ jh() {
     _jjhistory \
     | fzf  \
         --ansi \
+        --highlight-line \
         --preview "$preview" \
         --preview-window 'top,60%' \
         --height 100% \
@@ -635,4 +645,155 @@ lsemr() {
 
     export GDP_SPARK_CLUSTER_IP="$ip"
     export REMOTE_SPARK_IP="$ip"
+}
+
+cdescribe() {
+    # Have Claude describe a Jujutsu commit
+    local revset=$1
+    local ticket_id=$2
+
+    # If the first argument is not a revset (does not contain :: or ..), assume
+    # it's a change ID and expand it.
+    if [[ "$revset" != *"::"* && "$revset" != *".."* ]]; then
+        # If the first argument is a change ID, expand it to a revset.
+        revset=$(jj log -r "$revset" --template "self.change_id()" --no-graph)
+    fi
+
+    # Validate mandatory first argument
+    if [ -z "$revset" ]; then
+        gum log --level error "Error: revset is required as the first argument"
+        gum log --level info "Usage: cdescribe <revset> [ticket_id]"
+        return 1
+    fi
+
+    if ! jj log -r "${revset}" >/dev/null 2>&1; then
+        gum log --level error "Error: revset '${revset}' not found"
+        return 1
+    fi
+
+    gum log --level info "Describing commit '${revset}'"
+
+    export CLAUDE_REVSET="${revset}"
+    claude "/describe ${revset}"
+    unset CLAUDE_REVSET
+
+    # Modify the description of the commit to add the ticket ID on the last line
+    if [ -n "$ticket_id" ]; then
+        gum log --level info "Adding ticket ID: ${ticket_id}"
+
+        # Get current description and check if operation succeeded
+        if ! description=$(jj log -r "${revset}" --template description --no-graph 2>/dev/null); then
+            gum log --level error "Error: failed to get commit description"
+            return 1
+        fi
+
+        # Add ticket ID to description
+        new_description="${description}"$'\n\n'"${ticket_id}"
+
+        # Update commit description
+        if jj describe -r "${revset}" -m "${new_description}" >/dev/null 2>&1; then
+            gum log --level info "Successfully updated commit description with ticket ID"
+        else
+            gum log --level error "Error: failed to update commit description"
+            return 1
+        fi
+    fi
+}
+
+cpr() {
+    # Have Claude create a pullrequest for a Jujutsu bookmark
+    local bookmark="$1"
+
+    if [ -z "${bookmark}" ]; then
+        if ! command -v gum &> /dev/null; then
+            echo "gum is not installed. Please provide a branch name or install gum."
+            echo "Usage: cpr <bookmark>"
+            return 1
+        fi
+
+        # Get bookmarks, clean up trailing '*', and present with gum
+        bookmark=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
+            | uniq | gum choose --header="Select a branch to create workspace for:")
+
+        if [ -z "${bookmark}" ]; then
+            gum log --level error "No bookmark selected."
+            return 1
+        fi
+    fi
+
+    jj precommit -r "trunk()..${bookmark}" || {
+        gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
+        return 1
+    }
+
+    reviewers=$(gum choose \
+        --no-limit \
+        --header="Select reviewers" \
+        $(gh api orgs/grubhubprod/teams/mlops/members --jq '.[].login' | grep -v hdemers) 'I want more choice' )
+
+    # If reviewers equals 'I want more choice', then start over with all members of that org
+    if [ "${reviewers}" = "I want more choice" ]; then
+        reviewers=$(gh api orgs/grubhubprod/members --jq '.[].login' --paginate | fzf --multi)
+    fi
+
+    reviewers=$(echo "${reviewers}" | tr '\n' ',' | sed 's/,$//')
+
+    if ! jj git push --bookmark "${bookmark}"; then
+        gum log --level error "Failed to push bookmark '${bookmark}'."
+        return 1
+    fi
+
+    export CLAUDE_BOOKMARK="${bookmark}"
+    export CLAUDE_REVIEWERS="${reviewers}"
+    claude "/create-pr-jj"
+    unset CLAUDE_BOOKMARK
+    unset CLAUDE_REVIEWERS
+
+}
+
+cticket() {
+    # Have Claude create a JIRA ticket
+    local revset=$1
+
+    # If the first argument is not a revset (does not contain :: or ..), assume
+    # it's a change ID and expand it.
+    if [[ "$revset" != *"::"* && "$revset" != *".."* ]]; then
+        # If the first argument is a change ID, expand it to a revset.
+        revset=$(jj log -r "$revset" --template "self.change_id()" --no-graph)
+    fi
+
+    # Validate mandatory first argument
+    if [ -z "$revset" ]; then
+        gum log --level error "Error: revset is required as the first argument"
+        gum log --level info "Usage: cticket <revset>"
+        return 1
+    fi
+
+    if ! jj log -r "${revset}" >/dev/null 2>&1; then
+        gum log --level error "Error: revset '${revset}' not found"
+        return 1
+    fi
+
+    local sprint=$(gum choose \
+        "current sprint" "backlog" "next sprint" \
+        --header="Select sprint for the ticket:")
+    local points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
+    local epic=$(jira issues -e | fzf --ansi --header-lines=1 --bind='enter:become(echo {1})')
+
+    export CLAUDE_REVSET="${revset}"
+    export CLAUDE_TICKET_EPIC="${epic}"
+    export CLAUDE_TICKET_SPRINT="${sprint}"
+    export CLAUDE_TICKET_POINTS="${points}"
+
+    gum confirm "Do you want to create a JIRA ticket for the commit '${revset}' with epic '${epic}', sprint '${sprint}', and points '${points}'?" || {
+        gum log --level info "Ticket creation cancelled."
+        return 0
+    }
+    claude "/ticket"
+    unset CLAUDE_REVSET
+    unset CLAUDE_TICKET_EPIC
+    unset CLAUDE_TICKET_SPRINT
+    unset CLAUDE_TICKET_POINTS
+
+
 }

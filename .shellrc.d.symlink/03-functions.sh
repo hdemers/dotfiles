@@ -182,7 +182,7 @@ rpq() {
     fi
 
     if [ -z "$1" ]; then
-        echo "Usage: rpq <query>"
+        echo "Usage: rpq <file>"
         return 1
     fi
 
@@ -194,9 +194,9 @@ rpq() {
         file="${file}/**/*.parquet"
     fi
 
-    duckdb -c "select * from read_parquet('${file}') limit 10;"
-    duckdb -c "describe select * from read_parquet('${file}') limit 10;"
-    duckdb -c "select column_id \
+    duckdb -ui -c "select * from read_parquet('${file}') limit 10;"
+    duckdb -ui -c "describe select * from read_parquet('${file}');"
+    duckdb -ui -c "select column_id \
         , path_in_schema \
         , num_values \
         , stats_min \
@@ -671,10 +671,9 @@ cdescribe() {
         return 1
     fi
 
-    gum log --level info "Describing commit '${revset}'"
-
     export CLAUDE_REVSET="${revset}"
-    claude "/describe ${revset}"
+    gum spin --title "Claude describing commit '${revset}'" -- \
+        claude "/describe ${revset}" | jj describe -r ${revset} --stdin
     unset CLAUDE_REVSET
 
     # Modify the description of the commit to add the ticket ID on the last line
@@ -698,6 +697,9 @@ cdescribe() {
             return 1
         fi
     fi
+
+    jj log -r "${revset}" --color always --no-graph \
+        -T 'self.change_id().shortest(8) ++ "\n" ++ self.description()'
 }
 
 cpr() {

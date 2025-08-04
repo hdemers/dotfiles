@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(jj describe:*), Bash(jj diff:*), Bash(jj log:*)
+allowed-tools: Bash(jj diff:*), Bash(jj log:*)
 description: Provide a Jujutsu commit description and ONLY the description.
 ---
 # Describe Jujutsu commit
@@ -33,7 +33,6 @@ else.
 1. Based on the above context, generate a descriptive commit message
 2. Include scope in summary: `type(scope): summary`
 3. Add body for complex changes explaining why
-4. Format the description to be used as is, with newlines.
 
 ## Best Practices:
 - Limit the title of commit messages to 50 characters and the body to 79.

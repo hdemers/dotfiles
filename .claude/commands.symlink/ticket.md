@@ -8,10 +8,10 @@ description: Create a ticket
 Create a ticket using the `ticket` mcp tool.
 
 ## Context
-- Current description: !`jj log -r $CLAUDE_REVSET`
-- Current diff: !`jj diff --git -r $CLAUDE_REVSET`
+- Current description: !`jj log -r $CLAUDE_BOOKMARK -T description --no-graph`
+- Current diff: !`jj diff --git -r "trunk()..$CLAUDE_BOOKMARK"`
 - Epic: !`printenv CLAUDE_TICKET_EPIC`
-- Sprint: <!`printenv CLAUDE_TICKET_SPRINT`>
+- Sprint: '!`printenv CLAUDE_TICKET_SPRINT`'
 - Points: !`printenv CLAUDE_TICKET_POINTS`
 
 ## Template

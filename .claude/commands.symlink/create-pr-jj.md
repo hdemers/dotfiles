@@ -11,9 +11,8 @@ Open a PR on Github.
 - Current commit description: !`jj log -r "trunk()..$CLAUDE_BOOKMARK" --template description --no-graph`
 - Current diffs: !`jj diff --git -r "trunk()..$CLAUDE_BOOKMARK"`
 
-
 ## Process:
-1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.
+1. Use the template found in .github/PULL_REQUEST_TEMPLATE.md, if any.
 2. Use Markdown formatting for the PR description.
 3. Set assignee to: me.
 4. Set reviewers to: !`printenv CLAUDE_REVIEWERS`
@@ -29,3 +28,4 @@ Open a PR on Github.
 - Keep the description as concise as possible, but still detailed enough to facilitate the review.
 - Explain why, not just what.
 - Reference issues/PRs when relevant
+- DO NOT add a "Generated with Claude Code" footer.

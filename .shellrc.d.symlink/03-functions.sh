@@ -194,9 +194,14 @@ rpq() {
         file="${file}/**/*.parquet"
     fi
 
-    duckdb -ui -c "select * from read_parquet('${file}') limit 10;"
-    duckdb -ui -c "describe select * from read_parquet('${file}');"
-    duckdb -ui -c "select column_id \
+    local row_count=$(duckdb -ascii -c "select count(*) as Rows from read_parquet('${file}');")
+    echo "Row count: ${row_count}"
+
+    duckdb -c "select * from read_parquet('${file}', hive_partitioning=true) limit 10;"
+    duckdb -c "describe select * from read_parquet('${file}', hive_partitioning=true);"
+
+    echo "Parquet metadata for ${file}:"
+    duckdb -c "select column_id \
         , path_in_schema \
         , num_values \
         , stats_min \
@@ -274,11 +279,11 @@ js() {
         --bind 'ctrl-l:reload(jira issues --in-epic {1})+clear-query' \
         --bind 'ctrl-h:reload(jira issues)+clear-query' \
         --bind 'ctrl-e:reload(jira issues --epics-only)' \
-        --bind "ctrl-w:execute(wl-copy ${url}/{1})" \
+        --bind "ctrl-y:execute(wl-copy ${url}/{1})" \
         --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
         --border-label-pos 5:bottom \
         --border 'rounded' \
-        --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: in epic | ctrl-h: all | ctrl-w: copy url | ctrl-o: open url'
+        --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url'
 }
 
 gwa() {
@@ -703,7 +708,7 @@ cdescribe() {
 }
 
 cpr() {
-    # Have Claude create a pullrequest for a Jujutsu bookmark
+    # Have Claude create a pull request for a Jujutsu bookmark
     local bookmark="$1"
 
     if [ -z "${bookmark}" ]; then
@@ -755,44 +760,42 @@ cpr() {
 
 cticket() {
     # Have Claude create a JIRA ticket
-    local revset=$1
-
-    # If the first argument is not a revset (does not contain :: or ..), assume
-    # it's a change ID and expand it.
-    if [[ "$revset" != *"::"* && "$revset" != *".."* ]]; then
-        # If the first argument is a change ID, expand it to a revset.
-        revset=$(jj log -r "$revset" --template "self.change_id()" --no-graph)
-    fi
+    local bookmark=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
+            | uniq | gum choose --header="Select a branch to create workspace for:")
 
     # Validate mandatory first argument
-    if [ -z "$revset" ]; then
-        gum log --level error "Error: revset is required as the first argument"
-        gum log --level info "Usage: cticket <revset>"
+    if [ -z "$bookmark" ]; then
+        gum log --level error "Aborting"
         return 1
     fi
 
-    if ! jj log -r "${revset}" >/dev/null 2>&1; then
-        gum log --level error "Error: revset '${revset}' not found"
+    if ! jj log -r "${bookmark}" >/dev/null 2>&1; then
+        gum log --level error "Error: bookmark '${bookmark}' not found"
         return 1
     fi
 
-    local sprint=$(gum choose \
-        "current sprint" "backlog" "next sprint" \
-        --header="Select sprint for the ticket:")
+    local sprint=$(jira sprints -l \
+        | grep DSSO \
+        | cut -d '|' -f1,2 \
+        | column -s '|' -t \
+        | gum choose \
+        | sed 's/  *active\|future.*//' \
+    )
+
     local points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
     local epic=$(jira issues -e | fzf --ansi --header-lines=1 --bind='enter:become(echo {1})')
 
-    export CLAUDE_REVSET="${revset}"
+    export CLAUDE_BOOKMARK="${bookmark}"
     export CLAUDE_TICKET_EPIC="${epic}"
     export CLAUDE_TICKET_SPRINT="${sprint}"
     export CLAUDE_TICKET_POINTS="${points}"
 
-    gum confirm "Do you want to create a JIRA ticket for the commit '${revset}' with epic '${epic}', sprint '${sprint}', and points '${points}'?" || {
+    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s?' "$bookmark" "$epic" "$sprint" "$points")" || {
         gum log --level info "Ticket creation cancelled."
         return 0
     }
     claude "/ticket"
-    unset CLAUDE_REVSET
+    unset CLAUDE_BOOKMARK
     unset CLAUDE_TICKET_EPIC
     unset CLAUDE_TICKET_SPRINT
     unset CLAUDE_TICKET_POINTS

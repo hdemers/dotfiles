@@ -672,27 +672,27 @@ return {
   {
     -- Complement to https://github.com/hiasr/vim-zellij-navigator
     'swaits/zellij-nav.nvim',
-    enabled = false,
+    enabled = true,
     lazy = true,
     event = 'VeryLazy',
     keys = {
       {
-        '<c-h>',
+        '<a-h>',
         '<cmd>ZellijNavigateLeftTab<cr>',
         { silent = true, desc = 'navigate left or tab' },
       },
       {
-        '<c-j>',
+        '<a-j>',
         '<cmd>ZellijNavigateDown<cr>',
         { silent = true, desc = 'navigate down' },
       },
       {
-        '<c-k>',
+        '<a-k>',
         '<cmd>ZellijNavigateUp<cr>',
         { silent = true, desc = 'navigate up' },
       },
       {
-        '<c-l>',
+        '<a-l>',
         '<cmd>ZellijNavigateRightTab<cr>',
         { silent = true, desc = 'navigate right or tab' },
       },

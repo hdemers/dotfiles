@@ -85,6 +85,10 @@ return {
             gs.change_base 'master'
             vim.notify('Gitsign base changed to master', 'info')
             base = 'master'
+          elseif base == 'master' then
+            gs.change_base 'dev'
+            vim.notify('Gitsign base changed to dev', 'info')
+            base = 'dev'
           else
             gs.change_base 'HEAD'
             vim.notify('Gitsign base changed to HEAD', 'info')

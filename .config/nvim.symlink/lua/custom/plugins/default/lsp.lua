@@ -131,38 +131,44 @@ return {
       --  - settings (table): Override the default settings passed when initializing the server.
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
-        ruff = {
+        ruff = {},
+        basedpyright = {
+          enable = true,
+          settings = {
+            python = {
+              analysis = {
+                typeCheckingMode = 'off',
+                autoSearchPaths = true,
+                useLibraryCodeForTypes = true,
+                diagnosticMode = 'off',
+                autoImportCompletions = false,
+              },
+              linting = {
+                enabled = false,
+              },
+            },
+          },
+          -- Disable all diagnostics from Pyright
+          handlers = {
+            ['textDocument/publishDiagnostics'] = function() end,
+          },
+        },
+        ty = {
+          enable = true,
+          settings = {
+            python = {
+              analysis = {
+                disableLanguageServices = true,
+              },
+            },
+          },
           on_attach = function(client)
-            if client.name == 'ruff' then
+            if client.name == 'ty' then
               -- Disable hover in favor of baesdpyright
               client.server_capabilities.hoverProvider = false
             end
           end,
         },
-        basedpyright = {
-          enable = true,
-          settings = {
-            basedpyright = {
-              -- Using Ruff's import organizer
-              disableOrganizeImports = true,
-              analysis = {
-                diagnosticMode = 'workspace',
-                inlayHints = {
-                  callArguments = false,
-                },
-                -- We use ty for type checking. See below.
-                typeCheckingMode = 'off',
-              },
-            },
-            python = {
-              analysis = {
-                -- Ignore all files for analysis to exclusively use Ruff for linting
-                ignore = { '*' },
-              },
-            },
-          },
-        },
-        ty = {},
         beancount = {
           settings = {
             init_options = {
@@ -170,7 +176,7 @@ return {
             },
           },
         },
-        beanhub_cli = {},
+        -- beanhub_cli = {},
         arduino_language_server = {
           cmd = {
             'arduino-language-server',
@@ -226,8 +232,8 @@ return {
     cmd = 'Trouble',
     -- stylua: ignore
     keys = {
-      { '<leader>cx', '<cmd>Trouble diagnostics toggle<cr>', desc = 'Trouble: toggle all diagnostics', },
-      { '<leader>cX', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', desc = 'Trouble: toggle buffer diagnostics', },
+      { '<leader>cx', '<cmd>Trouble diagnostics toggle focus = true win = {size = 1.0}<cr>', desc = 'Trouble: toggle all diagnostics', },
+      { '<leader>cX', '<cmd>Trouble diagnostics toggle filter.buf=0 <cr>', desc = 'Trouble: toggle buffer diagnostics', },
       { '<leader>cs', '<cmd>Trouble symbols toggle focus=false win.size.width=70<cr>', desc = 'Trouble: show symbols', },
       { '<leader>cd', '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=70<cr>', desc = 'Trouble: lsp definitions/references/etc.', },
       { '<leader>cL', '<cmd>Trouble loclist toggle<cr>', desc = 'Trouble: toggle location list', },

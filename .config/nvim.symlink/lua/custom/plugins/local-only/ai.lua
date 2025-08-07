@@ -190,8 +190,6 @@ return {
       { '<leader>aol', '<cmd>CodeCompanionChat Toggle<CR>', desc = 'CodeCompanion: toggle', },
       { '<leader>aod', '<cmd>CodeCompanionChat Add<CR>', desc = 'CodeCompanion: add selected code to chat', mode = { 'v' } },
       { '<leader>aoo', '<cmd>CodeCompanionActions<CR>', desc = 'CodeCompanion: open actions menu' },
-      { '<leader>aoc', function() require("codecompanion").prompt("commit_staged") end, desc = 'CodeCompanion: commit staged files'},
-      { '<leader>aop', function() require("codecompanion").prompt("open_pr") end, desc = 'CodeCompanion: open PR'},
     },
     opts = {
       display = {
@@ -292,92 +290,6 @@ return {
         index = 1,
         description = 'Send',
       },
-      prompt_library = {
-        ['Commit Staged'] = {
-          strategy = 'chat',
-          description = 'Commit the staged files',
-          opts = {
-            auto_submit = true,
-            user_prompt = false,
-            short_name = 'commit_staged',
-          },
-          prompts = {
-            {
-              role = 'system',
-              content = 'You are an expert at writing conventional commit messages. Follow the user instructions closely.',
-            },
-            {
-              role = 'user',
-              content = function(_)
-                local repo = vim.fn.system 'git rev-parse --show-toplevel'
-                local branch = vim.fn.system 'git rev-parse --abbrev-ref HEAD'
-                return '1. Write a commit message (DO NOT COMMIT just yet) for the files staged in repository '
-                  .. repo
-                  .. ' on branch '
-                  .. branch
-                  .. '2. Follow the conventional commit format. Keep the title at 52 characters and the body at 72.\n'
-                  .. '3. Ask the user for the Jira commit ticket number. (DO NOT COMMIT just yet)\n'
-                  .. '4. Add the ticket number on a line of its own at the end of the commit message. \n'
-                  .. '5. Ask the user to review the commit message. \n'
-                  .. '6. If the user approves the message, commit it!\n'
-                  .. '7. Next, try pushing the branch to the remote\n'
-                  .. '8. If the push fails, stop right there, do not try to resolve the error, inform the user.\n'
-                  .. ' @mcp #neovim://workspace/info '
-              end,
-            },
-          },
-        },
-        ['Open PR'] = {
-          strategy = 'chat',
-          description = 'Open PR',
-          opts = {
-            auto_submit = true,
-            user_prompt = false,
-            short_name = 'open_pr',
-          },
-          prompts = {
-            {
-              role = 'system',
-              content = 'You are an expert at writing good PR description. Follow the user instructions closely.',
-            },
-            {
-              role = 'user',
-              content = function(_)
-                local repo = vim.fn.system('git rev-parse --show-toplevel'):gsub('\n', '')
-                local remote_url =
-                  vim.fn.system('git config --get remote.origin.url'):gsub('\n', '')
-                local main_branch_name = vim.fn
-                  .system(
-                    'git symbolic-ref refs/remotes/origin/HEAD | sed "s@^refs/remotes/origin/@@"'
-                  )
-                  :gsub('\n', '')
-
-                local branch =
-                  vim.fn.system('git rev-parse --abbrev-ref HEAD'):gsub('\n', '')
-
-                return "Open a PR for branch '"
-                  .. branch
-                  .. "' in repository "
-                  .. repo
-                  .. ' (remote URL: '
-                  .. remote_url
-                  .. ').\n\n'
-                  .. 'Follow these instructions closely:\n'
-                  .. "1. If there's a template file in .github/PULL_REQUEST_TEMPLATE.md use it.\n"
-                  .. '2. The commits part of this PR are those between HEAD and '
-                  .. main_branch_name
-                  .. ', use the `git_log_from_to` tool.\n'
-                  .. "3. Use the commit's messages part of this PR as the basis for the PR description.\n"
-                  .. '4. Use Markdown formatting for the PR description.\n'
-                  .. '5. Ask the user for approval before opening the PR.\n'
-                  .. '6. Once the PR has been opened, transition the associated ticket to InReview, going through all intermediate states if necessary\n'
-                  .. '\n'
-                  .. '@mcp #neovim://workspace/info'
-              end,
-            },
-          },
-        },
-      },
     },
     config = function(_, opts)
       -- Dynamically set adapter based on current working directory
@@ -397,50 +309,6 @@ return {
       }
       require('codecompanion-processing-spinner'):init()
       require('codecompanion-fidget-spinner'):init()
-
-      -- Add keymap for write, stage, diff, and CodeCompanion chat
-      vim.keymap.set('n', '<leader>gd', function()
-        -- Write the current buffer
-        vim.cmd 'write'
-
-        -- Stage the current file using fugitive
-        vim.cmd 'Gwrite'
-
-        local repo = vim.fn.system 'git rev-parse --show-toplevel'
-
-        -- Custom prompt for CodeCompanion
-        local prompt = 'Commit the staged file from repository '
-          .. repo
-          .. '\n'
-          .. ' 1. Write a conventional commit message for the staged changes and only the staged changes.\n'
-          .. ' 2. The type of the conventional message has to be "wip".\n'
-          .. ' 3. Keep the title at 52 characters wide and the body at 72.\n'
-          .. ' 4. Commit the changes with the message. DO NOT INTERRUPT THE USER.\n'
-          .. ' 5. Push the commit to the remote repository. If the push is rejected: stop right there and warn the user with the `notify` tool.\n'
-          .. ' 6. If everything was successful, inform the user with the `notify` tool.\n'
-          .. ' @mcp \n\n'
-
-        -- Create chat with proper message structure for auto_submit
-        local chat = require('codecompanion.strategies.chat').new {
-          context = {},
-          messages = {
-            {
-              role = require('codecompanion.config').constants.USER_ROLE,
-              content = prompt,
-            },
-          },
-          auto_submit = true,
-        }
-
-        -- Immediately hide the chat buffer after creation
-        vim.schedule(function()
-          if chat and chat.ui and chat.ui:is_visible() then
-            chat.ui:hide()
-          end
-        end)
-
-        vim.notify('Checkpoint commit initiated in background', vim.log.levels.INFO)
-      end, { desc = 'Git: stage and review changes with AI (background)' })
     end,
   },
   {

@@ -37,13 +37,13 @@
 <Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
 
 # Tmux-vim
-<Super>j,gtk-launch zellij-nvim.desktop,,/.*Zellij.*nvim.*/
+<Super>j,gtk-launch zellij-nvim.desktop,,/.*nvim.*/
 
 # Spotify
 <Super>s,flatpak run com.spotify.Client,Spotify,Spotify
 
 # KeePassXC
-<Super>p,flatpak run org.keepassxc.KeePassXC,org.keepassxc.KeePassXC,KeePassXC
+<Super>p,flatpak run org.keepassxc.KeePassXC,KeePassXC,KeePassXC
 
 # Google-Chrome - Grubhub
 <Super>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*grubhub-dev.*/

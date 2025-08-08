@@ -160,15 +160,15 @@ keybinds clear-defaults=true {
         bind "Alt f" { ToggleFloatingPanes; }
         bind "Alt j" { MoveFocus "down"; }
         bind "Alt k" { MoveFocus "up"; }
-        bind "Alt h" { GoToPreviousTab; }
-        bind "Alt l" { GoToNextTab; }
-        bind "Alt n" { NewTab; }
+        bind "Alt p" { GoToPreviousTab; }
+        bind "Alt n" { GoToNextTab; }
+        bind "Alt t" { NewTab; }
         bind "Alt i" { MoveTab "left"; }
         bind "Alt o" { MoveTab "right"; }
         bind "Alt z" { ToggleFocusFullscreen;}
     }
     shared_except "locked" "renametab" "renamepane" {
-        bind "Ctrl g" { SwitchToMode "locked"; }
+        // bind "Ctrl g" { SwitchToMode "locked"; }
         bind "Ctrl q" { Quit; }
     }
     shared_except "locked" "entersearch" {
@@ -299,7 +299,9 @@ keybinds clear-defaults=true {
 // changing these requires a restart to take effect
 plugins {
     about location="zellij:about"
-    compact-bar location="zellij:compact-bar"
+    compact-bar location="zellij:compact-bar" {
+        tooltip "F1"
+    }
     configuration location="zellij:configuration"
     filepicker location="zellij:strider" {
         cwd "/"
@@ -512,3 +514,10 @@ scrollback_editor "/home/linuxbrew/.linuxbrew/bin/nvim"
 // Default: true
 // 
 // show_release_notes false
+
+web_server false
+web_server_ip "0.0.0.0"
+web_server_port 8082
+web_server_cert "/home/hdemers/Private/certs/localhost+2.pem"
+web_server_key  "/home/hdemers/Private/certs/localhost+2-key.pem"
+enforce_https_on_localhost true

@@ -34,12 +34,6 @@ When contributing code:
 - Old code is deleted
 - Docstrings are written
 
-#### VCS
-
-Most projects use Git, but some projects use Jujutsu. Learn more
-about Jujutsu (aka `jj`) here:
-https://jj-vcs.github.io/jj/v0.30.0/cli-reference/.
-
 ## Learning
 
 If you need to learn more about a command or another project, use the

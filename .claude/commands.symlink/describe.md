@@ -12,27 +12,23 @@ else.
 - Current description: !`jj log -r $CLAUDE_REVSET`
 - Current diff: !`jj diff --git -r $CLAUDE_REVSET`
 
-##  Features
-- Uses conventional commit format with descriptive emojis
+##  Format
+- Uses conventional commit format with descriptive emojis from the
+[gitmoji](https://gitmoji.dev/) set.
+- Include scope in summary if applicable.
 
-## Commit Types
-- ✨feat: New features
-- 🐛fix: Bug fixes
-- 📝docs: Documentation changes
-- ♻️refactor: Code restructuring without changing functionality
-- 🎨style: Code formatting, missing semicolons, etc.
-- ⚡️perf: Performance improvements
-- ✅test: Adding or correcting tests
-- 💤chore: Tooling, configuration, maintenance
-- 🚧wip: Work in progress
-- 🔥remove: Removing code or files
-- 🚑hotfix: Critical fixes
-- 🔒security: Security improvements
+Example format:
+```
+<emoji><type>(<scope>): <summary>
+
+<body>
+
+```
 
 ## TODOs:
 1. Based on the above context, generate a descriptive commit message
-2. Include scope in summary: `type(scope): summary`
-3. Add body for complex changes explaining why
+2. Write summary, one line, maximum of 50 characters.
+3. Add body for complex changes explaining why, limit lines to 79 characters.
 
 ## Best Practices:
 - Limit the title of commit messages to 50 characters and the body to 79.

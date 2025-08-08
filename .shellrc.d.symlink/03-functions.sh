@@ -281,6 +281,7 @@ js() {
         --bind 'ctrl-e:reload(jira issues --epics-only)' \
         --bind "ctrl-y:execute(wl-copy ${url}/{1})" \
         --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
+        --bind "ctrl-u:execute(jira update {1})" \
         --border-label-pos 5:bottom \
         --border 'rounded' \
         --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url'
@@ -543,17 +544,9 @@ jb(){
 
 function _jjhistory() {
     local del='" "'
-    local nl='"\n"'
     local null='"\0"'
     jj log -T \
-        "change_id.shortest(8) ++ ${del} ++ \
-        author.name() ++ ${del} ++ \
-        committer.timestamp().local().format('%Y-%m-%d %H:%M:%S') ++ ${del} ++ \
-        if(tags, tags.join(' ') ++ ${del}, ${del}) ++ \
-        commit_id.shortest(8) ++ ${del} ++ \
-        if(bookmarks, bookmarks.join(' '), '') ++ ${nl} ++ \
-        if(self.empty(), '(empty)', '') ++ ${del} ++ \
-        if(description, description.first_line() ++ ' ', '(no description set)') ++ ${null}" \
+        "builtin_log_compact" \
         --color always \
         -r "::"
 }
@@ -597,14 +590,17 @@ jh() {
         --bind 'ctrl-t:execute(jj edit -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
         --bind 'ctrl-u:execute(jj undo)+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
         --bind 'enter:execute(echo $('"$change_id"') | tr -d '\n' | xsel --clipboard --input)+abort' \
+        --bind 'ctrl-p,ctrl-k,up:up+up' \
+        --bind 'ctrl-n,ctrl-j,down:down+down' \
         --preview-label-pos 5:bottom \
         --border 'rounded' \
         --preview-label '  ctrl-d: diff | ctrl-e: describe | ctrl-x: abandon | ctrl-u: undo | ctrl-t: edit | ctrl-w: new | ctrl-/: split | ctrl-w: web | ctrl-s: toggle ticket | ctrl-c: close ticket' \
         --highlight-line \
-        --color='fg:#f8f8f2,bg:#282a36,hl:#bd93f9' \
-        --color='fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9' \
-        --color='info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6' \
-        --color='marker:#ff79c6,spinner:#ffb86c,header:#6272a4'
+        --color='bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8' \
+        --color='fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC' \
+        --color='marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8' \
+        --color='selected-bg:#45475A' \
+        --color='border:#6C7086,label:#CDD6F4'
 }
 
 bcheck() {
@@ -677,7 +673,7 @@ cdescribe() {
     fi
 
     export CLAUDE_REVSET="${revset}"
-    gum spin --title "Claude describing commit '${revset}'" -- \
+    gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
         claude "/describe ${revset}" | jj describe -r ${revset} --stdin
     unset CLAUDE_REVSET
 
@@ -709,29 +705,60 @@ cdescribe() {
 
 cpr() {
     # Have Claude create a pull request for a Jujutsu bookmark
-    local bookmark="$1"
+    local bookmark=""
+    local no_verify=false
+    local no_push=false
+
+    if ! command -v gum &> /dev/null; then
+        echo "gum is not installed. Please provide a branch name or install gum."
+        echo "Usage: cpr <bookmark>"
+        return 1
+    fi
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --no-verify)
+                no_verify=true
+                shift
+                ;;
+            --no-push)
+                no_push=true
+                shift
+                ;;
+            *)
+                bookmark="$1"
+                shift
+                ;;
+        esac
+    done
 
     if [ -z "${bookmark}" ]; then
-        if ! command -v gum &> /dev/null; then
-            echo "gum is not installed. Please provide a branch name or install gum."
-            echo "Usage: cpr <bookmark>"
-            return 1
-        fi
-
         # Get bookmarks, clean up trailing '*', and present with gum
         bookmark=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
-            | uniq | gum choose --header="Select a branch to create workspace for:")
+            | uniq | gum choose --header="Select a bookmark:")
 
         if [ -z "${bookmark}" ]; then
             gum log --level error "No bookmark selected."
             return 1
         fi
+    else
+        # Validate the provided bookmark
+        if ! jj log -r "${bookmark}" >/dev/null 2>&1; then
+            gum log --level error "Error: bookmark '${bookmark}' not found"
+            return 1
+        fi
+        gum log --level info "Using bookmark: ${bookmark}"
     fi
 
-    jj precommit -r "trunk()..${bookmark}" || {
-        gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
-        return 1
-    }
+    # If no_verify is set, skip precommit checks
+    if [ "${no_verify}" = true ]; then
+        gum log --level info "Skipping precommit checks."
+    else
+        jj precommit -r "trunk()..${bookmark}" || {
+            gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
+            return 1
+        }
+    fi
 
     reviewers=$(gum choose \
         --no-limit \
@@ -739,7 +766,7 @@ cpr() {
         $(gh api orgs/grubhubprod/teams/mlops/members --jq '.[].login' | grep -v hdemers) 'I want more choice' )
 
     # If reviewers equals 'I want more choice', then start over with all members of that org
-    if [ "${reviewers}" = "I want more choice" ]; then
+    if [ "${reviewers}" = "*I want more choice*" ]; then
         reviewers=$(gh api orgs/grubhubprod/members --jq '.[].login' --paginate | fzf --multi)
     fi
 
@@ -783,14 +810,21 @@ cticket() {
     )
 
     local points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
-    local epic=$(jira issues -e | fzf --ansi --header-lines=1 --bind='enter:become(echo {1})')
+    local epic=$(jira issues -e \
+        | fzf \
+        --ansi \
+        --header-lines=1 \
+        --bind='enter:become(echo {1})' \
+        --preview-window=up:50% \
+        --preview='jira describe {1}' \
+    )
 
     export CLAUDE_BOOKMARK="${bookmark}"
     export CLAUDE_TICKET_EPIC="${epic}"
     export CLAUDE_TICKET_SPRINT="${sprint}"
     export CLAUDE_TICKET_POINTS="${points}"
 
-    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s?' "$bookmark" "$epic" "$sprint" "$points")" || {
+    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s' "$bookmark" "$epic" "$sprint" "$points")" || {
         gum log --level info "Ticket creation cancelled."
         return 0
     }

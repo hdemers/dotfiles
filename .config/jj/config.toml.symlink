@@ -24,6 +24,8 @@ diff-formatter = ["difft", "--color=always", "--syntax-highlight=on", "$left", "
 #     "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
 # ]
 # merge-tool-edits-conflict-markers = true
+dev_node = "bright yellow"
+main_node = "bright green"
 
 [revset-aliases]
 'bases' = 'dev'
@@ -71,9 +73,11 @@ precommit = [
 
 [templates]
 log_node = '''
-if(self && !current_working_copy && !immutable && !conflict && in_branch(self),
-  "◇",
-  builtin_log_node
-)
-'''
+  if(bookmarks.filter(|x| x.name() == "dev"), label("dev_node", "◆"),
+  if(bookmarks.filter(|x| x.name() == "master" || x.name() == "main"), label("main_node", "◆"),
+  if(self && !current_working_copy && !immutable && !conflict && in_branch(self),
+    "◇",
+    builtin_log_node
+  )))
+  '''
 # vim: set filetype=toml:

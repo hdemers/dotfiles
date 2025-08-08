@@ -255,7 +255,7 @@ return {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
-            ['--border-label'] = 'ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-w: web link | ctrl-o: open',
+            ['--border-label'] = 'ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-y: yank link | ctrl-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
@@ -324,7 +324,7 @@ return {
               end,
               fzflua.actions.resume,
             },
-            ['ctrl-w'] = {
+            ['ctrl-y'] = {
               function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
                 local server_url = vim.fn.getenv 'JIRA_SERVER_URL'

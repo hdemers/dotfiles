@@ -1,7 +1,6 @@
 languages:
   python:
     linters:
-      - "ruff format"
       - "ruff check --output-format concise" 
 
   javascript:

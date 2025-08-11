@@ -4,16 +4,24 @@ description: Open a PR from a Jujutsu bookmark
 ---
 
 ## Context
-- Current commit description: !`jj log -r "trunk()..$CLAUDE_BOOKMARK" --template description --no-graph`
-- Current diffs: !`jj diff --git -r "trunk()..$CLAUDE_BOOKMARK"`
+
+### Current commit descriptions:
+
+!`jj log -r "trunk()..$CLAUDE_BOOKMARK" --template description --no-graph`
+
+### Current diffs
+
+!`jj diff --git -r "trunk()..$CLAUDE_BOOKMARK"`
+
 
 ## Process:
-1. Use the template found in .github/PULL_REQUEST_TEMPLATE.md.
-2. Use Markdown formatting for the PR description.
-3. Assigne the PR to me.
-4. Set reviewers to: !`printenv CLAUDE_REVIEWERS`
-5. Set `--head` to !`printenv CLAUDE_BOOKMARK` when calling `gh pr create`.
-6. Once the PR has been successfully opened, transition the associated ticket
+1. Draft a PR description from the above commit messages and diffs.
+2. Use the template found in .github/PULL_REQUEST_TEMPLATE.md.
+3. Use Markdown formatting for the PR description.
+4. Assign the PR to me.
+5. Set reviewers to: !`printenv CLAUDE_REVIEWERS`
+6. Set `--head` to !`printenv CLAUDE_BOOKMARK` when calling `gh pr create`.
+7. Once the PR has been successfully opened, transition the associated ticket
     (if any) to "In Review", going through all intermediate states if necessary
     `New -> Refined -> "In Dev" -> "In Review" -> Merged -> Closed`
    - Command: `jira transition-to <ticket> <state>`

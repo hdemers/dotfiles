@@ -9,10 +9,12 @@ Create a ticket using the `jira` CLI.
 
 ## Context
 - Current description: !`jj log -r $CLAUDE_BOOKMARK -T description --no-graph`
-- Current diff: !`jj diff --git -r "trunk()..$CLAUDE_BOOKMARK"`
+- Current diff: !`jj diff --git -r "$CLAUDE_PR_BASE..$CLAUDE_BOOKMARK"`
+- Project: !`printenv CLAUDE_TICKET_PROJECT`
 - Epic: !`printenv CLAUDE_TICKET_EPIC`
 - Sprint: '!`printenv CLAUDE_TICKET_SPRINT`'
 - Points: !`printenv CLAUDE_TICKET_POINTS`
+- Assignee: !`printenv CLAUDE_TICKET_ASSIGNEE`
 
 ## Template
 h1. Brief description

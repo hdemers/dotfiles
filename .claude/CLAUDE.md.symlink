@@ -14,6 +14,8 @@ When you're stuck or confused:
 
 My insights on better approaches are valued - please ask for them!
 
+Use the CLI `notify <message>` to notify the user.
+
 ## Optimize Parallel Tool Calling
 
 For maximum efficiency, whenever you need to perform multiple independent

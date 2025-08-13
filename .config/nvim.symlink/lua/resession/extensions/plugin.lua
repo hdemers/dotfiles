@@ -19,15 +19,7 @@ M.on_post_load = function(data)
   -- This is run after the buffers, windows, and tabs are restored
   -- Needed to have the material colorscheme correctly set its style, cf. 'marko-cerovac/material.nvim',
   vim.g.material_style = data.material_style
-
-  if data.colorscheme == 'kanagawa' then
-    require('kanagawa').load(data.kanagawa_theme)
-  else
-    vim.cmd('colorscheme ' .. data.colorscheme)
-    vim.defer_fn(function()
-      vim.cmd('colorscheme ' .. data.colorscheme)
-    end, 1000) -- Delay in milliseconds
-  end
+  vim.cmd('colorscheme ' .. data.colorscheme)
 end
 
 return M

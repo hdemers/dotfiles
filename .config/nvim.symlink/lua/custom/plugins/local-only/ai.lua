@@ -374,7 +374,7 @@ return {
     keys = {
       { '<leader>ac', nil, desc = 'AI/Claude Code' },
       { '<leader>acc', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude' },
-      { '<leader>acf', '<cmd>ClaudeCodeFocus<cr>', desc = 'Focus Claude' },
+      { '<C-Space>', '<cmd>ClaudeCodeFocus<cr>', desc = 'Focus Claude' },
       { '<leader>acr', '<cmd>ClaudeCode --resume<cr>', desc = 'Resume Claude' },
       { '<leader>acC', '<cmd>ClaudeCode --continue<cr>', desc = 'Continue Claude' },
       { '<leader>acb', '<cmd>ClaudeCodeAdd %<cr>', desc = 'Add current buffer' },
@@ -388,6 +388,47 @@ return {
       -- Diff management
       { '<leader>aca', '<cmd>ClaudeCodeDiffAccept<cr>', desc = 'Accept diff' },
       { '<leader>acd', '<cmd>ClaudeCodeDiffDeny<cr>', desc = 'Deny diff' },
+    },
+    opts = {
+      -- Server Configuration
+      auto_start = true,
+      log_level = 'info', -- "trace", "debug", "info", "warn", "error"
+      terminal_cmd = nil, -- Custom terminal command (default: "claude")
+      -- For local installations: "~/.claude/local/claude"
+      -- For native binary: use output from 'which claude'
+
+      -- Selection Tracking
+      track_selection = true,
+      visual_demotion_delay_ms = 50,
+
+      -- Terminal Configuration
+      terminal = {
+        ---@module "snacks"
+        ---@type snacks.win.Config|{}
+        snacks_win_opts = {
+          position = 'float',
+          width = 0.5,
+          height = 0.9,
+          border = 'rounded',
+          backdrop = 70,
+          keys = {
+            claude_hide = {
+              '<C-Space>', -- Change above too
+              function(self)
+                self:hide()
+              end,
+              mode = 't',
+              desc = 'Hide',
+            },
+          },
+        },
+      },
+      diff_opts = {
+        auto_close_on_accept = true,
+        vertical_split = true,
+        open_in_current_tab = false,
+        keep_terminal_focus = false, -- If true, moves focus back to terminal after diff opens
+      },
     },
   },
 }

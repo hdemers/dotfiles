@@ -637,12 +637,20 @@ jop() {
 lsemr() {
     local ip=$(listemr | \
     fzf \
+    --ansi \
     --header-lines=1 \
     --preview='listemr describe {1}' \
-    --preview-window=up:50% \
-    --bind='ctrl-o:execute(browse http://{4}:8088 > /dev/null)' \
+    --preview-window=up:75% \
+    --bind='ctrl-h:execute(browse http://{4}:8088 > /dev/null)' \
+    --bind='ctrl-g:execute(browse http://{4}/ganglia > /dev/null)' \
+    --bind='ctrl-s:execute(sshpass -eOKTA_PASSWORD ssh {4})+abort' \
     --bind='enter:execute(echo {4} | tr -d \"\\n\" | xsel --clipboard --input)+become(echo {4})' \
-    --height 50%)
+    --height 50% \
+    --border-label-pos 5:bottom \
+    --border rounded \
+    --border-label 'ctrl-h: Hadoop UI | ctrl-s: ssh | ctrl-g: Ganglia' \
+    --preview-border 'none'
+    )
 
     export GDP_SPARK_CLUSTER_IP="$ip"
     export REMOTE_SPARK_IP="$ip"
@@ -703,39 +711,27 @@ cdescribe() {
         -T 'self.change_id().shortest(8) ++ "\n" ++ self.description()'
 }
 
-cpr() {
-    # Have Claude create a pull request for a Jujutsu bookmark
-    local bookmark=""
-    local no_verify=false
-    local no_push=false
-
+_check_prerequisites() {
     if ! command -v gum &> /dev/null; then
-        echo "gum is not installed. Please provide a branch name or install gum."
-        echo "Usage: cpr <bookmark>"
+        echo "gum is not installed. Install it with 'brew install gum'."
         return 1
     fi
 
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --no-verify)
-                no_verify=true
-                shift
-                ;;
-            --no-push)
-                no_push=true
-                shift
-                ;;
-            *)
-                bookmark="$1"
-                shift
-                ;;
-        esac
-    done
+    if ! command -v gh &> /dev/null; then
+        echo "gh (GitHub CLI) is not installed. Install it with 'brew install gh'."
+        return 1
+    fi
+
+}
+
+_select_bookmark() {
+    local bookmark="$1"
+    local header=${2:-"Select a bookmark:"}
 
     if [ -z "${bookmark}" ]; then
         # Get bookmarks, clean up trailing '*', and present with gum
         bookmark=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
-            | uniq | gum choose --header="Select a bookmark:")
+            | uniq | gum choose --header="${header}")
 
         if [ -z "${bookmark}" ]; then
             gum log --level error "No bookmark selected."
@@ -749,6 +745,47 @@ cpr() {
         fi
         gum log --level info "Using bookmark: ${bookmark}"
     fi
+    echo "${bookmark}"
+}
+
+cpr() {
+    # Have Claude create a pull request for a Jujutsu bookmark
+    local bookmark=""
+    local no_verify=false
+    local no_push=false
+    local stacked=false
+    local jj_base="trunk()"
+    local pr_base="master"
+
+    # Check prerequisites
+    if ! _check_prerequisites; then return 1; fi
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --no-verify)
+                no_verify=true
+                shift
+                ;;
+            --no-push)
+                no_push=true
+                shift
+                ;;
+            --stacked)
+                stacked=true
+                shift
+                ;;
+            *)
+                bookmark="$1"
+                shift
+                ;;
+        esac
+    done
+
+    bookmark=$(_select_bookmark "${bookmark}")
+    if [ -z "$bookmark" ]; then
+        gum log --level error "You must provide a bookmark."
+        return 1
+    fi
 
     # If no_verify is set, skip precommit checks
     if [ "${no_verify}" = true ]; then
@@ -758,6 +795,15 @@ cpr() {
             gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
             return 1
         }
+    fi
+
+    if [ "${stacked}" = true ]; then
+        jj_base=$(_select_bookmark "" "Select a base bookmark for the stacked PR:")
+        pr_base=${jj_base}
+        if [ -z "$jj_base" ]; then
+            gum log --level error "You must provide a base."
+            return 1
+        fi
     fi
 
     reviewers=$(gum choose \
@@ -779,27 +825,38 @@ cpr() {
 
     export CLAUDE_BOOKMARK="${bookmark}"
     export CLAUDE_REVIEWERS="${reviewers}"
+    export CLAUDE_JJ_BASE="${jj_base}"
+    export CLAUDE_PR_BASE="${pr_base}"
     claude "/create-pr-jj"
     unset CLAUDE_BOOKMARK
     unset CLAUDE_REVIEWERS
+    unset CLAUDE_JJ_BASE
+    unset CLAUDE_PR_BASE
 
 }
 
 cticket() {
     # Have Claude create a JIRA ticket
-    local bookmark=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
-            | uniq | gum choose --header="Select a branch to create workspace for:")
+    local bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
+    local base="trunk()"
+    local stacked=false
 
-    # Validate mandatory first argument
     if [ -z "$bookmark" ]; then
-        gum log --level error "Aborting"
+        gum log --level error "You must provide a bookmark."
         return 1
     fi
 
-    if ! jj log -r "${bookmark}" >/dev/null 2>&1; then
-        gum log --level error "Error: bookmark '${bookmark}' not found"
-        return 1
-    fi
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --stacked)
+                stacked=true
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
 
     local sprint=$(jira sprints -l \
         | grep DSSO \
@@ -819,12 +876,25 @@ cticket() {
         --preview='jira describe {1}' \
     )
 
+    local assignee=$(gum choose me, "<leave unassigned>" --header="Select assignee for the ticket:")
+
+    if [ "${stacked}" = true ]; then
+        base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")
+        if [ -z "$base" ]; then
+            gum log --level error "You must provide a base."
+            return 1
+        fi
+    fi
+
     export CLAUDE_BOOKMARK="${bookmark}"
+    export CLAUDE_PR_BASE="${base}"
     export CLAUDE_TICKET_EPIC="${epic}"
     export CLAUDE_TICKET_SPRINT="${sprint}"
     export CLAUDE_TICKET_POINTS="${points}"
+    export CLAUDE_TICKET_ASSIGNEE="${assignee}"
+    export CLAUDE_TICKET_PROJECT="DSSO"
 
-    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s' "$bookmark" "$epic" "$sprint" "$points")" || {
+    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$bookmark" "$epic" "$sprint" "$points", "$assignee")" || {
         gum log --level info "Ticket creation cancelled."
         return 0
     }
@@ -833,6 +903,8 @@ cticket() {
     unset CLAUDE_TICKET_EPIC
     unset CLAUDE_TICKET_SPRINT
     unset CLAUDE_TICKET_POINTS
-
+    unset CLAUDE_PR_BASE
+    unset CLAUDE_TICKET_ASSIGNEE
+    unset CLAUDE_TICKET_PROJECT
 
 }

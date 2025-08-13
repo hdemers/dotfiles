@@ -4,6 +4,7 @@
 #     "pandas",
 #     "lxml",
 #     "click",
+#     "rich",
 # ]
 # ///
 
@@ -11,6 +12,8 @@
 import os
 import pandas as pd
 import click
+from rich.console import Console
+from rich.table import Table
 
 pd.set_option("display.width", 10000)
 pd.set_option("display.max_columns", None)
@@ -86,14 +89,56 @@ def describe(name):
     """Describe a specific EMR cluster by name."""
     custom_url = f"{URL}&name={name}"
     dfs = pd.read_html(custom_url)
-    df = pd.concat(
-        [
-            dfs[0].Name,
-            pd.concat(df.set_index(0).T for df in dfs[1:]).reset_index(drop=True),
-        ],
-        axis=1,
-    )
-    print(df.fillna("").T.__repr__())
+
+    # Get cluster names from the first table
+    cluster_names = dfs[0]["Name"].tolist()
+
+    # Process data tables (skip the first table which contains names)
+    data_tables = dfs[1:]
+
+    # Collect all cluster data into a structured format
+    all_cluster_data = {}
+
+    # Process each cluster's data table
+    for i, cluster_name in enumerate(cluster_names):
+        if i < len(data_tables):
+            data_df = data_tables[i]
+
+            # Extract field names and values from this cluster's data table
+            if len(data_df.columns) >= 2:
+                field_names = data_df.iloc[
+                    :, 0
+                ].tolist()  # First column contains field names
+                values = data_df.iloc[:, 1].tolist()  # Second column contains values
+
+                # Add each field-value pair to our structured data
+                for field_name, value in zip(field_names, values):
+                    if pd.notna(field_name) and pd.notna(value):  # Skip empty rows
+                        field_name = str(field_name)
+                        if field_name not in all_cluster_data:
+                            # Initialize with empty values for all clusters
+                            all_cluster_data[field_name] = [""] * len(cluster_names)
+                        all_cluster_data[field_name][i] = str(value)
+
+    # Create single table with clusters as columns
+    console = Console(force_terminal=True)
+    table = Table(title=f"Cluster: {cluster_names[0]}", show_header=False)
+
+    # Add first column for field names (right-aligned)
+    table.add_column("Field", justify="right", style="cyan", no_wrap=True)
+
+    # Add one column per cluster (left-aligned)
+    for cluster_name in cluster_names:
+        table.add_column(cluster_name, justify="left", style="white")
+
+    # Add rows for each field
+    for field_name, values in all_cluster_data.items():
+        # Ensure we have values for all clusters (fill missing with empty string)
+        while len(values) < len(cluster_names):
+            values.append("")
+        table.add_row(field_name, *values)
+
+    console.print(table)
 
 
 if __name__ == "__main__":

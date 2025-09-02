@@ -709,6 +709,8 @@ cdescribe() {
 
     jj log -r "${revset}" --color always --no-graph \
         -T 'self.change_id().shortest(8) ++ "\n" ++ self.description()'
+
+    gum confirm "Edit description?" && jj describe -r "${revset}"
 }
 
 _check_prerequisites() {
@@ -876,7 +878,7 @@ cticket() {
         --preview='jira describe {1}' \
     )
 
-    local assignee=$(gum choose me, "<leave unassigned>" --header="Select assignee for the ticket:")
+    local assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
 
     if [ "${stacked}" = true ]; then
         base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")

@@ -158,6 +158,7 @@ alias dtr="env FORCE_COLOR=true budget latest | \
 alias gjust="/usr/bin/just --justfile $HOME/src/containers/devpod/gh-ai-sandbox.Justfile"
 alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/ai-sandbox.Justfile"
 
+alias ccgh="env ANTHROPIC_MODEL=${GH_ANTHROPIC_MODEL} ANTHROPIC_SMALL_FAST_MODEL=${GH_ANTHROPIC_SMALL_FAST_MODEL} ANTHROPIC_USE_BEDROCK=1 claude"
 alias clc="claude --dangerously-skip-permissions"
 
 alias jjup="jj git fetch && jj rall && jj rdev && jj git push -r branches"

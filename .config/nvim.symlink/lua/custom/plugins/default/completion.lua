@@ -31,6 +31,7 @@ return {
       --   opts = {},
       -- },
       'folke/lazydev.nvim',
+      'Dynge/gitmoji.nvim',
     },
     --- @module 'blink.cmp'
     --- @type blink.cmp.Config
@@ -76,12 +77,19 @@ return {
       },
 
       sources = {
-        default = { 'lsp', 'path', 'snippets', 'lazydev' },
+        default = { 'lsp', 'path', 'snippets', 'lazydev', 'gitmoji' },
         providers = {
           lazydev = {
             module = 'lazydev.integrations.blink',
             score_offset = 100,
             name = 'LazyDev',
+          },
+          gitmoji = {
+            name = 'gitmoji',
+            module = 'gitmoji.blink',
+            opts = { -- gitmoji config values goes here
+              filetypes = { 'gitcommit', 'jjdescription' },
+            },
           },
         },
       },

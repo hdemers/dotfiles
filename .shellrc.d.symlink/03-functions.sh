@@ -66,8 +66,8 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
         if [[ -n "$CMD_START_TIME" && -n "$CMD_TO_NOTIFY" ]]; then
             local elapsed=$((EPOCHSECONDS - CMD_START_TIME))
             if (( elapsed > NOTIFY_THRESHOLD )); then
-                local cmd=$(echo "$CMD_TO_NOTIFY" | sed -E 's/([;&|]\s*)?notify\s*$//')
-                notify "$cmd" "$LAST_EXIT_CODE"
+                local cmd=$(echo "$CMD_TO_NOTIFY" | sed -E 's/([;&|]\s*)?_notify\s*$//')
+                _notify "$cmd" "$LAST_EXIT_CODE"
             fi
             unset CMD_START_TIME CMD_TO_NOTIFY
         fi
@@ -76,7 +76,7 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
     add-zsh-hook preexec notify_preexec
     add-zsh-hook precmd notify_precmd
 
-    notify() {
+    _notify() {
         local error_code="$?"
         local cmd
         if [[ -n "$1" ]]; then
@@ -85,7 +85,7 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
         else
             cmd="$CMD_TO_NOTIFY"
             # Remove trailing notify invocation if present
-            cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?notify\s*$//')
+            cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?_notify\s*$//')
         fi
         if [ "$error_code" -eq 0 ]; then
             ntfy "$cmd" -H "X-Title: Success" -H "Tags: heavy_check_mark"

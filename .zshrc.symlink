@@ -111,4 +111,5 @@ autoload -Uz compinit && compinit
 # We don't want to use the default bling.sh script, we already have everything we need from that elsewhere.
 export BLING_SOURCED=1
 
+eval "$(zoxide init zsh)"
 # zprof

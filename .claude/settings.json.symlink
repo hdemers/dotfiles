@@ -1,18 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "model": "opus",
+  "env": {},
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [],
+    "deny": []
+  },
+  "model": "opusplan",
   "hooks": {
-    "SubagentStop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/hooks.py notify --message \"Claude subagent has stopped\""
-          }
-        ]
-      }
-    ],
     "Notification": [
       {
         "matcher": "",
@@ -34,7 +29,22 @@
           }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/hooks.py notify --message \"Claude subagent has stopped\""
+          }
+        ]
+      }
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "printf '\\033[01;32m%s@%s\\033[00m:\\033[01;34m%s\\033[00m' \"$(whoami)\" \"$(hostname -s)\" \"$(basename \"$(pwd)\")\""
   },
   "feedbackSurveyState": {
     "lastShownTime": 1754146791251

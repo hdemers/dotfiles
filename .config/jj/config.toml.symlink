@@ -9,13 +9,13 @@ default-command = "log"
 diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
 # diff-formatter = "git"
 # Use Difftastic by default
-diff-formatter = ["difft", "--color=always", "--syntax-highlight=on", "$left", "$right"]
+# diff-formatter = ["difft", "--color=always", "--syntax-highlight=on", "$left", "$right"]
 # Use tool named "<name>" (see below)
 # diff-formatter = "<name>"
 
 [colors]
-# "diff removed token" = { fg = "bright red", bg = "black", underline = false }
-# "diff added token" = { fg = "bright green", bg = "black", underline = false }
+"diff removed token" = { fg = "bright red", bg = "black", underline = false }
+"diff added token" = { fg = "bright green", bg = "black", underline = false }
 # [merge-tools.diffconflicts]
 # program = "nvim"
 # merge-args = [

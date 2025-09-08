@@ -201,25 +201,27 @@ return {
         },
       },
       adapters = {
-        copilot = function()
-          return require('codecompanion.adapters').extend('copilot', {
-            schema = {
-              model = {
-                default = 'claude-sonnet-4',
-                -- default = 'gpt-4.1',
+        http = {
+          copilot = function()
+            return require('codecompanion.adapters').extend('copilot', {
+              schema = {
+                model = {
+                  default = 'claude-sonnet-4',
+                  -- default = 'gpt-4.1',
+                },
               },
-            },
-          })
-        end,
-        gemini = function()
-          return require('codecompanion.adapters').extend('gemini', {
-            schema = {
-              model = {
-                default = 'gemini-2.5-flash-preview-05-20',
+            })
+          end,
+          gemini = function()
+            return require('codecompanion.adapters').extend('gemini', {
+              schema = {
+                model = {
+                  default = 'gemini-2.5-flash-preview-05-20',
+                },
               },
-            },
-          })
-        end,
+            })
+          end,
+        },
       },
       strategies = {
         chat = {
@@ -338,33 +340,6 @@ return {
       require('mcphub').setup(opts)
       -- Initialize custom MCP servers
       require('custom.mcp_servers').setup()
-    end,
-  },
-  {
-    'greggh/claude-code.nvim',
-    enabled = false,
-    dependencies = {
-      'nvim-lua/plenary.nvim', -- Required for git operations
-    },
-    opts = {
-      window = {
-        position = 'vertical',
-      },
-      keymaps = {
-        toggle = {
-          normal = '<leader>acl', -- Normal mode keymap for toggling Claude Code, false to disable
-          terminal = false, -- Terminal mode keymap for toggling Claude Code, false to disable
-          variants = {
-            continue = '<leader>acc', -- Normal mode keymap for Claude Code with continue flag
-            verbose = '<leader>acb', -- Normal mode keymap for Claude Code with verbose flag
-          },
-        },
-        window_navigation = true, -- Enable window navigation keymaps (<C-h/j/k/l>)
-        scrolling = true, -- Enable scrolling keymaps (<C-f/b>) for page up/down
-      },
-    },
-    config = function(_, opts)
-      require('claude-code').setup(opts)
     end,
   },
   {

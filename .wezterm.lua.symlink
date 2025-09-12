@@ -1,89 +1,108 @@
 -- vim: set ft=lua:
 
 -- Pull in the wezterm API
-local wezterm = require("wezterm")
+local wezterm = require 'wezterm'
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-config.color_scheme = "Tokyo Night Storm"
-config.window_decorations = "TITLE|RESIZE"
+config.color_scheme = 'Tokyo Night Storm'
+config.window_decorations = 'TITLE|RESIZE'
 
 -- Default font
-local font_family = "Hack"
+local font_family = 'Hack'
 
-if os.getenv("ZELLIJ_NVIM") == "true" then
-	font_family = "Sudo"
+if os.getenv 'ZELLIJ_NVIM' == 'true' then
+  font_family = 'Sudo'
 
-	config.window_decorations = "NONE"
-	config.window_padding = {
-		left = 0,
-		right = 0,
-		top = 0,
-		bottom = 0,
-	}
+  config.window_decorations = 'NONE'
+  config.window_padding = {
+    left = 0,
+    right = 0,
+    top = 0,
+    bottom = 0,
+  }
 
-	config.hide_tab_bar_if_only_one_tab = true
-	config.use_fancy_tab_bar = false
-	--- Window size
-	config.initial_rows = 70
-	config.initial_cols = 300
+  config.hide_tab_bar_if_only_one_tab = true
+  config.use_fancy_tab_bar = false
+  --- Window size
+  config.initial_rows = 70
+  config.initial_cols = 300
 
-	local mux = wezterm.mux
-	wezterm.on("gui-startup", function(cmd)
-		local _, _, window = mux.spawn_window(cmd or {})
-		window:gui_window():maximize()
-	end)
+  local mux = wezterm.mux
+  wezterm.on('gui-startup', function(cmd)
+    local _, _, window = mux.spawn_window(cmd or {})
+    window:gui_window():maximize()
+  end)
 else
-	font_family = "Monaspace Krypton"
+  font_family = 'Monaspace Krypton'
 end
 
-config.font = wezterm.font({ family = font_family })
-if font_family == "Sudo" then
-	config.font_size = 12
-elseif font_family == "Hack" then
-	config.font_size = 11
-	config.line_height = 1.00
-elseif font_family == "FiraCode Nerd Font" then
-	config.font_size = 10
-elseif font_family == "JetBrains Mono" then
-	config.font_size = 11
-elseif font_family == "GeistMono" then
-	config.font_size = 11
-elseif string.match(font_family, "^Iosevka") then
-	config.font_size = 12
-elseif string.match(font_family, "^Monaspace") then
-	config.font_size = 11
-	config.harfbuzz_features =
-		{ "calt", "ss01", "ss02", "ss03", "ss04", "ss05", "ss06", "ss07", "ss08", "ss09", "liga" }
+config.font = wezterm.font { family = font_family }
+if font_family == 'Sudo' then
+  config.font_size = 12
+elseif font_family == 'Hack' then
+  config.font_size = 11
+  config.line_height = 1.00
+elseif font_family == 'FiraCode Nerd Font' then
+  config.font_size = 10
+elseif font_family == 'JetBrains Mono' then
+  config.font_size = 11
+elseif font_family == 'GeistMono' then
+  config.font_size = 11
+elseif string.match(font_family, '^Iosevka') then
+  config.font_size = 12
+elseif string.match(font_family, '^Monaspace') then
+  config.font_size = 11
+  config.harfbuzz_features = {
+    'calt',
+    'ss01',
+    'ss02',
+    'ss03',
+    'ss04',
+    'ss05',
+    'ss06',
+    'ss07',
+    'ss08',
+    'ss09',
+    'liga',
+  }
 else
-	config.font_size = 11
+  config.font_size = 11
 end
 -- Wezterm doesn't do layout persisting and application restore like tmux-resurrect does.
 -- However, there's this this project that does something similar:
 -- https://github.com/danielcopper/wezterm-session-manager
 
 -- By default we launch zsh
-config.default_prog = { "/usr/bin/zsh" }
+config.default_prog = { '/usr/bin/zsh' }
 
 config.keys = {
-	-- CMD-y starts `top` in a new tab
-	{
-		key = "g",
-		mods = "CTRL",
-		action = wezterm.action.SpawnCommandInNewTab({
-			args = {
-				"/usr/bin/distrobox",
-				"enter",
-				"grubhub-dev",
-				"--",
-				"/home/linuxbrew/.linuxbrew/bin/zellij",
-				"attach",
-				"-c",
-				"grubhub-dev",
-			},
-		}),
-	},
+  -- I don't remember why I implemented this Ctrl-G in the first place. Doing
+  -- that from a zellij-nvim session messes things up.
+  -- {
+  --   key = 'g',
+  --   mods = 'CTRL',
+  --   action = wezterm.action.SpawnCommandInNewTab {
+  --     args = {
+  --       '/usr/bin/distrobox',
+  --       'enter',
+  --       'grubhub-dev',
+  --       '--',
+  --       '/home/linuxbrew/.linuxbrew/bin/zellij',
+  --       'attach',
+  --       '-c',
+  --       'grubhub-dev',
+  --     },
+  --   },
+  -- },
+  -- Allow Shift-Enter to send a literal Enter to the terminal. Useful in Claude
+  -- Code among other places.
+  {
+    key = 'Enter',
+    mods = 'SHIFT',
+    action = wezterm.action { SendString = '\x1b\r' },
+  },
 }
 
 return config

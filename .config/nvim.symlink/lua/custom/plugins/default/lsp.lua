@@ -132,8 +132,36 @@ return {
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         ruff = {},
+        -- ty does not support rename, so we use pyright for that. All other capabilities are disabled.
         basedpyright = {
           enable = true,
+          on_attach = function(client, _)
+            -- Disable all capabilities except rename
+            client.server_capabilities.hoverProvider = false
+            client.server_capabilities.completionProvider = false
+            client.server_capabilities.signatureHelpProvider = false
+            client.server_capabilities.definitionProvider = false
+            client.server_capabilities.referencesProvider = false
+            client.server_capabilities.documentHighlightProvider = false
+            client.server_capabilities.documentSymbolProvider = false
+            client.server_capabilities.codeActionProvider = false
+            client.server_capabilities.codeLensProvider = false
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+            client.server_capabilities.documentOnTypeFormattingProvider = false
+            client.server_capabilities.declarationProvider = false
+            client.server_capabilities.typeDefinitionProvider = false
+            client.server_capabilities.implementationProvider = false
+            client.server_capabilities.documentLinkProvider = false
+            client.server_capabilities.colorProvider = false
+            client.server_capabilities.foldingRangeProvider = false
+            client.server_capabilities.selectionRangeProvider = false
+            client.server_capabilities.semanticTokensProvider = false
+            client.server_capabilities.inlayHintProvider = false
+            client.server_capabilities.workspaceSymbolProvider = false
+            client.server_capabilities.executeCommandProvider = false
+            -- Keep renameProvider = true (default)
+          end,
           settings = {
             python = {
               analysis = {
@@ -155,19 +183,6 @@ return {
         },
         ty = {
           enable = true,
-          settings = {
-            python = {
-              analysis = {
-                disableLanguageServices = true,
-              },
-            },
-          },
-          on_attach = function(client)
-            if client.name == 'ty' then
-              -- Disable hover in favor of baesdpyright
-              client.server_capabilities.hoverProvider = false
-            end
-          end,
         },
         beancount = {
           settings = {

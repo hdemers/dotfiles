@@ -255,7 +255,7 @@ return {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
-            ['--border-label'] = 'ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics only | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-y: yank link | ctrl-o: open',
+            ['--border-label'] = 'ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics | ctrl-r: programs | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-y: yank link | ctrl-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
@@ -308,6 +308,12 @@ return {
             ['ctrl-e'] = {
               function(_)
                 show_jira_issues ' --epics-only'
+              end,
+              fzflua.actions.resume,
+            },
+            ['ctrl-r'] = {
+              function(_)
+                show_jira_issues ' --programs-only'
               end,
               fzflua.actions.resume,
             },

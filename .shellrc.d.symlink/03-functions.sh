@@ -279,12 +279,13 @@ js() {
         --bind 'ctrl-l:reload(jira issues --in-epic {1})+clear-query' \
         --bind 'ctrl-h:reload(jira issues)+clear-query' \
         --bind 'ctrl-e:reload(jira issues --epics-only)' \
+        --bind 'ctrl-r:reload(jira issues --programs-only)' \
         --bind "ctrl-y:execute(wl-copy ${url}/{1})" \
         --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
         --bind "ctrl-u:execute(jira update {1})" \
         --border-label-pos 5:bottom \
         --border 'rounded' \
-        --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url'
+        --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update'
 }
 
 gwa() {
@@ -900,7 +901,7 @@ cticket() {
         gum log --level info "Ticket creation cancelled."
         return 0
     }
-    claude "/ticket"
+    claude "/jj-ticket"
     unset CLAUDE_BOOKMARK
     unset CLAUDE_TICKET_EPIC
     unset CLAUDE_TICKET_SPRINT

@@ -16,17 +16,17 @@ diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
 [colors]
 "diff removed token" = { fg = "bright red", bg = "black", underline = false }
 "diff added token" = { fg = "bright green", bg = "black", underline = false }
-# [merge-tools.diffconflicts]
-# program = "nvim"
-# merge-args = [
-#     "-n",
-#     "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
-#     "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
-# ]
-# merge-tool-edits-conflict-markers = true
 dev_node = "bright yellow"
 main_node = "bright green"
 elided_node = "black"
+
+[merge-tools.diffconflicts]
+program = "nvim"
+merge-args = [
+  "-c", "let g:jj_diffconflicts_marker_length=$marker_length",
+  "-c", "JJDiffConflicts!", "$output", "$base", "$left", "$right",
+]
+merge-tool-edits-conflict-markers = true
 
 [revset-aliases]
 'bases' = 'dev'
@@ -46,7 +46,7 @@ push-new-bookmarks = true
 # private-commits = "dev+"
 
 [aliases]
-rdev = ["rebase", "-s", "dev", "-d", "all:trunkandbranches"]
+rdev = ["rebase", "-s", "dev", "-d", "trunkandbranches"]
 ralldev = ["rebase", "-s", "dev", "-d", "all:(dev- | trunk() | heads(trunk():: ~dev::))"]
 rtrunk = ["rebase", "-s", "dev", "-d", "all:(visible_heads() & mutable() ~ dev::)"]
 rall = ["rebase", "-b", "dev", "-d", "trunk()"]

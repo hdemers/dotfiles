@@ -389,6 +389,67 @@ def _lint(
     return return_code
 
 
+def _type_check(
+    language: str,
+    target_files: List[str],
+    config_data: Dict,
+) -> int:
+    """Run type checkers for a specific language on target files."""
+    type_checkers = config_data["languages"][language]["type_checkers"]
+
+    console.print(
+        f"Running [bold]{language}[/bold] type checkers on {len(target_files)} file(s)"
+    )
+
+    return_code = 0
+    ran_type_checkers = []
+
+    for type_checker_cmd in type_checkers:
+        console.print(f"[blue]Running:[/blue] {type_checker_cmd}")
+
+        cmd_parts = type_checker_cmd.split()
+        cmd_parts.extend(target_files)
+
+        try:
+            result = subprocess.run(
+                cmd_parts,
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+
+            ran_type_checkers.append(type_checker_cmd)
+
+            if result.returncode != 0:
+                return_code = 2
+                if result.stdout:
+                    error_console.print(f"\n{result.stdout.strip()}")
+                if result.stderr:
+                    error_console.print(f"\n{result.stderr.strip()}")
+
+        except FileNotFoundError:
+            return_code = 1
+            error_console.print(
+                f"[red]Skipping type checking {language} files as "
+                + f"command not found: {type_checker_cmd}[/red]"
+            )
+        except Exception as error:
+            return_code = 1
+            error_console.print(f"[red]Error while type checking: {str(error)}[/red]")
+
+    if return_code:
+        error_console.print(
+            f"[red]Type checking FAILED! ({len(ran_type_checkers)}/{len(type_checkers)} ran)[/red]"
+        )
+        error_console.print("\n[red]STOP and FIX[/red]")
+    else:
+        console.print(
+            f"[green]All available type checkers passed! ({len(ran_type_checkers)}/{len(type_checkers)} ran)[/green]"
+        )
+
+    return return_code
+
+
 @click.group()
 @click.version_option()
 def cli():
@@ -420,6 +481,34 @@ def lint(
     for lang, files in languages_map.items():
         if lang in config_data.get("languages", {}):
             return_codes.append(_lint(lang, files, config_data))
+
+    sys.exit(max(return_codes, default=0))
+
+
+@cli.command(name="type-check")
+@click.option("--config", "-c", default="config.yaml", help="Config file path")
+def type_check(
+    config: str,
+):
+    """Run type checkers based on configuration."""
+
+    config_data = load_config(config)
+
+    if config_data is None:
+        error_msg = f"Configuration required. Please create {config} with your type checking preferences."
+        error_console.print(f"[red]{error_msg}[/red]")
+        sys.exit(1)
+
+    # No language specified: auto-detect and type check all modified languages
+    languages_map = get_all_modified_languages()
+    if not languages_map:
+        error_console.print("[yellow]No type checkable files found[/yellow]")
+        sys.exit(1)
+
+    return_codes = []
+    for lang, files in languages_map.items():
+        if lang in config_data.get("languages", {}) and "type_checkers" in config_data["languages"][lang]:
+            return_codes.append(_type_check(lang, files, config_data))
 
     sys.exit(max(return_codes, default=0))
 

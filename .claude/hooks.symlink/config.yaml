@@ -1,29 +1,39 @@
 languages:
   python:
     linters:
-      - "ruff check --output-format concise" 
+      - "ruff check --output-format concise"
+    type_checkers:
+      - "ty check --output-format concise"
 
   javascript:
     linters:
       - "eslint"
       - "prettier --check"
+    type_checkers:
+      - "tsc --allowJs --checkJs --noEmit"
 
   typescript:
     linters:
       - "eslint"
       - "tsc --noEmit"
       - "prettier --check"
+    type_checkers:
+      - "tsc --noEmit"
 
   rust:
     linters:
       - "cargo clippy"
       - "cargo fmt --check"
+    type_checkers:
+      - "cargo check"
 
   go:
     linters:
       - "go fmt"
       - "go vet"
       - "golint"
+    type_checkers:
+      - "go build -o /dev/null"
 
   shell:
     linters:

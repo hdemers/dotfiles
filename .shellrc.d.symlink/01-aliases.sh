@@ -159,8 +159,6 @@ alias gjust="/usr/bin/just --justfile $HOME/src/containers/devpod/gh-ai-sandbox.
 alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/ai-sandbox.Justfile"
 
 alias ccgh="env ANTHROPIC_MODEL=${GH_ANTHROPIC_MODEL} ANTHROPIC_SMALL_FAST_MODEL=${GH_ANTHROPIC_SMALL_FAST_MODEL} ANTHROPIC_USE_BEDROCK=1 claude"
-alias clc="claude --dangerously-skip-permissions"
+alias clauded="claude --dangerously-skip-permissions"
 
 alias jjup="jj git fetch && jj rall && jj rdev && jj git push -r branches"
-
-alias jjre="jj log --color always -r 'remote_bookmarks()' -T 'bookmarks ++ \"|\" ++ author.name() ++ \"|\" ++ committer.timestamp().local().format(\"%Y-%m-%d %H:%M\") ++ \"|\" ++ description.first_line() ++ \"\\n\"' --no-graph | column -t -s \"|\" | grep -v \"Hugues\" | grep -v \"master\" | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-limit --no-strip-ansi | cut -d ' ' -f 1 | xargs --no-run-if-empty printf ' -d %s' | xargs --no-run-if-empty jj rdev"

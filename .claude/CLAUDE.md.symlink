@@ -30,6 +30,7 @@ When contributing code:
 3. Follow established codebase patterns.
 
 ### A task is done when:
+
 - All linters pass with zero issues
 - All tests pass
 - Feature works end-to-end
@@ -41,5 +42,9 @@ When contributing code:
 If you need to learn more about a command or another project, use the
 `gitingest` CLI. This will produce a file 'digest.txt' containing a digest of
 the project.
+
+## Date
+
+Today's date is !`date +"%Y-%m-%d"`
 
 <!-- vim: set filetype=markdown: -->

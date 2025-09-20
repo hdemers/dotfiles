@@ -5,23 +5,23 @@ description: Create a ticket
 
 # Create a ticket
 
-Create a ticket using the `jira` CLI, specifically the command `jira create`.
+Use the jira-ticket-manager subagent proactively to create a new ticket.
 
 ## Context
-The following context must be provided by the user. If not, STOP and ASK for it:
+Provide the following context to the subagent. If a mandatory item is not provided, STOP and ASK before submitting to subagent.
 
-The ticket can either be of type "Epic" or "Story". If not specified, assume "Story".
+- Type [MANDATORY]: possible values "Epic" or "Story". If not specified, assume "Story".
 
 For Epic creation:
-- Work classification
-- Capitalizable? Yes/No
-- Assignee
+- Work classification [MANDATORY]: possible values: A, B or C.
+- Capitalizable? [MANDATORY]: possible values: yes or no.
+- Assignee [OPTIONAL]: leave blank if not provided.
 
 For Story creation:
-- Epic
-- Sprint
-- Points
-- Assignee
+- Epic [MANDATORY]
+- Sprint [OPTIONAL]: if not provided, leave blank
+- Points [OPTIONAL]: if not provided, leave blank
+- Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me", assume user specified by the environment variable `USER`.
 
 ## Template
 h3. Brief description

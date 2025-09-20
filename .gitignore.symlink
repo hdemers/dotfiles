@@ -87,3 +87,5 @@ scratch*
 CLAUDE.local.md
 settings.local.json
 *claude.json
+
+token.json

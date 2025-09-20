@@ -21,6 +21,8 @@ releasemsg() {
     # diff from. The release message will include commits from $FROM to $TO if
     # provided. FROM defaults to the latest tag on the *current* branch and TO
     # defaults to HEAD.
+    local FROM
+    local TO
     if [ -z "$1" ]
     then
         FROM=$(git tag --sort=taggerdate | tail -n1)
@@ -216,7 +218,7 @@ rpq() {
 gb() {
     local story="git show --quiet --pretty=format:\"%s %b\" {1} \
             | grep -oE \"[A-Z]+-[0-9]+\" \
-            | xargs -I % jira describe %"
+            | xargs -I % jira view --rich %"
 
     git rb | \
         fzf \
@@ -265,27 +267,28 @@ js() {
         fi
     fi
 
-    jira issues --current-sprint --mine  \
+    jira issues -r --current-sprint --mine  \
         | fzf \
         --height 90% \
         --ansi \
-        --preview 'jira describe {1}' \
+        --preview 'jira view -r {1}' \
         --preview-window 'top,60%' \
         --header-lines 1 \
         --scheme history \
         --bind 'enter:execute(wl-copy {1})+abort' \
-        --bind 'ctrl-t:execute(jira transition {1})+reload(jira issues)' \
-        --bind 'ctrl-i:execute(jira create)+reload(jira issues)' \
-        --bind 'ctrl-l:reload(jira issues --in-epic {1})+clear-query' \
-        --bind 'ctrl-h:reload(jira issues)+clear-query' \
-        --bind 'ctrl-e:reload(jira issues --epics-only)' \
-        --bind 'ctrl-r:reload(jira issues --programs-only)' \
+        --bind 'ctrl-t:execute(jira transition --interactive {1})+reload(jira issues -r)' \
+        --bind 'ctrl-i:execute(jira create)+reload(jira issues -r)' \
+        --bind 'ctrl-l:reload(jira issues -r --in-epic {1})+clear-query' \
+        --bind 'ctrl-h:reload(jira issues -r)+clear-query' \
+        --bind 'ctrl-e:reload(jira issues -r --epics-only)' \
+        --bind 'ctrl-r:reload(jira issues -r --programs-only)' \
         --bind "ctrl-y:execute(wl-copy ${url}/{1})" \
         --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
         --bind "ctrl-u:execute(jira update {1})" \
+        --bind "ctrl-s:reload(jira issues -r --current-sprint --mine)" \
         --border-label-pos 5:bottom \
         --border 'rounded' \
-        --border-label '  ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update'
+        --border-label '  ctrl-s: mine | ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update'
 }
 
 gwa() {
@@ -370,7 +373,6 @@ gwr() {
 }
 
 jwa() {
-    local repo_name=$(basename $(jj workspace root))
     local branch="$1"
 
     # If no branch provided, use gum to select one
@@ -484,7 +486,7 @@ jb(){
         printf "\033[0m\n";
         env GH_FORCE_TTY=1 gh pr view --comments {1}
     else
-        '"$ticket"' | xargs -I % jira describe %
+        '"$ticket"' | xargs -I % jira view --rich %
     fi'
 
     local integrate="
@@ -544,8 +546,6 @@ jb(){
 }
 
 function _jjhistory() {
-    local del='" "'
-    local null='"\0"'
     jj log -T \
         "builtin_log_compact" \
         --color always \
@@ -567,7 +567,7 @@ jh() {
         '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
             | grep -oE "[A-Z]+-[0-9]+" \
             | uniq \
-            | xargs -I % jira describe %
+            | xargs -I % jira view  --rich %
     elif echo "$FZF_PROMPT" | grep -q "Diff"; then
         '"$change_id"' | xargs -I % jj diff --tool difft -r %
     fi'
@@ -584,7 +584,7 @@ jh() {
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -qv "Ticket"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
         --bind 'ctrl-c:execute('"$ticket"' | xargs -I % jira close %)' \
         --bind 'ctrl-d:transform:if echo "$FZF_PROMPT" | grep -qv "Diff"; then echo "change-prompt(Diff> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
-        --bind 'ctrl-e:execute(jj describe $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
+        --bind 'ctrl-e:execute(jj view $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
         --bind 'ctrl-/:execute(jj split -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
         --bind 'ctrl-x:execute(jj abandon -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
         --bind 'ctrl-w:execute(jj new -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
@@ -595,7 +595,7 @@ jh() {
         --bind 'ctrl-n,ctrl-j,down:down+down' \
         --preview-label-pos 5:bottom \
         --border 'rounded' \
-        --preview-label '  ctrl-d: diff | ctrl-e: describe | ctrl-x: abandon | ctrl-u: undo | ctrl-t: edit | ctrl-w: new | ctrl-/: split | ctrl-w: web | ctrl-s: toggle ticket | ctrl-c: close ticket' \
+        --preview-label '  ctrl-d: diff | ctrl-e: view | ctrl-x: abandon | ctrl-u: undo | ctrl-t: edit | ctrl-w: new | ctrl-/: split | ctrl-w: web | ctrl-s: toggle ticket | ctrl-c: close ticket' \
         --highlight-line \
         --color='bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8' \
         --color='fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC' \
@@ -609,7 +609,7 @@ bcheck() {
     jj diff --name-only -r "trunk()::${bookmark}" | grep -E ".py" | xargs ruff check
 }
 
-jop() {
+jjoplog() {
     jj op log \
         -T 'self.id().short() ++ " " ++ self.time().start().ago() ++ " " ++ self.description() ++ "\n" ++ self.tags() ++ "\0"' \
         --color always \
@@ -633,6 +633,33 @@ jop() {
         --border-label-pos 5:bottom \
         --border 'rounded' \
         --border-label ' ctrl-r: restore'
+}
+
+jjadopt() {
+    jj log \
+        --color always \
+        -r 'untracked_remote_bookmarks()' \
+        -T 'bookmarks ++ "|" ++ author.email() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d %H:%M") ++ "|" ++ description.first_line() ++ "\n"' \
+        --no-graph \
+    | column -t -s "|" \
+    | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-limit --no-strip-ansi \
+    | cut -d ' ' -f 1 \
+    | xargs --no-run-if-empty printf ' -d %s' \
+    | xargs --no-run-if-empty jj rdev
+}
+
+jjreview() {
+    jj log \
+        --color always \
+        -r 'remote_bookmarks()' \
+        -T 'bookmarks ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d %H:%M") ++ "|" ++ description.first_line() ++ "\n"' \
+        --no-graph \
+    | column -t -s "|" \
+    | grep -v "Hugues" \
+    | grep -v "master" \
+    | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-strip-ansi \
+    | cut -d ' ' -f 1 \
+    | xargs --no-run-if-empty jj new
 }
 
 lsemr() {
@@ -733,7 +760,7 @@ _select_bookmark() {
 
     if [ -z "${bookmark}" ]; then
         # Get bookmarks, clean up trailing '*', and present with gum
-        bookmark=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
+        bookmark=$(jj bookmark list -r "trunk():: ~ dev ~ trunk()" -T '"\n" ++ self.name()' \
             | uniq | gum choose --header="${header}")
 
         if [ -z "${bookmark}" ]; then
@@ -758,7 +785,7 @@ cpr() {
     local no_push=false
     local stacked=false
     local jj_base="trunk()"
-    local pr_base="master"
+    local pr_base=$(git branch -r | grep -E 'origin/(main|master)$' | sed 's/.*\///')
 
     # Check prerequisites
     if ! _check_prerequisites; then return 1; fi
@@ -876,7 +903,7 @@ cticket() {
         --header-lines=1 \
         --bind='enter:become(echo {1})' \
         --preview-window=up:50% \
-        --preview='jira describe {1}' \
+        --preview='jira view --rich {1}' \
     )
 
     local assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")

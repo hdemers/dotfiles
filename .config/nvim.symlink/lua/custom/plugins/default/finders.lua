@@ -156,7 +156,7 @@ return {
           fzf_opts = {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,75%',
-            ['--border-label'] = 'ctrl-r: toggle remote | ctrl-e: delete | ctrl-w: web',
+            ['--border-label'] = 'ctrl-r: toggle remote | ctrl-e: delete | ctrl-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
@@ -178,7 +178,7 @@ return {
               fzflua.actions.resume,
             },
             ['ctrl-e'] = {
-              function(selected)
+              fn = function(selected)
                 local branch, is_current = extract_branch(selected)
                 if is_current then
                   vim.notify('Cannot delete current branch', vim.log.levels.WARN)
@@ -193,7 +193,7 @@ return {
                   end
                 end
               end,
-              fzflua.actions.resume,
+              reload = true,
             },
             ['ctrl-r'] = {
               function(_)
@@ -207,8 +207,8 @@ return {
               end,
               fzflua.actions.resume,
             },
-            ['ctrl-w'] = {
-              function(selected)
+            ['ctrl-o'] = {
+              fn = function(selected)
                 local branch, _ = extract_branch(selected)
                 vim.cmd(string.format('!gh pr view --web %s', branch))
                 -- Check if the previous command failed
@@ -216,7 +216,7 @@ return {
                   vim.cmd '!gh browse'
                 end
               end,
-              fzflua.actions.resume,
+              reload = true,
             },
           },
           preview = {
@@ -248,14 +248,14 @@ return {
       local function show_jira_issues(args)
         local Terminal = require('toggleterm.terminal').Terminal
 
-        local cmd = string.format('jira issues %s', args or '')
+        local cmd = string.format('jira issues --rich %s', args or '')
 
         fzflua.fzf_exec(cmd, {
           fzf_opts = {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
-            ['--border-label'] = 'ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics | ctrl-r: programs | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-y: yank link | ctrl-o: open',
+            ['--border-label'] = 'ctrl-s: my sprint | ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics | ctrl-r: programs | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-y: yank link | ctrl-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
@@ -263,18 +263,23 @@ return {
             width = 200,
           },
           actions = {
-            ['ctrl-t'] = function(selected)
-              local key = vim.split(selected[1], ' ', { trimempty = true })[1]
-              Terminal:new({
-                direction = 'float',
-                cmd = string.format('jira transition %s', key),
-                hidden = false,
-                float_opts = { width = 60, height = 30 },
-                on_close = fzflua.actions.resume,
-              }):open()
-            end,
+            ['ctrl-t'] = {
+              fn = function(selected)
+                local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                Terminal
+                  :new({
+                    direction = 'float',
+                    cmd = string.format('jira transition --interactive %s', key),
+                    hidden = false,
+                    float_opts = { width = 60, height = 30 },
+                    on_close = fzflua.actions.resume,
+                  })
+                  :open()
+              end,
+              reload = true,
+            },
             ['ctrl-d'] = {
-              function(selected)
+              fn = function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
                 local cmd = 'jira close ' .. key
                 local output = vim.fn.system(cmd)
@@ -288,17 +293,20 @@ return {
                   vim.notify('Closed ticket ' .. key .. '.', vim.log.levels.INFO)
                 end
               end,
-              fzflua.actions.resume,
+              reload = true,
             },
-            ['ctrl-i'] = function()
-              Terminal:new({
-                direction = 'float',
-                cmd = 'jira create',
-                hidden = false,
-                float_opts = { width = 200, height = 50 },
-                on_close = fzflua.actions.resume,
-              }):open()
-            end,
+            ['ctrl-i'] = {
+              fn = function()
+                Terminal:new({
+                  direction = 'float',
+                  cmd = 'jira create',
+                  hidden = false,
+                  float_opts = { width = 200, height = 50 },
+                  on_close = fzflua.actions.resume,
+                }):open()
+              end,
+              reload = true,
+            },
             ['enter'] = function(selected)
               -- Store `selected` in the system clipboard
               local key = vim.split(selected[1], ' ', { trimempty = true })[1]
@@ -306,8 +314,14 @@ return {
               vim.notify('Copied issue key: ' .. key, vim.log.levels.INFO)
             end,
             ['ctrl-e'] = {
-              function(_)
+              fn = function(_)
                 show_jira_issues ' --epics-only'
+              end,
+              reload = true,
+            },
+            ['ctrl-s'] = {
+              function(_)
+                show_jira_issues ' --mine --current-sprint'
               end,
               fzflua.actions.resume,
             },
@@ -331,41 +345,44 @@ return {
               fzflua.actions.resume,
             },
             ['ctrl-y'] = {
-              function(selected)
+              fn = function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
                 local server_url = vim.fn.getenv 'JIRA_SERVER_URL'
                 local issue_url = server_url .. '/browse/' .. key
                 vim.fn.setreg('+', issue_url)
                 vim.notify('Copied issue URL: ' .. issue_url, vim.log.levels.INFO)
               end,
-              fzflua.actions.resume,
+              reload = true,
             },
             ['ctrl-o'] = {
-              function(selected)
+              fn = function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
                 local server_url = vim.fn.getenv 'JIRA_SERVER_URL'
                 local issue_url = server_url .. '/browse/' .. key
                 misc.open_url(issue_url)
               end,
-              fzflua.actions.resume,
+              reload = true,
             },
-            ['ctrl-u'] = function(selected)
-              local key = vim.split(selected[1], ' ', { trimempty = true })[1]
-              Terminal:new({
-                direction = 'float',
-                cmd = string.format('jira update %s', key),
-                hidden = false,
-                float_opts = { width = 200, height = 50 },
-                on_close = fzflua.actions.resume,
-              }):open()
-            end,
+            ['ctrl-u'] = {
+              fn = function(selected)
+                local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                Terminal:new({
+                  direction = 'float',
+                  cmd = string.format('jira update %s', key),
+                  hidden = false,
+                  float_opts = { width = 200, height = 50 },
+                  on_close = fzflua.actions.resume,
+                }):open()
+              end,
+              reload = true,
+            },
           },
           preview = {
             type = 'cmd',
             fn = function(items)
               -- Split items[1] by space and select the first one
               local key = vim.split(items[1], ' ', { trimempty = true })[1]
-              return string.format('jira describe %s', key)
+              return string.format('jira view --rich %s', key)
             end,
           },
         })

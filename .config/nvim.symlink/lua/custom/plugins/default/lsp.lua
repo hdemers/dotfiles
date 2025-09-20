@@ -140,7 +140,7 @@ return {
             client.server_capabilities.hoverProvider = false
             client.server_capabilities.completionProvider = false
             client.server_capabilities.signatureHelpProvider = false
-            client.server_capabilities.definitionProvider = false
+            client.server_capabilities.definitionProvider = true
             client.server_capabilities.referencesProvider = false
             client.server_capabilities.documentHighlightProvider = false
             client.server_capabilities.documentSymbolProvider = false
@@ -160,7 +160,7 @@ return {
             client.server_capabilities.inlayHintProvider = false
             client.server_capabilities.workspaceSymbolProvider = false
             client.server_capabilities.executeCommandProvider = false
-            -- Keep renameProvider = true (default)
+            client.server_capabilities.renameProvider = true
           end,
           settings = {
             python = {
@@ -183,6 +183,9 @@ return {
         },
         ty = {
           enable = true,
+          on_attach = function(client, _)
+            client.server_capabilities.definitionProvider = false
+          end,
         },
         beancount = {
           settings = {
@@ -213,6 +216,7 @@ return {
             },
           },
         },
+        bashls = {},
       }
 
       local neoconf = require 'neoconf'
@@ -250,7 +254,7 @@ return {
       { '<leader>cx', '<cmd>Trouble diagnostics toggle focus = true win = {size = 1.0}<cr>', desc = 'Trouble: toggle all diagnostics', },
       { '<leader>cX', '<cmd>Trouble diagnostics toggle filter.buf=0 <cr>', desc = 'Trouble: toggle buffer diagnostics', },
       { '<leader>cs', '<cmd>Trouble symbols toggle focus=false win.size.width=70<cr>', desc = 'Trouble: show symbols', },
-      { '<leader>cd', '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=70<cr>', desc = 'Trouble: lsp definitions/references/etc.', },
+      { '<leader>cd', '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=120<cr>', desc = 'Trouble: lsp definitions/references/etc.', },
       { '<leader>cL', '<cmd>Trouble loclist toggle<cr>', desc = 'Trouble: toggle location list', },
       { '<leader>cQ', '<cmd>Trouble qflist toggle<cr>', desc = 'Trouble: toggle quickfix list', },
       {

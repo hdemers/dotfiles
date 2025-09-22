@@ -89,6 +89,13 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
             # Remove trailing notify invocation if present
             cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?_notify\s*$//')
         fi
+        # If command contains one of the following substrings, do not send notifications.
+        local ignore_list=("ssh" "vim" "nvim")
+        for ignore in "${ignore_list[@]}"; do
+            if [[ "$cmd" == *"$ignore"* ]]; then
+                return
+            fi
+        done
         if [ "$error_code" -eq 0 ]; then
             ntfy "$cmd" -H "X-Title: Success" -H "Tags: heavy_check_mark"
         else
@@ -803,6 +810,16 @@ cpr() {
             --stacked)
                 stacked=true
                 shift
+                ;;
+            --help)
+                echo "Usage: cpr [--no-verify] [--no-push] [--stacked] [bookmark]"
+                echo ""
+                echo "Options:"
+                echo "  --no-verify    Skip precommit checks"
+                echo "  --no-push      Do not push the bookmark before creating the PR"
+                echo "  --stacked      Create a stacked PR (select a base bookmark)"
+                echo "  --help         Show this help message"
+                return 0
                 ;;
             *)
                 bookmark="$1"

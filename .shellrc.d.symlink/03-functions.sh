@@ -90,7 +90,7 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
             cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?_notify\s*$//')
         fi
         # If command contains one of the following substrings, do not send notifications.
-        local ignore_list=("ssh" "vim" "nvim")
+        local ignore_list=("ssh" "vim" "nvim" "lsemr")
         for ignore in "${ignore_list[@]}"; do
             if [[ "$cmd" == *"$ignore"* ]]; then
                 return
@@ -679,11 +679,12 @@ lsemr() {
     --bind='ctrl-h:execute(browse http://{4}:8088 > /dev/null)' \
     --bind='ctrl-g:execute(browse http://{4}/ganglia > /dev/null)' \
     --bind='ctrl-s:execute(sshpass -eOKTA_PASSWORD ssh {4})+abort' \
+    --bind='ctrl-i:execute(source $HOME/.shellrc.d/99-remote.sh; remote_setup {4})' \
     --bind='enter:execute(echo {4} | tr -d \"\\n\" | xsel --clipboard --input)+become(echo {4})' \
     --height 50% \
     --border-label-pos 5:bottom \
     --border rounded \
-    --border-label 'ctrl-h: Hadoop UI | ctrl-s: ssh | ctrl-g: Ganglia' \
+    --border-label 'ctrl-h: Hadoop UI | ctrl-s: ssh | ctrl-g: Ganglia | ctrl-i: install dotfiles' \
     --preview-border 'none'
     )
 
@@ -954,4 +955,89 @@ cticket() {
     unset CLAUDE_TICKET_ASSIGNEE
     unset CLAUDE_TICKET_PROJECT
 
+}
+
+# Function to send command to floating pane in current Zellij tab
+# Usage: zellij_float_cmd "your command here"
+zellij_float_cmd() {
+    local cmd="$1"
+    local layout
+    local current_tab_section
+    local has_floating
+    local is_hidden
+
+    if [ -z "$cmd" ]; then
+        gum log -sl error "Error: No command provided"
+        gum log -sl info "Usage: zellij_float_cmd 'command to execute'"
+        return 1
+    fi
+
+    # Get the current layout
+    layout=$(zellij action dump-layout)
+
+    # Extract current tab info (the one with focus=true)
+    # Check if current tab has floating panes that are not hidden
+    current_tab_section=$(echo "$layout" | awk '
+        /tab.*focus=true/ { in_current_tab=1 }
+        in_current_tab && /tab[^}]*{/ && !/focus=true/ { in_current_tab=0 }
+        in_current_tab { print }
+    ')
+
+    # Check if floating panes exist and are visible
+    has_floating=$(echo "$current_tab_section" | grep -c "floating_panes")
+    is_hidden=$(echo "$current_tab_section" | grep -c "hide_floating_panes=true")
+
+    if [ "$has_floating" -eq 0 ]; then
+        # No floating pane exists, create one
+        gum log -sl info "Creating floating pane..."
+        zellij action new-pane --floating
+
+        # Small delay to ensure pane is created and focused
+        sleep 1
+    elif [ "$is_hidden" -gt 0 ]; then
+        # Floating pane exists but is hidden, unhide it
+        gum log -sl info "Unhiding floating panes..."
+        zellij action toggle-floating-panes
+
+        # Small delay to ensure pane is visible and focused
+        sleep 0.2
+    else
+        # Floating pane exists and is visible, focus it
+        gum log -sl info "Focusing existing floating pane..."
+        # Focus the floating pane by toggling twice (hide then show)
+        zellij action toggle-floating-panes
+        sleep 0.1
+        zellij action toggle-floating-panes
+        sleep 0.1
+    fi
+
+    # Now send the command to the floating pane
+    gum log -s "Sending command: $cmd"
+    zellij action write-chars "$cmd"
+
+    # Send Enter to execute the command
+    zellij action write 13
+
+    gum log -sl info "Command sent successfully"
+}
+
+
+cdeploy() {
+    # Deploy a branch using Jenkins CLI. Have this run in a Zellij floating pane.
+    local cmd
+    local bookmark
+
+    bookmark=$(_select_bookmark "${bookmark}")
+    if [ -z "$bookmark" ]; then
+        gum log --level error "You must provide a bookmark."
+        return 1
+    fi
+
+    gum log -sl info "Will deploy bookmark '${bookmark}'"
+
+    cmd="jenkins deploy-branch --branch ${bookmark}"
+
+    gum confirm "Run unit tests?" || cmd="${cmd} --no-unit-tests"
+
+    zellij_float_cmd "${cmd}"
 }

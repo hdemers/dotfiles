@@ -3,7 +3,7 @@
 # Functions to ease dealing with remote machines
 
 remote_install() {
-    sshnohost $1 < $HOME/src/scripts/$2.sh
+    ssh -A -o StrictHostKeyChecking=no $1 < $HOME/src/scripts/$2.sh
 }
 
 remote_setup() {

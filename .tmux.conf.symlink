@@ -1,9 +1,8 @@
 # vim: set filetype=tmux:
 
-# Change prefix key to `
 unbind C-b
-set -g prefix C-a
-bind C-Space send-prefix
+# set -g prefix C-a
+# bind C-Space send-prefix
 
 # 0 is too far from ` ;)
 set -g base-index 1

@@ -34,27 +34,31 @@ CLI tool.
 
 You must strictly adhere to the following template to write the ticket description:
 
-```
-h3. Brief description
+```markdown
+h3. Description
 
-* Work needed
+* Work needed. Be as detailed as possible to allow coworkers to points the level of effort needed.
+* DO NOT make a judgement call on the level of effort itself, only describe it.
 
 h3. Expected work product
 
-* Document? Metric? Code/Repo?
+* Is this a code change? If so, provide the URL of the repository.
+* Is the output a document? If so what type:
+  - Google Docs?
+  - Jupyter/Quarto Notebook?
+* Keep this section real simple.
 
 h3. Acceptance Criteria
 
 - [ ] Criteria 1
 - [ ] Criteria 2
 
-h3. Dependencies
-
-* Meetings? Another ticket? Peer review?
+NOTE: do not mention code reviews, these always happen.
 
 h3. Any background context you want to provide
 
-* Details that supports work needed
+* What is the broader context of this work?
+* Why are we doing this?
 ```
 
 

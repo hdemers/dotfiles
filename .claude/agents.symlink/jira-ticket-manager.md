@@ -230,6 +230,7 @@ For Story creation:
 - Reference related tickets using the PROJ-#### format
 - Add screenshots or error messages as attachments when available
 - Use the Jira Text Formatting language.
+- Code blocks should specify the language: `{code:language} some code {code}`.
 
 **Communication Style**:
 - Be precise and technical when documenting issues

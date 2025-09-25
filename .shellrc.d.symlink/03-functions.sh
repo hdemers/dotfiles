@@ -90,7 +90,7 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
             cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?_notify\s*$//')
         fi
         # If command contains one of the following substrings, do not send notifications.
-        local ignore_list=("ssh" "vim" "nvim" "lsemr")
+        local ignore_list=("ssh" "vim" "nvim" "lsemr" "js")
         for ignore in "${ignore_list[@]}"; do
             if [[ "$cmd" == *"$ignore"* ]]; then
                 return
@@ -261,43 +261,6 @@ gb() {
         --bind 'ctrl-g:preview(git show --stat --color=always $(echo {1} | tr -d "*" | sed "s|^origin/||"))'
 }
 
-
-js() {
-    local url="${JIRA_SERVER_URL}/browse"
-    local container_name="${DBX_CONTAINER_NAME}"
-    local cmd='xdg-open'
-    if [ -n "$container_name" ]; then
-        if [ -n "$CONTAINER_ID" ]; then
-            cmd="gtk-launch google-chrome.desktop"
-        else
-            cmd="gtk-launch ${container_name}-google-chrome.desktop"
-        fi
-    fi
-
-    jira issues -r --current-sprint --mine  \
-        | fzf \
-        --height 90% \
-        --ansi \
-        --preview 'jira view -r {1}' \
-        --preview-window 'top,60%' \
-        --header-lines 1 \
-        --scheme history \
-        --bind 'enter:execute(wl-copy {1})+abort' \
-        --bind 'ctrl-t:execute(jira transition --interactive {1})+reload(jira issues -r)' \
-        --bind 'ctrl-i:execute(jira create)+reload(jira issues -r)' \
-        --bind 'ctrl-l:reload(jira issues -r --in-epic {1})+clear-query' \
-        --bind 'ctrl-h:reload(jira issues -r)+clear-query' \
-        --bind 'ctrl-e:reload(jira issues -r --epics-only)' \
-        --bind 'ctrl-r:reload(jira issues -r --programs-only)' \
-        --bind "ctrl-y:execute(wl-copy ${url}/{1})" \
-        --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
-        --bind "ctrl-u:execute(jira update {1})" \
-        --bind "ctrl-s:reload(jira issues -r --current-sprint --mine)" \
-        --border-label-pos 5:bottom \
-        --border 'rounded' \
-        --border-label '  ctrl-s: mine | ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update'
-}
-
 gwa() {
     # Git Worktree Add (gwa)
     # This function adds a new worktree for a given branch in the parent directory.
@@ -379,295 +342,6 @@ gwr() {
     git worktree remove "${worktree_to_remove}"
 }
 
-jwa() {
-    local branch="$1"
-
-    # If no branch provided, use gum to select one
-    if [ -z "${branch}" ]; then
-        if ! command -v gum &> /dev/null; then
-            echo "gum is not installed. Please provide a branch name or install gum."
-            echo "Usage: jwa <branch>"
-            return 1
-        fi
-
-        # Get bookmarks, clean up trailing '*', and present with gum
-        branch=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
-            | uniq | gum choose --header="Select a branch to create workspace for:")
-
-        if [ -z "${branch}" ]; then
-            echo "No branch selected."
-            return 1
-        fi
-    fi
-
-    local workspace_path="../${branch}"
-
-    jj workspace add -r "${branch}" "${workspace_path}"
-    gum log -sl info "Workspace ${branch} created at ${workspace_path}"
-    # Return if the workspace already exists
-    if [ $? -ne 0 ]; then
-        gum log -sl error "Workspace '${workspace_path}' already exists. Skipping creation."
-        return 1
-    fi
-
-    cd "${workspace_path}" || return 1
-    # Copy .envrc from the main workspace if it exists
-    if [ -f "${OLDPWD}/.envrc" ]; then
-        cp "${OLDPWD}/.envrc" .
-        gum log -sl info "file '.envrc' copied to new workspace."
-        direnv allow .
-    else
-        gum log -sl warn "No '.envrc' file found in the main workspace."
-    fi
-    # Copy CLAUDE.local.md from the main workspace if it exists
-    if [ -f "${OLDPWD}/CLAUDE.local.md" ]; then
-        cp "${OLDPWD}/CLAUDE.local.md" .
-        gum log -sl info "file 'CLAUDE.local.md' copied to new workspace."
-    fi
-
-    if [ -d "${OLDPWD}/.claude" ]; then
-        # If the main workspace has a .claude directory, copy it to the new workspace
-        cp -r "${OLDPWD}/.claude" .
-        gum log -sl info "'.claude' directory copied to new workspace."
-    fi
-
-    if gum confirm "Do you want to run 'make install' in the new workspace?"; then
-        make install
-    else
-        gum log -sl warn "'make install' skipped."
-    fi
-
-}
-
-jwr() {
-    # Git workspace Remove (jwr)
-    # Removes a workspace above the current one, using jj workspace list for selection.
-
-    local workspace_to_remove="$1"
-
-    # If no workspace path provided, use gum to select one from existing workspaces
-    if [ -z "${workspace_to_remove}" ]; then
-        if ! command -v gum &> /dev/null; then
-            echo "gum is not installed. Please provide a workspace path or install gum."
-            echo "Usage: jwr <workspace_path>"
-            return 1
-        fi
-
-        # Get workspace names, exclude 'default', and present with gum
-        workspace_to_remove=$(jj workspace list \
-            | awk -F: '{print $1}' \
-            | grep -v '^default$' \
-            | grep -v '^[[:space:]]*$' \
-            | gum choose --header="Select a workspace to remove:")
-
-        if [ -z "${workspace_to_remove}" ]; then
-            gum log -sl info "No workspace selected."
-            return 1
-        fi
-    fi
-
-    local workspace_path="../${workspace_to_remove}"
-
-    if [ ! -d "${workspace_path}" ]; then
-        gum log -sl error "Workspace directory '${workspace_path}' does not exist."
-        return 1
-    fi
-
-    jj workspace forget "${workspace_to_remove}"
-    gum log -sl info "Workspace '${workspace_to_remove}' removed."
-    gum log -sl info "Directory '${workspace_path}' was not deleted."
-}
-
-jb(){
-    local ticket='
-        jj log -T builtin_log_compact_full_description -r master..{3} \
-            | grep -oE "[A-Z]+-[0-9]+" \
-            | uniq'
-
-    local combined_preview='
-    if echo "$FZF_PROMPT" | grep -q "Pull"; then
-        base=$(gh pr view {1} --json baseRefName -q .baseRefName);
-        jj log --color always -r ${base}..{3} --stat -T builtin_log_detailed ;
-        printf "\033[38;5;242m";
-        printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g";
-        printf "\033[0m\n";
-        env GH_FORCE_TTY=1 gh pr view --comments {1}
-    else
-        '"$ticket"' | xargs -I % jira view --rich %
-    fi'
-
-    local integrate="
-    ticket=\$(jj log -T builtin_log_compact_full_description -r master..{3} | grep -oE \"[A-Z]+-[0-9]+\" | uniq);
-    if [ \$(jj log -r \"{3} & ~remote_bookmarks()\" --no-graph | wc -l) -gt 0 ]; then
-        gum confirm \"Bookmark {3} needs push first. Now?\" && jj git push -b {3} && \\
-        jenkins integrate -p {1}
-    else
-        gum confirm \"Integrate {3}?\" && jenkins integrate -p {1} && jira close \$ticket
-    fi
-    "
-
-    local width=${COLUMNS:-$(tput cols)}
-    local title_width=$((width * 40 / 100))    # 40% for title
-    local branch_width=$((width * 25 / 100))   # 25% for branch
-    local time_width=12                        # Fixed width for time
-    local author_width=20                      # Fixed width for author
-
-    env GH_FORCE_TTY="100%" gh pr list \
-    --json number,title,headRefName,updatedAt,author \
-    --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\n" .number .title .headRefName (timeago .updatedAt) .author.name}}{{end}}' \
-    | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v timew="$time_width" -v aw="$author_width" '{
-        # Color codes
-        reset = "\033[0m"
-        pr_color = "\033[1;36m"      # Bright cyan for PR numbers
-        title_color = "\033[1;37m"   # Bright white for titles
-        branch_color = "\033[1;33m"  # Bright yellow for branches
-        time_color = "\033[0;32m"    # Green for timestamps
-        author_color = "\033[0;35m"  # Magenta for authors
-
-        # Truncate and pad fields
-        title = (length($2) > tw) ? substr($2, 1, tw-1) "…" : $2
-        branch = (length($3) > bw) ? substr($3, 1, bw-1) "…" : $3
-        author = (length($5) > aw) ? substr($5, 1, aw-1) "…" : $5
-
-        # Format with fixed widths and preserve tabs
-        printf "%s%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n", 
-               pr_color, $1, reset,
-               title_color, tw, title, reset,
-               branch_color, bw, branch, reset,
-               time_color, timew, $4, reset,
-               author_color, aw, author, reset
-    }' \
-    | fzf \
-        --ansi \
-        --preview-window 'top,90%' \
-        --height 100% \
-        --delimiter '\t' \
-        --preview "$combined_preview" \
-        --bind "ctrl-i:become($integrate)" \
-        --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
-        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
-        --prompt 'Pull Request> ' \
-        --border-label-pos 5:bottom \
-        --border 'rounded' \
-        --border-label '  ctrl-i: integrate | ctrl-w: web | ctrl-s: toggle view'
-}
-
-function _jjhistory() {
-    jj log -T \
-        "builtin_log_compact" \
-        --color always \
-        -r "::"
-}
-
-
-jh() {
-    local change_id='echo {} | grep -oE  "\\b[k-z]+\\b" | head -1'
-    local ticket='
-        '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
-            | grep -oE "[A-Z]+-[0-9]+" \
-            | uniq'
-
-    local preview='
-    if echo "$FZF_PROMPT" | grep -q '::'; then
-        '"$change_id"' | xargs --no-run-if-empty -I % jj lll -r % --color always
-    elif echo "$FZF_PROMPT" | grep -q "Ticket"; then
-        '"$change_id"' | xargs -I % jj log -T description --no-graph -r % \
-            | grep -oE "[A-Z]+-[0-9]+" \
-            | uniq \
-            | xargs -I % jira view  --rich %
-    elif echo "$FZF_PROMPT" | grep -q "Diff"; then
-        '"$change_id"' | xargs -I % jj diff --tool difft -r %
-    fi'
-    
-    _jjhistory \
-    | fzf  \
-        --ansi \
-        --highlight-line \
-        --preview "$preview" \
-        --preview-window 'top,60%' \
-        --height 100% \
-        --reverse \
-        --prompt "::> " \
-        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -qv "Ticket"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
-        --bind 'ctrl-c:execute('"$ticket"' | xargs -I % jira close %)' \
-        --bind 'ctrl-d:transform:if echo "$FZF_PROMPT" | grep -qv "Diff"; then echo "change-prompt(Diff> )+refresh-preview"; else echo "change-prompt(::> )+refresh-preview"; fi' \
-        --bind 'ctrl-e:execute(jj view $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
-        --bind 'ctrl-/:execute(jj split -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
-        --bind 'ctrl-x:execute(jj abandon -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
-        --bind 'ctrl-w:execute(jj new -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
-        --bind 'ctrl-t:execute(jj edit -r $('"$change_id"'))+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
-        --bind 'ctrl-u:execute(jj undo)+reload(. ~/.shellrc.d/03-functions.sh && _jjhistory)' \
-        --bind 'enter:execute(echo $('"$change_id"') | tr -d '\n' | xsel --clipboard --input)+abort' \
-        --bind 'ctrl-p,ctrl-k,up:up+up' \
-        --bind 'ctrl-n,ctrl-j,down:down+down' \
-        --preview-label-pos 5:bottom \
-        --border 'rounded' \
-        --preview-label '  ctrl-d: diff | ctrl-e: view | ctrl-x: abandon | ctrl-u: undo | ctrl-t: edit | ctrl-w: new | ctrl-/: split | ctrl-w: web | ctrl-s: toggle ticket | ctrl-c: close ticket' \
-        --highlight-line \
-        --color='bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8' \
-        --color='fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC' \
-        --color='marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8' \
-        --color='selected-bg:#45475A' \
-        --color='border:#6C7086,label:#CDD6F4'
-}
-
-bcheck() {
-    local bookmark="$1"
-    jj diff --name-only -r "trunk()::${bookmark}" | grep -E ".py" | xargs ruff check
-}
-
-jjoplog() {
-    jj op log \
-        -T 'self.id().short() ++ " " ++ self.time().start().ago() ++ " " ++ self.description() ++ "\n" ++ self.tags() ++ "\0"' \
-        --color always \
-        --no-graph \
-        | fzf \
-        --read0 \
-        --ansi \
-        --highlight-line \
-        --preview 'jj op show {1} --summary --color always' \
-        --bind 'ctrl-r:become(jj op restore {1})' \
-        --border-label 'ctrl-r: restore' \
-        --border-label-pos 5:bottom \
-        --border rounded \
-        --border-label 'Jujutsu Op Log' \
-        --border-label-pos 5:top \
-        --preview-border left \
-        --color='fg:#f8f8f2,bg:#282a36,hl:#bd93f9' \
-        --color='fg+:#f8f8f2,bg+:#44475a,hl+:#bd93f9' \
-        --color='info:#ffb86c,prompt:#50fa7b,pointer:#ff79c6' \
-        --color='marker:#ff79c6,spinner:#ffb86c,header:#6272a4' \
-        --border-label-pos 5:bottom \
-        --border 'rounded' \
-        --border-label ' ctrl-r: restore'
-}
-
-jjadopt() {
-    jj log \
-        --color always \
-        -r 'untracked_remote_bookmarks()' \
-        -T 'bookmarks ++ "|" ++ author.email() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d %H:%M") ++ "|" ++ description.first_line() ++ "\n"' \
-        --no-graph \
-    | column -t -s "|" \
-    | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-limit --no-strip-ansi \
-    | cut -d ' ' -f 1 \
-    | xargs --no-run-if-empty printf ' -d %s' \
-    | xargs --no-run-if-empty jj rdev
-}
-
-jjreview() {
-    jj log \
-        --color always \
-        -r 'remote_bookmarks()' \
-        -T 'bookmarks ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d %H:%M") ++ "|" ++ description.first_line() ++ "\n"' \
-        --no-graph \
-    | column -t -s "|" \
-    | grep -v "Hugues" \
-    | grep -v "master" \
-    | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-strip-ansi \
-    | cut -d ' ' -f 1 \
-    | xargs --no-run-if-empty jj new
-}
 
 lsemr() {
     local ip=$(listemr | \
@@ -692,63 +366,6 @@ lsemr() {
     export REMOTE_SPARK_IP="$ip"
 }
 
-cdescribe() {
-    # Have Claude describe a Jujutsu commit
-    local revset=$1
-    local ticket_id=$2
-
-    # If the first argument is not a revset (does not contain :: or ..), assume
-    # it's a change ID and expand it.
-    if [[ "$revset" != *"::"* && "$revset" != *".."* ]]; then
-        # If the first argument is a change ID, expand it to a revset.
-        revset=$(jj log -r "$revset" --template "self.change_id()" --no-graph)
-    fi
-
-    # Validate mandatory first argument
-    if [ -z "$revset" ]; then
-        gum log --level error "Error: revset is required as the first argument"
-        gum log --level info "Usage: cdescribe <revset> [ticket_id]"
-        return 1
-    fi
-
-    if ! jj log -r "${revset}" >/dev/null 2>&1; then
-        gum log --level error "Error: revset '${revset}' not found"
-        return 1
-    fi
-
-    export CLAUDE_REVSET="${revset}"
-    gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
-        claude "/describe ${revset}" | jj describe -r ${revset} --stdin
-    unset CLAUDE_REVSET
-
-    # Modify the description of the commit to add the ticket ID on the last line
-    if [ -n "$ticket_id" ]; then
-        gum log --level info "Adding ticket ID: ${ticket_id}"
-
-        # Get current description and check if operation succeeded
-        if ! description=$(jj log -r "${revset}" --template description --no-graph 2>/dev/null); then
-            gum log --level error "Error: failed to get commit description"
-            return 1
-        fi
-
-        # Add ticket ID to description
-        new_description="${description}"$'\n\n'"${ticket_id}"
-
-        # Update commit description
-        if jj describe -r "${revset}" -m "${new_description}" >/dev/null 2>&1; then
-            gum log --level info "Successfully updated commit description with ticket ID"
-        else
-            gum log --level error "Error: failed to update commit description"
-            return 1
-        fi
-    fi
-
-    jj log -r "${revset}" --color always --no-graph \
-        -T 'self.change_id().shortest(8) ++ "\n" ++ self.description()'
-
-    gum confirm "Edit description?" && jj describe -r "${revset}"
-}
-
 _check_prerequisites() {
     if ! command -v gum &> /dev/null; then
         echo "gum is not installed. Install it with 'brew install gum'."
@@ -759,201 +376,6 @@ _check_prerequisites() {
         echo "gh (GitHub CLI) is not installed. Install it with 'brew install gh'."
         return 1
     fi
-
-}
-
-_select_bookmark() {
-    local bookmark="$1"
-    local header=${2:-"Select a bookmark:"}
-
-    if [ -z "${bookmark}" ]; then
-        # Get bookmarks, clean up trailing '*', and present with gum
-        bookmark=$(jj bookmark list -r "trunk():: ~ dev ~ trunk()" -T '"\n" ++ self.name()' \
-            | uniq | gum choose --header="${header}")
-
-        if [ -z "${bookmark}" ]; then
-            gum log --level error "No bookmark selected."
-            return 1
-        fi
-    else
-        # Validate the provided bookmark
-        if ! jj log -r "${bookmark}" >/dev/null 2>&1; then
-            gum log --level error "Error: bookmark '${bookmark}' not found"
-            return 1
-        fi
-        gum log --level info "Using bookmark: ${bookmark}"
-    fi
-    echo "${bookmark}"
-}
-
-cpr() {
-    # Have Claude create a pull request for a Jujutsu bookmark
-    local bookmark=""
-    local no_verify=false
-    local no_push=false
-    local stacked=false
-    local jj_base="trunk()"
-    local pr_base=$(git branch -r | grep -E 'origin/(main|master)$' | sed 's/.*\///')
-
-    # Check prerequisites
-    if ! _check_prerequisites; then return 1; fi
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --no-verify)
-                no_verify=true
-                shift
-                ;;
-            --no-push)
-                no_push=true
-                shift
-                ;;
-            --stacked)
-                stacked=true
-                shift
-                ;;
-            --help)
-                echo "Usage: cpr [--no-verify] [--no-push] [--stacked] [bookmark]"
-                echo ""
-                echo "Options:"
-                echo "  --no-verify    Skip precommit checks"
-                echo "  --no-push      Do not push the bookmark before creating the PR"
-                echo "  --stacked      Create a stacked PR (select a base bookmark)"
-                echo "  --help         Show this help message"
-                return 0
-                ;;
-            *)
-                bookmark="$1"
-                shift
-                ;;
-        esac
-    done
-
-    bookmark=$(_select_bookmark "${bookmark}")
-    if [ -z "$bookmark" ]; then
-        gum log --level error "You must provide a bookmark."
-        return 1
-    fi
-
-    # If no_verify is set, skip precommit checks
-    if [ "${no_verify}" = true ]; then
-        gum log --level info "Skipping precommit checks."
-    else
-        jj precommit -r "trunk()..${bookmark}" || {
-            gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
-            return 1
-        }
-    fi
-
-    if [ "${stacked}" = true ]; then
-        jj_base=$(_select_bookmark "" "Select a base bookmark for the stacked PR:")
-        pr_base=${jj_base}
-        if [ -z "$jj_base" ]; then
-            gum log --level error "You must provide a base."
-            return 1
-        fi
-    fi
-
-    reviewers=$(gum choose \
-        --no-limit \
-        --header="Select reviewers" \
-        $(gh api orgs/grubhubprod/teams/mlops/members --jq '.[].login' | grep -v hdemers) 'I want more choice' )
-
-    # If reviewers equals 'I want more choice', then start over with all members of that org
-    if [ "${reviewers}" = "*I want more choice*" ]; then
-        reviewers=$(gh api orgs/grubhubprod/members --jq '.[].login' --paginate | fzf --multi)
-    fi
-
-    reviewers=$(echo "${reviewers}" | tr '\n' ',' | sed 's/,$//')
-
-    if ! jj git push --bookmark "${bookmark}"; then
-        gum log --level error "Failed to push bookmark '${bookmark}'."
-        return 1
-    fi
-
-    export CLAUDE_BOOKMARK="${bookmark}"
-    export CLAUDE_REVIEWERS="${reviewers}"
-    export CLAUDE_JJ_BASE="${jj_base}"
-    export CLAUDE_PR_BASE="${pr_base}"
-    claude "/create-pr-jj"
-    unset CLAUDE_BOOKMARK
-    unset CLAUDE_REVIEWERS
-    unset CLAUDE_JJ_BASE
-    unset CLAUDE_PR_BASE
-
-}
-
-cticket() {
-    # Have Claude create a JIRA ticket
-    local bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
-    local base="trunk()"
-    local stacked=false
-
-    if [ -z "$bookmark" ]; then
-        gum log --level error "You must provide a bookmark."
-        return 1
-    fi
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --stacked)
-                stacked=true
-                shift
-                ;;
-            *)
-                shift
-                ;;
-        esac
-    done
-
-    local sprint=$(jira sprints -l \
-        | grep DSSO \
-        | cut -d '|' -f1,2 \
-        | column -s '|' -t \
-        | gum choose \
-        | sed 's/  *active\|future.*//' \
-    )
-
-    local points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
-    local epic=$(jira issues -e \
-        | fzf \
-        --ansi \
-        --header-lines=1 \
-        --bind='enter:become(echo {1})' \
-        --preview-window=up:50% \
-        --preview='jira view --rich {1}' \
-    )
-
-    local assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
-
-    if [ "${stacked}" = true ]; then
-        base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")
-        if [ -z "$base" ]; then
-            gum log --level error "You must provide a base."
-            return 1
-        fi
-    fi
-
-    export CLAUDE_BOOKMARK="${bookmark}"
-    export CLAUDE_PR_BASE="${base}"
-    export CLAUDE_TICKET_EPIC="${epic}"
-    export CLAUDE_TICKET_SPRINT="${sprint}"
-    export CLAUDE_TICKET_POINTS="${points}"
-    export CLAUDE_TICKET_ASSIGNEE="${assignee}"
-    export CLAUDE_TICKET_PROJECT="DSSO"
-
-    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$bookmark" "$epic" "$sprint" "$points", "$assignee")" || {
-        gum log --level info "Ticket creation cancelled."
-        return 0
-    }
-    claude "/jj-ticket"
-    unset CLAUDE_BOOKMARK
-    unset CLAUDE_TICKET_EPIC
-    unset CLAUDE_TICKET_SPRINT
-    unset CLAUDE_TICKET_POINTS
-    unset CLAUDE_PR_BASE
-    unset CLAUDE_TICKET_ASSIGNEE
-    unset CLAUDE_TICKET_PROJECT
 
 }
 
@@ -989,21 +411,21 @@ zellij_float_cmd() {
 
     if [ "$has_floating" -eq 0 ]; then
         # No floating pane exists, create one
-        gum log -sl info "Creating floating pane..."
+        gum log -sl debug "Creating floating pane..."
         zellij action new-pane --floating
 
         # Small delay to ensure pane is created and focused
         sleep 1
     elif [ "$is_hidden" -gt 0 ]; then
         # Floating pane exists but is hidden, unhide it
-        gum log -sl info "Unhiding floating panes..."
+        gum log -sl debug "Unhiding floating panes..."
         zellij action toggle-floating-panes
 
         # Small delay to ensure pane is visible and focused
         sleep 0.2
     else
         # Floating pane exists and is visible, focus it
-        gum log -sl info "Focusing existing floating pane..."
+        gum log -sl debug "Focusing existing floating pane..."
         # Focus the floating pane by toggling twice (hide then show)
         zellij action toggle-floating-panes
         sleep 0.1
@@ -1012,32 +434,48 @@ zellij_float_cmd() {
     fi
 
     # Now send the command to the floating pane
-    gum log -s "Sending command: $cmd"
+    gum log -sl debug "Sending command: $cmd"
     zellij action write-chars "$cmd"
 
     # Send Enter to execute the command
     zellij action write 13
 
-    gum log -sl info "Command sent successfully"
+    gum log -sl info "Command sent to Zellij floating pane."
 }
 
-
-cdeploy() {
-    # Deploy a branch using Jenkins CLI. Have this run in a Zellij floating pane.
-    local cmd
-    local bookmark
-
-    bookmark=$(_select_bookmark "${bookmark}")
-    if [ -z "$bookmark" ]; then
-        gum log --level error "You must provide a bookmark."
-        return 1
+js() {
+    local url="${JIRA_SERVER_URL}/browse"
+    local container_name="${DBX_CONTAINER_NAME}"
+    local cmd='xdg-open'
+    if [ -n "$container_name" ]; then
+        if [ -n "$CONTAINER_ID" ]; then
+            cmd="gtk-launch google-chrome.desktop"
+        else
+            cmd="gtk-launch ${container_name}-google-chrome.desktop"
+        fi
     fi
 
-    gum log -sl info "Will deploy bookmark '${bookmark}'"
-
-    cmd="jenkins deploy-branch --branch ${bookmark}"
-
-    gum confirm "Run unit tests?" || cmd="${cmd} --no-unit-tests"
-
-    zellij_float_cmd "${cmd}"
+    jira issues -r --current-sprint --mine  \
+        | fzf \
+        --height 90% \
+        --ansi \
+        --preview 'jira view -r {1}' \
+        --preview-window 'top,60%' \
+        --header-lines 1 \
+        --scheme history \
+        --bind 'enter:execute(wl-copy {1})+abort' \
+        --bind 'ctrl-t:execute(jira transition --interactive {1})+reload(jira issues -r)' \
+        --bind 'ctrl-i:execute(jira create)+reload(jira issues -r)' \
+        --bind 'ctrl-l:reload(jira issues -r --in-epic {1})+clear-query' \
+        --bind 'ctrl-h:reload(jira issues -r)+clear-query' \
+        --bind 'ctrl-e:reload(jira issues -r --epics-only)' \
+        --bind 'ctrl-r:reload(jira issues -r --programs-only)' \
+        --bind "ctrl-y:execute(wl-copy ${url}/{1})" \
+        --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
+        --bind "ctrl-u:execute(jira update {1})" \
+        --bind "ctrl-s:reload(jira issues -r --current-sprint --mine)" \
+        --border-label-pos 5:bottom \
+        --border 'rounded' \
+        --border-label '  ctrl-s: mine | ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update'
 }
+

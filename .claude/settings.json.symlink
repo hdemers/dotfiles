@@ -6,7 +6,6 @@
     "allow": [],
     "deny": []
   },
-  "model": "opusplan",
   "hooks": {
     "Notification": [
       {
@@ -46,6 +45,7 @@
     "type": "command",
     "command": "printf '\\033[01;32m%s@%s\\033[00m:\\033[01;34m%s\\033[00m' \"$(whoami)\" \"$(hostname -s)\" \"$(basename \"$(pwd)\")\""
   },
+  "alwaysThinkingEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754146791251
   }

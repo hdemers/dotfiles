@@ -59,6 +59,10 @@ h3. Any background context you want to provide
 
 * What is the broader context of this work?
 * Why are we doing this?
+
+h3. Plan
+
+if you are provided with a plan, copy it here, as is.
 ```
 
 

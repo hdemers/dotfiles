@@ -3,6 +3,8 @@ allowed-tools: Bash(jj log:*), Bash(jj diff:*), Bash(gh pr create:*), Bash(gh pr
 description: Open a PR from a Jujutsu bookmark
 ---
 
+MANDATORY: `git` commands won't work. This is a Jujutsu repository.
+
 ## Context
 
 ### Current commit descriptions:

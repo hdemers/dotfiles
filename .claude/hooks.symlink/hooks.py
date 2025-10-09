@@ -507,14 +507,17 @@ def type_check(
 
     return_codes = []
     for lang, files in languages_map.items():
-        if lang in config_data.get("languages", {}) and "type_checkers" in config_data["languages"][lang]:
+        if (
+            lang in config_data.get("languages", {})
+            and "type_checkers" in config_data["languages"][lang]
+        ):
             return_codes.append(_type_check(lang, files, config_data))
 
     sys.exit(max(return_codes, default=0))
 
 
 @cli.command()
-@click.option("--message", "-m", default="wip: 🤖 checkpoint", help="Commit message")
+@click.option("--message", "-m", default="🤖 wip: checkpoint", help="Commit message")
 @single_instance
 def checkpoint(message: str):
     """Create automated checkpoint commit."""

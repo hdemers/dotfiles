@@ -391,6 +391,8 @@ return {
       local resession = require 'resession'
       resession.setup(opts)
 
+      vim.keymap.set('n', '<leader>Sd', resession.delete)
+
       -- Load a dir-specific session when we open Neovim, save it when we exit.
       vim.api.nvim_create_autocmd('VimEnter', {
         callback = function()
@@ -506,7 +508,7 @@ return {
   },
   {
     'MeanderingProgrammer/render-markdown.nvim',
-    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
     ---@module 'render-markdown'
     ---@type render.md.UserConfig
     opts = {
@@ -524,7 +526,7 @@ return {
         language_icon = false,
         language_pad = 0,
         sign = false,
-        border = 'thin',
+        border = 'thick',
       },
     },
   },

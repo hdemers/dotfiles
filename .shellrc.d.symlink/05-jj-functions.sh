@@ -44,7 +44,7 @@ jwa() {
         fi
 
         # Get bookmarks, clean up trailing '*', and present with gum
-        branch=$(jj bookmark list -r "master:: ~ dev ~ master" -T '"\n" ++ self.name()' \
+        branch=$(jj bookmark list -r "trunk():: ~ dev ~ trunk()" -T '"\n" ++ self.name()' \
             | uniq | gum choose --header="Select a branch to create workspace for:")
 
         if [ -z "${branch}" ]; then
@@ -133,7 +133,7 @@ jwr() {
 
 jb(){
     local ticket='
-        jj log -T builtin_log_compact_full_description -r master..{3} \
+    jj log -T builtin_log_compact_full_description -r trunk()..{3} \
             | grep -oE "[A-Z]+-[0-9]+" \
             | uniq'
 
@@ -148,17 +148,6 @@ jb(){
     else
         '"$ticket"' | xargs -I % jira view --rich %
     fi'
-
-    local integrate="
-    ticket=\$(jj log -T builtin_log_compact_full_description -r master..{3} | grep -oE \"[A-Z]+-[0-9]+\" | uniq);
-    . ~/.shellrc.d/03-functions.sh;
-    if [ \$(jj log -r \"{3} & ~remote_bookmarks()\" --no-graph | wc -l) -gt 0 ]; then
-        gum confirm \"Bookmark {3} needs push first. Now?\" && jj git push -b {3} && \\
-        zellij_float_cmd \"jenkins integrate -p {1}\"
-    else
-        gum confirm \"Integrate {3}?\" && zellij_float_cmd \"jenkins integrate -p {1} && jira close \$ticket\"
-    fi
-    "
 
     local width=${COLUMNS:-$(tput cols)}
     local title_width=$((width * 40 / 100))    # 40% for title
@@ -194,10 +183,11 @@ jb(){
     | fzf \
         --ansi \
         --preview-window 'top,90%' \
+        --with-shell '/usr/bin/bash -c' \
         --height 100% \
         --delimiter '\t' \
         --preview "$combined_preview" \
-        --bind "ctrl-i:become($integrate)" \
+        --bind "ctrl-i:become(source ~/.shellrc.d/05-jj-functions.sh; jintegrate {1} {3})" \
         --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
         --prompt 'Pull Request> ' \
@@ -327,7 +317,7 @@ jjreview() {
 jdeploy() {
     # Deploy a Jujutsu bookmark using Jenkins CLI. Have this run in a Zellij floating pane.
     local cmd
-    local bookmark
+    local bookmark="$1"
 
     bookmark=$(_select_bookmark "${bookmark}")
     if [ -z "$bookmark" ]; then
@@ -341,5 +331,32 @@ jdeploy() {
 
     gum confirm "Run unit tests?" || cmd="${cmd} --no-unit-tests"
 
-    zellij_float_cmd "${cmd}"
+    zellij run -f -- zsh -c "${cmd}"
 }
+
+jintegrate() {
+    local pr_number="$1"
+    local bookmark="$2"
+    local ticket
+
+    ticket=$(jj log -T builtin_log_compact_full_description -r "trunk()..${bookmark}" \
+        | grep -oE "[A-Z]+-[0-9]+" \
+        | uniq)
+
+    if [ "$(jj log -r "${bookmark} & ~remote_bookmarks()" --no-graph | wc -l)" -gt 0 ]; then
+        gum confirm "Bookmark ${bookmark} needs push first. Now?" \
+            && jj git push -b "${bookmark}"
+    fi
+
+    gum confirm "Integrate PR ${pr_number} (${bookmark}) and close ticket ${ticket}?" \
+        && zellij run -f -- zsh -c "/home/linuxbrew/.linuxbrew/bin/jenkins integrate -p ${pr_number}" \
+        && jira close "${ticket}" \
+        && notify "Pull Request ${pr_number} integrated and ticket $ticket closed."
+
+
+}
+
+# Export functions for subshells, but only in bash (not zsh)
+if [[ -n "$BASH_VERSION" ]]; then
+    export -f jintegrate
+fi

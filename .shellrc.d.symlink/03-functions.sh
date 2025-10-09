@@ -90,7 +90,8 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
             cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?_notify\s*$//')
         fi
         # If command contains one of the following substrings, do not send notifications.
-        local ignore_list=("ssh" "vim" "nvim" "lsemr" "js")
+        local ignore_list=("ssh" "vim" "nvim" "lsemr" "js" "claude")
+
         for ignore in "${ignore_list[@]}"; do
             if [[ "$cmd" == *"$ignore"* ]]; then
                 return
@@ -143,21 +144,22 @@ rfv() {
 custom-atuin-history-widget() {
   local selected
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
-  selected=$(atuin search --reverse --format "{relativetime}\t{host}\t{exit}\t{command}" \
-      | awk -F'\t' -v cols="$(tput cols)" '{ 
-          time=sprintf("%-5s", $1);
-          host=sprintf("%-20s", $2);
-          exit_code=sprintf("%-3s", $3);
-          # Calculate remaining space: total width - time(5) - host(20) - exit(3) - tabs(3) - margin(2)
-          remaining = cols - 35;
+  selected=$(atuin search --exit 0 --reverse --format "{relativetime}\t{time}\t{host}\t{exit}\t{command}" \
+      | awk -F'\t' -v cols="$(tput cols)" '{
+          reltime=sprintf("%-5s", $1);
+          datetime=sprintf("%-16s", $2);
+          host=sprintf("%-20s", $3);
+          exit_code=sprintf("%-3s", $4);
+          # Calculate remaining space: total width - reltime(5) - datetime(16) - host(20) - exit(3) - tabs(4) - margin(2)
+          remaining = cols - 52;
           if (remaining < 10) remaining = 10;  # Minimum width for command
-          
-          cmd = $4;
+
+          cmd = $5;
           if (length(cmd) > remaining) {
               cmd = substr(cmd, 1, remaining - 3) "...";
           }
-          
-          printf "\033[36m%s\t\033[33m%s\t\033[32m%s\t\033[35m%s\033[0m\n", time, host, exit_code, cmd
+
+          printf "\033[36m%s\t\033[36m%s\t\033[33m%s\t\033[32m%s\t\033[35m%s\033[0m\n", reltime, datetime, host, exit_code, cmd
         }' \
       | fzf --ansi --delimiter='\t' \
           --bind 'tab:execute-silent(echo paste)+abort' \
@@ -379,68 +381,66 @@ _check_prerequisites() {
 
 }
 
-# Function to send command to floating pane in current Zellij tab
-# Usage: zellij_float_cmd "your command here"
+# Function to send command to a pane in current Zellij tab
+# Usage: zellij_float_cmd "your command here" [--floating]
+#
+# NOTE: Floating panes may have cross-tab focus issues in older Zellij versions.
+# See: https://github.com/zellij-org/zellij/issues/809 & https://github.com/zellij-org/zellij/pull/1265
+# Consider upgrading Zellij if experiencing cross-tab command issues.
 zellij_float_cmd() {
     local cmd="$1"
-    local layout
-    local current_tab_section
-    local has_floating
-    local is_hidden
+    local use_floating=false
+    local pane_name="cmd_$(date +%s)_$$"
+
+    # Check for --floating flag
+    if [[ "$2" == "--floating" ]] || [[ "$1" == "--floating" && -n "$3" ]]; then
+        use_floating=true
+        if [[ "$1" == "--floating" ]]; then
+            cmd="$2"
+        fi
+    fi
 
     if [ -z "$cmd" ]; then
         gum log -sl error "Error: No command provided"
-        gum log -sl info "Usage: zellij_float_cmd 'command to execute'"
+        gum log -sl info "Usage: zellij_float_cmd 'command to execute' [--floating]"
         return 1
     fi
 
-    # Get the current layout
-    layout=$(zellij action dump-layout)
+    if [ "$use_floating" = true ]; then
+        # Attempt to ensure we're in the right context for floating panes
+        gum log -sl debug "Creating floating pane: $pane_name"
 
-    # Extract current tab info (the one with focus=true)
-    # Check if current tab has floating panes that are not hidden
-    current_tab_section=$(echo "$layout" | awk '
-        /tab.*focus=true/ { in_current_tab=1 }
-        in_current_tab && /tab[^}]*{/ && !/focus=true/ { in_current_tab=0 }
-        in_current_tab { print }
-    ')
+        # Hide all floating panes first, then create new one to ensure it gets focus
+        zellij action toggle-floating-panes 2>/dev/null || true
+        sleep 0.1
 
-    # Check if floating panes exist and are visible
-    has_floating=$(echo "$current_tab_section" | grep -c "floating_panes")
-    is_hidden=$(echo "$current_tab_section" | grep -c "hide_floating_panes=true")
-
-    if [ "$has_floating" -eq 0 ]; then
-        # No floating pane exists, create one
-        gum log -sl debug "Creating floating pane..."
-        zellij action new-pane --floating
-
-        # Small delay to ensure pane is created and focused
-        sleep 1
-    elif [ "$is_hidden" -gt 0 ]; then
-        # Floating pane exists but is hidden, unhide it
-        gum log -sl debug "Unhiding floating panes..."
-        zellij action toggle-floating-panes
-
-        # Small delay to ensure pane is visible and focused
-        sleep 0.2
+        # Create new floating pane
+        zellij action new-pane --floating --name "$pane_name"
+        sleep 0.5
     else
-        # Floating pane exists and is visible, focus it
-        gum log -sl debug "Focusing existing floating pane..."
-        # Focus the floating pane by toggling twice (hide then show)
-        zellij action toggle-floating-panes
-        sleep 0.1
-        zellij action toggle-floating-panes
-        sleep 0.1
+        # Use regular pane that splits current view - this always works correctly
+        gum log -sl debug "Creating regular pane: $pane_name"
+        zellij action new-pane --direction right --name "$pane_name"
+
+        # Auto-close the pane after command finishes (if it's a simple command)
+        # We'll send a command to close the pane after execution
+        local close_cmd=" ; read -p 'Press Enter to close pane...' ; zellij action close-pane"
+        cmd="$cmd$close_cmd"
+        sleep 0.5
     fi
 
-    # Now send the command to the floating pane
-    gum log -sl debug "Sending command: $cmd"
+    # Send the command to the newly created pane
+    gum log -sl debug "Sending command to pane: $cmd"
     zellij action write-chars "$cmd"
 
     # Send Enter to execute the command
     zellij action write 13
 
-    gum log -sl info "Command sent to Zellij floating pane."
+    if [ "$use_floating" = true ]; then
+        gum log -sl info "Command sent to floating pane '$pane_name'"
+    else
+        gum log -sl info "Command sent to regular pane '$pane_name' in current tab"
+    fi
 }
 
 js() {
@@ -479,3 +479,7 @@ js() {
         --border-label '  ctrl-s: mine | ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update'
 }
 
+# Export functions for subshells, but only in bash (not zsh)
+if [[ -n "$BASH_VERSION" ]]; then
+    export -f ntfy
+fi

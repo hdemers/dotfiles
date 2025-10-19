@@ -659,6 +659,7 @@ return {
             .option('cursorcolumn', { name = 'Cursor column' })
             :map '<leader>uo'
           Snacks.toggle.option('cursorline', { name = 'Cursor line' }):map '<leader>ur'
+          Snacks.toggle.scroll():map '<leader>ua'
         end,
 
         vim.keymap.set('n', '<leader>uD', function()

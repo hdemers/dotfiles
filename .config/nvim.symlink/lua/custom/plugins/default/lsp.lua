@@ -141,7 +141,7 @@ return {
             client.server_capabilities.completionProvider = false
             client.server_capabilities.signatureHelpProvider = false
             client.server_capabilities.definitionProvider = true
-            client.server_capabilities.referencesProvider = true
+            client.server_capabilities.referencesProvider = false
             client.server_capabilities.documentHighlightProvider = false
             client.server_capabilities.documentSymbolProvider = false
             client.server_capabilities.codeActionProvider = false

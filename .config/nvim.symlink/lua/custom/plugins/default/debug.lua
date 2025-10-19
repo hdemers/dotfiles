@@ -134,6 +134,7 @@ return {
 
       {
         'mfussenegger/nvim-dap-python',
+        enabled = false,
         config = function()
           -- Install Python specific config
           local dap_python = require 'dap-python'

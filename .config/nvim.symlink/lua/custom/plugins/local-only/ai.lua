@@ -15,12 +15,12 @@ return {
         },
       },
       nes = {
-        enabled = true,
-        -- keymap = {
-        --   accept_and_goto = '<Tab>',
-        --   accept = false,
-        --   dismiss = '<Esc>',
-        -- },
+        enabled = false,
+        keymap = {
+          accept_and_goto = '<Tab>',
+          accept = false,
+          dismiss = '<Esc>',
+        },
       },
     },
     config = function(_, opts)

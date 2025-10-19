@@ -10,6 +10,7 @@ cpr() {
     local stacked=false
     local jj_base="trunk()"
     local pr_base=$(git branch -r | grep -E 'origin/(main|master)$' | sed 's/.*\///')
+    local empty_change_ids
 
     # Check prerequisites
     if ! _check_prerequisites; then return 1; fi
@@ -82,6 +83,9 @@ cpr() {
 
     reviewers=$(echo "${reviewers}" | tr '\n' ',' | sed 's/,$//')
 
+    empty_change_ids=$(jj log -r "trunk()..${bookmark} & description(exact:'')" --no-graph -T 'change_id.short()')
+    [ -n "${empty_change_ids}" ] && jj describe -r "${empty_change_ids}"
+
     if ! jj git push --bookmark "${bookmark}"; then
         gum log --level error "Failed to push bookmark '${bookmark}'."
         return 1
@@ -101,9 +105,15 @@ cpr() {
 
 cticket() {
     # Have Claude create a JIRA ticket
-    local bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
+    local bookmark
     local base="trunk()"
     local stacked=false
+    local sprint
+    local points
+    local epic
+    local assignee
+
+    bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
 
     if [ -z "$bookmark" ]; then
         gum log --level error "You must provide a bookmark."
@@ -122,7 +132,7 @@ cticket() {
         esac
     done
 
-    local sprint=$(jira sprints -l \
+    sprint=$(jira sprints \
         | grep DSSO \
         | cut -d '|' -f1,2 \
         | column -s '|' -t \
@@ -130,17 +140,18 @@ cticket() {
         | sed 's/  *active\|future.*//' \
     )
 
-    local points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
-    local epic=$(jira issues -e \
+    points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
+    epic=$(jira issues -er \
         | fzf \
         --ansi \
         --header-lines=1 \
         --bind='enter:become(echo {1})' \
         --preview-window=up:50% \
         --preview='jira view --rich {1}' \
+        --prompt='Select an epic for the ticket > ' \
     )
 
-    local assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
+    assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
 
     if [ "${stacked}" = true ]; then
         base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")

@@ -28,17 +28,7 @@ alias la='ls -A'
 alias l='ls -CF'
 alias lz='ls -alFrthZ'
 
-# If exa is installed, use it instead of ls
-if command -v exa &> /dev/null
-then
-    alias ls='exa'
-    alias ll='exa -l --git -s time'
-    alias l='exa -l --git -s time'
-    alias la='exa -la --git -s time'
-    alias lt='exa -lT --git --git-ignore -s time'
-    alias lz='exa -lZ --git -s time'
-fi
-
+# If eza is installed, use it instead of ls
 if [ "$(command -v eza)" ]; then
     alias ll='eza -la --git --icons=auto --sort newest'
     alias l.='eza -d .*'
@@ -46,6 +36,9 @@ if [ "$(command -v eza)" ]; then
     alias ls='eza --icons=auto'
     alias l1='eza -1 --icons=auto'
     alias lt='eza -lT --git --icons=auto'
+    alias lt2='eza -lT --git --icons=auto -L 2'
+    alias lt3='eza -lT --git --icons=auto -L 3'
+    alias lt4='eza -lT --git --icons=auto -L 4'
     alias lz='eza -laZ --git --icons=auto --sort newest'
 fi
 

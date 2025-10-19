@@ -2,10 +2,6 @@
 #
 # Jujutsu related function definitions
 
-__s() {
-    . $HOME/.shellrc.d/03-functions.sh
-}
-
 _select_bookmark() {
     local bookmark="$1"
     local header=${2:-"Select a bookmark:"}
@@ -16,8 +12,27 @@ _select_bookmark() {
             | uniq | gum choose --header="${header}")
 
         if [ -z "${bookmark}" ]; then
-            gum log --level error "No bookmark selected."
-            return 1
+            # Ask if the user wants to create a new bookmark
+            if gum confirm "No bookmark selected. Do you want to create a new bookmark?"; then
+                bookmark=$(gum input --placeholder="Enter new bookmark name")
+                if [ -z "${bookmark}" ]; then
+                    gum log --level error "Error: Bookmark name cannot be empty"
+                    return 1
+                else
+                    revset=$(gum input --placeholder="Enter revset (default: trunk())")
+                    revset=${revset:-trunk()}
+                    if ! jj log -r "${revset}" >/dev/null 2>&1; then
+                        gum log --level error "Error: revset '${revset}' not found"
+                        return 1
+
+                    fi
+                    if ! jj bookmark create -r "${revset}" "${bookmark}"; then
+                        gum log --level error "Error: Failed to create bookmark '${bookmark}'"
+                        return 1
+                    fi
+
+                fi
+            fi
         fi
     else
         # Validate the provided bookmark
@@ -131,24 +146,41 @@ jwr() {
     gum log -sl info "Directory '${workspace_path}' was not deleted."
 }
 
-jb(){
-    local ticket='
-    jj log -T builtin_log_compact_full_description -r trunk()..{3} \
+_extract_ticket() {
+    local change_id="$1"
+
+    jj log -T builtin_log_compact_full_description -r "trunk()..${change_id}" \
             | grep -oE "[A-Z]+-[0-9]+" \
-            | uniq'
+            | uniq
+}
 
-    local combined_preview='
+_jpreview() {
+    local pr_number="$1"
+    local change_id="$2"
+
+    # Check that change_id exists. If not, try change_id@origin.
+    if ! jj log -r "${change_id}" >/dev/null 2>&1; then
+        if ! jj log -r "${change_id}@origin" >/dev/null 2>&1; then
+            printf "\033[38;5;196mError: Change ID '%s' not found.\033[0m\n" "${change_id}"
+            return 1
+        else
+            change_id="${change_id}@origin"
+        fi
+    fi
+
     if echo "$FZF_PROMPT" | grep -q "Pull"; then
-        base=$(gh pr view {1} --json baseRefName -q .baseRefName);
-        jj log --color always -r ${base}..{3} --stat -T builtin_log_detailed ;
-        printf "\033[38;5;242m";
-        printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g";
-        printf "\033[0m\n";
-        env GH_FORCE_TTY=1 gh pr view --comments {1}
+        base=$(gh pr view "${pr_number}" --json baseRefName -q .baseRefName)
+        jj log --color always -r "${base}..${change_id}" --stat -T builtin_log_detailed
+        printf "\033[38;5;242m"
+        printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g"
+        printf "\033[0m\n"
+        env GH_FORCE_TTY=1 gh pr view --comments "${pr_number}"
     else
-        '"$ticket"' | xargs -I % jira view --rich %
-    fi'
+        jira view --rich "$(_extract_ticket "${change_id}")"
+    fi
+}
 
+jb(){
     local width=${COLUMNS:-$(tput cols)}
     local title_width=$((width * 40 / 100))    # 40% for title
     local branch_width=$((width * 25 / 100))   # 25% for branch
@@ -183,20 +215,21 @@ jb(){
     | fzf \
         --ansi \
         --preview-window 'top,90%' \
-        --with-shell '/usr/bin/bash -c' \
+        --with-shell "$HOME/.local/bin/fzf-wrapper.sh" \
         --height 100% \
         --delimiter '\t' \
-        --preview "$combined_preview" \
-        --bind "ctrl-i:become(source ~/.shellrc.d/05-jj-functions.sh; jintegrate {1} {3})" \
+        --preview "_jpreview {1} {3}" \
+        --bind "ctrl-i:become(_jintegrate {1} {3})" \
+        --bind "ctrl-b:become(_jdeploy {3})" \
         --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
         --prompt 'Pull Request> ' \
         --border-label-pos 5:bottom \
         --border 'rounded' \
-        --border-label '  ctrl-i: integrate | ctrl-w: web | ctrl-s: toggle view'
+        --border-label '  ctrl-i: integrate | ctrl-b: deploy branch | ctrl-w: web | ctrl-s: toggle view'
 }
 
-function _jjhistory() {
+_jjhistory() {
     jj log -T \
         "builtin_log_compact" \
         --color always \
@@ -314,10 +347,10 @@ jjreview() {
     | xargs --no-run-if-empty jj new
 }
 
-jdeploy() {
-    # Deploy a Jujutsu bookmark using Jenkins CLI. Have this run in a Zellij floating pane.
+_jdeploy() {
     local cmd
     local bookmark="$1"
+    local unit_tests=""
 
     bookmark=$(_select_bookmark "${bookmark}")
     if [ -z "$bookmark" ]; then
@@ -325,38 +358,41 @@ jdeploy() {
         return 1
     fi
 
-    gum log -sl info "Will deploy bookmark '${bookmark}'"
+    gum confirm "Run unit tests?" || unit_tests="--no-unit-tests"
 
-    cmd="jenkins deploy-branch --branch ${bookmark}"
+    cmd="jj git push -b ${bookmark} \
+        && jenkins deploy-branch --branch ${bookmark} ${unit_tests} \
+        && notify 'Bookmark ${bookmark} deployed.'"
 
-    gum confirm "Run unit tests?" || cmd="${cmd} --no-unit-tests"
-
-    zellij run -f -- zsh -c "${cmd}"
+    gum confirm "Deploy bookmark '${bookmark}' now?" && 
+        zellij_float_cmd "$cmd"
 }
 
-jintegrate() {
+_jintegrate() {
     local pr_number="$1"
     local bookmark="$2"
     local ticket
 
-    ticket=$(jj log -T builtin_log_compact_full_description -r "trunk()..${bookmark}" \
-        | grep -oE "[A-Z]+-[0-9]+" \
-        | uniq)
+    ticket=$(_extract_ticket "${bookmark}")
 
     if [ "$(jj log -r "${bookmark} & ~remote_bookmarks()" --no-graph | wc -l)" -gt 0 ]; then
         gum confirm "Bookmark ${bookmark} needs push first. Now?" \
             && jj git push -b "${bookmark}"
     fi
 
+    cmd="jenkins integrate -p ${pr_number} \
+       && jira close ${ticket} \
+       && notify 'Pull Request ${pr_number} integrated and ticket ${ticket} closed.'"
+
     gum confirm "Integrate PR ${pr_number} (${bookmark}) and close ticket ${ticket}?" \
-        && zellij run -f -- zsh -c "/home/linuxbrew/.linuxbrew/bin/jenkins integrate -p ${pr_number}" \
-        && jira close "${ticket}" \
-        && notify "Pull Request ${pr_number} integrated and ticket $ticket closed."
+        && zellij_float_cmd "$cmd"
 
 
 }
 
 # Export functions for subshells, but only in bash (not zsh)
-if [[ -n "$BASH_VERSION" ]]; then
-    export -f jintegrate
-fi
+# if [[ -n "$BASH_VERSION" ]]; then
+#     export -f _jpreview
+#     export -f _jdeploy
+#     export -f _jintegrate
+# fi

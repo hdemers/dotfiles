@@ -381,66 +381,9 @@ _check_prerequisites() {
 
 }
 
-# Function to send command to a pane in current Zellij tab
-# Usage: zellij_float_cmd "your command here" [--floating]
-#
-# NOTE: Floating panes may have cross-tab focus issues in older Zellij versions.
-# See: https://github.com/zellij-org/zellij/issues/809 & https://github.com/zellij-org/zellij/pull/1265
-# Consider upgrading Zellij if experiencing cross-tab command issues.
 zellij_float_cmd() {
     local cmd="$1"
-    local use_floating=false
-    local pane_name="cmd_$(date +%s)_$$"
-
-    # Check for --floating flag
-    if [[ "$2" == "--floating" ]] || [[ "$1" == "--floating" && -n "$3" ]]; then
-        use_floating=true
-        if [[ "$1" == "--floating" ]]; then
-            cmd="$2"
-        fi
-    fi
-
-    if [ -z "$cmd" ]; then
-        gum log -sl error "Error: No command provided"
-        gum log -sl info "Usage: zellij_float_cmd 'command to execute' [--floating]"
-        return 1
-    fi
-
-    if [ "$use_floating" = true ]; then
-        # Attempt to ensure we're in the right context for floating panes
-        gum log -sl debug "Creating floating pane: $pane_name"
-
-        # Hide all floating panes first, then create new one to ensure it gets focus
-        zellij action toggle-floating-panes 2>/dev/null || true
-        sleep 0.1
-
-        # Create new floating pane
-        zellij action new-pane --floating --name "$pane_name"
-        sleep 0.5
-    else
-        # Use regular pane that splits current view - this always works correctly
-        gum log -sl debug "Creating regular pane: $pane_name"
-        zellij action new-pane --direction right --name "$pane_name"
-
-        # Auto-close the pane after command finishes (if it's a simple command)
-        # We'll send a command to close the pane after execution
-        local close_cmd=" ; read -p 'Press Enter to close pane...' ; zellij action close-pane"
-        cmd="$cmd$close_cmd"
-        sleep 0.5
-    fi
-
-    # Send the command to the newly created pane
-    gum log -sl debug "Sending command to pane: $cmd"
-    zellij action write-chars "$cmd"
-
-    # Send Enter to execute the command
-    zellij action write 13
-
-    if [ "$use_floating" = true ]; then
-        gum log -sl info "Command sent to floating pane '$pane_name'"
-    else
-        gum log -sl info "Command sent to regular pane '$pane_name' in current tab"
-    fi
+    zellij run -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
 }
 
 js() {

@@ -79,3 +79,8 @@ export PLAID_USER=hdemers
 export UV_LINK_MODE=symlink
 
 export UV_CACHE_DIR=/home/hdemers/.cache/uv
+
+# Workaround for zellij to access sessions when connecting from ssh, but only when on host neptune
+if [[ "$(hostname)" == "neptune" ]]; then
+    export XDG_RUNTIME_DIR=/run/user/$(id -u)
+fi

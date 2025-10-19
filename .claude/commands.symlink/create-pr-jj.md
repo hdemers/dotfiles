@@ -35,4 +35,5 @@ MANDATORY: `git` commands won't work. This is a Jujutsu repository.
 - Keep the description as concise as possible, but still detailed enough to facilitate the review.
 - Explain why, not just what.
 - Reference issues/PRs when relevant
+- If `--base` is different from `master` or `main`, explain that this is a stacked PR (explain what stacked PRs are), and mention the base.
 - DO NOT add a "Generated with Claude Code" footer.

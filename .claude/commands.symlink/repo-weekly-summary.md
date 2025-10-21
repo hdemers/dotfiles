@@ -3,7 +3,7 @@
 Summarize the work done in this repository over a specific time horizon.
 
 ## Usage:
-`/weekly-summary <date>`
+`/repo-weekly-summary <date>`
 
 ## Process:
 0. This is a Jujutsu repository, but ONLY use `git ...` comamnds. It will work.

@@ -45,12 +45,6 @@
     "type": "command",
     "command": "printf '\\033[01;32m%s@%s\\033[00m:\\033[01;34m%s\\033[00m' \"$(whoami)\" \"$(hostname -s)\" \"$(basename \"$(pwd)\")\""
   },
-  "enabledPlugins": {
-    "coding-basics@hdemers-marketplace": true,
-    "jujutsu@hdemers-marketplace": true,
-    "Jira@hdemers-marketplace": true,
-    "GDP@hdemers-marketplace": true
-  },
   "alwaysThinkingEnabled": true,
   "feedbackSurveyState": {
     "lastShownTime": 1754146791251

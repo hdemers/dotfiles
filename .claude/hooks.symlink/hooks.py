@@ -134,6 +134,49 @@ def load_config(config_path: str = "config.yaml") -> Optional[Dict]:
         return None
 
 
+def get_files_from_stdin() -> List[str]:
+    """Extract modified file paths from stdin JSON data provided by PostToolUse hook."""
+    try:
+        # Read JSON from stdin
+        stdin_data = sys.stdin.read()
+        if not stdin_data:
+            return []
+
+        hook_data = json.loads(stdin_data)
+        tool_name = hook_data.get("tool_name", "")
+        tool_input = hook_data.get("tool_input", {})
+
+        files = []
+
+        # Extract file paths based on tool type
+        if tool_name in ["Write", "Edit"]:
+            file_path = tool_input.get("file_path")
+            if file_path:
+                files.append(file_path)
+
+        elif tool_name == "MultiEdit":
+            edits = tool_input.get("edits", [])
+            for edit in edits:
+                file_path = edit.get("file_path")
+                if file_path:
+                    files.append(file_path)
+
+        elif tool_name == "NotebookEdit":
+            notebook_path = tool_input.get("notebook_path")
+            if notebook_path:
+                files.append(notebook_path)
+
+        # Return unique file paths
+        return list(set(files))
+
+    except (json.JSONDecodeError, KeyError) as e:
+        error_console.print(f"[yellow]Warning: Failed to parse stdin JSON: {e}[/yellow]")
+        return []
+    except Exception as e:
+        error_console.print(f"[yellow]Warning: Unexpected error reading stdin: {e}[/yellow]")
+        return []
+
+
 def get_modified_files() -> List[str]:
     """Get list of modified files using Jujutsu or Git."""
     modified_files = []
@@ -192,9 +235,13 @@ def get_modified_files() -> List[str]:
     return []
 
 
-def get_all_modified_languages() -> Dict[str, List[str]]:
-    """Get all modified files grouped by detected language."""
-    modified_files = get_modified_files()
+def get_all_modified_languages(file_list: Optional[List[str]] = None) -> Dict[str, List[str]]:
+    """Get all modified files grouped by detected language.
+
+    Args:
+        file_list: Optional list of files to categorize. If None, uses get_modified_files().
+    """
+    modified_files = file_list if file_list is not None else get_modified_files()
     languages_map = {}
 
     for file_path in modified_files:
@@ -211,6 +258,32 @@ def get_all_modified_languages() -> Dict[str, List[str]]:
                     break
 
     return languages_map
+
+
+def normalize_to_absolute_paths(files: List[str], cwd: Optional[str] = None) -> List[str]:
+    """Normalize file paths to absolute paths.
+
+    Args:
+        files: List of file paths (can be relative or absolute)
+        cwd: Current working directory for resolving relative paths (defaults to os.getcwd())
+
+    Returns:
+        List of absolute paths
+    """
+    if cwd is None:
+        cwd = os.getcwd()
+
+    base_path = Path(cwd).resolve()
+    absolute_paths = []
+
+    for file_path in files:
+        path = Path(file_path)
+        if path.is_absolute():
+            absolute_paths.append(str(path.resolve()))
+        else:
+            absolute_paths.append(str((base_path / path).resolve()))
+
+    return absolute_paths
 
 
 def detect_language(directory: str = ".") -> Optional[str]:
@@ -462,7 +535,7 @@ def cli():
 def lint(
     config: str,
 ):
-    """Run linters based on configuration."""
+    """Run linters based on configuration using files from stdin JSON."""
 
     config_data = load_config(config)
 
@@ -471,15 +544,26 @@ def lint(
         error_console.print(f"[red]{error_msg}[/red]")
         sys.exit(1)
 
-    # No language specified: auto-detect and lint all modified languages
-    languages_map = get_all_modified_languages()
+    # Type narrowing for type checker
+    assert config_data is not None
+
+    # Get files from stdin (PostToolUse hook)
+    modified_files = get_files_from_stdin()
+
+    # Skip silently if no files were modified
+    if not modified_files:
+        sys.exit(0)
+
+    # Auto-detect and lint all modified languages
+    languages_map = get_all_modified_languages(modified_files)
     if not languages_map:
-        error_console.print("[yellow]No lintable files found[/yellow]")
-        sys.exit(1)
+        # Files were modified but none are lintable - skip silently
+        sys.exit(0)
 
     return_codes = []
+    languages = config_data.get("languages", {})
     for lang, files in languages_map.items():
-        if lang in config_data.get("languages", {}):
+        if languages and lang in languages:
             return_codes.append(_lint(lang, files, config_data))
 
     sys.exit(max(return_codes, default=0))
@@ -490,7 +574,7 @@ def lint(
 def type_check(
     config: str,
 ):
-    """Run type checkers based on configuration."""
+    """Run type checkers based on configuration using files from stdin JSON."""
 
     config_data = load_config(config)
 
@@ -499,17 +583,29 @@ def type_check(
         error_console.print(f"[red]{error_msg}[/red]")
         sys.exit(1)
 
-    # No language specified: auto-detect and type check all modified languages
-    languages_map = get_all_modified_languages()
+    # Type narrowing for type checker
+    assert config_data is not None
+
+    # Get files from stdin (PostToolUse hook)
+    modified_files = get_files_from_stdin()
+
+    # Skip silently if no files were modified
+    if not modified_files:
+        sys.exit(0)
+
+    # Auto-detect and type check all modified languages
+    languages_map = get_all_modified_languages(modified_files)
     if not languages_map:
-        error_console.print("[yellow]No type checkable files found[/yellow]")
-        sys.exit(1)
+        # Files were modified but none are type checkable - skip silently
+        sys.exit(0)
 
     return_codes = []
+    languages = config_data.get("languages", {})
     for lang, files in languages_map.items():
         if (
-            lang in config_data.get("languages", {})
-            and "type_checkers" in config_data["languages"][lang]
+            languages
+            and lang in languages
+            and "type_checkers" in languages[lang]
         ):
             return_codes.append(_type_check(lang, files, config_data))
 
@@ -520,15 +616,36 @@ def type_check(
 @click.option("--message", "-m", default="🤖 wip: checkpoint", help="Commit message")
 @single_instance
 def checkpoint(message: str):
-    """Create automated checkpoint commit."""
+    """Create automated checkpoint commit using stdin data with overlap detection."""
     return_code = 0
-    # Reuse existing function to get modified files
-    modified_files = get_modified_files()
 
-    # Check if there are files to commit
-    if not modified_files:
-        error_console.print("[yellow]No modified files found to commit[/yellow]")
-        sys.exit(1)
+    # Get files from stdin (PostToolUse hook)
+    stdin_files = get_files_from_stdin()
+
+    # Exit silently if no files from stdin (no files modified by Claude)
+    if not stdin_files:
+        sys.exit(0)
+
+    # Get modified files from VCS
+    vcs_files = get_modified_files()
+
+    # Exit silently if no VCS changes
+    if not vcs_files:
+        sys.exit(0)
+
+    # Normalize both lists to absolute paths for comparison
+    stdin_absolute = set(normalize_to_absolute_paths(stdin_files))
+    vcs_absolute = set(normalize_to_absolute_paths(vcs_files))
+
+    # Find intersection - only files that Claude edited AND are in the current repo
+    overlapping_files = stdin_absolute & vcs_absolute
+
+    # Exit silently if no overlap (Claude edited files outside this repo)
+    if not overlapping_files:
+        sys.exit(0)
+
+    # Convert back to list for VCS operations
+    files_to_commit = list(overlapping_files)
 
     # Detect VCS
     vcs = detect_vcs()
@@ -538,7 +655,7 @@ def checkpoint(message: str):
 
     # Call appropriate VCS-specific function
     if vcs == "git":
-        return_code = commit_git(message, modified_files)
+        return_code = commit_git(message, files_to_commit)
     elif vcs == "jujutsu":
         return_code = commit_jujutsu(message)
     else:

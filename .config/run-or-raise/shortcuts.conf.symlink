@@ -42,6 +42,9 @@
 # Spotify
 <Super>s,flatpak run com.spotify.Client,Spotify,Spotify
 
+# YouTube Music
+<Super>y,gtk-launch com.google.Chrome.flextop.chrome-cinhimbnkkaeohfgghhklpknlkffjgod-Default.desktop,,YouTube Music
+
 # KeePassXC
 <Super>p,flatpak run org.keepassxc.KeePassXC,KeePassXC,KeePassXC
 

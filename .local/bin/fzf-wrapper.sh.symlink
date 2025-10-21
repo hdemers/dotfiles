@@ -1,6 +1,0 @@
-#!/usr/bin/bash
-
-source $HOME/.shellrc.d/05-jj-functions.sh
-eval "$@"
-
-# :vim: set ft=sh

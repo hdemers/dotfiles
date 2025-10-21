@@ -182,15 +182,24 @@ _jpreview() {
 
 jb(){
     local width=${COLUMNS:-$(tput cols)}
-    local title_width=$((width * 40 / 100))    # 40% for title
-    local branch_width=$((width * 25 / 100))   # 25% for branch
-    local time_width=12                        # Fixed width for time
-    local author_width=20                      # Fixed width for author
 
-    env GH_FORCE_TTY="100%" gh pr list \
-    --json number,title,headRefName,updatedAt,author \
-    --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\n" .number .title .headRefName (timeago .updatedAt) .author.name}}{{end}}' \
-    | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v timew="$time_width" -v aw="$author_width" '{
+    # Fetch PR data once and store it
+    local pr_data
+    pr_data=$(env GH_FORCE_TTY="100%" gh pr list \
+        --json number,title,headRefName,updatedAt,author \
+        --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\n" .number .title .headRefName (timeago .updatedAt) .author.name}}{{end}}')
+
+    # Calculate maximum branch name length (dynamic width)
+    local max_branch_width
+    max_branch_width=$(echo "$pr_data" | awk -F'\t' 'BEGIN {max=0} {if (length($3) > max) max=length($3)} END {print max}')
+
+    # Set fixed column widths
+    local branch_width=$max_branch_width  # Dynamic: never truncate
+    local title_width=60                  # Fixed: truncate if longer
+    local time_width=15                   # Fixed: truncate if longer
+    local author_width=20                 # Fixed: truncate if longer
+
+    echo "$pr_data" | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v timew="$time_width" -v aw="$author_width" '{
         # Color codes
         reset = "\033[0m"
         pr_color = "\033[1;36m"      # Bright cyan for PR numbers
@@ -199,13 +208,16 @@ jb(){
         time_color = "\033[0;32m"    # Green for timestamps
         author_color = "\033[0;35m"  # Magenta for authors
 
-        # Truncate and pad fields
+        # Strip emojis and non-ASCII characters from title for proper alignment
+        gsub(/[^\x00-\x7F]/, "", $2)
+
+        # Truncate title and author if needed, but never truncate branch
         title = (length($2) > tw) ? substr($2, 1, tw-1) "…" : $2
-        branch = (length($3) > bw) ? substr($3, 1, bw-1) "…" : $3
+        branch = $3  # Never truncate branch name
         author = (length($5) > aw) ? substr($5, 1, aw-1) "…" : $5
 
         # Format with fixed widths and preserve tabs
-        printf "%s%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n", 
+        printf "%s%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n",
                pr_color, $1, reset,
                title_color, tw, title, reset,
                branch_color, bw, branch, reset,
@@ -215,7 +227,7 @@ jb(){
     | fzf \
         --ansi \
         --preview-window 'top,90%' \
-        --with-shell "$HOME/.local/bin/fzf-wrapper.sh" \
+        --with-shell "$HOME/.local/bin/fzf-shell.sh" \
         --height 100% \
         --delimiter '\t' \
         --preview "_jpreview {1} {3}" \
@@ -255,7 +267,7 @@ jh() {
     elif echo "$FZF_PROMPT" | grep -q "Diff"; then
         '"$change_id"' | xargs -I % jj diff --tool difft -r %
     fi'
-    
+
     _jjhistory \
     | fzf  \
         --ansi \

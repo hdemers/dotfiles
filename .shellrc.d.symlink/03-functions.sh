@@ -55,7 +55,8 @@ ntfy() {
         > /dev/null
 }
 
-if [[ $CURRENT_SHELL = "zsh" ]]; then
+# If either CURRENT_SHELL or SHELL is zsh, then...
+if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
     NOTIFY_THRESHOLD=120
 
     notify_preexec() {
@@ -90,7 +91,7 @@ if [[ $CURRENT_SHELL = "zsh" ]]; then
             cmd=$(echo "$cmd" | sed -E 's/([;&|]\s*)?_notify\s*$//')
         fi
         # If command contains one of the following substrings, do not send notifications.
-        local ignore_list=("ssh" "vim" "nvim" "lsemr" "js" "claude")
+        local ignore_list=("ssh" "vim" "nvim" "lsemr" "js" "claude" "jb")
 
         for ignore in "${ignore_list[@]}"; do
             if [[ "$cmd" == *"$ignore"* ]]; then
@@ -125,7 +126,7 @@ rfv() {
         --glob !'*.{venv,ruff_cache,pytest_cache,mypy_cache,tox}' \
         --glob !'{__pycache__}' \
         --hidden \
-        "${*}" \
+        "$@" \
             | \
         fzf --ansi \
         --color='hl:#268BD2,hl+:reverse' \

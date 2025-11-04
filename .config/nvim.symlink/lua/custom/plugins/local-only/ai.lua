@@ -16,8 +16,9 @@ return {
       },
       nes = {
         enabled = false,
+        auto_trigger = false,
         keymap = {
-          accept_and_goto = '<Tab>',
+          accept_and_goto = '<leader>p',
           accept = false,
           dismiss = '<Esc>',
         },
@@ -25,12 +26,17 @@ return {
     },
     config = function(_, opts)
       require('copilot').setup(opts)
+
+      -- Setup keymap to open Copilot panel.
+      vim.keymap.set('n', '<leader>ao', function()
+        require('copilot.panel').toggle()
+      end, { desc = 'Copilot Panel Toggle' })
     end,
   },
   {
     'coder/claudecode.nvim',
     dependencies = { 'folke/snacks.nvim' },
-    enabled = true,
+    enabled = false,
     config = true,
     keys = {
       { '<leader>ac', nil, desc = 'AI/Claude Code' },
@@ -105,25 +111,17 @@ return {
       },
     },
     keys = {
-      {
-        '<tab>',
-        function()
-          -- if there is a next edit, jump to it, otherwise apply it if any
-          if not require('sidekick').nes_jump_or_apply() then
-            return '<Tab>' -- fallback to normal tab
-          end
-        end,
-        expr = true,
-        desc = 'Goto/Apply Next Edit Suggestion',
-      },
-      {
-        '<leader>aa',
-        function()
-          require('sidekick.cli').toggle { focus = true }
-        end,
-        desc = 'Sidekick Toggle CLI',
-        mode = { 'n', 'v' },
-      },
+      -- {
+      --   '<tab>',
+      --   function()
+      --     -- if there is a next edit, jump to it, otherwise apply it if any
+      --     if not require('sidekick').nes_jump_or_apply() then
+      --       return '<Tab>' -- fallback to normal tab
+      --     end
+      --   end,
+      --   expr = true,
+      --   desc = 'Goto/Apply Next Edit Suggestion',
+      -- },
       {
         '<c-space>',
         function()
@@ -133,20 +131,59 @@ return {
         mode = { 'n', 'x', 'i', 't' },
       },
       {
-        '<leader>ag',
+        '<leader>aa',
         function()
-          require('sidekick.cli').toggle { name = 'grok', focus = true }
+          require('sidekick.cli').toggle()
         end,
-        desc = 'Sidekick Grok Toggle',
-        mode = { 'n', 'v' },
+        desc = 'Sidekick Toggle CLI',
+      },
+      {
+        '<leader>as',
+        function()
+          require('sidekick.cli').select()
+        end,
+        -- Or to select only installed tools:
+        -- require("sidekick.cli").select({ filter = { installed = true } })
+        desc = 'Sidekick Select CLI',
+      },
+      {
+        '<leader>at',
+        function()
+          require('sidekick.cli').send { msg = '{this}' }
+        end,
+        mode = { 'x', 'n' },
+        desc = 'Send This',
+      },
+      {
+        '<leader>af',
+        function()
+          require('sidekick.cli').send { msg = '{file}' }
+        end,
+        desc = 'Sidekick Send File',
+      },
+      {
+        '<leader>av',
+        function()
+          require('sidekick.cli').send { msg = '{selection}' }
+        end,
+        mode = { 'x' },
+        desc = 'Sidekick Send Visual Selection',
       },
       {
         '<leader>ap',
         function()
-          require('sidekick.cli').select_prompt()
+          require('sidekick.cli').prompt()
         end,
-        desc = 'Sidekick Ask Prompt',
-        mode = { 'n', 'v' },
+        mode = { 'n', 'x' },
+        desc = 'Sidekick Select Prompt',
+      },
+      -- Example of a keybinding to open Claude directly
+      {
+        '<leader>ac',
+        function()
+          require('sidekick.cli').toggle { name = 'claude', focus = true }
+        end,
+        desc = 'Sidekick Toggle Claude',
       },
     },
   },

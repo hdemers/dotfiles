@@ -47,4 +47,10 @@ the project.
 
 Today's date is !`date +"%Y-%m-%d"`
 
+## Obsidian Vault
+
+When you need to write a report use the report-writing skill to write to the
+Obsidian vault located at /home/hdemers/Dropbox/Documents/Obsidian/Grubhub/
+(or might also be under /var/home/hdemers/...)
+
 <!-- vim: set filetype=markdown: -->

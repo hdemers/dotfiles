@@ -417,9 +417,11 @@ def _lint(
     ran_linters = []
 
     for linter_cmd in linters:
-        console.print(f"[blue]Running:[/blue] {linter_cmd}")
+        # Expand environment variables in the command
+        expanded_cmd = os.path.expandvars(linter_cmd)
+        console.print(f"[blue]Running:[/blue] {expanded_cmd}")
 
-        cmd_parts = linter_cmd.split()
+        cmd_parts = expanded_cmd.split()
         cmd_parts.extend(target_files)
 
         try:
@@ -478,9 +480,11 @@ def _type_check(
     ran_type_checkers = []
 
     for type_checker_cmd in type_checkers:
-        console.print(f"[blue]Running:[/blue] {type_checker_cmd}")
+        # Expand environment variables in the command
+        expanded_cmd = os.path.expandvars(type_checker_cmd)
+        console.print(f"[blue]Running:[/blue] {expanded_cmd}")
 
-        cmd_parts = type_checker_cmd.split()
+        cmd_parts = expanded_cmd.split()
         cmd_parts.extend(target_files)
 
         try:

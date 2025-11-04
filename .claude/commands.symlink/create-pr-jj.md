@@ -1,9 +1,10 @@
 ---
-allowed-tools: Bash(jj log:*), Bash(jj diff:*), Bash(gh pr create:*), Bash(gh pr edit:*), Bash(jira transition-to:*), Bash(printenv:*), Bash(jira describe:*)
+allowed-tools: Bash(jj log:*), Bash(jj diff:*), Bash(gh pr create:*), Bash(gh pr edit:*), Bash(jira transition-to:*), Bash(printenv:*), Bash(jira view:*), Bash(cat:*)
 description: Open a PR from a Jujutsu bookmark
 ---
 
-MANDATORY: `git` commands won't work. This is a Jujutsu repository.
+MANDATORY: You have all the informatin you need below, DO NOT attempt to run
+`jj` (or worse `git`) commands, rather STOP and ASK if need be.
 
 ## Context
 
@@ -15,10 +16,17 @@ MANDATORY: `git` commands won't work. This is a Jujutsu repository.
 
 !`jj diff --git -r "$CLAUDE_JJ_BASE..$CLAUDE_BOOKMARK"`
 
+### Associated ticket (if any)
+
+!`jira view "$CLAUDE_TICKET" 2>/dev/null || echo "no ticket"`
+
+### PR Template (if any)
+
+!`cat .github/PULL_REQUEST_TEMPLATE.md 2>/dev/null || echo "no pre-existing PR template."`
 
 ## Process:
 1. Draft a PR description from the above commit messages and diffs.
-2. Use the template found in .github/PULL_REQUEST_TEMPLATE.md.
+2. Use the PR template, if any pre-existing exists, otherwise use a sensible structure.
 3. Use Markdown formatting for the PR description.
 4. Assign the PR to me.
 5. Set reviewers to: !`printenv CLAUDE_REVIEWERS`

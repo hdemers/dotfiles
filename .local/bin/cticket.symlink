@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+show_help() {
+    cat << EOF
+Usage: cticket [OPTIONS]
+
+Create a JIRA ticket for a Jujutsu bookmark using Claude AI.
+
+This interactive script guides you through creating a JIRA ticket by:
+  1. Selecting a bookmark (Jujutsu branch)
+  2. Choosing a sprint
+  3. Assigning story points
+  4. Selecting an epic
+  5. Choosing an assignee
+  6. Having Claude generate the ticket content
+
+OPTIONS:
+    --stacked    Create a stacked diff ticket (prompts for base bookmark)
+    --help       Display this help message and exit
+
+EXAMPLES:
+    # Create a regular ticket
+    cticket
+
+    # Create a stacked diff ticket
+    cticket --stacked
+
+ENVIRONMENT:
+    TRACE        Set to '1' to enable bash tracing
+
+DEPENDENCIES:
+    - jira       JIRA CLI tool
+    - gum        Terminal UI tool
+    - fzf        Fuzzy finder
+    - claude     Claude AI CLI
+    - jj         Jujutsu version control
+
+EOF
+}
+
+main() {
+    # Have Claude create a JIRA ticket
+    local bookmark
+    local base="trunk()"
+    local stacked=false
+    local sprint
+    local points
+    local epic
+    local assignee
+
+    # Parse command-line arguments first
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help)
+                show_help
+                return 0
+                ;;
+            --stacked)
+                stacked=true
+                shift
+                ;;
+            *)
+                shift
+                ;;
+        esac
+    done
+
+    . "$HOME"/.shellrc.d/05-jj-functions.sh
+
+    bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
+
+    if [ -z "$bookmark" ]; then
+        gum log --level error "You must provide a bookmark."
+        return 1
+    fi
+
+    sprint=$(jira sprints \
+        | grep DSSO \
+        | cut -d '|' -f1,2 \
+        | column -s '|' -t \
+        | gum choose \
+        | sed 's/  *active\|future.*//' \
+    )
+
+    points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
+    epic=$(jira issues -er \
+        | fzf \
+        --ansi \
+        --header-lines=1 \
+        --bind='enter:become(echo {1})' \
+        --preview-window=up:50% \
+        --preview='jira view --rich {1}' \
+        --prompt='Select an epic for the ticket > ' \
+    )
+
+    assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
+
+    if [ "${stacked}" = true ]; then
+        base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")
+        if [ -z "$base" ]; then
+            gum log --level error "You must provide a base."
+            return 1
+        fi
+    fi
+
+    export CLAUDE_BOOKMARK="${bookmark}"
+    export CLAUDE_PR_BASE="${base}"
+    export CLAUDE_TICKET_EPIC="${epic}"
+    export CLAUDE_TICKET_SPRINT="${sprint}"
+    export CLAUDE_TICKET_POINTS="${points}"
+    export CLAUDE_TICKET_ASSIGNEE="${assignee}"
+    export CLAUDE_TICKET_PROJECT="DSSO"
+
+    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$bookmark" "$epic" "$sprint" "$points", "$assignee")" || {
+        gum log --level info "Ticket creation cancelled."
+        return 0
+    }
+    claude "/jj-ticket"
+    unset CLAUDE_BOOKMARK
+    unset CLAUDE_TICKET_EPIC
+    unset CLAUDE_TICKET_SPRINT
+    unset CLAUDE_TICKET_POINTS
+    unset CLAUDE_PR_BASE
+    unset CLAUDE_TICKET_ASSIGNEE
+    unset CLAUDE_TICKET_PROJECT
+
+
+}
+
+main "$@"
+
+# vim: set ft=sh

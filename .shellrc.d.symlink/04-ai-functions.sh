@@ -11,6 +11,7 @@ cpr() {
     local jj_base="trunk()"
     local pr_base=$(git branch -r | grep -E 'origin/(main|master)$' | sed 's/.*\///')
     local empty_change_ids
+    local ticket
 
     # Check prerequisites
     if ! _check_prerequisites; then return 1; fi
@@ -71,6 +72,8 @@ cpr() {
         fi
     fi
 
+    ticket=$(_extract_ticket "${bookmark}")
+
     reviewers=$(gum choose \
         --no-limit \
         --header="Select reviewers" \
@@ -95,92 +98,13 @@ cpr() {
     export CLAUDE_REVIEWERS="${reviewers}"
     export CLAUDE_JJ_BASE="${jj_base}"
     export CLAUDE_PR_BASE="${pr_base}"
+    export CLAUDE_TICKET="${ticket}"
     claude "/create-pr-jj"
+    unset CLAUDE_TICKET
     unset CLAUDE_BOOKMARK
     unset CLAUDE_REVIEWERS
     unset CLAUDE_JJ_BASE
     unset CLAUDE_PR_BASE
-
-}
-
-cticket() {
-    # Have Claude create a JIRA ticket
-    local bookmark
-    local base="trunk()"
-    local stacked=false
-    local sprint
-    local points
-    local epic
-    local assignee
-
-    bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
-
-    if [ -z "$bookmark" ]; then
-        gum log --level error "You must provide a bookmark."
-        return 1
-    fi
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --stacked)
-                stacked=true
-                shift
-                ;;
-            *)
-                shift
-                ;;
-        esac
-    done
-
-    sprint=$(jira sprints \
-        | grep DSSO \
-        | cut -d '|' -f1,2 \
-        | column -s '|' -t \
-        | gum choose \
-        | sed 's/  *active\|future.*//' \
-    )
-
-    points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
-    epic=$(jira issues -er \
-        | fzf \
-        --ansi \
-        --header-lines=1 \
-        --bind='enter:become(echo {1})' \
-        --preview-window=up:50% \
-        --preview='jira view --rich {1}' \
-        --prompt='Select an epic for the ticket > ' \
-    )
-
-    assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
-
-    if [ "${stacked}" = true ]; then
-        base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")
-        if [ -z "$base" ]; then
-            gum log --level error "You must provide a base."
-            return 1
-        fi
-    fi
-
-    export CLAUDE_BOOKMARK="${bookmark}"
-    export CLAUDE_PR_BASE="${base}"
-    export CLAUDE_TICKET_EPIC="${epic}"
-    export CLAUDE_TICKET_SPRINT="${sprint}"
-    export CLAUDE_TICKET_POINTS="${points}"
-    export CLAUDE_TICKET_ASSIGNEE="${assignee}"
-    export CLAUDE_TICKET_PROJECT="DSSO"
-
-    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$bookmark" "$epic" "$sprint" "$points", "$assignee")" || {
-        gum log --level info "Ticket creation cancelled."
-        return 0
-    }
-    claude "/jj-ticket"
-    unset CLAUDE_BOOKMARK
-    unset CLAUDE_TICKET_EPIC
-    unset CLAUDE_TICKET_SPRINT
-    unset CLAUDE_TICKET_POINTS
-    unset CLAUDE_PR_BASE
-    unset CLAUDE_TICKET_ASSIGNEE
-    unset CLAUDE_TICKET_PROJECT
 
 }
 
@@ -210,7 +134,7 @@ cdescribe() {
 
     export CLAUDE_REVSET="${revset}"
     gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
-        claude "/describe ${revset}" | jj describe -r ${revset} --stdin
+        claude "/describe ${revset}" | jj describe -r "${revset}" --stdin
     unset CLAUDE_REVSET
 
     # Modify the description of the commit to add the ticket ID on the last line
@@ -290,6 +214,7 @@ Best practices:
 EOF
 )
 
+    gum log --level info "Using API key: ${ANTHROPIC_API_KEY}"
     gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
         jj diff --git -r "${revset}" | mods --role commit --prompt "${prompt}" | jj describe -r "${revset}" --stdin
 

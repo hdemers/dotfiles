@@ -70,6 +70,12 @@ jwa() {
 
     local workspace_path="../${branch}"
 
+    # IF workspace directory already exists, return
+    if [ -d "${workspace_path}" ]; then
+        gum log -sl error "Workspace directory '${workspace_path}' already exists. Skipping creation."
+        return 1
+    fi
+
     jj workspace add -r "${branch}" "${workspace_path}"
     gum log -sl info "Workspace ${branch} created at ${workspace_path}"
     # Return if the workspace already exists
@@ -231,14 +237,15 @@ jb(){
         --height 100% \
         --delimiter '\t' \
         --preview "_jpreview {1} {3}" \
-        --bind "ctrl-i:become(_jintegrate {1} {3})" \
-        --bind "ctrl-b:become(_jdeploy {3})" \
+        --bind "ctrl-i:become(jintegrate {1} {3})" \
+        --bind "ctrl-b:become(jdeploy {3})" \
         --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
+        --bind 'ctrl-m:become(pr-discussions {1} --human)' \
         --prompt 'Pull Request> ' \
         --border-label-pos 5:bottom \
         --border 'rounded' \
-        --border-label '  ctrl-i: integrate | ctrl-b: deploy branch | ctrl-w: web | ctrl-s: toggle view'
+        --border-label '  ctrl-i: integrate | ctrl-b: deploy branch | ctrl-w: web | ctrl-s: toggle view | ctr-m: list comments'
 }
 
 _jjhistory() {
@@ -359,7 +366,7 @@ jjreview() {
     | xargs --no-run-if-empty jj new
 }
 
-_jdeploy() {
+jdeploy() {
     local cmd
     local bookmark="$1"
     local unit_tests=""
@@ -380,7 +387,7 @@ _jdeploy() {
         zellij_float_cmd "$cmd"
 }
 
-_jintegrate() {
+jintegrate() {
     local pr_number="$1"
     local bookmark="$2"
     local ticket
@@ -403,8 +410,9 @@ _jintegrate() {
 }
 
 # Export functions for subshells, but only in bash (not zsh)
-# if [[ -n "$BASH_VERSION" ]]; then
-#     export -f _jpreview
-#     export -f _jdeploy
-#     export -f _jintegrate
-# fi
+if [[ -n "$BASH_VERSION" ]]; then
+    export -f _jpreview
+    export -f jdeploy
+    export -f jintegrate
+    export -f _select_bookmark 
+fi

@@ -572,6 +572,7 @@ return {
       statuscolumn = { enabled = true },
       words = { enabled = true },
       scroll = { enabled = true },
+      scope = { enabled = true },
       picker = {
         win = {
           -- input window
@@ -615,6 +616,10 @@ return {
       { 'gd', function() Snacks.picker.lsp_definitions() end, desc = 'Go to definition', },
       { "<leader>bs",  function() Snacks.scratch.open({ft='markdown'}) end, desc = "Open Markdown Scratch Buffer" },
       { "<leader>bss",  function() Snacks.scratch.select() end, desc = "Select Scratch Buffer" },
+      { "<leader>gr", function() Snacks.picker.gh_pr() end, desc = "GitHub Pull Requests (open)" },
+      { "<leader>gR", function() Snacks.picker.gh_pr({ state = "all" }) end, desc = "GitHub Pull Requests (all)" },
+      { "]r",         function() Snacks.words.jump(vim.v.count1) end, desc = "Next Reference", mode = { "n", "t" } },
+      { "[r",         function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev Reference", mode = { "n", "t" } },
     },
     init = function()
       vim.api.nvim_create_autocmd('User', {

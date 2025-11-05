@@ -146,11 +146,11 @@ return {
         ':Git push',
         desc = 'Fugitive: git push',
       },
-      {
-        '<leader>gr',
-        ':Git rebase -i master<CR>',
-        desc = 'Fugitive: git rebase -i master',
-      },
+      -- {
+      --   '<leader>gr',
+      --   ':Git rebase -i master<CR>',
+      --   desc = 'Fugitive: git rebase -i master',
+      -- },
       {
         '<leader>gb',
         ':Git blame<CR>',

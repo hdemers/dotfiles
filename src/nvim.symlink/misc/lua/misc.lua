@@ -60,13 +60,13 @@ M.check_for_ipython = function()
   handle:close()
 
   if result == '' then
-    -- Prompt user to install ipykernel
+    -- Prompt user to install ipython
     local input =
-      vim.fn.input('Confirm', 'ipython not found. Install ipykernel? [y/N]: '):sub(-1)
+      vim.fn.input('Confirm', 'ipython not found. Install ipython? [y/N]: '):sub(-1)
 
     if input and input:lower() == 'y' then
       local Terminal = require('toggleterm.terminal').Terminal
-      local cmd = container_cmd .. 'uv pip install ipykernel'
+      local cmd = container_cmd .. 'uv pip install ipython'
       Terminal
         :new({
           direction = 'float',
@@ -76,11 +76,11 @@ M.check_for_ipython = function()
           float_opts = { width = 100, height = 40 },
           on_exit = function(t, _, code, _)
             if code ~= 0 then
-              vim.notify('Failed to install ipykernel', vim.log.levels.ERROR)
+              vim.notify('Failed to install ipython', vim.log.levels.ERROR)
               vim.wait(3000)
               M.ipython_available = false
             else
-              vim.notify('Successfully installed ipykernel', vim.log.levels.INFO)
+              vim.notify('Successfully installed ipython', vim.log.levels.INFO)
               M.ipython_available = true
             end
             t:close()

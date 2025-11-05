@@ -1,6 +1,7 @@
 keybinds clear-defaults=true {
     locked {
         bind "Ctrl a" { SwitchToMode "normal"; }
+        bind "Shift Enter" { WriteChars "\\\n"; }
     }
     normal {
         bind "1" { GoToTab 1; SwitchToMode "locked"; }
@@ -166,6 +167,16 @@ keybinds clear-defaults=true {
         bind "Alt i" { MoveTab "left"; }
         bind "Alt o" { MoveTab "right"; }
         bind "Alt z" { ToggleFocusFullscreen;}
+        bind "Alt g" {
+          Run "bash" "-ic" "~/.local/bin/cproject" {
+              floating true
+              x "35%"
+              y "10%"
+              width "25%"
+              close_on_exit true
+              name "Project Launcher"
+          }
+        }
     }
     shared_except "locked" "renametab" "renamepane" {
         // bind "Ctrl g" { SwitchToMode "locked"; }

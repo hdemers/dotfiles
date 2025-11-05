@@ -1,0 +1,24 @@
+#!/bin/bash
+
+dir=$(fd -d 1 -t d . /home/hdemers/Projets/grubhub | fzf --height 100%)
+
+if [ -n "$dir" ]; then
+    # Get the tab name from directory basename
+    tab_name=$(basename "$dir")
+
+    # Query existing tab names and check if our tab exists
+    existing_tabs=$(zellij action query-tab-names)
+
+    if echo "$existing_tabs" | grep -qx "$tab_name"; then
+        # Tab exists, switch to it
+        zellij action go-to-tab-name "$tab_name"
+    else
+        # Tab doesn't exist, create new one
+        zellij action new-tab --name "$tab_name"
+        sleep 0.3
+        zellij action write-chars "cd \"$dir\" && exec /home/linuxbrew/.linuxbrew/bin/nvim"
+        zellij action write 13
+    fi
+fi
+
+# vim set ft=sh

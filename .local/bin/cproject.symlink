@@ -1,6 +1,14 @@
 #!/bin/bash
 
-dir=$(fd -d 1 -t d . /home/hdemers/Projets/grubhub | fzf --height 100%)
+PROJET_DIR="/home/hdemers/Projets"
+
+export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS' 
+--color=fg:#c0caf5,bg:#24283b,hl:#bb9af7
+--color=fg+:#c0caf5,bg+:#1b1e2d,hl+:#7dcfff
+--color=info:#7aa2f7,prompt:#7dcfff,pointer:#7dcfff 
+--color=marker:#9ece6a,spinner:#9ece6a,header:#9ece6a'
+
+dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | fzf --height 100%)
 
 if [ -n "$dir" ]; then
     # Get the tab name from directory basename
@@ -15,8 +23,8 @@ if [ -n "$dir" ]; then
     else
         # Tab doesn't exist, create new one
         zellij action new-tab --name "$tab_name"
-        sleep 0.3
-        zellij action write-chars "cd \"$dir\" && exec /home/linuxbrew/.linuxbrew/bin/nvim"
+        sleep 2
+        zellij action write-chars "cd $dir && exec /home/linuxbrew/.linuxbrew/bin/nvim"
         zellij action write 13
     fi
 fi

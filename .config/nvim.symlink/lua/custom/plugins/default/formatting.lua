@@ -14,30 +14,27 @@ return {
     },
     opts = {
       notify_on_error = false,
-      format_on_save = function(bufnr)
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
-        local lsp_format_opt
-        if disable_filetypes[vim.bo[bufnr].filetype] then
-          lsp_format_opt = 'never'
-        elseif vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
-          return
-        else
-          lsp_format_opt = 'fallback'
-        end
-        return {
-          timeout_ms = 500,
-          lsp_fallback = lsp_format_opt,
-        }
-      end,
+      -- format_on_save = function(bufnr)
+      --   -- Disable "format_on_save lsp_fallback" for languages that don't
+      --   -- have a well standardized coding style. You can add additional
+      --   -- languages here or re-enable it for the disabled ones.
+      --   local disable_filetypes = { c = true, cpp = true }
+      --   if disable_filetypes[vim.bo[bufnr].filetype] then
+      --     return nil
+      --   else
+      --     return {
+      --       timeout_ms = 500,
+      --       lsp_format = 'fallback',
+      --     }
+      --   end
+      -- end,
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
         python = { 'ruff_format' },
         quarto = { 'injected' },
         json = { 'jq' },
+        sql = { 'sqlfluff' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
@@ -46,7 +43,8 @@ return {
     },
     config = function(_, opts)
       require('conform').setup(opts)
-      -- Customize the "injected" formatter
+      -- Customize the "injected" formatter. Those are for languages embedded
+      -- in others like Python in Markdown.
       require('conform').formatters.injected = {
         -- Set the options field
         options = {

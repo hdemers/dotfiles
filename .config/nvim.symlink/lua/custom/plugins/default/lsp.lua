@@ -300,34 +300,6 @@ return {
       },
     },
   },
-  -- I wish lspconfig had sqlfluff support, but it doesn't. And nvim-lint doesn't
-  -- appear to support code-actions. So, I'm resorting to use `null-ls` for now.
-  {
-    'jay-babu/mason-null-ls.nvim',
-    event = { 'BufReadPre', 'BufNewFile' },
-    dependencies = {
-      'mason-org/mason.nvim',
-      { 'nvimtools/none-ls.nvim', dependencies = 'nvim-lua/plenary.nvim' },
-    },
-    config = function()
-      require('mason').setup()
-      local null_ls = require 'null-ls'
-      local sources = {
-        null_ls.builtins.formatting.sqlfluff.with {
-          extra_args = { '--dialect', 'sparksql' },
-        },
-        -- null_ls.builtins.diagnostics.bean_check,
-        -- null_ls.builtins.formatting.bean_format,
-      }
-
-      null_ls.setup { sources = sources, debug = true }
-
-      require('mason-null-ls').setup {
-        ensure_installed = {},
-        automatic_installation = true,
-      }
-    end,
-  },
   {
     'folke/lazydev.nvim',
     ft = 'lua', -- only load on lua files

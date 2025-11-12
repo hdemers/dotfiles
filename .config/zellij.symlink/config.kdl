@@ -172,7 +172,7 @@ keybinds clear-defaults=true {
               floating true
               x "35%"
               y "10%"
-              width "25%"
+              width "30%"
               close_on_exit true
               name "Project Launcher"
           }

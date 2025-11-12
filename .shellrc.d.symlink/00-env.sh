@@ -60,9 +60,22 @@ else
   echo "No match found"
 fi
 
-# Try to execute the command `secret` and if there are no error, execute the following.
-if [[ -x "$(command -v secret)" ]]; then
-    eval "$(secret export ~/.secrets-conf.yaml)"
+# Try to execute the command `secret` and if there are no error or we are not
+# in a devcontainer, execute the following.
+if [[ -x "$(command -v secret)" && -z "$DEVCONTAINER" ]]; then
+    # eval "$(secret export ~/.secrets-conf.yaml)"
+    export GITHUB_TOKEN=$(secret-tool lookup github token)
+    export TODOIST_API_TOKEN=$(secret-tool lookup todoist token)
+    export JIRA_API_TOKEN=$(secret-tool lookup jira token)
+    export OPENAI_API_KEY=$(secret-tool lookup openai apikey)
+    export NTFY_NEPTUNE_CHANNEL=$(secret-tool lookup ntfy neptune)
+    export ANTHROPIC_API_KEY=$(secret-tool lookup anthropic apikey)
+    export MQTTUI_PASSWORD=$(secret-tool lookup mqtt password)
+    export GEMINI_API_KEY=$(secret-tool lookup gemini apikey)
+    export PLAID_CLIENT_ID=$(secret-tool lookup plaid-sandbox client_id)
+    export SANDBOX_PLAID_SECRET=$(secret-tool lookup plaid-sandbox secret)
+    export PLAID_SECRET=$(secret-tool lookup plaid secret)
+    export PLAID_ACCESS_TOKEN=$(secret-tool lookup plaid access_token)
 fi
 
 # Check we have google-chrome installed and set the BROWSER environment variable

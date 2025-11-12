@@ -1,6 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "env": {},
+  "env": {
+    "BASH_MAX_TIMEOUT_MS": "300000"
+  },
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
@@ -35,17 +37,6 @@
           }
         ]
       }
-    ],
-    "SubagentStop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "~/.claude/hooks/hooks.py notify --message \"Claude subagent has stopped\""
-          }
-        ]
-      }
     ]
   },
   "statusLine": {
@@ -57,5 +48,6 @@
     "on-call@gdp-cli-marketplace": true,
     "coding@gdp-cli-marketplace": true
   },
-  "alwaysThinkingEnabled": false
+  "alwaysThinkingEnabled": true,
+  "model": "sonnet[1m]"
 }

@@ -32,8 +32,9 @@ MANDATORY: You have all the informatin you need below, DO NOT attempt to run
 5. Set reviewers to: !`printenv CLAUDE_REVIEWERS`
 6. Set `--head` to !`printenv CLAUDE_BOOKMARK` when calling `gh pr create`.
 6. Set `--base` to !`printenv CLAUDE_PR_BASE` when calling `gh pr create`.
-7. Once the PR has been successfully opened, transition the associated ticket
-    (if any) to "In Review", going through all intermediate states if necessary
+7. Once the PR has been successfully opened, use the _jira-ticket_ skill to transition
+   the associated ticket (if any) to "In Review", going through all
+   intermediate states if necessary
     `New -> Refined -> "In Dev" -> "In Review" -> Merged -> Closed`
    - Command: `jira transition-to <ticket> <state>`
 

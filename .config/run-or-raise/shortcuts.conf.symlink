@@ -49,10 +49,10 @@
 <Super>p,flatpak run org.keepassxc.KeePassXC,KeePassXC,KeePassXC
 
 # Google-Chrome - Grubhub
-<Super>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*grubhub-dev.*/
+<Super>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*/
 
 # Google-Chrome
-<Super><Shift>c,gtk-launch com.google.Chrome.desktop,,/.*Google Chrome$/
+#<Super><Shift>c,gtk-launch com.google.Chrome.desktop,,/.*Google Chrome$/
 
 # Gemini
 <Super>g,gtk-launch com.google.Chrome.flextop.chrome-mojogeknlbnppmajemmkcfkilgaapppk-Default.desktop,,Google AI Studio

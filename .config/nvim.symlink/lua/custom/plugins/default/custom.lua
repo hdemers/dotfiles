@@ -80,21 +80,6 @@ return {
         callback = rename_zellij_tab,
         desc = 'Rename zellij tab when directory changes',
       })
-
-      -- Open a terminal running jjui.
-      vim.keymap.set('n', '<leader>jj', function()
-        local Terminal = require('toggleterm.terminal').Terminal
-        Terminal:new({
-          direction = 'float',
-          cmd = 'jjui',
-          hidden = false,
-          float_opts = {
-            border = 'rounded',
-            width = 200,
-            height = 70,
-          },
-        }):open()
-      end, { desc = 'Open jj UI in terminal' })
     end,
   },
   {

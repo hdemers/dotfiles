@@ -252,3 +252,13 @@ EOF
 
     gum confirm "Edit description?" && jj describe -r "${revset}"
 }
+
+clauded() {
+# This is a fix for a known bug in Claude Code when running in sandbox mode.
+# See https://github.com/anthropics/claude-code/issues/10952
+export TMPDIR=/tmp/claude
+# Call claude with all remaining arguments 
+claude --dangerously-skip-permissions "$@"
+unset TMPDIR
+
+}

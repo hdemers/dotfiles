@@ -6,15 +6,17 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Skill(report-writing)",
-      "Edit(//var/home/hdemers/Dropbox/Documents/Obsidian/Grubhub/Repositories/**)",
-      "Edit(//home/hdemers/Dropbox/Documents/Obsidian/Grubhub/Repositories/**)",
-      "Edit(//home/hdemers/.cache/jira/**)",
-      "Edit(//var/home/hdemers/.cache/jira/**)",
-      "Edit(//tmp/**)"
+      "Edit(/var/home/hdemers/Dropbox/Documents/Obsidian/Grubhub/Repositories/**)",
+      "Edit(/home/hdemers/Dropbox/Documents/Obsidian/Grubhub/Repositories/**)",
+      "Edit(/home/hdemers/.cache/jira/**)",
+      "Edit(/var/home/hdemers/.cache/jira/**)",
+      "Edit(/var/home/hdemers/.distrobox/homes/grubhub-dev/.cache/jira/**)",
+      "Edit(/tmp/**)",
+      "Bash(jira:*)"
     ],
     "deny": []
   },
+  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -48,6 +50,12 @@
     "on-call@gdp-cli-marketplace": true,
     "coding@gdp-cli-marketplace": true
   },
-  "alwaysThinkingEnabled": true,
-  "model": "sonnet[1m]"
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": true,
+    "excludedCommands": [
+      "jira:*"
+    ]
+  },
+  "alwaysThinkingEnabled": true
 }

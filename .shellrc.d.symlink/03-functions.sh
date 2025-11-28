@@ -347,11 +347,11 @@ gwr() {
 
 
 lsemr() {
-    local ip=$(listemr | \
+    local ip=$(listemr --human | \
     fzf \
     --ansi \
     --header-lines=1 \
-    --preview='listemr describe {1}' \
+    --preview='listemr describe --human {1}' \
     --preview-window=up:75% \
     --bind='ctrl-h:execute(browse http://{4}:8088 > /dev/null)' \
     --bind='ctrl-g:execute(browse http://{4}/ganglia > /dev/null)' \

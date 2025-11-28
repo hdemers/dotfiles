@@ -81,10 +81,11 @@ main() {
         return 1
     fi
 
-    sprint=$(jira sprints \
+    sprint=$( { jira sprints \
         | grep DSSO \
         | cut -d '|' -f1,2 \
-        | column -s '|' -t \
+        | column -s '|' -t; \
+        echo "Backlog"; } \
         | gum choose \
         | sed 's/  *active\|future.*//' \
     )
@@ -117,6 +118,7 @@ main() {
     export CLAUDE_TICKET_POINTS="${points}"
     export CLAUDE_TICKET_ASSIGNEE="${assignee}"
     export CLAUDE_TICKET_PROJECT="DSSO"
+    export TMPDIR=/tmp/claude
 
     gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$bookmark" "$epic" "$sprint" "$points", "$assignee")" || {
         gum log --level info "Ticket creation cancelled."
@@ -130,6 +132,7 @@ main() {
     unset CLAUDE_PR_BASE
     unset CLAUDE_TICKET_ASSIGNEE
     unset CLAUDE_TICKET_PROJECT
+    unset TMPDIR
 
 
 }

@@ -77,10 +77,10 @@ cpr() {
     reviewers=$(gum choose \
         --no-limit \
         --header="Select reviewers" \
-        $(gh api orgs/grubhubprod/teams/mlops/members --jq '.[].login' | grep -v hdemers) 'I want more choice' )
+        'None' $(gh api orgs/grubhubprod/teams/mlops/members --jq '.[].login' | grep -v hdemers) 'more...' )
 
-    # If reviewers equals 'I want more choice', then start over with all members of that org
-    if [ "${reviewers}" = "*I want more choice*" ]; then
+    # If reviewers equals 'more...', then start over with all members of that org
+    if [[ "${reviewers}" == *"more..."* ]]; then
         reviewers=$(gh api orgs/grubhubprod/members --jq '.[].login' --paginate | fzf --multi)
     fi
 
@@ -99,12 +99,14 @@ cpr() {
     export CLAUDE_JJ_BASE="${jj_base}"
     export CLAUDE_PR_BASE="${pr_base}"
     export CLAUDE_TICKET="${ticket}"
+    export TMPDIR=/tmp/claude
     claude "/create-pr-jj"
     unset CLAUDE_TICKET
     unset CLAUDE_BOOKMARK
     unset CLAUDE_REVIEWERS
     unset CLAUDE_JJ_BASE
     unset CLAUDE_PR_BASE
+    unset TMPDIR
 
 }
 
@@ -133,9 +135,14 @@ cdescribe() {
     fi
 
     export CLAUDE_REVSET="${revset}"
+    # This is a workaround for the fact that TMPDIR is not set correctly by
+    # Claude Code when running in sandbox mode.
+    # See https://github.com/anthropics/claude-code/issues/10952
+    export TMPDIR=/tmp/claude
     gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
         claude "/describe ${revset}" | jj describe -r "${revset}" --stdin
     unset CLAUDE_REVSET
+    unset TMPDIR
 
     # Modify the description of the commit to add the ticket ID on the last line
     if [ -n "$ticket_id" ]; then

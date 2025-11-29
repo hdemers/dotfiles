@@ -1,0 +1,136 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+show_help() {
+    cat << EOF
+Usage: cdescribe <revset> [OPTIONS]
+
+Have Claude AI generate a description for a Jujutsu commit.
+
+ARGUMENTS:
+    <revset>     A Jujutsu revset or change ID (required)
+
+OPTIONS:
+    --ticket <id>   Append a ticket ID to the commit description
+    --help          Display this help message and exit
+
+EXAMPLES:
+    # Describe the current commit
+    cdescribe @
+
+    # Describe a specific change ID
+    cdescribe abc123
+
+    # Describe a range of commits
+    cdescribe "trunk()..@"
+
+    # Add a JIRA ticket reference
+    cdescribe @ --ticket DSSO-1234
+
+ENVIRONMENT:
+    TRACE        Set to '1' to enable bash tracing
+
+DEPENDENCIES:
+    - claude     Claude AI CLI
+    - jj         Jujutsu version control
+    - gum        Terminal UI tool
+
+EOF
+}
+
+main() {
+    local revset=""
+    local ticket_id=""
+
+    # Parse command-line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help)
+                show_help
+                return 0
+                ;;
+            --ticket)
+                ticket_id="$2"
+                shift 2
+                ;;
+            -*)
+                gum log --level error "Unknown option: $1"
+                show_help
+                return 1
+                ;;
+            *)
+                if [ -z "$revset" ]; then
+                    revset="$1"
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    # Validate mandatory revset argument
+    if [ -z "$revset" ]; then
+        gum log --level error "Error: revset is required as the first argument"
+        show_help
+        return 1
+    fi
+
+    # If the first argument is not a revset (does not contain :: or ..), assume
+    # it's a change ID and expand it.
+    if [[ "$revset" != *"::"* && "$revset" != *".."* ]]; then
+        revset=$(jj log -r "$revset" --template "self.change_id()" --no-graph)
+    fi
+
+    if ! jj log -r "${revset}" >/dev/null 2>&1; then
+        gum log --level error "Error: revset '${revset}' not found"
+        return 1
+    fi
+
+    export CLAUDE_REVSET="${revset}"
+    # This is a workaround for the fact that TMPDIR is not set correctly by
+    # Claude Code when running in sandbox mode.
+    # See https://github.com/anthropics/claude-code/issues/10952
+    export TMPDIR=/tmp/claude
+
+    gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
+        claude "/describe ${revset}" | jj describe -r "${revset}" --stdin
+
+    unset CLAUDE_REVSET
+    unset TMPDIR
+
+    # Modify the description of the commit to add the ticket ID on the last line
+    if [ -n "$ticket_id" ]; then
+        gum log --level info "Adding ticket ID: ${ticket_id}"
+
+        # Get current description and check if operation succeeded
+        if ! description=$(jj log -r "${revset}" --template description --no-graph 2>/dev/null); then
+            gum log --level error "Error: failed to get commit description"
+            return 1
+        fi
+
+        # Add ticket ID to description
+        new_description="${description}"$'\n\n'"${ticket_id}"
+
+        # Update commit description
+        if jj describe -r "${revset}" -m "${new_description}" >/dev/null 2>&1; then
+            gum log --level info "Successfully updated commit description with ticket ID"
+        else
+            gum log --level error "Error: failed to update commit description"
+            return 1
+        fi
+    fi
+
+    jj log -r "${revset}" --color always --no-graph \
+        -T 'self.change_id().shortest(8) ++ "\n" ++ self.description()'
+
+    gum confirm "Edit description?" && jj describe -r "${revset}"
+}
+
+main "$@"
+
+# vim: set ft=sh

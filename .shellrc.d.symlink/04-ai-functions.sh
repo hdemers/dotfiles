@@ -110,68 +110,6 @@ cpr() {
 
 }
 
-cdescribe() {
-    # Have Claude describe a Jujutsu commit
-    local revset=$1
-    local ticket_id=$2
-
-    # If the first argument is not a revset (does not contain :: or ..), assume
-    # it's a change ID and expand it.
-    if [[ "$revset" != *"::"* && "$revset" != *".."* ]]; then
-        # If the first argument is a change ID, expand it to a revset.
-        revset=$(jj log -r "$revset" --template "self.change_id()" --no-graph)
-    fi
-
-    # Validate mandatory first argument
-    if [ -z "$revset" ]; then
-        gum log --level error "Error: revset is required as the first argument"
-        gum log --level info "Usage: cdescribe <revset> [ticket_id]"
-        return 1
-    fi
-
-    if ! jj log -r "${revset}" >/dev/null 2>&1; then
-        gum log --level error "Error: revset '${revset}' not found"
-        return 1
-    fi
-
-    export CLAUDE_REVSET="${revset}"
-    # This is a workaround for the fact that TMPDIR is not set correctly by
-    # Claude Code when running in sandbox mode.
-    # See https://github.com/anthropics/claude-code/issues/10952
-    export TMPDIR=/tmp/claude
-    gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
-        claude "/describe ${revset}" | jj describe -r "${revset}" --stdin
-    unset CLAUDE_REVSET
-    unset TMPDIR
-
-    # Modify the description of the commit to add the ticket ID on the last line
-    if [ -n "$ticket_id" ]; then
-        gum log --level info "Adding ticket ID: ${ticket_id}"
-
-        # Get current description and check if operation succeeded
-        if ! description=$(jj log -r "${revset}" --template description --no-graph 2>/dev/null); then
-            gum log --level error "Error: failed to get commit description"
-            return 1
-        fi
-
-        # Add ticket ID to description
-        new_description="${description}"$'\n\n'"${ticket_id}"
-
-        # Update commit description
-        if jj describe -r "${revset}" -m "${new_description}" >/dev/null 2>&1; then
-            gum log --level info "Successfully updated commit description with ticket ID"
-        else
-            gum log --level error "Error: failed to update commit description"
-            return 1
-        fi
-    fi
-
-    jj log -r "${revset}" --color always --no-graph \
-        -T 'self.change_id().shortest(8) ++ "\n" ++ self.description()'
-
-    gum confirm "Edit description?" && jj describe -r "${revset}"
-}
-
 mdescribe() {
     # Have Claude describe a Jujutsu commit
     local revset=$1

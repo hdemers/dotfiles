@@ -33,6 +33,7 @@ M.state = {
     type = nil, -- 'diff' or 'show'
     change_id = nil,
   },
+  stored_visual_range = nil, -- { start_line, end_line } when visual selection is preserved
 }
 
 local function is_win_valid(win)
@@ -43,8 +44,25 @@ local function is_buf_valid(buf)
   return buf and vim.api.nvim_buf_is_valid(buf)
 end
 
+local function state_is_valid()
+  return is_win_valid(M.state.win) and is_buf_valid(M.state.buf)
+end
+
 local function preview_is_valid()
   return is_win_valid(M.state.preview.win) and is_buf_valid(M.state.preview.buf)
+end
+
+local function is_visual()
+  local mode = vim.fn.mode()
+  return mode == 'v' or mode == 'V' or mode == '\22'
+end
+
+local function exit_visual_mode()
+  vim.api.nvim_feedkeys(
+    vim.api.nvim_replace_termcodes('<Esc>', true, false, true),
+    'nx',
+    false
+  )
 end
 
 --------------------------------------------------------------------------------
@@ -53,7 +71,9 @@ end
 
 local function safe_colorize()
   if Snacks and Snacks.terminal and Snacks.terminal.colorize then
+    local saved_listchars = vim.opt.listchars:get()
     Snacks.terminal.colorize()
+    vim.opt.listchars = saved_listchars
   end
 end
 
@@ -88,7 +108,8 @@ end
 
 local function get_diff_file_at_cursor()
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
-  local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, cursor_line, false)
+  local lines =
+    vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, cursor_line, false)
   for i = #lines, 1, -1 do
     local match = lines[i]:match '^diff %-%-git a/(.-) b/'
     if match then
@@ -133,36 +154,119 @@ end
 -- Forward declaration for refresh_log (used in run_jj_with_editor)
 local refresh_log
 
-local function run_jj_with_editor(jj_args, title, on_complete)
-  local saved_cursor = is_win_valid(M.state.win)
-      and vim.api.nvim_win_get_cursor(M.state.win)
-    or nil
-
+-- Create temporary session for jj editor interaction
+local function create_editor_session(jj_args)
   local session_dir = vim.fn.tempname()
   vim.fn.mkdir(session_dir, 'p')
 
-  local file_marker = session_dir .. '/jj_file'
-  local waiting_marker = session_dir .. '/waiting'
-  local editor_script = session_dir .. '/editor.sh'
+  local session = {
+    dir = session_dir,
+    file_marker = session_dir .. '/jj_file',
+    waiting_marker = session_dir .. '/waiting',
+    editor_script = session_dir .. '/editor.sh',
+    saved_cursor = is_win_valid(M.state.win) and vim.api.nvim_win_get_cursor(M.state.win)
+      or nil,
+  }
 
-  vim.fn.writefile({}, waiting_marker)
+  vim.fn.writefile({}, session.waiting_marker)
   vim.fn.writefile({
     '#!/bin/sh',
-    'echo "$1" > "' .. file_marker .. '"',
-    'while [ -f "' .. waiting_marker .. '" ]; do sleep 0.1; done',
+    'echo "$1" > "' .. session.file_marker .. '"',
+    'while [ -f "' .. session.waiting_marker .. '" ]; do sleep 0.1; done',
     'exit 0',
-  }, editor_script)
-  vim.fn.setfperm(editor_script, 'rwx------')
+  }, session.editor_script)
+  vim.fn.setfperm(session.editor_script, 'rwx------')
 
-  local cmd = string.format(
+  session.cmd = string.format(
     'cd %s && JJ_EDITOR=%s jj %s 2>&1',
     vim.fn.shellescape(M.state.cwd),
-    vim.fn.shellescape(editor_script),
+    vim.fn.shellescape(session.editor_script),
     jj_args
   )
 
+  return session
+end
+
+-- Open floating editor window for jj
+local function open_editor_float(session, job_id, title)
+  local lines = vim.fn.readfile(session.file_marker)
+  if #lines == 0 or lines[1] == '' then
+    return false
+  end
+
+  local buf = vim.fn.bufadd(lines[1])
+  vim.fn.bufload(buf)
+
+  local height = math.floor(vim.o.lines * 0.5)
+  local win = vim.api.nvim_open_win(buf, true, {
+    relative = 'editor',
+    row = math.floor((vim.o.lines - height) / 2),
+    col = math.floor((vim.o.columns - CONST.FLOAT_WIDTH) / 2),
+    width = CONST.FLOAT_WIDTH,
+    height = height,
+    border = 'rounded',
+    title = title .. '│ <CR> save │ q cancel ',
+    title_pos = 'center',
+  })
+
+  vim.bo[buf].filetype = 'gitcommit'
+  vim.wo[win].wrap = true
+  vim.wo[win].cursorline = false
+
+  local closed = false
+  local function cleanup()
+    if closed then
+      return
+    end
+    closed = true
+    vim.fn.delete(session.waiting_marker)
+  end
+
+  local function finish_edit()
+    closed = true
+    vim.api.nvim_buf_call(buf, function()
+      vim.cmd 'silent! write!'
+    end)
+    if session.saved_cursor and is_win_valid(M.state.win) then
+      pcall(vim.api.nvim_win_set_cursor, M.state.win, session.saved_cursor)
+    end
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+    vim.defer_fn(function()
+      vim.fn.delete(session.waiting_marker)
+    end, CONST.CURSOR_RESTORE_DELAY_MS)
+  end
+
+  local function cancel_edit()
+    vim.fn.jobstop(job_id)
+    if vim.api.nvim_win_is_valid(win) then
+      vim.api.nvim_win_close(win, true)
+    end
+    cleanup()
+  end
+
+  vim.api.nvim_create_autocmd('WinClosed', {
+    pattern = tostring(win),
+    once = true,
+    callback = function()
+      if not closed then
+        vim.fn.jobstop(job_id)
+        cleanup()
+      end
+    end,
+  })
+
+  vim.keymap.set('n', '<CR>', finish_edit, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'q', cancel_edit, { buffer = buf, nowait = true })
+  return true
+end
+
+local function run_jj_with_editor(jj_args, title, on_complete)
+  local session = create_editor_session(jj_args)
+
   local jj_output = {}
-  local job_id = vim.fn.jobstart(cmd, {
+  local job_id = vim.fn.jobstart(session.cmd, {
     on_stdout = function(_, data)
       vim.list_extend(jj_output, data)
     end,
@@ -170,13 +274,13 @@ local function run_jj_with_editor(jj_args, title, on_complete)
       vim.list_extend(jj_output, data)
     end,
     on_exit = function(_, exit_code)
-      vim.fn.delete(session_dir, 'rf')
+      vim.fn.delete(session.dir, 'rf')
       local output = table.concat(jj_output, '\n'):gsub('^%s+', ''):gsub('%s+$', '')
       if exit_code == 0 then
         if output ~= '' then
           vim.notify(output, vim.log.levels.INFO)
         end
-        refresh_log(saved_cursor)
+        refresh_log(session.saved_cursor)
       elseif output ~= '' and not output:match 'interrupt' then
         vim.notify(output, vim.log.levels.ERROR)
       end
@@ -187,97 +291,30 @@ local function run_jj_with_editor(jj_args, title, on_complete)
   })
 
   if job_id <= 0 then
-    vim.fn.delete(session_dir, 'rf')
+    vim.fn.delete(session.dir, 'rf')
     vim.notify('Failed to start jj', vim.log.levels.ERROR)
     return
   end
 
   local attempts = 0
-  local function check_for_file()
+  local function poll_for_editor()
     attempts = attempts + 1
-    if vim.fn.filereadable(file_marker) == 1 then
-      local lines = vim.fn.readfile(file_marker)
-      if #lines > 0 and lines[1] ~= '' then
-        local jj_file = lines[1]
-        local buf = vim.fn.bufadd(jj_file)
-        vim.fn.bufload(buf)
-
-        local height = math.floor(vim.o.lines * 0.5)
-        local win = vim.api.nvim_open_win(buf, true, {
-          relative = 'editor',
-          row = math.floor((vim.o.lines - height) / 2),
-          col = math.floor((vim.o.columns - CONST.FLOAT_WIDTH) / 2),
-          width = CONST.FLOAT_WIDTH,
-          height = height,
-          border = 'rounded',
-          title = title .. '│ <CR> save │ q cancel ',
-          title_pos = 'center',
-        })
-
-        vim.bo[buf].filetype = 'gitcommit'
-        vim.wo[win].wrap = true
-        vim.wo[win].cursorline = false
-
-        local closed = false
-        local function cleanup()
-          if closed then
-            return
-          end
-          closed = true
-          vim.fn.delete(waiting_marker)
-        end
-
-        local function finish_edit()
-          closed = true
-          vim.api.nvim_buf_call(buf, function()
-            vim.cmd 'silent! write!'
-          end)
-          if saved_cursor and is_win_valid(M.state.win) then
-            pcall(vim.api.nvim_win_set_cursor, M.state.win, saved_cursor)
-          end
-          if vim.api.nvim_win_is_valid(win) then
-            vim.api.nvim_win_close(win, true)
-          end
-          vim.defer_fn(function()
-            vim.fn.delete(waiting_marker)
-          end, CONST.CURSOR_RESTORE_DELAY_MS)
-        end
-
-        local function cancel_edit()
-          vim.fn.jobstop(job_id)
-          if vim.api.nvim_win_is_valid(win) then
-            vim.api.nvim_win_close(win, true)
-          end
-          cleanup()
-        end
-
-        vim.api.nvim_create_autocmd('WinClosed', {
-          pattern = tostring(win),
-          once = true,
-          callback = function()
-            if not closed then
-              vim.fn.jobstop(job_id)
-              cleanup()
-            end
-          end,
-        })
-
-        vim.keymap.set('n', '<CR>', finish_edit, { buffer = buf, nowait = true })
-        vim.keymap.set('n', 'q', cancel_edit, { buffer = buf, nowait = true })
+    if vim.fn.filereadable(session.file_marker) == 1 then
+      if open_editor_float(session, job_id, title) then
         return
       end
     end
 
     if attempts < CONST.EDITOR_POLL_MAX_ATTEMPTS then
-      vim.defer_fn(check_for_file, CONST.EDITOR_POLL_INTERVAL_MS)
+      vim.defer_fn(poll_for_editor, CONST.EDITOR_POLL_INTERVAL_MS)
     else
       vim.fn.jobstop(job_id)
-      vim.fn.delete(session_dir, 'rf')
+      vim.fn.delete(session.dir, 'rf')
       vim.notify('Timeout waiting for jj', vim.log.levels.ERROR)
     end
   end
 
-  vim.defer_fn(check_for_file, CONST.EDITOR_POLL_INTERVAL_MS)
+  vim.defer_fn(poll_for_editor, CONST.EDITOR_POLL_INTERVAL_MS)
 end
 
 --------------------------------------------------------------------------------
@@ -299,9 +336,27 @@ local function setup_dual_cursorline(buf, win)
       local line_count = vim.api.nvim_buf_line_count(buf)
 
       if mode == 'v' or mode == 'V' or mode == '\22' then
+        -- Clear stored range when starting new visual selection
+        M.state.stored_visual_range = nil
+
         local visual_start = vim.fn.line 'v'
         local start_line = math.min(visual_start, cursor_line)
         local end_line = math.max(visual_start, cursor_line)
+
+        for line = start_line, end_line do
+          vim.api.nvim_buf_set_extmark(buf, cursorline_ns, line - 1, 0, {
+            line_hl_group = 'Visual',
+          })
+        end
+        if end_line < line_count then
+          vim.api.nvim_buf_set_extmark(buf, cursorline_ns, end_line, 0, {
+            line_hl_group = 'Visual',
+          })
+        end
+      elseif M.state.stored_visual_range then
+        -- Use stored visual range (preserved when switching to preview)
+        local start_line = M.state.stored_visual_range[1]
+        local end_line = M.state.stored_visual_range[2]
 
         for line = start_line, end_line do
           vim.api.nvim_buf_set_extmark(buf, cursorline_ns, line - 1, 0, {
@@ -332,6 +387,83 @@ end
 -- Preview window management
 local preview = {}
 
+-- Open side-by-side diff in a new tab
+local function open_side_by_side_diff()
+  local file_path = get_diff_file_at_cursor()
+  if not file_path then
+    vim.notify('No file found at cursor position', vim.log.levels.WARN)
+    return
+  end
+  local cid = M.state.preview.change_id
+  if not cid then
+    vim.notify('No change ID in preview', vim.log.levels.WARN)
+    return
+  end
+
+  -- Handle range revsets (oldest::newest) vs single revisions
+  local old_rev, new_rev
+  local oldest, newest = cid:match '^([^:]+)::(.+)$'
+  if oldest and newest then
+    -- Range: show file before oldest and at newest
+    old_rev = oldest .. '-'
+    new_rev = newest
+  else
+    -- Single revision: show file before and at this revision
+    old_rev = cid .. '-'
+    new_rev = cid
+  end
+
+  local old_content = vim.fn.system(
+    build_jj_cmd('file show -r ' .. old_rev .. ' ' .. vim.fn.shellescape(file_path))
+  )
+  local new_content = vim.fn.system(
+    build_jj_cmd('file show -r ' .. new_rev .. ' ' .. vim.fn.shellescape(file_path))
+  )
+  local ft = vim.filetype.match { filename = file_path }
+
+  local function setup_diff_buf(buf, content, suffix)
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(content, '\n'))
+    vim.bo[buf].buftype = 'nofile'
+    vim.bo[buf].bufhidden = 'wipe'
+    vim.bo[buf].buflisted = false
+    vim.api.nvim_buf_set_name(buf, file_path .. suffix)
+    if ft then
+      vim.bo[buf].filetype = ft
+    end
+    vim.cmd 'diffthis'
+  end
+
+  local function close_diff_tab()
+    vim.cmd 'diffoff!'
+    vim.cmd 'tabclose'
+  end
+
+  vim.cmd 'tabnew'
+  local old_buf = vim.api.nvim_get_current_buf()
+  setup_diff_buf(old_buf, old_content, ' (' .. old_rev .. ')')
+
+  vim.cmd 'rightbelow vsplit'
+  local new_buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(0, new_buf)
+  setup_diff_buf(new_buf, new_content, ' (' .. new_rev .. ')')
+
+  vim.keymap.set('n', 'q', close_diff_tab, { buffer = old_buf, nowait = true })
+  vim.keymap.set('n', 'q', close_diff_tab, { buffer = new_buf, nowait = true })
+end
+
+local function setup_preview_keymaps(buf)
+  vim.keymap.set('n', 'q', function()
+    preview.close()
+    if is_win_valid(M.state.win) then
+      vim.api.nvim_set_current_win(M.state.win)
+    end
+  end, { buffer = buf, nowait = true })
+
+  vim.keymap.set('n', 'O', open_side_by_side_diff, { buffer = buf, nowait = true })
+  vim.keymap.set('n', '<CR>', open_side_by_side_diff, { buffer = buf, nowait = true })
+  vim.keymap.set('n', '<Tab>', preview.toggle_focus, { buffer = buf, nowait = true })
+end
+
 function preview.close()
   if is_win_valid(M.state.preview.win) then
     vim.cmd('noautocmd call nvim_win_close(' .. M.state.preview.win .. ', v:true)')
@@ -347,7 +479,34 @@ function preview.toggle_focus()
     local current_win = vim.api.nvim_get_current_win()
     if current_win == M.state.preview.win then
       vim.api.nvim_set_current_win(M.state.win)
+      -- Restore visual selection if we had one stored
+      if M.state.stored_visual_range then
+        local start_line = M.state.stored_visual_range[1]
+        local end_line = M.state.stored_visual_range[2]
+        M.state.stored_visual_range = nil
+        vim.api.nvim_win_set_cursor(M.state.win, { start_line, 0 })
+        vim.cmd 'normal! V'
+        if end_line > start_line then
+          vim.api.nvim_win_set_cursor(M.state.win, { end_line, 0 })
+        end
+      end
     else
+      -- Store visual range before exiting, so highlighting persists
+      if is_visual() then
+        local start_line = vim.fn.line 'v'
+        local end_line = vim.fn.line '.'
+        if start_line > end_line then
+          start_line, end_line = end_line, start_line
+        end
+        M.state.stored_visual_range = { start_line, end_line }
+        exit_visual_mode()
+        -- Trigger cursorline update to show stored range
+        vim.schedule(function()
+          if is_buf_valid(M.state.buf) then
+            vim.api.nvim_exec_autocmds('ModeChanged', { buffer = M.state.buf })
+          end
+        end)
+      end
       vim.api.nvim_set_current_win(M.state.preview.win)
     end
   end
@@ -394,25 +553,24 @@ function preview.open(content, preview_type, change_id, opts)
 
   local content_lines = vim.split(content, '\n')
 
-  if preview_is_valid() then
-    -- Reuse existing preview window
-    local current_win = vim.api.nvim_get_current_win()
-    vim.api.nvim_set_current_win(M.state.preview.win)
+  local created_new_window = false
 
+  if preview_is_valid() then
+    -- Reuse existing preview window - update buffer without switching windows
     vim.bo[M.state.preview.buf].filetype = opts.filetype or 'diff'
     vim.bo[M.state.preview.buf].modifiable = true
     vim.api.nvim_buf_set_lines(M.state.preview.buf, 0, -1, false, content_lines)
-    if not opts.no_colorize then
-      safe_colorize()
-    end
+    vim.api.nvim_win_call(M.state.preview.win, function()
+      if not opts.no_colorize then
+        safe_colorize()
+      end
+      if opts.filetype == 'jujutsu' then
+        create_folds_for_diff(M.state.preview.win, content_lines)
+      end
+    end)
     vim.bo[M.state.preview.buf].modifiable = false
-
-    if opts.filetype == 'jujutsu' then
-      create_folds_for_diff(M.state.preview.win, content_lines)
-    end
-
-    vim.api.nvim_set_current_win(current_win)
   else
+    created_new_window = true
     -- Create new preview window
     local buf = vim.api.nvim_create_buf(false, true)
 
@@ -445,81 +603,15 @@ function preview.open(content, preview_type, change_id, opts)
       create_folds_for_diff(win, content_lines)
     end
 
-    -- Preview keymaps (defined inline to avoid forward declaration issues)
-    vim.keymap.set('n', 'q', function()
-      preview.close()
-      if is_win_valid(M.state.win) then
-        vim.api.nvim_set_current_win(M.state.win)
-      end
-    end, { buffer = buf, nowait = true })
-
-    vim.keymap.set('n', 'O', function()
-      local file_path = get_diff_file_at_cursor()
-      if not file_path then
-        vim.notify('No file found at cursor position', vim.log.levels.WARN)
-        return
-      end
-      local cid = M.state.preview.change_id
-      if not cid then
-        vim.notify('No change ID in preview', vim.log.levels.WARN)
-        return
-      end
-
-      local old_content = vim.fn.system(
-        build_jj_cmd('file show -r ' .. cid .. '- ' .. vim.fn.shellescape(file_path))
-      )
-      local new_content = vim.fn.system(
-        build_jj_cmd('file show -r ' .. cid .. ' ' .. vim.fn.shellescape(file_path))
-      )
-
-      vim.cmd 'tabnew'
-      local old_buf = vim.api.nvim_get_current_buf()
-      vim.api.nvim_buf_set_lines(old_buf, 0, -1, false, vim.split(old_content, '\n'))
-      vim.bo[old_buf].buftype = 'nofile'
-      vim.bo[old_buf].bufhidden = 'wipe'
-      vim.bo[old_buf].buflisted = false
-      vim.api.nvim_buf_set_name(old_buf, file_path .. ' (old)')
-
-      local ft = vim.filetype.match { filename = file_path }
-      if ft then
-        vim.bo[old_buf].filetype = ft
-      end
-      vim.cmd 'diffthis'
-
-      vim.cmd 'rightbelow vsplit'
-      local new_buf = vim.api.nvim_create_buf(false, true)
-      vim.api.nvim_win_set_buf(0, new_buf)
-      vim.api.nvim_buf_set_lines(new_buf, 0, -1, false, vim.split(new_content, '\n'))
-      vim.bo[new_buf].buftype = 'nofile'
-      vim.bo[new_buf].bufhidden = 'wipe'
-      vim.bo[new_buf].buflisted = false
-      vim.api.nvim_buf_set_name(new_buf, file_path .. ' (new)')
-
-      if ft then
-        vim.bo[new_buf].filetype = ft
-      end
-      vim.cmd 'diffthis'
-
-      local function close_diff_tab()
-        vim.cmd 'diffoff!'
-        vim.cmd 'tabclose'
-      end
-      vim.keymap.set('n', 'q', close_diff_tab, { buffer = old_buf, nowait = true })
-      vim.keymap.set('n', 'q', close_diff_tab, { buffer = new_buf, nowait = true })
-    end, { buffer = buf, nowait = true })
-
-    vim.keymap.set('n', '<CR>', function()
-      vim.api.nvim_feedkeys('O', 'n', false)
-    end, { buffer = buf, nowait = true })
-
-    vim.keymap.set('n', '<Tab>', preview.toggle_focus, { buffer = buf, nowait = true })
+    setup_preview_keymaps(buf)
   end
 
   M.state.preview.type = preview_type
   M.state.preview.change_id = change_id
 
-  -- Return focus to log window
-  if is_win_valid(M.state.win) then
+  -- Return focus to log window only when we created a new window
+  -- (updating existing preview doesn't change focus, so no need to restore)
+  if created_new_window and is_win_valid(M.state.win) then
     vim.api.nvim_set_current_win(M.state.win)
     if log_cursor then
       vim.api.nvim_win_set_cursor(M.state.win, log_cursor)
@@ -529,16 +621,35 @@ function preview.open(content, preview_type, change_id, opts)
   return M.state.preview.buf
 end
 
+-- Refresh preview with current change_id (re-fetch content)
+function preview.refresh()
+  if not preview_is_valid() or not M.state.preview.change_id then
+    return
+  end
+
+  local id = M.state.preview.change_id
+  local preview_type = M.state.preview.type
+  local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git')
+    or ('show -r ' .. id .. ' --git')
+
+  local output = vim.fn.system(build_jj_cmd(cmd))
+
+  -- Clear cached change_id to force update
+  M.state.preview.change_id = nil
+  preview.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
+end
+
 local function show_help()
   local help_lines = {
     '  Jujutsu Flog - Keybindings',
     '  ──────────────────────────',
     '  Preview (toggle, reuses pane):',
-    '  <CR>  show      - Show commit details',
+    '  <CR>  show      - Show commit details (visual: range diff)',
     '  D     cdescribe - AI-generate description (interactive)',
     '  d     describe  - Edit description (<CR> save, q cancel)',
     '  s     squash    - Squash commit (visual: squash range)',
     '  O/<CR> split    - Open file diff side-by-side (in preview)',
+    '                    (works with visual range selection)',
     '',
     '  Actions:',
     '  e     edit     - Edit (checkout) commit',
@@ -584,28 +695,107 @@ end
 -- 6. Action Framework
 --------------------------------------------------------------------------------
 
---- Execute an action that requires a change ID under cursor
----@param action_fn function(change_id: string)
+--- Get revset from current context (cursor or visual selection)
+--- Does NOT exit visual mode - use for preview/read-only operations
+---@return string|nil revset
+local function get_revset()
+  if not is_visual() then
+    return get_change_id_under_cursor()
+  end
+
+  local start_line = vim.fn.line 'v'
+  local end_line = vim.fn.line '.'
+  if start_line > end_line then
+    start_line, end_line = end_line, start_line
+  end
+
+  local lines = vim.api.nvim_buf_get_lines(M.state.buf, start_line - 1, end_line, false)
+  local change_ids = {}
+  local seen = {}
+  for _, line in ipairs(lines) do
+    local id = get_change_id_from_line(line)
+    if id and not seen[id] then
+      table.insert(change_ids, id)
+      seen[id] = true
+    end
+  end
+
+  if #change_ids == 0 then
+    return nil
+  elseif #change_ids == 1 then
+    return change_ids[1]
+  else
+    return change_ids[#change_ids] .. '::' .. change_ids[1] -- oldest::newest
+  end
+end
+
+--- Execute an action with a revset (single revision or range)
+--- In visual mode: exits visual mode before running action
+---@param action_fn function(revset: string)
 ---@param opts? { refresh?: boolean }
 ---@return function
 local function with_change_id(action_fn, opts)
   opts = opts or {}
   return function()
-    local change_id = get_change_id_under_cursor()
-    if not change_id then
-      vim.notify('No change ID found on this line', vim.log.levels.WARN)
+    local was_visual = is_visual()
+    local revset = get_revset()
+
+    if not revset then
+      local msg = was_visual and 'No change IDs found in selection'
+        or 'No change ID found on this line'
+      vim.notify(msg, vim.log.levels.WARN)
       return
     end
-    action_fn(change_id)
-    if opts.refresh ~= false then
-      refresh_log()
+
+    local function run_action()
+      action_fn(revset)
+      if opts.refresh ~= false then
+        refresh_log()
+      end
+    end
+
+    if was_visual then
+      exit_visual_mode()
+      vim.schedule(run_action)
+    else
+      run_action()
     end
   end
 end
 
+-- Refresh preview with revision under cursor (called after log refresh)
+local function refresh_preview_after_log()
+  if not preview_is_valid() then
+    return
+  end
+  vim.schedule(function()
+    if not preview_is_valid() or not is_win_valid(M.state.win) then
+      return
+    end
+    -- Ensure we're in the log window
+    local prev_win = vim.api.nvim_get_current_win()
+    vim.api.nvim_set_current_win(M.state.win)
+
+    local id = get_change_id_under_cursor()
+    if id then
+      local preview_type = M.state.preview.type or 'show'
+      local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git')
+        or ('show -r ' .. id .. ' --git')
+      local output = vim.fn.system(build_jj_cmd(cmd))
+      M.state.preview.change_id = nil -- force update
+      preview.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
+    end
+
+    -- Restore previous window if different
+    if prev_win ~= M.state.win and vim.api.nvim_win_is_valid(prev_win) then
+      vim.api.nvim_set_current_win(prev_win)
+    end
+  end)
+end
+
 -- Define refresh_log (uses existing buffer, keymaps already attached)
 refresh_log = function(cursor_pos)
-  if not is_win_valid(M.state.win) or not is_buf_valid(M.state.buf) then
+  if not state_is_valid() then
     return
   end
 
@@ -639,6 +829,8 @@ refresh_log = function(cursor_pos)
     if is_win_valid(M.state.win) then
       pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, col })
     end
+    -- Refresh preview after cursor is restored
+    refresh_preview_after_log()
   end, CONST.CURSOR_RESTORE_DELAY_MS)
 end
 
@@ -680,8 +872,14 @@ actions.show = with_change_id(function(id)
   local cursor = vim.api.nvim_win_get_cursor(M.state.win)
   local win = M.state.win
 
-  local output = vim.fn.system(build_jj_cmd('show -r ' .. id .. ' --git'))
-  preview.open(output, 'show', id, { filetype = 'jujutsu', no_colorize = true })
+  -- Use diff for ranges (oldest::newest), show for single revisions
+  local is_range = id:find '::'
+  local cmd = is_range and ('diff -r ' .. id .. ' --git')
+    or ('show -r ' .. id .. ' --git')
+  local preview_type = is_range and 'diff' or 'show'
+
+  local output = vim.fn.system(build_jj_cmd(cmd))
+  preview.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
 
   vim.defer_fn(function()
     if is_win_valid(win) then
@@ -690,56 +888,16 @@ actions.show = with_change_id(function(id)
   end, 10)
 end, { refresh = false })
 
-actions.squash = function()
-  local mode = vim.fn.mode()
-
-  if mode == 'v' or mode == 'V' or mode == '\22' then
-    -- Multi-commit squash from visual selection
-    local start_line = vim.fn.line 'v'
-    local end_line = vim.fn.line '.'
-    if start_line > end_line then
-      start_line, end_line = end_line, start_line
-    end
-
-    local lines = vim.api.nvim_buf_get_lines(M.state.buf, start_line - 1, end_line, false)
-    local change_ids = {}
-    local seen = {}
-    for _, line in ipairs(lines) do
-      local id = get_change_id_from_line(line)
-      if id and not seen[id] then
-        table.insert(change_ids, id)
-        seen[id] = true
-      end
-    end
-
-    if #change_ids == 0 then
-      vim.notify('No change IDs found in selection', vim.log.levels.WARN)
-      return
-    end
-
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'nx', false)
-
-    vim.schedule(function()
-      if #change_ids == 1 then
-        run_jj_with_editor('squash -r ' .. change_ids[1], ' Squash ' .. change_ids[1] .. ' ')
-        return
-      end
-
-      local newest = change_ids[1]
-      local oldest = change_ids[#change_ids]
-      local cmd = string.format('squash -f %s::%s -t %s', oldest, newest, oldest)
-      run_jj_with_editor(cmd, ' Squash ' .. oldest .. '::' .. newest .. ' ')
-    end)
+actions.squash = with_change_id(function(revset)
+  local cmd
+  if revset:find '::' then
+    local oldest = revset:match '^([^:]+)'
+    cmd = string.format('squash -f %s -t %s', revset, oldest)
   else
-    -- Single commit squash
-    local id = get_change_id_under_cursor()
-    if not id then
-      vim.notify('No change ID found on this line', vim.log.levels.WARN)
-      return
-    end
-    run_jj_with_editor('squash -r ' .. id, ' Squash ' .. id .. ' ')
+    cmd = 'squash -r ' .. revset
   end
-end
+  run_jj_with_editor(cmd, ' Squash ' .. revset .. ' ')
+end, { refresh = false })
 
 actions.abandon = with_change_id(function(id)
   vim.ui.select({ 'Yes', 'No' }, { prompt = 'Abandon ' .. id .. '?' }, function(choice)
@@ -769,14 +927,22 @@ actions.redo = function()
   refresh_log()
 end
 
-actions.nav_down = function()
-  vim.cmd 'normal! 2j'
-  actions.show()
+local function nav(direction)
+  vim.cmd('normal! 2' .. direction)
+  local revset = get_revset()
+  if not revset then
+    return
+  end
+  local cmd = is_visual() and 'diff' or 'show'
+  local output = vim.fn.system(build_jj_cmd(cmd .. ' -r ' .. revset .. ' --git'))
+  preview.open(output, cmd, revset, { filetype = 'jujutsu', no_colorize = true })
 end
 
+actions.nav_down = function()
+  nav 'j'
+end
 actions.nav_up = function()
-  vim.cmd 'normal! 2k'
-  actions.show()
+  nav 'k'
 end
 
 actions.cdescribe = with_change_id(function(id)
@@ -829,28 +995,28 @@ local keymap_defs = {
   { modes = { 'n' }, key = 'k', action = actions.nav_up },
   { modes = { 'n' }, key = '<Down>', action = actions.nav_down },
   { modes = { 'n' }, key = '<Up>', action = actions.nav_up },
-  { modes = { 'x' }, key = 'j', action = '2j' },
-  { modes = { 'x' }, key = 'k', action = '2k' },
-  { modes = { 'x' }, key = '<Down>', action = '2j' },
-  { modes = { 'x' }, key = '<Up>', action = '2k' },
+  { modes = { 'x' }, key = 'j', action = actions.nav_down },
+  { modes = { 'x' }, key = 'k', action = actions.nav_up },
+  { modes = { 'x' }, key = '<Down>', action = actions.nav_down },
+  { modes = { 'x' }, key = '<Up>', action = actions.nav_up },
 
   -- Preview actions
   { modes = { 'n', 'x' }, key = '<CR>', action = actions.show },
   { modes = { 'n' }, key = 'D', action = actions.cdescribe },
-  { modes = { 'n' }, key = 'd', action = actions.describe },
+  { modes = { 'n', 'x' }, key = 'd', action = actions.describe },
   { modes = { 'n', 'x' }, key = 's', action = actions.squash },
 
   -- Edit actions
   { modes = { 'n' }, key = 'e', action = actions.edit },
   { modes = { 'n' }, key = 'n', action = actions.new },
   { modes = { 'n' }, key = 'N', action = actions.new_current },
-  { modes = { 'n' }, key = 'x', action = actions.abandon },
+  { modes = { 'n', 'x' }, key = 'x', action = actions.abandon },
   { modes = { 'n' }, key = 'b', action = actions.bookmark },
   { modes = { 'n' }, key = 'u', action = actions.undo },
   { modes = { 'n' }, key = 'r', action = actions.redo },
 
   -- UI
-  { modes = { 'n' }, key = '<Tab>', action = preview.toggle_focus },
+  { modes = { 'n', 'x' }, key = '<Tab>', action = preview.toggle_focus },
   { modes = { 'n' }, key = '?', action = show_help },
   { modes = { 'n' }, key = 'q', action = close_flog },
   { modes = { 'n' }, key = '<Esc>', action = close_flog },
@@ -901,7 +1067,8 @@ function M.jujutsu_new()
   local output = vim.fn.system 'jj new'
   local is_success = vim.v.shell_error == 0
   local level = is_success and vim.log.levels.INFO or vim.log.levels.ERROR
-  local prefix = is_success and 'New Jujutsu commit created:\n' or 'Error creating commit: '
+  local prefix = is_success and 'New Jujutsu commit created:\n'
+    or 'Error creating commit: '
   vim.notify(prefix .. output, level)
 end
 

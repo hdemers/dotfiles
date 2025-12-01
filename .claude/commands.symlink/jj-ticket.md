@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash(printenv:*), Bash(jj diff:*), Bash(jj log:*), Bash(jira:*)
 description: Create a ticket
+model: haiku
 ---
 
 # Create a ticket

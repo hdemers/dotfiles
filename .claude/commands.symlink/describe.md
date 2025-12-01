@@ -1,6 +1,7 @@
 ---
 allowed-tools: Bash(jj diff:*), Bash(jj log:*)
 description: Provide a Jujutsu commit description and ONLY the description.
+model: haiku
 ---
 # Describe Jujutsu commit
 

@@ -34,6 +34,8 @@ M.state = {
     change_id = nil,
   },
   stored_visual_range = nil, -- { start_line, end_line } when visual selection is preserved
+  active_job = nil, -- Current async jj job ID (for cancellation)
+  debounce_timer = nil, -- Timer for debounced preview updates
 }
 
 local function is_win_valid(win)
@@ -55,6 +57,42 @@ end
 local function is_visual()
   local mode = vim.fn.mode()
   return mode == 'v' or mode == 'V' or mode == '\22'
+end
+
+-- Cancel any pending debounced operation
+local function cancel_debounce()
+  if M.state.debounce_timer then
+    M.state.debounce_timer:stop()
+    M.state.debounce_timer:close()
+    M.state.debounce_timer = nil
+  end
+end
+
+-- Debounce a function call (cancels previous pending call)
+local function debounce(fn, delay_ms)
+  cancel_debounce()
+  M.state.debounce_timer = vim.uv.new_timer()
+  M.state.debounce_timer:start(delay_ms, 0, vim.schedule_wrap(function()
+    cancel_debounce()
+    fn()
+  end))
+end
+
+-- Track and cancel active async jj jobs
+local function set_active_job(job_id)
+  -- Cancel previous job if still running
+  if M.state.active_job and vim.fn.jobwait({ M.state.active_job }, 0)[1] == -1 then
+    vim.fn.jobstop(M.state.active_job)
+  end
+  M.state.active_job = job_id
+end
+
+local function clear_active_job()
+  M.state.active_job = nil
+end
+
+local function has_active_job()
+  return M.state.active_job and vim.fn.jobwait({ M.state.active_job }, 0)[1] == -1
 end
 
 local function exit_visual_mode()
@@ -292,6 +330,9 @@ end
 local function run_jj_with_editor(jj_args, title, on_complete)
   local session = create_editor_session(jj_args)
 
+  -- Cancel any pending preview updates
+  cancel_debounce()
+
   local jj_output = {}
   local job_id = vim.fn.jobstart(session.cmd, {
     on_stdout = function(_, data)
@@ -301,6 +342,7 @@ local function run_jj_with_editor(jj_args, title, on_complete)
       vim.list_extend(jj_output, data)
     end,
     on_exit = function(_, exit_code)
+      clear_active_job()
       vim.fn.delete(session.dir, 'rf')
       local output = table.concat(jj_output, '\n'):gsub('^%s+', ''):gsub('%s+$', '')
       if exit_code == 0 then
@@ -322,6 +364,8 @@ local function run_jj_with_editor(jj_args, title, on_complete)
     vim.notify('Failed to start jj', vim.log.levels.ERROR)
     return
   end
+
+  set_active_job(job_id)
 
   local attempts = 0
   local function poll_for_editor()
@@ -661,7 +705,7 @@ end
 
 -- Refresh preview with current change_id (re-fetch content)
 function preview.refresh()
-  if not preview_is_valid() or not M.state.preview.change_id then
+  if not preview_is_valid() or not M.state.preview.change_id or has_active_job() then
     return
   end
 
@@ -833,11 +877,11 @@ end
 
 -- Refresh preview with revision under cursor (called after log refresh)
 local function refresh_preview_after_log()
-  if not preview_is_valid() then
+  if not preview_is_valid() or has_active_job() then
     return
   end
   vim.schedule(function()
-    if not preview_is_valid() or not is_win_valid(M.state.win) then
+    if not preview_is_valid() or not is_win_valid(M.state.win) or has_active_job() then
       return
     end
     -- Ensure we're in the log window
@@ -892,23 +936,24 @@ refresh_log = function(cursor_pos)
   -- Restore cursor AFTER colorize (it may have moved it)
   pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, col })
 
-  -- Deferred restore as final backup
-  vim.defer_fn(function()
+  -- Debounced preview refresh - will be cancelled if new operation starts
+  debounce(function()
     if is_win_valid(M.state.win) then
       pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, col })
     end
-    -- Refresh preview after cursor is restored
     refresh_preview_after_log()
   end, CONST.CURSOR_RESTORE_DELAY_MS)
 end
 
 local function close_flog()
+  cancel_debounce()
   preview.close()
   if is_buf_valid(M.state.buf) then
     vim.cmd 'tabclose'
   end
   M.state.win = nil
   M.state.buf = nil
+  M.state.active_job = nil
 end
 
 -- Action definitions using the wrapper pattern
@@ -1030,6 +1075,10 @@ end
 
 local function nav(direction)
   vim.cmd('normal! 2' .. direction)
+  -- Skip preview update if an async job is running
+  if has_active_job() then
+    return
+  end
   local revset = get_revset()
   if not revset then
     return
@@ -1041,7 +1090,7 @@ end
 
 -- Navigate from preview buffer: move cursor in log and update preview
 preview_nav = function(direction)
-  if not is_win_valid(M.state.win) or not is_buf_valid(M.state.buf) then
+  if not is_win_valid(M.state.win) or not is_buf_valid(M.state.buf) or has_active_job() then
     return
   end
 
@@ -1111,6 +1160,9 @@ actions.cdescribe = with_change_id(function(id)
       and vim.api.nvim_win_get_cursor(M.state.win)
     or nil
 
+  -- Cancel any pending preview updates
+  cancel_debounce()
+
   local buf = vim.api.nvim_create_buf(false, true)
   local height = math.floor(vim.o.lines * 0.5)
   local win = vim.api.nvim_open_win(buf, true, {
@@ -1125,9 +1177,10 @@ actions.cdescribe = with_change_id(function(id)
   })
 
   local cmd = string.format('cd %s && cdescribe %s', vim.fn.shellescape(M.state.cwd), id)
-  vim.fn.termopen(cmd, {
+  local job_id = vim.fn.termopen(cmd, {
     on_exit = function()
       vim.schedule(function()
+        clear_active_job()
         vim.cmd 'stopinsert'
         if vim.api.nvim_win_is_valid(win) then
           vim.api.nvim_win_close(win, true)
@@ -1142,6 +1195,10 @@ actions.cdescribe = with_change_id(function(id)
       end)
     end,
   })
+
+  if job_id > 0 then
+    set_active_job(job_id)
+  end
 
   vim.cmd 'startinsert'
 end, { refresh = false })
@@ -1216,8 +1273,9 @@ function M.jujutsu_flog()
   setup_keymaps(buf)
   setup_dual_cursorline(buf, M.state.win)
 
-  vim.defer_fn(function()
-    if is_win_valid(M.state.win) then
+  -- Debounced initial show - will be cancelled if user starts an operation quickly
+  debounce(function()
+    if is_win_valid(M.state.win) and not has_active_job() then
       vim.api.nvim_win_set_cursor(M.state.win, { 1, 0 })
       actions.show()
     end

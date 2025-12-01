@@ -653,6 +653,13 @@ function preview.open(content, preview_type, change_id, opts)
     vim.bo[M.state.preview.buf].modifiable = false
   else
     created_new_window = true
+
+    -- Clean up any existing JJ-preview buffer before creating new one
+    local existing = vim.fn.bufnr('JJ-preview')
+    if existing ~= -1 then
+      vim.api.nvim_buf_delete(existing, { force = true })
+    end
+
     -- Create new preview window
     local buf = vim.api.nvim_create_buf(false, true)
 
@@ -669,6 +676,7 @@ function preview.open(content, preview_type, change_id, opts)
     M.state.preview.buf = buf
     M.state.preview.win = win
 
+    vim.api.nvim_buf_set_name(buf, 'JJ-preview')
     vim.bo[buf].buftype = 'nofile'
     vim.bo[buf].bufhidden = 'wipe'
     vim.bo[buf].buflisted = false
@@ -1254,6 +1262,13 @@ end
 
 function M.jujutsu_flog()
   M.state.cwd = vim.fn.getcwd()
+
+  -- Clean up any existing JJ-log buffer before creating new tab
+  local existing = vim.fn.bufnr('JJ-log')
+  if existing ~= -1 then
+    vim.api.nvim_buf_delete(existing, { force = true })
+  end
+
   local output = vim.fn.system(build_jj_cmd 'log -r :: --color=always')
 
   vim.cmd 'tabnew'
@@ -1261,11 +1276,12 @@ function M.jujutsu_flog()
   M.state.buf = buf
   M.state.win = vim.api.nvim_get_current_win()
 
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(output, '\n'))
+  vim.api.nvim_buf_set_name(buf, 'JJ-log')
   vim.bo[buf].buftype = 'nofile'
   vim.bo[buf].bufhidden = 'wipe'
   vim.bo[buf].buflisted = false
 
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(output, '\n'))
   vim.bo[buf].modifiable = true
   safe_colorize()
   vim.bo[buf].modifiable = false

@@ -83,8 +83,9 @@ end
 
 local function get_change_id_from_line(line)
   local clean = strip_ansi(line)
-  -- Match change ID: 8+ lowercase letters/numbers after graph chars (│ ◆ ○ @ ◉ ~)
-  local change_id = clean:match '[│◆○@◉~%s]+([a-z][a-z0-9]+)%s'
+  -- Match change ID: lowercase letters/numbers after graph chars, followed by commit_id
+  -- This ensures we only match the first line of a commit (not description lines)
+  local change_id = clean:match '[│◆○@◉~%s]+([a-z][a-z0-9]+)%s+[a-z0-9]+'
   if change_id and #change_id >= CONST.CHANGE_ID_LENGTH then
     return change_id:sub(1, CONST.CHANGE_ID_LENGTH)
   end
@@ -119,6 +120,9 @@ local function get_diff_file_at_cursor()
   return nil
 end
 
+local DEFAULT_REVISION_TEMPLATE =
+  'change_id.shortest() ++ " (" ++ commit_id.shortest() ++ ") " ++ bookmarks ++ " " ++ description.first_line()'
+
 --------------------------------------------------------------------------------
 -- 4. Command Execution Layer
 --------------------------------------------------------------------------------
@@ -149,6 +153,29 @@ local function run_jj_cmd(cmd, change_id, opts)
   end
 
   return output, success
+end
+
+local function get_revisions(opts)
+  opts = opts or {}
+  local revset = opts.revset or 'trunk()::'
+  local template = opts.template or DEFAULT_REVISION_TEMPLATE
+
+  local cmd = 'log -r '
+    .. vim.fn.shellescape(revset)
+    .. ' --no-graph --template '
+    .. vim.fn.shellescape(template .. ' ++ "\\n"')
+  local output, success = run_jj_cmd(cmd, nil, { notify = false })
+  if not success then
+    return nil
+  end
+
+  local revisions = {}
+  for line in output:gmatch '[^\n]+' do
+    if line ~= '' then
+      table.insert(revisions, line)
+    end
+  end
+  return revisions
 end
 
 -- Forward declaration for refresh_log (used in run_jj_with_editor)
@@ -209,7 +236,7 @@ local function open_editor_float(session, job_id, title)
     title_pos = 'center',
   })
 
-  vim.bo[buf].filetype = 'gitcommit'
+  vim.bo[buf].filetype = 'jjdescription'
   vim.wo[win].wrap = true
   vim.wo[win].cursorline = false
 
@@ -451,6 +478,9 @@ local function open_side_by_side_diff()
   vim.keymap.set('n', 'q', close_diff_tab, { buffer = new_buf, nowait = true })
 end
 
+-- Forward declaration for preview navigation (defined after nav())
+local preview_nav
+
 local function setup_preview_keymaps(buf)
   vim.keymap.set('n', 'q', function()
     preview.close()
@@ -462,6 +492,14 @@ local function setup_preview_keymaps(buf)
   vim.keymap.set('n', 'O', open_side_by_side_diff, { buffer = buf, nowait = true })
   vim.keymap.set('n', '<CR>', open_side_by_side_diff, { buffer = buf, nowait = true })
   vim.keymap.set('n', '<Tab>', preview.toggle_focus, { buffer = buf, nowait = true })
+
+  -- Navigate revisions from preview (J/K)
+  vim.keymap.set('n', 'J', function()
+    preview_nav 'j'
+  end, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'K', function()
+    preview_nav 'k'
+  end, { buffer = buf, nowait = true })
 end
 
 function preview.close()
@@ -648,6 +686,7 @@ local function show_help()
     '  D     cdescribe - AI-generate description (interactive)',
     '  d     describe  - Edit description (<CR> save, q cancel)',
     '  s     squash    - Squash commit (visual: squash range)',
+    '  S     squash    - Squash into selected target (pick from list)',
     '  O/<CR> split    - Open file diff side-by-side (in preview)',
     '                    (works with visual range selection)',
     '',
@@ -659,9 +698,11 @@ local function show_help()
     '  b     bookmark - Set bookmark on commit',
     '  u     undo     - Undo last operation',
     '  r     redo     - Redo last undo',
+    '  R     rebase   - Rebase revision(s) onto another',
     '',
     '  Navigation:',
     '  j/k   move     - Move by commit (2 lines)',
+    '  J/K   move     - Navigate revisions from preview',
     '  <Tab> focus    - Toggle log/preview focus',
     '  ?     help     - Show this help',
     '  q/Esc close    - Close flog (log) / preview',
@@ -731,8 +772,8 @@ end
 
 --- Execute an action with a revset (single revision or range)
 --- In visual mode: exits visual mode before running action
----@param action_fn function(revset: string)
----@param opts? { refresh?: boolean }
+---@param action_fn function(revset: string, chosen?: string)
+---@param opts? { refresh?: boolean, choose_from?: string }
 ---@return function
 local function with_change_id(action_fn, opts)
   opts = opts or {}
@@ -747,18 +788,45 @@ local function with_change_id(action_fn, opts)
       return
     end
 
-    local function run_action()
-      action_fn(revset)
+    local function run_action(chosen)
+      action_fn(revset, chosen)
       if opts.refresh ~= false then
         refresh_log()
       end
     end
 
+    local function execute_action()
+      if opts.choose_from then
+        local destinations = get_revisions { revset = opts.choose_from }
+        if not destinations or #destinations == 0 then
+          vim.notify('No revisions found from: ' .. opts.choose_from, vim.log.levels.WARN)
+          return
+        end
+
+        vim.ui.select(destinations, {
+          prompt = 'Select target revision:',
+          format_item = function(item)
+            return item
+          end,
+        }, function(choice)
+          if not choice then
+            return
+          end
+          local chosen_id = choice:match '^(%S+)'
+          if chosen_id then
+            run_action(chosen_id)
+          end
+        end)
+      else
+        run_action()
+      end
+    end
+
     if was_visual then
       exit_visual_mode()
-      vim.schedule(run_action)
+      vim.schedule(execute_action)
     else
-      run_action()
+      execute_action()
     end
   end
 end
@@ -888,9 +956,12 @@ actions.show = with_change_id(function(id)
   end, 10)
 end, { refresh = false })
 
-actions.squash = with_change_id(function(revset)
+actions.squash = with_change_id(function(revset, target)
   local cmd
-  if revset:find '::' then
+  if target then
+    -- Squash into explicit target
+    cmd = string.format('squash -f %s -t %s', revset, target)
+  elseif revset:find '::' then
     local oldest = revset:match '^([^:]+)'
     cmd = string.format('squash -f %s -t %s', revset, oldest)
   else
@@ -898,6 +969,11 @@ actions.squash = with_change_id(function(revset)
   end
   run_jj_with_editor(cmd, ' Squash ' .. revset .. ' ')
 end, { refresh = false })
+
+actions.squash_into = with_change_id(function(revset, target)
+  local cmd = string.format('squash -f %s -t %s', revset, target)
+  run_jj_with_editor(cmd, ' Squash ' .. revset .. ' into ' .. target .. ' ')
+end, { refresh = false, choose_from = 'trunk()..' })
 
 actions.abandon = with_change_id(function(id)
   vim.ui.select({ 'Yes', 'No' }, { prompt = 'Abandon ' .. id .. '?' }, function(choice)
@@ -912,6 +988,31 @@ actions.bookmark = with_change_id(function(id)
   vim.ui.input({ prompt = 'Bookmark name: ' }, function(name)
     if name and name ~= '' then
       run_jj_cmd('bookmark', 'set ' .. name .. ' -r ' .. id)
+      refresh_log()
+    end
+  end)
+end, { refresh = false }) -- refresh handled in callback
+
+actions.rebase = with_change_id(function(revset)
+  local destinations = get_revisions()
+  if not destinations or #destinations == 0 then
+    vim.notify('No destinations found from trunk()', vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.select(destinations, {
+    prompt = 'Rebase ' .. revset .. ' onto:',
+    format_item = function(item)
+      return item
+    end,
+  }, function(choice)
+    if not choice then
+      return
+    end
+    local dest_id = choice:match '^(%S+)'
+    if dest_id then
+      run_jj_cmd('rebase', '-r ' .. revset .. ' -d ' .. dest_id)
+      run_jj_cmd 'rdev'
       refresh_log()
     end
   end)
@@ -936,6 +1037,66 @@ local function nav(direction)
   local cmd = is_visual() and 'diff' or 'show'
   local output = vim.fn.system(build_jj_cmd(cmd .. ' -r ' .. revset .. ' --git'))
   preview.open(output, cmd, revset, { filetype = 'jujutsu', no_colorize = true })
+end
+
+-- Navigate from preview buffer: move cursor in log and update preview
+preview_nav = function(direction)
+  if not is_win_valid(M.state.win) or not is_buf_valid(M.state.buf) then
+    return
+  end
+
+  -- Don't navigate if there's a visual selection (doesn't make sense)
+  if M.state.stored_visual_range then
+    return
+  end
+
+  local preview_id = M.state.preview.change_id
+  if not preview_id then
+    return
+  end
+
+  -- Handle range revsets - use newest for positioning
+  local target_id = preview_id:match '::(.+)$' or preview_id
+
+  -- Build list of (line_number, change_id) from log buffer
+  local lines = vim.api.nvim_buf_get_lines(M.state.buf, 0, -1, false)
+  local commits = {}
+  for i, line in ipairs(lines) do
+    local line_id = get_change_id_from_line(line)
+    if line_id then
+      table.insert(commits, { line = i, id = line_id })
+    end
+  end
+
+  -- Find current position and calculate next/previous
+  local current_idx = nil
+  for i, commit in ipairs(commits) do
+    if commit.id == target_id then
+      current_idx = i
+      break
+    end
+  end
+
+  if not current_idx then
+    return
+  end
+
+  local new_idx = direction == 'j' and (current_idx + 1) or (current_idx - 1)
+  if new_idx < 1 or new_idx > #commits then
+    return
+  end
+
+  local new_commit = commits[new_idx]
+
+  -- Move cursor in log buffer and scroll to show it
+  vim.api.nvim_win_call(M.state.win, function()
+    vim.api.nvim_win_set_cursor(M.state.win, { new_commit.line, 0 })
+    vim.cmd 'normal! zz'
+  end)
+
+  -- Update preview
+  local output = vim.fn.system(build_jj_cmd('show -r ' .. new_commit.id .. ' --git'))
+  preview.open(output, 'show', new_commit.id, { filetype = 'jujutsu', no_colorize = true })
 end
 
 actions.nav_down = function()
@@ -1005,6 +1166,7 @@ local keymap_defs = {
   { modes = { 'n' }, key = 'D', action = actions.cdescribe },
   { modes = { 'n', 'x' }, key = 'd', action = actions.describe },
   { modes = { 'n', 'x' }, key = 's', action = actions.squash },
+  { modes = { 'n', 'x' }, key = 'S', action = actions.squash_into },
 
   -- Edit actions
   { modes = { 'n' }, key = 'e', action = actions.edit },
@@ -1014,6 +1176,7 @@ local keymap_defs = {
   { modes = { 'n' }, key = 'b', action = actions.bookmark },
   { modes = { 'n' }, key = 'u', action = actions.undo },
   { modes = { 'n' }, key = 'r', action = actions.redo },
+  { modes = { 'n', 'x' }, key = 'R', action = actions.rebase },
 
   -- UI
   { modes = { 'n', 'x' }, key = '<Tab>', action = preview.toggle_focus },

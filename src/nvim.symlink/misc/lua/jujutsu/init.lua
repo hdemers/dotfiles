@@ -67,10 +67,14 @@ end
 local function debounce(fn, delay_ms)
   M.utils.cancel_debounce()
   M.state.debounce_timer = vim.uv.new_timer()
-  M.state.debounce_timer:start(delay_ms, 0, vim.schedule_wrap(function()
-    M.utils.cancel_debounce()
-    fn()
-  end))
+  M.state.debounce_timer:start(
+    delay_ms,
+    0,
+    vim.schedule_wrap(function()
+      M.utils.cancel_debounce()
+      fn()
+    end)
+  )
 end
 
 -- Track and cancel active async jj jobs
@@ -106,7 +110,10 @@ end
 
 function M.utils.get_change_id_from_line(line)
   local clean = strip_ansi(line)
-  local change_id = clean:match '[│◆○@◉~%s]+([a-z][a-z0-9]+)%s+[a-z0-9]+'
+  -- Require a commit marker (◆◇○@◉×~) to distinguish commit lines from description continuations
+  -- Description lines only have │ and spaces, so they won't match
+  local change_id =
+    clean:match '[│%s]*[◆◇○@◉×~][│%s]*([a-z][a-z0-9]+)%s+[a-z0-9]+'
   if change_id and #change_id >= M.CONST.CHANGE_ID_LENGTH then
     return change_id:sub(1, M.CONST.CHANGE_ID_LENGTH)
   end
@@ -130,7 +137,8 @@ end
 
 function M.utils.get_diff_file_at_cursor()
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
-  local lines = vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, cursor_line, false)
+  local lines =
+    vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, cursor_line, false)
   for i = #lines, 1, -1 do
     local match = lines[i]:match '^diff %-%-git a/(.-) b/'
     if match then
@@ -211,7 +219,8 @@ local function create_editor_session(jj_args)
     file_marker = session_dir .. '/jj_file',
     waiting_marker = session_dir .. '/waiting',
     editor_script = session_dir .. '/editor.sh',
-    saved_cursor = is_win_valid(M.state.win) and vim.api.nvim_win_get_cursor(M.state.win) or nil,
+    saved_cursor = is_win_valid(M.state.win) and vim.api.nvim_win_get_cursor(M.state.win)
+      or nil,
   }
 
   vim.fn.writefile({}, session.waiting_marker)
@@ -379,12 +388,20 @@ end
 local function refresh_preview_after_log()
   local preview = require 'jujutsu.preview'
 
-  if not is_win_valid(M.state.preview.win) or not M.state.preview.change_id or M.utils.has_active_job() then
+  if
+    not is_win_valid(M.state.preview.win)
+    or not M.state.preview.change_id
+    or M.utils.has_active_job()
+  then
     return
   end
 
   vim.schedule(function()
-    if not is_win_valid(M.state.preview.win) or not is_win_valid(M.state.win) or M.utils.has_active_job() then
+    if
+      not is_win_valid(M.state.preview.win)
+      or not is_win_valid(M.state.win)
+      or M.utils.has_active_job()
+    then
       return
     end
 
@@ -395,7 +412,8 @@ local function refresh_preview_after_log()
     local id = M.utils.get_change_id_under_cursor()
     if id then
       local preview_type = M.state.preview.type or 'show'
-      local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git') or ('show -r ' .. id .. ' --git')
+      local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git')
+        or ('show -r ' .. id .. ' --git')
       local output = vim.fn.system(M.utils.build_jj_cmd(cmd))
       M.state.preview.change_id = nil -- force update
       preview.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
@@ -464,6 +482,8 @@ local function close_flog()
   M.state.active_job = nil
 end
 
+M.close = close_flog
+
 --------------------------------------------------------------------------------
 -- Keymaps
 --------------------------------------------------------------------------------
@@ -496,15 +516,25 @@ local function setup_keymaps(buf)
   vim.keymap.set('n', 'N', actions.new_current, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'x', actions.abandon, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'b', actions.bookmark, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'B', actions.move_bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'u', actions.undo, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'r', actions.redo, { buffer = buf, nowait = true })
-  vim.keymap.set({ 'n', 'x' }, 'R', actions.rebase, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'U', actions.redo, { buffer = buf, nowait = true })
+  vim.keymap.set({ 'n', 'x' }, 'r', actions.rebase, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'p', actions.push, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'P', actions.push_bookmark, { buffer = buf, nowait = true })
 
   -- UI
-  vim.keymap.set({ 'n', 'x' }, '<Tab>', preview.toggle_focus, { buffer = buf, nowait = true })
-  vim.keymap.set('n', '?', preview.show_help, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'q', close_flog, { buffer = buf, nowait = true })
-  vim.keymap.set('n', '<Esc>', close_flog, { buffer = buf, nowait = true })
+  vim.keymap.set(
+    { 'n', 'x' },
+    '<CR>',
+    preview.toggle_focus,
+    { buffer = buf, nowait = true }
+  )
+  vim.keymap.set('n', 'g?', preview.show_help, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'gq', close_flog, { buffer = buf, nowait = true })
+
+  -- Clear snacks.nvim's q mapping from colorize()
+  pcall(vim.keymap.del, 'n', 'q', { buffer = buf })
 end
 
 --------------------------------------------------------------------------------
@@ -543,6 +573,21 @@ function M.jujutsu_flog()
   setup_keymaps(buf)
   preview.setup_dual_cursorline(buf, M.state.win)
 
+  -- Cleanup when buffer is wiped (e.g., by tabclose)
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = buf,
+    once = true,
+    callback = function()
+      M.utils.cancel_debounce()
+      -- Don't call preview.close() here - Neovim is already closing everything
+      -- Just clear state to prevent callbacks from accessing invalid handles
+      M.state.preview = { buf = nil, win = nil, type = nil, change_id = nil }
+      M.state.win = nil
+      M.state.buf = nil
+      M.state.active_job = nil
+    end,
+  })
+
   -- Debounced initial show
   debounce(function()
     if is_win_valid(M.state.win) and not M.utils.has_active_job() then
@@ -558,7 +603,8 @@ function M.jujutsu_new()
   local output = vim.fn.system 'jj new'
   local is_success = vim.v.shell_error == 0
   local level = is_success and vim.log.levels.INFO or vim.log.levels.ERROR
-  local prefix = is_success and 'New Jujutsu commit created:\n' or 'Error creating commit: '
+  local prefix = is_success and 'New Jujutsu commit created:\n'
+    or 'Error creating commit: '
   vim.notify(prefix .. output, level)
 end
 

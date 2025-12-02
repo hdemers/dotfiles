@@ -358,4 +358,82 @@ M.cdescribe = with_revset(function(id)
   vim.cmd 'startinsert'
 end, { refresh = false })
 
+--------------------------------------------------------------------------------
+-- Git push
+--------------------------------------------------------------------------------
+
+local function get_bookmarks()
+  local utils = get_utils()
+  local template = [[if(!self.remote(), self.normal_target().change_id().shortest() ++ " " ++ self.name() ++ if(!self.synced(), "*", "") ++ " " ++ self.normal_target().commit_id().shortest() ++ "\n")]]
+  local cmd = 'bookmark list -r '
+    .. vim.fn.shellescape('trunk():: ~ dev ~ trunk()')
+    .. ' -T '
+    .. vim.fn.shellescape(template)
+  local output, success = utils.run_jj_cmd(cmd, nil, { notify = false })
+  if not success then
+    return nil
+  end
+  local lines = vim.split(output, '\n', { trimempty = true })
+  return #lines > 0 and lines or nil
+end
+
+function M.push()
+  local utils = get_utils()
+  utils.run_jj_cmd('git push', '')
+  utils.refresh_log()
+end
+
+M.move_bookmark = with_revset(function(id)
+  local utils = get_utils()
+  local bookmarks = get_bookmarks()
+  if not bookmarks or #bookmarks == 0 then
+    vim.notify('No bookmarks found from trunk()..', vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.select(bookmarks, {
+    prompt = 'Move bookmark to ' .. id .. ':',
+    format_item = function(item)
+      return item
+    end,
+  }, function(choice)
+    if not choice then
+      return
+    end
+    local bookmark_name = choice:match '^%S+%s+(%S+)'
+    if bookmark_name then
+      bookmark_name = bookmark_name:gsub('%*$', '')
+      utils.run_jj_cmd('bookmark move', bookmark_name .. ' -t ' .. id)
+      utils.refresh_log()
+    end
+  end)
+end, { refresh = false })
+
+function M.push_bookmark()
+  local utils = get_utils()
+  local bookmarks = get_bookmarks()
+  if not bookmarks or #bookmarks == 0 then
+    vim.notify('No bookmarks found from trunk()..', vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.select(bookmarks, {
+    prompt = 'Push bookmark:',
+    format_item = function(item)
+      return item
+    end,
+  }, function(choice)
+    if not choice then
+      return
+    end
+    local bookmark_name = choice:match '^%S+%s+(%S+)'
+    if bookmark_name then
+      -- Remove trailing * if present (indicates unsynced)
+      bookmark_name = bookmark_name:gsub('%*$', '')
+      utils.run_jj_cmd('git push', '-b ' .. bookmark_name)
+      utils.refresh_log()
+    end
+  end)
+end
+
 return M

@@ -63,7 +63,7 @@ function M.setup_dual_cursorline(buf, win)
     group = augroup,
     buffer = buf,
     callback = function()
-      if not is_buf_valid(buf) then
+      if not is_buf_valid(buf) or not is_win_valid(win) then
         return true
       end
 
@@ -71,7 +71,11 @@ function M.setup_dual_cursorline(buf, win)
       vim.api.nvim_buf_clear_namespace(buf, cursorline_ns, 0, -1)
 
       local mode = vim.fn.mode()
-      local cursor_line = vim.api.nvim_win_get_cursor(win)[1]
+      local ok, cursor = pcall(vim.api.nvim_win_get_cursor, win)
+      if not ok then
+        return true
+      end
+      local cursor_line = cursor[1]
       local line_count = vim.api.nvim_buf_line_count(buf)
 
       if mode == 'v' or mode == 'V' or mode == '\22' then
@@ -180,10 +184,12 @@ function M.open_side_by_side_diff()
     new_rev = cid
   end
 
-  local old_content =
-    vim.fn.system(utils.build_jj_cmd('file show -r ' .. old_rev .. ' ' .. vim.fn.shellescape(file_path)))
-  local new_content =
-    vim.fn.system(utils.build_jj_cmd('file show -r ' .. new_rev .. ' ' .. vim.fn.shellescape(file_path)))
+  local old_content = vim.fn.system(
+    utils.build_jj_cmd('file show -r ' .. old_rev .. ' ' .. vim.fn.shellescape(file_path))
+  )
+  local new_content = vim.fn.system(
+    utils.build_jj_cmd('file show -r ' .. new_rev .. ' ' .. vim.fn.shellescape(file_path))
+  )
   local ft = vim.filetype.match { filename = file_path }
 
   local function setup_diff_buf(buf, content, suffix)
@@ -212,8 +218,8 @@ function M.open_side_by_side_diff()
   vim.api.nvim_win_set_buf(0, new_buf)
   setup_diff_buf(new_buf, new_content, ' (' .. new_rev .. ')')
 
-  vim.keymap.set('n', 'q', close_diff_tab, { buffer = old_buf, nowait = true })
-  vim.keymap.set('n', 'q', close_diff_tab, { buffer = new_buf, nowait = true })
+  vim.keymap.set('n', 'gq', close_diff_tab, { buffer = old_buf, nowait = true })
+  vim.keymap.set('n', 'gq', close_diff_tab, { buffer = new_buf, nowait = true })
 end
 
 --------------------------------------------------------------------------------
@@ -226,23 +232,21 @@ local preview_nav
 local function setup_preview_keymaps(buf)
   local state = get_state()
 
-  vim.keymap.set('n', 'q', function()
-    M.close()
-    if is_win_valid(state.win) then
-      vim.api.nvim_set_current_win(state.win)
-    end
-  end, { buffer = buf, nowait = true })
-
   vim.keymap.set('n', 'O', M.open_side_by_side_diff, { buffer = buf, nowait = true })
   vim.keymap.set('n', '<CR>', M.open_side_by_side_diff, { buffer = buf, nowait = true })
-  vim.keymap.set('n', '<Tab>', M.toggle_focus, { buffer = buf, nowait = true })
+  vim.keymap.set('n', '<leader>e', M.toggle_focus, { buffer = buf, nowait = true })
 
-  -- Navigate revisions from preview (J/K)
-  vim.keymap.set('n', 'J', function()
+  -- Navigate revisions from preview (Tab/Shift-Tab)
+  vim.keymap.set('n', '<Tab>', function()
     preview_nav 'j'
   end, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'K', function()
+  vim.keymap.set('n', '<S-Tab>', function()
     preview_nav 'k'
+  end, { buffer = buf, nowait = true })
+
+  -- Close entire jj-log from preview buffer
+  vim.keymap.set('n', 'gq', function()
+    require('jujutsu').close()
   end, { buffer = buf, nowait = true })
 end
 
@@ -289,7 +293,11 @@ function M.toggle_focus()
           start_line, end_line = end_line, start_line
         end
         state.stored_visual_range = { start_line, end_line }
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'nx', false)
+        vim.api.nvim_feedkeys(
+          vim.api.nvim_replace_termcodes('<Esc>', true, false, true),
+          'nx',
+          false
+        )
         -- Trigger cursorline update to show stored range
         vim.schedule(function()
           if is_buf_valid(state.buf) then
@@ -307,7 +315,8 @@ function M.open(content, preview_type, change_id, opts)
   local state = get_state()
   local CONST = get_const()
 
-  local log_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win) or nil
+  local log_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)
+    or nil
 
   -- Same content already showing? Do nothing
   if
@@ -402,7 +411,8 @@ function M.refresh()
 
   local id = state.preview.change_id
   local preview_type = state.preview.type
-  local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git') or ('show -r ' .. id .. ' --git')
+  local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git')
+    or ('show -r ' .. id .. ' --git')
 
   local output = vim.fn.system(utils.build_jj_cmd(cmd))
 
@@ -419,7 +429,11 @@ preview_nav = function(direction)
   local state = get_state()
   local utils = get_utils()
 
-  if not is_win_valid(state.win) or not is_buf_valid(state.buf) or utils.has_active_job() then
+  if
+    not is_win_valid(state.win)
+    or not is_buf_valid(state.buf)
+    or utils.has_active_job()
+  then
     return
   end
 
@@ -473,7 +487,8 @@ preview_nav = function(direction)
   end)
 
   -- Update preview
-  local output = vim.fn.system(utils.build_jj_cmd('show -r ' .. new_commit.id .. ' --git'))
+  local output =
+    vim.fn.system(utils.build_jj_cmd('show -r ' .. new_commit.id .. ' --git'))
   M.open(output, 'show', new_commit.id, { filetype = 'jujutsu', no_colorize = true })
 end
 
@@ -502,16 +517,20 @@ function M.show_help()
     '  N     new @    - New commit after current',
     '  x     abandon  - Abandon commit (confirm)',
     '  b     bookmark - Set bookmark on commit',
+    '  B     bookmark - Move bookmark to commit',
     '  u     undo     - Undo last operation',
-    '  r     redo     - Redo last undo',
-    '  R     rebase   - Rebase revision(s) onto another',
+    '  U     redo     - Redo last undo',
+    '  r     rebase   - Rebase revision(s) onto another',
+    '  p     push     - Git push all bookmarks',
+    '  P     push     - Git push selected bookmark',
     '',
     '  Navigation:',
     '  j/k   move     - Move by commit (2 lines)',
     '  J/K   move     - Navigate revisions from preview',
     '  <Tab> focus    - Toggle log/preview focus',
-    '  ?     help     - Show this help',
-    '  q/Esc close    - Close flog (log) / preview',
+    '  g?    help     - Show this help',
+    '  gq    close    - Close flog',
+    '  q     close    - Close preview (from preview buffer)',
   }
 
   local buf = vim.api.nvim_create_buf(false, true)

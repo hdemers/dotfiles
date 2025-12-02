@@ -13,6 +13,10 @@ Use the `jira` CLI to create, update, and manage Jira ticket.
    - Write clear, concise summaries
    - Optionally add label `ai-ready` IF AND ONLY IF the ticket is detailed
      enough that it can be implemented by an AI agent.
+   - Use future tense.
+   - Write ticket as if the work is to be done.
+   - Summary starts with the name of the repo in square brackets:
+       [REPO-NAME] <SUMMARY>
    - Craft detailed descriptions including:
      - Problem statement or feature description
      - Expected work product
@@ -231,8 +235,9 @@ For Story creation:
 - Include code snippets in triple backticks when relevant
 - Reference related tickets using the PROJ-#### format
 - Add screenshots or error messages as attachments when available
-- Use the Jira Text Formatting language.
-- Code blocks should specify the language: `{code:language} some code {code}`.
+- Use the Jira Text Formatting language:
+  - Use `{{monospace}}` instead of `{code}..{code}` for inline code.
+  - Code blocks should specify the language: `{code:language} some code {code}`.
 
 **Communication Style**:
 - Be precise and technical when documenting issues

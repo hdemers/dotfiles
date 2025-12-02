@@ -22,8 +22,9 @@ This interactive script guides you through creating a JIRA ticket by:
   6. Having Claude generate the ticket content
 
 OPTIONS:
-    --stacked    Create a stacked diff ticket (prompts for base bookmark)
-    --help       Display this help message and exit
+    -r, --revset REVSET  Use a custom revset instead of the default
+    --stacked            Create a stacked diff ticket (prompts for base bookmark)
+    --help               Display this help message and exit
 
 EXAMPLES:
     # Create a regular ticket
@@ -31,6 +32,9 @@ EXAMPLES:
 
     # Create a stacked diff ticket
     cticket --stacked
+
+    # Use a custom revset
+    cticket -r 'ancestors(@, 3)'
 
 ENVIRONMENT:
     TRACE        Set to '1' to enable bash tracing
@@ -54,6 +58,7 @@ main() {
     local points
     local epic
     local assignee
+    local revset
 
     # Parse command-line arguments first
     while [[ $# -gt 0 ]]; do
@@ -61,6 +66,10 @@ main() {
             --help)
                 show_help
                 return 0
+                ;;
+            -r|--revset)
+                revset="$2"
+                shift 2
                 ;;
             --stacked)
                 stacked=true
@@ -71,15 +80,6 @@ main() {
                 ;;
         esac
     done
-
-    . "$HOME"/.shellrc.d/05-jj-functions.sh
-
-    bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
-
-    if [ -z "$bookmark" ]; then
-        gum log --level error "You must provide a bookmark."
-        return 1
-    fi
 
     sprint=$( { jira sprints \
         | grep DSSO \
@@ -103,35 +103,45 @@ main() {
 
     assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
 
-    if [ "${stacked}" = true ]; then
-        base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")
-        if [ -z "$base" ]; then
-            gum log --level error "You must provide a base."
+    if [ -z "${revset:-}" ]; then
+        . "$HOME"/.shellrc.d/05-jj-functions.sh
+
+        bookmark=$(_select_bookmark "" "Select a bookmark to create a JIRA ticket for:")
+
+        if [ -z "$bookmark" ]; then
+            gum log --level error "You must provide a bookmark."
             return 1
         fi
+
+        if [ "${stacked}" = true ]; then
+            base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")
+            if [ -z "$base" ]; then
+                gum log --level error "You must provide a base."
+                return 1
+            fi
+        fi
+        revset=${base}..${bookmark}
     fi
 
-    export CLAUDE_BOOKMARK="${bookmark}"
-    export CLAUDE_PR_BASE="${base}"
-    export CLAUDE_TICKET_EPIC="${epic}"
-    export CLAUDE_TICKET_SPRINT="${sprint}"
-    export CLAUDE_TICKET_POINTS="${points}"
-    export CLAUDE_TICKET_ASSIGNEE="${assignee}"
-    export CLAUDE_TICKET_PROJECT="DSSO"
+    export AGENT_REVSET="${revset}"
+    export AGENT_TICKET_EPIC="${epic}"
+    export AGENT_TICKET_SPRINT="${sprint}"
+    export AGENT_TICKET_POINTS="${points}"
+    export AGENT_TICKET_ASSIGNEE="${assignee}"
+    export AGENT_TICKET_PROJECT="DSSO"
     export TMPDIR=/tmp/claude
 
-    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nBookmark: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$bookmark" "$epic" "$sprint" "$points", "$assignee")" || {
+    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nRevset: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$revset" "$epic" "$sprint" "$points" "$assignee")" || {
         gum log --level info "Ticket creation cancelled."
         return 0
     }
     claude "/jj-ticket"
-    unset CLAUDE_BOOKMARK
-    unset CLAUDE_TICKET_EPIC
-    unset CLAUDE_TICKET_SPRINT
-    unset CLAUDE_TICKET_POINTS
-    unset CLAUDE_PR_BASE
-    unset CLAUDE_TICKET_ASSIGNEE
-    unset CLAUDE_TICKET_PROJECT
+    unset AGENT_REVSET
+    unset AGENT_TICKET_EPIC
+    unset AGENT_TICKET_SPRINT
+    unset AGENT_TICKET_POINTS
+    unset AGENT_TICKET_ASSIGNEE
+    unset AGENT_TICKET_PROJECT
     unset TMPDIR
 
 

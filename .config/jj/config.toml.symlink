@@ -41,9 +41,8 @@ merge-tool-edits-conflict-markers = true
 
 'remotebranch(x)' = 'fork_point(x | trunk())+::x'
 
-[git]
-push-new-bookmarks = true
-# private-commits = "dev+"
+[remotes.origin]
+auto-track-bookmarks = "glob:*"
 
 [aliases]
 rdev = ["rebase", "-s", "dev", "-d", "trunkandbranches"]

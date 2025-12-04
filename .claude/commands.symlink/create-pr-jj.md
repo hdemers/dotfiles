@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(jj log:*), Bash(jj diff:*), Bash(gh pr create:*), Bash(gh pr edit:*), Bash(jira transition-to:*), Bash(printenv:*), Bash(jira view:*), Bash(cat:*)
 description: Open a PR from a Jujutsu bookmark
-model: haiku
+model: sonnet
 ---
 
 MANDATORY: You have all the informatin you need below, DO NOT attempt to run

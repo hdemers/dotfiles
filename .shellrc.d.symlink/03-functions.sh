@@ -181,7 +181,7 @@ custom-atuin-history-widget() {
 }
 
 # Only works in Zsh
-if [[ -n "$ZSH_VERSION" ]]; then
+if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
   zle -N custom-atuin-history-widget
   bindkey '^R' custom-atuin-history-widget
 fi
@@ -418,9 +418,10 @@ js() {
         --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
         --bind "ctrl-u:execute(jira update {1})" \
         --bind "ctrl-s:reload(jira issues -r --current-sprint --mine)" \
+        --bind "ctrl-v:execute(COLUMNS=120 jira view -r {1} | less -R)" \
         --border-label-pos 5:bottom \
         --border 'rounded' \
-        --border-label '  ctrl-s: mine | ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update'
+        --border-label "  ctrl-s: mine | ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update | ctrl-v: view"
 }
 
 # Export functions for subshells, but only in bash (not zsh)

@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+show_help() {
+    cat << EOF
+Usage: adeploy [OPTIONS]
+
+Deploy a Jujutsu bookmark to Jenkins, then run on Azkaban.
+
+OPTIONS:
+    -b, --bookmark NAME  Bookmark to deploy (interactive selection if not provided)
+    --no-unit-tests      Skip running unit tests during deployment
+    --help               Display this help message and exit
+
+EXAMPLES:
+    # Interactive mode - prompts for bookmark and unit tests
+    adeploy
+
+    # Deploy a specific bookmark, prompt for unit tests
+    adeploy --bookmark my-feature
+
+    # Deploy a specific bookmark without unit tests
+    adeploy --bookmark my-feature --no-unit-tests
+
+    # Short form
+    adeploy -b my-feature --no-unit-tests
+
+ENVIRONMENT:
+    TRACE        Set to '1' to enable bash tracing
+
+DEPENDENCIES:
+    - jj         Jujutsu version control
+    - gum        Terminal UI tool
+    - jenkins    Jenkins CLI tool
+    - notify     Notification tool
+    - zellij     Terminal multiplexer (for floating command window)
+
+EOF
+}
+
+main() {
+    local bookmark=""
+    local unit_tests=""
+    local interactive=true
+    local azkaban_project=""
+    local jenkins_project=""
+    local flow=""
+    local jobs=""
+    local cmd
+
+    # Parse command-line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help)
+                show_help
+                return 0
+                ;;
+            -b|--bookmark)
+                bookmark="$2"
+                interactive=false
+                shift 2
+                ;;
+            -j|--jobs)
+                jobs="$2"
+                shift 2
+                ;;
+            -a|--azkaban-project)
+                azkaban_project="$2"
+                shift 2
+                ;;
+            -p|--jenkins-project)
+                jenkins_project="$2"
+                shift 2
+                ;;
+            -f|--flow)
+                flow="$2"
+                shift 2
+                ;;
+            --no-unit-tests)
+                unit_tests="--no-unit-tests"
+                shift
+                ;;
+            *)
+                gum log --level error "Unknown option: $1"
+                show_help
+                return 1
+                ;;
+        esac
+    done
+
+    # Source the helper function for bookmark selection
+    . "$HOME"/.shellrc.d/05-jj-functions.sh
+    export CURRENT_SHELL='bash'
+    . "$HOME"/.shellrc.d/03-functions.sh
+
+    if [ "$interactive" = true ]; then
+        # Interactive mode: select bookmark and prompt for unit tests
+        bookmark=$(_select_bookmark "")
+        if [ -z "$bookmark" ]; then
+            gum log --level error "You must provide a bookmark."
+            return 1
+        fi
+        gum confirm "Run unit tests?" || unit_tests="--no-unit-tests"
+    else
+        # Non-interactive: validate the provided bookmark
+        if ! jj log -r "${bookmark}" >/dev/null 2>&1; then
+            gum log --level error "Error: bookmark '${bookmark}' not found"
+            return 1
+        fi
+    fi
+
+    local jenkins_project_opt=""
+    if [ -n "$jenkins_project" ]; then
+        jenkins_project_opt="--project ${jenkins_project}"
+    fi
+
+    local jobs_opt=""
+    if [ -n "$jobs" ]; then
+        jobs_opt="--jobs ${jobs}"
+    fi
+
+    cmd="jj git push -b ${bookmark} \
+        && jenkins deploy-branch --branch ${bookmark} ${unit_tests} ${jenkins_project_opt} \
+        && notify 'Bookmark ${bookmark} deployed.'"
+
+    cmd+=" && schedule run --project ${azkaban_project} --flow ${flow} ${jobs_opt}"
+    cmd+=" && notify 'Flow ${flow} started.'"
+
+    if [ "$interactive" = true ]; then
+        gum confirm "Deploy bookmark '${bookmark}' now?" &&
+            zellij_float_cmd "$cmd"
+    else
+        zellij_float_cmd "$cmd"
+    fi
+}
+
+main "$@"
+
+# vim: set ft=sh
+

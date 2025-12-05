@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+show_help() {
+    cat << EOF
+Usage: jdeploy [OPTIONS]
+
+Deploy a Jujutsu bookmark to Jenkins.
+
+This script pushes a bookmark to the remote and triggers a Jenkins deploy-branch
+job. It can run interactively or with command-line arguments.
+
+OPTIONS:
+    -b, --bookmark NAME  Bookmark to deploy (interactive selection if not provided)
+    -p, --project NAME   Project to deploy to (passed to jenkins deploy-branch)
+    --no-unit-tests      Skip running unit tests during deployment
+    --help               Display this help message and exit
+
+EXAMPLES:
+    # Interactive mode - prompts for bookmark and unit tests
+    jdeploy
+
+    # Deploy a specific bookmark, prompt for unit tests
+    jdeploy --bookmark my-feature
+
+    # Deploy a specific bookmark without unit tests
+    jdeploy --bookmark my-feature --no-unit-tests
+
+    # Short form
+    jdeploy -b my-feature --no-unit-tests
+
+ENVIRONMENT:
+    TRACE        Set to '1' to enable bash tracing
+
+DEPENDENCIES:
+    - jj         Jujutsu version control
+    - gum        Terminal UI tool
+    - jenkins    Jenkins CLI tool
+    - notify     Notification tool
+    - zellij     Terminal multiplexer (for floating command window)
+
+EOF
+}
+
+main() {
+    local bookmark=""
+    local unit_tests=""
+    local project=""
+    local interactive=true
+    local cmd
+
+    # Parse command-line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help)
+                show_help
+                return 0
+                ;;
+            -b|--bookmark)
+                bookmark="$2"
+                interactive=false
+                shift 2
+                ;;
+            -p|--project)
+                project="$2"
+                shift 2
+                ;;
+            --no-unit-tests)
+                unit_tests="--no-unit-tests"
+                shift
+                ;;
+            *)
+                gum log --level error "Unknown option: $1"
+                show_help
+                return 1
+                ;;
+        esac
+    done
+
+    # Source the helper function for bookmark selection
+    . "$HOME"/.shellrc.d/05-jj-functions.sh
+    export CURRENT_SHELL='bash'
+    . "$HOME"/.shellrc.d/03-functions.sh
+
+    if [ "$interactive" = true ]; then
+        # Interactive mode: select bookmark and prompt for unit tests
+        bookmark=$(_select_bookmark "")
+        if [ -z "$bookmark" ]; then
+            gum log --level error "You must provide a bookmark."
+            return 1
+        fi
+        gum confirm "Run unit tests?" || unit_tests="--no-unit-tests"
+    else
+        # Non-interactive: validate the provided bookmark
+        if ! jj log -r "${bookmark}" >/dev/null 2>&1; then
+            gum log --level error "Error: bookmark '${bookmark}' not found"
+            return 1
+        fi
+    fi
+
+    local project_opt=""
+    if [ -n "$project" ]; then
+        project_opt="--project ${project}"
+    fi
+
+    cmd="jj git push -b ${bookmark} \
+        && jenkins deploy-branch --branch ${bookmark} ${unit_tests} ${project_opt} \
+        && notify 'Bookmark ${bookmark} deployed.'"
+
+    if [ "$interactive" = true ]; then
+        gum confirm "Deploy bookmark '${bookmark}' now?" &&
+            zellij_float_cmd "$cmd"
+    else
+        zellij_float_cmd "$cmd"
+    fi
+}
+
+main "$@"
+
+# vim: set ft=sh

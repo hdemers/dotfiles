@@ -366,27 +366,6 @@ jjreview() {
     | xargs --no-run-if-empty jj new
 }
 
-jdeploy() {
-    local cmd
-    local bookmark="$1"
-    local unit_tests=""
-
-    bookmark=$(_select_bookmark "${bookmark}")
-    if [ -z "$bookmark" ]; then
-        gum log --level error "You must provide a bookmark."
-        return 1
-    fi
-
-    gum confirm "Run unit tests?" || unit_tests="--no-unit-tests"
-
-    cmd="jj git push -b ${bookmark} \
-        && jenkins deploy-branch --branch ${bookmark} ${unit_tests} \
-        && notify 'Bookmark ${bookmark} deployed.'"
-
-    gum confirm "Deploy bookmark '${bookmark}' now?" && 
-        zellij_float_cmd "$cmd"
-}
-
 jintegrate() {
     local pr_number="$1"
     local bookmark="$2"
@@ -412,7 +391,6 @@ jintegrate() {
 # Export functions for subshells, but only in bash (not zsh)
 if [[ -n "$BASH_VERSION" ]]; then
     export -f _jpreview
-    export -f jdeploy
     export -f jintegrate
     export -f _select_bookmark 
 fi

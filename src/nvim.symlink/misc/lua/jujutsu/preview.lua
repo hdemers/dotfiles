@@ -248,6 +248,16 @@ local function setup_preview_keymaps(buf)
   vim.keymap.set('n', 'gq', function()
     require('jujutsu').close()
   end, { buffer = buf, nowait = true })
+
+  -- Intercept :tabclose to use proper cleanup (prevents crashes)
+  vim.cmd.cnoreabbrev '<buffer> tabclose JJClose'
+  vim.api.nvim_buf_create_user_command(buf, 'JJClose', function()
+    require('jujutsu').close()
+  end, { bang = true })
+  -- Override <leader>w if user has it mapped to :tabclose
+  vim.keymap.set('n', '<leader>w', function()
+    require('jujutsu').close()
+  end, { buffer = buf, nowait = true })
 end
 
 --------------------------------------------------------------------------------
@@ -268,6 +278,11 @@ end
 
 function M.toggle_focus()
   local state = get_state()
+
+  -- Early exit if plugin was closed
+  if not state.cwd then
+    return
+  end
 
   if preview_is_valid() then
     local current_win = vim.api.nvim_get_current_win()
@@ -314,6 +329,11 @@ function M.open(content, preview_type, change_id, opts)
   opts = opts or {}
   local state = get_state()
   local CONST = get_const()
+
+  -- Early exit if plugin was closed
+  if not state.cwd then
+    return nil
+  end
 
   local log_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)
     or nil
@@ -405,7 +425,8 @@ function M.refresh()
   local state = get_state()
   local utils = get_utils()
 
-  if not preview_is_valid() or not state.preview.change_id or utils.has_active_job() then
+  -- Early exit if plugin was closed
+  if not state.cwd or not preview_is_valid() or not state.preview.change_id or utils.has_active_job() then
     return
   end
 
@@ -429,8 +450,10 @@ preview_nav = function(direction)
   local state = get_state()
   local utils = get_utils()
 
+  -- Early exit if plugin was closed
   if
-    not is_win_valid(state.win)
+    not state.cwd
+    or not is_win_valid(state.win)
     or not is_buf_valid(state.buf)
     or utils.has_active_job()
   then
@@ -521,6 +544,7 @@ function M.show_help()
     '  u     undo     - Undo last operation',
     '  U     redo     - Redo last undo',
     '  r     rebase   - Rebase revision(s) onto another',
+    '  w     swap     - Swap revision with parent (rebase before)',
     '  p     push     - Git push all bookmarks',
     '  P     push     - Git push selected bookmark',
     '',

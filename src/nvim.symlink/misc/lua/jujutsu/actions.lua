@@ -270,6 +270,24 @@ function M.redo()
   utils.refresh_log()
 end
 
+-- Rebase revision before its parent (swap with parent)
+M.rebase_before_parent = with_revset(function(id)
+  local utils = get_utils()
+
+  -- Get the parent's change_id using jj log with parent revset syntax
+  local parent_cmd = 'log -r ' .. id .. '- --no-graph -T "change_id.shortest()"'
+  local parent_output = vim.fn.system(utils.build_jj_cmd(parent_cmd))
+  local parent_id = parent_output:gsub('%s+', '')
+
+  if parent_id == '' then
+    vim.notify('Could not find parent of ' .. id, vim.log.levels.WARN)
+    return
+  end
+
+  -- Rebase the revision before its parent
+  utils.run_jj_cmd('rebase', '-r ' .. id .. ' -B ' .. parent_id)
+end)
+
 --------------------------------------------------------------------------------
 -- Navigation
 --------------------------------------------------------------------------------

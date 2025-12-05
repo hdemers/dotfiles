@@ -386,6 +386,11 @@ end
 
 -- Refresh preview with revision under cursor (called after log refresh)
 local function refresh_preview_after_log()
+  -- Early exit if plugin was closed (cwd is nil when fully closed)
+  if not M.state.cwd then
+    return
+  end
+
   local preview = require 'jujutsu.preview'
 
   if
@@ -397,8 +402,10 @@ local function refresh_preview_after_log()
   end
 
   vim.schedule(function()
+    -- Re-check cwd since we're in a scheduled callback
     if
-      not is_win_valid(M.state.preview.win)
+      not M.state.cwd
+      or not is_win_valid(M.state.preview.win)
       or not is_win_valid(M.state.win)
       or M.utils.has_active_job()
     then
@@ -427,7 +434,8 @@ local function refresh_preview_after_log()
 end
 
 function M.utils.refresh_log(cursor_pos)
-  if not state_is_valid() then
+  -- Early exit if plugin was closed (cwd is nil when fully closed)
+  if not M.state.cwd or not state_is_valid() then
     return
   end
 
@@ -458,10 +466,10 @@ function M.utils.refresh_log(cursor_pos)
 
   -- Debounced preview refresh
   debounce(function()
-    if is_win_valid(M.state.win) then
+    if M.state.cwd and is_win_valid(M.state.win) then
       pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, col })
+      refresh_preview_after_log()
     end
-    refresh_preview_after_log()
   end, M.CONST.CURSOR_RESTORE_DELAY_MS)
 end
 
@@ -473,6 +481,10 @@ local function close_flog()
   local preview = require 'jujutsu.preview'
 
   M.utils.cancel_debounce()
+  -- Stop any active job
+  if M.state.active_job then
+    pcall(vim.fn.jobstop, M.state.active_job)
+  end
   preview.close()
   if is_buf_valid(M.state.buf) then
     vim.cmd 'tabclose'
@@ -480,6 +492,7 @@ local function close_flog()
   M.state.win = nil
   M.state.buf = nil
   M.state.active_job = nil
+  M.state.cwd = nil -- Mark as fully closed
 end
 
 M.close = close_flog
@@ -520,6 +533,7 @@ local function setup_keymaps(buf)
   vim.keymap.set('n', 'u', actions.undo, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'U', actions.redo, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'r', actions.rebase, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'w', actions.rebase_before_parent, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'p', actions.push, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'P', actions.push_bookmark, { buffer = buf, nowait = true })
 
@@ -545,13 +559,14 @@ function M.jujutsu_flog()
   local preview = require 'jujutsu.preview'
   local actions = require 'jujutsu.actions'
 
-  M.state.cwd = vim.fn.getcwd()
-
-  -- Clean up any existing JJ-log buffer before creating new tab
+  -- Clean up any existing JJ-log buffer BEFORE setting state
+  -- (deleting triggers BufWipeout which clears state)
   local existing = vim.fn.bufnr 'JJ-log'
   if existing ~= -1 then
     vim.api.nvim_buf_delete(existing, { force = true })
   end
+
+  M.state.cwd = vim.fn.getcwd()
 
   local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
 
@@ -573,24 +588,38 @@ function M.jujutsu_flog()
   setup_keymaps(buf)
   preview.setup_dual_cursorline(buf, M.state.win)
 
+  -- Intercept :tabclose to use proper cleanup (prevents crashes)
+  -- Use abbreviation since we can't override built-in commands
+  vim.cmd.cnoreabbrev '<buffer> tabclose JJClose'
+  vim.api.nvim_buf_create_user_command(buf, 'JJClose', function()
+    close_flog()
+  end, { bang = true })
+  -- Override <leader>w if user has it mapped to :tabclose
+  vim.keymap.set('n', '<leader>w', close_flog, { buffer = buf, nowait = true })
+
   -- Cleanup when buffer is wiped (e.g., by tabclose)
   vim.api.nvim_create_autocmd('BufWipeout', {
     buffer = buf,
     once = true,
     callback = function()
       M.utils.cancel_debounce()
+      -- Stop any active job to prevent on_exit callback from firing after cleanup
+      if M.state.active_job then
+        pcall(vim.fn.jobstop, M.state.active_job)
+      end
       -- Don't call preview.close() here - Neovim is already closing everything
       -- Just clear state to prevent callbacks from accessing invalid handles
       M.state.preview = { buf = nil, win = nil, type = nil, change_id = nil }
       M.state.win = nil
       M.state.buf = nil
       M.state.active_job = nil
+      M.state.cwd = nil -- Mark as fully closed
     end,
   })
 
   -- Debounced initial show
   debounce(function()
-    if is_win_valid(M.state.win) and not M.utils.has_active_job() then
+    if M.state.cwd and is_win_valid(M.state.win) and not M.utils.has_active_job() then
       vim.api.nvim_win_set_cursor(M.state.win, { 1, 0 })
       actions.show()
     end

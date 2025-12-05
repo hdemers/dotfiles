@@ -329,8 +329,8 @@ return {
         --   end,
         -- },
         icons = {
-          failed = '✗',
-          passed = '✔',
+          failed = '',
+          passed = '',
           pending = '⧗',
           error = '!',
           running = '↯',

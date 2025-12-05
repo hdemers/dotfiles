@@ -43,12 +43,12 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "printf '\\033[01;32m%s@%s\\033[00m:\\033[01;34m%s\\033[00m' \"$(whoami)\" \"$(hostname -s)\" \"$(basename \"$(pwd)\")\""
+    "command": "~/.claude/statusline.sh"
   },
   "enabledPlugins": {
     "gdp@gdp-cli-marketplace": true,
-    "on-call@gdp-cli-marketplace": true,
-    "coding@gdp-cli-marketplace": true
+    "on-call@gdp-cli-marketplace": false,
+    "coding@gdp-cli-marketplace": false
   },
   "sandbox": {
     "enabled": true,

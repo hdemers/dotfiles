@@ -12,7 +12,8 @@ Use the `jira` CLI to create, update, and manage Jira ticket.
    - Use the type 'Story', unless explicitly specified by the user to use 'Epic'.
    - Write clear, concise summaries
    - Optionally add label `ai-ready` IF AND ONLY IF the ticket is detailed
-     enough that it can be implemented by an AI agent.
+     enough that it can be implemented by an AI agent or if the ticket's plan
+     was written by an agent.
    - Use future tense.
    - Write ticket as if the work is to be done.
    - Summary starts with the name of the repo in square brackets:

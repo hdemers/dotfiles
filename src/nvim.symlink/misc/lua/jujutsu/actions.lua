@@ -232,32 +232,6 @@ M.bookmark = with_revset(function(id)
   end)
 end, { refresh = false }) -- refresh handled in callback
 
-M.rebase = with_revset(function(revset)
-  local utils = get_utils()
-  local destinations = utils.get_revisions()
-  if not destinations or #destinations == 0 then
-    vim.notify('No destinations found from trunk()', vim.log.levels.WARN)
-    return
-  end
-
-  vim.ui.select(destinations, {
-    prompt = 'Rebase ' .. revset .. ' onto:',
-    format_item = function(item)
-      return item
-    end,
-  }, function(choice)
-    if not choice then
-      return
-    end
-    local dest_id = choice:match '^(%S+)'
-    if dest_id then
-      utils.run_jj_cmd('rebase', '-r ' .. revset .. ' -d ' .. dest_id)
-      utils.run_jj_cmd 'rdev'
-      utils.refresh_log()
-    end
-  end)
-end, { refresh = false }) -- refresh handled in callback
-
 function M.undo()
   local utils = get_utils()
   utils.run_jj_cmd('undo', '')
@@ -270,11 +244,62 @@ function M.redo()
   utils.refresh_log()
 end
 
--- Rebase revision before its parent (swap with parent)
-M.rebase_before_parent = with_revset(function(id)
-  local utils = get_utils()
+--------------------------------------------------------------------------------
+-- Rebase
+--------------------------------------------------------------------------------
 
-  -- Get the parent's change_id using jj log with parent revset syntax
+local REBASE_MODES = {
+  onto = { flag = '-d', desc = 'Onto (-d): make target the new parent' },
+  before = { flag = '-B', desc = 'Before (-B): insert before target' },
+  after = { flag = '-A', desc = 'After (-A): insert after target' },
+}
+
+--- Select a destination revision from trunk()::
+---@param prompt string
+---@param callback function(dest_id: string)
+local function select_destination(prompt, callback)
+  local utils = get_utils()
+  local destinations = utils.get_revisions()
+  if not destinations or #destinations == 0 then
+    vim.notify('No destinations found from trunk()', vim.log.levels.WARN)
+    return
+  end
+  vim.ui.select(destinations, { prompt = prompt }, function(choice)
+    if choice then
+      local dest_id = choice:match '^(%S+)'
+      if dest_id then
+        callback(dest_id)
+      end
+    end
+  end)
+end
+
+--- Execute rebase with specified mode
+---@param revset string
+---@param target_id string
+---@param mode 'onto'|'before'|'after'
+local function do_rebase(revset, target_id, mode)
+  local utils = get_utils()
+  utils.run_jj_cmd('rebase', '-r ' .. revset .. ' ' .. REBASE_MODES[mode].flag .. ' ' .. target_id)
+  utils.run_jj_cmd 'rdev'
+  utils.refresh_log()
+end
+
+M.rebase = with_revset(function(revset)
+  select_destination('Rebase ' .. revset .. ' onto:', function(dest_id)
+    do_rebase(revset, dest_id, 'onto')
+  end)
+end, { refresh = false })
+
+M.rebase_before = with_revset(function(revset)
+  select_destination('Rebase ' .. revset .. ' before:', function(dest_id)
+    do_rebase(revset, dest_id, 'before')
+  end)
+end, { refresh = false })
+
+-- Swap revision with its parent
+M.switch_revisions = with_revset(function(id)
+  local utils = get_utils()
   local parent_cmd = 'log -r ' .. id .. '- --no-graph -T "change_id.shortest()"'
   local parent_output = vim.fn.system(utils.build_jj_cmd(parent_cmd))
   local parent_id = parent_output:gsub('%s+', '')
@@ -284,9 +309,28 @@ M.rebase_before_parent = with_revset(function(id)
     return
   end
 
-  -- Rebase the revision before its parent
-  utils.run_jj_cmd('rebase', '-r ' .. id .. ' -B ' .. parent_id)
-end)
+  do_rebase(id, parent_id, 'before')
+end, { refresh = false })
+
+M.rebase_interactive = with_revset(function(revset)
+  local modes = vim.tbl_map(function(key)
+    return { mode = key, desc = REBASE_MODES[key].desc }
+  end, { 'before', 'after', 'onto' })
+
+  vim.ui.select(modes, {
+    prompt = 'Rebase ' .. revset .. ':',
+    format_item = function(item)
+      return item.desc
+    end,
+  }, function(mode_choice)
+    if not mode_choice then
+      return
+    end
+    select_destination('Select target revision:', function(dest_id)
+      do_rebase(revset, dest_id, mode_choice.mode)
+    end)
+  end)
+end, { refresh = false })
 
 --------------------------------------------------------------------------------
 -- Navigation

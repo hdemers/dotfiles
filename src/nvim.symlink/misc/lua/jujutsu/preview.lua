@@ -544,7 +544,7 @@ function M.show_help()
     '  u     undo     - Undo last operation',
     '  U     redo     - Redo last undo',
     '  r     rebase   - Rebase revision(s) onto another',
-    '  w     swap     - Swap revision with parent (rebase before)',
+    '  w     switch   - Switch revision with parent',
     '  p     push     - Git push all bookmarks',
     '  P     push     - Git push selected bookmark',
     '',

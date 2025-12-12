@@ -72,7 +72,7 @@ cpr() {
         fi
     fi
 
-    ticket=$(_extract_ticket "${bookmark}")
+    ticket=$(_extract_ticket "${bookmark}" "${pr_base}")
 
     reviewers=$(gum choose \
         --no-limit \

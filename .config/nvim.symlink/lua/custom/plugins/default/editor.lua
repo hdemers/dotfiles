@@ -39,7 +39,7 @@ return {
   },
 
   {
-    'echasnovski/mini.nvim',
+    'nvim-mini/mini.nvim',
     lazy = false,
     keys = {
       {

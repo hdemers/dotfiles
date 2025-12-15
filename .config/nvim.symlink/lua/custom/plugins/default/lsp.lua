@@ -134,7 +134,7 @@ return {
         ruff = {},
         -- ty does not support rename, so we use pyright for that. All other capabilities are disabled.
         basedpyright = {
-          enable = true,
+          enable = false,
           on_attach = function(client, _)
             -- Disable all capabilities except rename
             client.server_capabilities.hoverProvider = false
@@ -184,7 +184,7 @@ return {
         ty = {
           enable = true,
           on_attach = function(client, _)
-            client.server_capabilities.definitionProvider = false
+            client.server_capabilities.definitionProvider = true
           end,
         },
         beancount = {

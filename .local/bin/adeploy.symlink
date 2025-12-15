@@ -14,9 +14,14 @@ Usage: adeploy [OPTIONS]
 Deploy a Jujutsu bookmark to Jenkins, then run on Azkaban.
 
 OPTIONS:
-    -b, --bookmark NAME  Bookmark to deploy (interactive selection if not provided)
-    --no-unit-tests      Skip running unit tests during deployment
-    --help               Display this help message and exit
+    -b, --bookmark NAME    Bookmark to deploy (interactive selection if not provided)
+    -J, --jenkins-project  Jenkins project name
+    -a, --azkaban-project  Azkaban project name
+    -f, --flow             Azkaban flow name
+    -j, --jobs             Jobs to run
+    -p, --param KEY VALUE  Parameter to pass to schedule (can be repeated)
+    --no-unit-tests        Skip running unit tests during deployment
+    --help                 Display this help message and exit
 
 EXAMPLES:
     # Interactive mode - prompts for bookmark and unit tests
@@ -30,6 +35,9 @@ EXAMPLES:
 
     # Short form
     adeploy -b my-feature --no-unit-tests
+
+    # Pass parameters to schedule
+    adeploy -b my-feature -p key value -p another_key another_value
 
 ENVIRONMENT:
     TRACE        Set to '1' to enable bash tracing
@@ -52,6 +60,7 @@ main() {
     local jenkins_project=""
     local flow=""
     local jobs=""
+    local schedule_params=()
     local cmd
 
     # Parse command-line arguments
@@ -74,7 +83,7 @@ main() {
                 azkaban_project="$2"
                 shift 2
                 ;;
-            -p|--jenkins-project)
+            -J|--jenkins-project)
                 jenkins_project="$2"
                 shift 2
                 ;;
@@ -85,6 +94,10 @@ main() {
             --no-unit-tests)
                 unit_tests="--no-unit-tests"
                 shift
+                ;;
+            -p|--param)
+                schedule_params+=("-p" "$2" "$3")
+                shift 3
                 ;;
             *)
                 gum log --level error "Unknown option: $1"
@@ -125,11 +138,16 @@ main() {
         jobs_opt="--jobs ${jobs}"
     fi
 
+    local schedule_params_opt=""
+    if [ ${#schedule_params[@]} -gt 0 ]; then
+        schedule_params_opt="${schedule_params[*]}"
+    fi
+
     cmd="jj git push -b ${bookmark} \
         && jenkins deploy-branch --branch ${bookmark} ${unit_tests} ${jenkins_project_opt} \
         && notify 'Bookmark ${bookmark} deployed.'"
 
-    cmd+=" && schedule run --project ${azkaban_project} --flow ${flow} ${jobs_opt}"
+    cmd+=" && schedule run --project ${azkaban_project} --flow ${flow} ${jobs_opt} ${schedule_params_opt}"
     cmd+=" && notify 'Flow ${flow} started.'"
 
     if [ "$interactive" = true ]; then

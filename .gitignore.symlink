@@ -91,3 +91,5 @@ settings.local.json
 token.json
 
 .venv
+
+digest.txt

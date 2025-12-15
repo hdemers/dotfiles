@@ -1,7 +1,7 @@
 keybinds clear-defaults=true {
     locked {
         bind "Ctrl a" { SwitchToMode "normal"; }
-        bind "Shift Enter" { WriteChars "\\\n"; }
+        // bind "Shift Enter" { WriteChars "\\\n"; }
     }
     normal {
         bind "1" { GoToTab 1; SwitchToMode "locked"; }
@@ -163,7 +163,7 @@ keybinds clear-defaults=true {
         bind "Alt k" { MoveFocus "up"; }
         bind "Alt p" { GoToPreviousTab; }
         bind "Alt n" { GoToNextTab; }
-        bind "Alt t" { NewTab; }
+        bind "Alt a" { NewTab; }
         bind "Alt i" { MoveTab "left"; }
         bind "Alt o" { MoveTab "right"; }
         bind "Alt z" { ToggleFocusFullscreen;}

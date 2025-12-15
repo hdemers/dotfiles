@@ -2,21 +2,28 @@
 input=$(cat)
 
 MODEL=$(echo "$input" | jq -r '.model.display_name')
-INPUT_TOKENS=$(echo "$input" | jq -r '.context_window.total_input_tokens')
-OUTPUT_TOKENS=$(echo "$input" | jq -r '.context_window.total_output_tokens')
-CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size')
 
-TOTAL=$((INPUT_TOKENS + OUTPUT_TOKENS))
-PERCENT=$((TOTAL * 100 / CONTEXT_SIZE))
-REMAINING=$((100 - PERCENT))
+CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size')
+USAGE=$(echo "$input" | jq '.context_window.current_usage')
+
+if [ "$USAGE" != "null" ]; then
+    # Calculate current context from current_usage fields
+    CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
+    PERCENT_USED=$((CURRENT_TOKENS * 100 / CONTEXT_SIZE))
+    REMAINING=$((100 - PERCENT_USED))
+else
+    REMAINING=100
+fi
+
 
 # Colors (using printf to create escape sequences)
 RESET=$(printf '\033[00m')
-GREEN=$(printf '\033[01;32m')
-BLUE=$(printf '\033[01;34m')
-MAGENTA=$(printf '\033[01;35m')
+GREEN=$(printf '\033[0;32m')
+BLUE=$(printf '\033[0;34m')
+MAGENTA=$(printf '\033[0;35m')
 YELLOW=$(printf '\033[01;33m')
 RED=$(printf '\033[01;31m')
+CYAN=$(printf '\033[0;36m')
 
 # Context color based on remaining percentage
 if [ "$REMAINING" -lt 10 ]; then
@@ -27,7 +34,6 @@ else
     CONTEXT_COLOR="$GREEN"
 fi
 
-# PS1-style: user@host:dir
-PS1_PART="${GREEN}$(whoami)@$(hostname -s)${RESET}:${BLUE}$(basename "$(pwd)")${RESET}"
+PS1_PART="${GREEN}$(hostname -s)${RESET}:${CYAN}$(basename "$(pwd)")${RESET}"
 
-printf '%s %s[%s]%s %sContext:%s %s%s%%%s\n' "$PS1_PART" "$MAGENTA" "$MODEL" "$RESET" "$GREEN" "$RESET" "$CONTEXT_COLOR" "$REMAINING" "$RESET"
+printf '%s %s[%s] %sContext: %s%%\n' "$PS1_PART" "$MAGENTA" "$MODEL" "$CONTEXT_COLOR" "$REMAINING"

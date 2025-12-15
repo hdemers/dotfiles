@@ -409,11 +409,12 @@ M.cdescribe = with_revset(function(id)
         end
         if is_win_valid(state.win) then
           vim.api.nvim_set_current_win(state.win)
+          -- Restore cursor before refresh so refresh_log preserves it
+          if saved_cursor then
+            pcall(vim.api.nvim_win_set_cursor, state.win, saved_cursor)
+          end
         end
-        utils.refresh_log(saved_cursor)
-        if saved_cursor and is_win_valid(state.win) then
-          pcall(vim.api.nvim_win_set_cursor, state.win, saved_cursor)
-        end
+        utils.refresh_log()
       end)
     end,
   })

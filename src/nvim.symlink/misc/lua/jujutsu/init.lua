@@ -142,9 +142,25 @@ end
 -- Colorization helper
 local function safe_colorize()
   if Snacks and Snacks.terminal and Snacks.terminal.colorize then
+    local buf = vim.api.nvim_get_current_buf()
     local saved_listchars = vim.opt.listchars:get()
+
     Snacks.terminal.colorize()
+
     vim.opt.listchars = saved_listchars
+
+    -- Clear snacks.nvim's keymaps and autocmds that interfere with our buffer
+    -- colorize() sets up: q mapping, TextChanged autocmd (moves cursor to end!),
+    -- TermEnter autocmd, and ]] [[ navigation mappings
+    pcall(vim.keymap.del, 'n', 'q', { buffer = buf })
+    pcall(vim.keymap.del, 'n', ']]', { buffer = buf })
+    pcall(vim.keymap.del, 'n', '[[', { buffer = buf })
+
+    -- Remove the TextChanged autocmd that moves cursor to last line
+    local autocmds = vim.api.nvim_get_autocmds({ buffer = buf, event = 'TextChanged' })
+    for _, au in ipairs(autocmds) do
+      pcall(vim.api.nvim_del_autocmd, au.id)
+    end
   end
 end
 
@@ -386,7 +402,11 @@ function M.utils.run_jj_with_editor(jj_args, title, on_complete)
         if output ~= '' then
           vim.notify(output, vim.log.levels.INFO)
         end
-        M.utils.refresh_log(session.saved_cursor)
+        -- Restore cursor before refresh so refresh_log preserves it
+        if session.saved_cursor and is_win_valid(M.state.win) then
+          pcall(vim.api.nvim_win_set_cursor, M.state.win, session.saved_cursor)
+        end
+        M.utils.refresh_log()
       elseif output ~= '' and not output:match 'interrupt' then
         vim.notify(output, vim.log.levels.ERROR)
       end
@@ -457,6 +477,9 @@ local function refresh_preview_after_log()
       return
     end
 
+    -- Save cursor before any operations
+    local saved_cursor = vim.api.nvim_win_get_cursor(M.state.win)
+
     -- Ensure we're in the log window
     local prev_win = vim.api.nvim_get_current_win()
     vim.api.nvim_set_current_win(M.state.win)
@@ -471,6 +494,11 @@ local function refresh_preview_after_log()
       preview.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
     end
 
+    -- Restore cursor after preview.open
+    if is_win_valid(M.state.win) then
+      pcall(vim.api.nvim_win_set_cursor, M.state.win, saved_cursor)
+    end
+
     -- Restore previous window if different
     if prev_win ~= M.state.win and vim.api.nvim_win_is_valid(prev_win) then
       vim.api.nvim_set_current_win(prev_win)
@@ -478,7 +506,7 @@ local function refresh_preview_after_log()
   end)
 end
 
-function M.utils.refresh_log(cursor_pos)
+function M.utils.refresh_log()
   -- Early exit if plugin was closed (cwd is nil when fully closed)
   if not M.state.cwd or not state_is_valid() then
     return
@@ -487,38 +515,31 @@ function M.utils.refresh_log(cursor_pos)
   -- Track refresh time for watcher deduplication
   M.state.last_refresh_time = vim.uv.now()
 
-  cursor_pos = cursor_pos or vim.api.nvim_win_get_cursor(M.state.win)
+  -- Save cursor before modifications
+  local cursor = vim.api.nvim_win_get_cursor(M.state.win)
 
   local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
   local lines = vim.split(output, '\n')
 
-  -- Reuse existing buffer - update contents in place
   vim.bo[M.state.buf].modifiable = true
   vim.api.nvim_buf_set_lines(M.state.buf, 0, -1, false, lines)
 
-  -- Compute row based on NEW content
+  -- Get line count BEFORE colorize (colorize may change buffer content)
   local line_count = #lines
-  local row = math.min(cursor_pos[1], line_count)
-  local col = cursor_pos[2] or 0
-
-  -- Restore cursor BEFORE colorize
-  pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, col })
 
   vim.api.nvim_win_call(M.state.win, function()
     safe_colorize()
   end)
   vim.bo[M.state.buf].modifiable = false
 
-  -- Restore cursor AFTER colorize (it may have moved it)
-  pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, col })
+  -- Restore cursor, clamped to valid range
+  local row = math.min(cursor[1], math.max(1, line_count))
+  pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, cursor[2] })
 
-  -- Debounced preview refresh
-  debounce(function()
-    if M.state.cwd and is_win_valid(M.state.win) then
-      pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, col })
-      refresh_preview_after_log()
-    end
-  end, M.CONST.CURSOR_RESTORE_DELAY_MS)
+  -- Refresh preview if open
+  if is_win_valid(M.state.preview.win) and M.state.preview.change_id then
+    refresh_preview_after_log()
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -598,8 +619,6 @@ local function setup_keymaps(buf)
   vim.keymap.set('n', 'g?', preview.show_help, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'gq', close_flog, { buffer = buf, nowait = true })
 
-  -- Clear snacks.nvim's q mapping from colorize()
-  pcall(vim.keymap.del, 'n', 'q', { buffer = buf })
 end
 
 --------------------------------------------------------------------------------

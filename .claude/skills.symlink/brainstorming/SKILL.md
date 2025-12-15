@@ -13,6 +13,8 @@ tools:
    solutions.
 3. Follow the best practices below
 4. STOP and ASK: validate solutions with user. DO NOT move to phase 2.
+5. If user selects a solution, do not start implementing. Always ask the user:
+   should we make a plan first. Then, make a plan.
 
 ### Phase 2: Advanced Solutions
 
@@ -27,6 +29,8 @@ tools:
      3. Subagents shall follow the best practices found below.
 5. Summarize and rank each solutions
 6. STOP and ASK: validate solutions with user. DO NOT move to phase 3.
+7. If user selects a solution, do not start implementing. Always ask the user:
+   should we make a plan first. Then, make a plan.
 
 ### Phase 3: Randomized Search Over Solution Space
 
@@ -41,6 +45,8 @@ tools:
      3. Subagents shall follow the best practices found below.
 5. Summarize and rank each solutions
 6. STOP and ASK: validate solutions with user. DO NOT move to phase 3.
+7. If user selects a solution, do not start implementing. Always ask the user:
+   should we make a plan first. Then, make a plan.
 
 ## Best Practices
 

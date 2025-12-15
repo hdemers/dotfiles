@@ -222,6 +222,11 @@ M.abandon = with_revset(function(id)
   end)
 end, { refresh = false }) -- refresh handled in callback
 
+M.absorb = with_revset(function(id)
+  local utils = get_utils()
+  utils.run_jj_cmd('absorb', '-f ' .. id)
+end)
+
 M.bookmark = with_revset(function(id)
   local utils = get_utils()
   vim.ui.input({ prompt = 'Bookmark name: ' }, function(name)

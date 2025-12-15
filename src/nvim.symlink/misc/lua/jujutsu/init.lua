@@ -15,6 +15,8 @@ M.CONST = {
   CURSOR_RESTORE_DELAY_MS = 100,
   FLOAT_WIDTH = 100,
   HELP_WIDTH = 63,
+  WATCHER_DEBOUNCE_MS = 200,
+  REFRESH_DEDUP_MS = 300,
 }
 
 --------------------------------------------------------------------------------
@@ -34,6 +36,8 @@ M.state = {
   stored_visual_range = nil, -- { start_line, end_line } when visual selection is preserved
   active_job = nil, -- Current async jj job ID (for cancellation)
   debounce_timer = nil, -- Timer for debounced preview updates
+  watcher = nil, -- uv_fs_event_t handle for op_heads directory
+  last_refresh_time = 0, -- Timestamp of last refresh (for dedup with watcher)
 }
 
 --------------------------------------------------------------------------------
@@ -92,6 +96,47 @@ end
 
 function M.utils.has_active_job()
   return M.state.active_job and vim.fn.jobwait({ M.state.active_job }, 0)[1] == -1
+end
+
+-- File watcher for external jj changes
+local function start_watcher()
+  if M.state.watcher then
+    return
+  end
+
+  local op_heads_path = M.state.cwd .. '/.jj/repo/op_heads/heads'
+  if vim.fn.isdirectory(op_heads_path) ~= 1 then
+    return
+  end
+
+  M.state.watcher = vim.uv.new_fs_event()
+  M.state.watcher:start(op_heads_path, {}, vim.schedule_wrap(function(err, fname)
+    -- Ignore errors, invalid state, and lock file churn
+    if err or not state_is_valid() or fname == 'lock' then
+      return
+    end
+
+    -- Debounce, then check timestamp INSIDE the callback (critical for race safety)
+    debounce(function()
+      -- Check timestamp AFTER debounce - catches actions during debounce window
+      local now = vim.uv.now()
+      if now - M.state.last_refresh_time < M.CONST.REFRESH_DEDUP_MS then
+        return
+      end
+
+      if state_is_valid() then
+        M.utils.refresh_log()
+      end
+    end, M.CONST.WATCHER_DEBOUNCE_MS)
+  end))
+end
+
+local function stop_watcher()
+  if M.state.watcher then
+    M.state.watcher:stop()
+    M.state.watcher:close()
+    M.state.watcher = nil
+  end
 end
 
 -- Colorization helper
@@ -439,6 +484,9 @@ function M.utils.refresh_log(cursor_pos)
     return
   end
 
+  -- Track refresh time for watcher deduplication
+  M.state.last_refresh_time = vim.uv.now()
+
   cursor_pos = cursor_pos or vim.api.nvim_win_get_cursor(M.state.win)
 
   local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
@@ -481,6 +529,7 @@ local function close_flog()
   local preview = require 'jujutsu.preview'
 
   M.utils.cancel_debounce()
+  stop_watcher()
   -- Stop any active job
   if M.state.active_job then
     pcall(vim.fn.jobstop, M.state.active_job)
@@ -528,6 +577,7 @@ local function setup_keymaps(buf)
   vim.keymap.set('n', 'n', actions.new, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'N', actions.new_current, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'x', actions.abandon, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'a', actions.absorb, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'b', actions.bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'B', actions.move_bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'u', actions.undo, { buffer = buf, nowait = true })
@@ -604,6 +654,7 @@ function M.jujutsu_flog()
     once = true,
     callback = function()
       M.utils.cancel_debounce()
+      stop_watcher()
       -- Stop any active job to prevent on_exit callback from firing after cleanup
       if M.state.active_job then
         pcall(vim.fn.jobstop, M.state.active_job)
@@ -617,6 +668,9 @@ function M.jujutsu_flog()
       M.state.cwd = nil -- Mark as fully closed
     end,
   })
+
+  -- Start file watcher for external jj changes
+  start_watcher()
 
   -- Debounced initial show
   debounce(function()

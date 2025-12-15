@@ -19,8 +19,8 @@ _select_bookmark() {
                     gum log --level error "Error: Bookmark name cannot be empty"
                     return 1
                 else
-                    revset=$(gum input --placeholder="Enter revset (default: trunk())")
-                    revset=${revset:-trunk()}
+                    revset=$(gum input --placeholder="Enter revset (default: @)")
+                    revset=${revset:-"@"}
                     if ! jj log -r "${revset}" >/dev/null 2>&1; then
                         gum log --level error "Error: revset '${revset}' not found"
                         return 1

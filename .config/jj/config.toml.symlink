@@ -33,7 +33,7 @@ merge-tool-edits-conflict-markers = true
 'downstream(x,y)' = '(x::y) & y'
 'branches' = 'downstream(trunk(), bookmarks() & ~dev:: & ~trunk())'
 'trunkandbranches' = 'downstream(trunk(), bookmarks() & ~dev::)'
-'mybranches' = 'downstream(trunk(), bookmarks()) & mine()'
+'mytrunkandbranches' = 'downstream(trunk(), bookmarks() & ~dev::) & mine()'
 'branchesandheads' = 'branches | (heads(trunk()::) & mine())'
 'curbranch' = 'latest(branches::@- & branches)'
 'nextbranch' = 'roots(@:: & branchesandheads)'
@@ -45,7 +45,7 @@ merge-tool-edits-conflict-markers = true
 auto-track-bookmarks = "glob:*"
 
 [aliases]
-rdev = ["rebase", "-s", "dev", "-d", "trunkandbranches"]
+rdev = ["rebase", "-s", "dev", "-d", "mytrunkandbranches"]
 ralldev = ["rebase", "-s", "dev", "-d", "all:(dev- | trunk() | heads(trunk():: ~dev::))"]
 rtrunk = ["rebase", "-s", "dev", "-d", "all:(visible_heads() & mutable() ~ dev::)"]
 rall = ["rebase", "-b", "dev", "-d", "trunk()"]

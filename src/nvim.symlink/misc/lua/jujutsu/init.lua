@@ -608,6 +608,7 @@ local function setup_keymaps(buf)
   vim.keymap.set('n', 'w', actions.switch_revisions, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'p', actions.push, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'P', actions.push_bookmark, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'l', actions.split, { buffer = buf, nowait = true })
 
   -- UI
   vim.keymap.set(

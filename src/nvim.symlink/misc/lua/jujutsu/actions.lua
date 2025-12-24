@@ -427,6 +427,41 @@ M.cdescribe = with_revset(function(id)
 end, { refresh = false })
 
 --------------------------------------------------------------------------------
+-- Split revision
+--------------------------------------------------------------------------------
+
+M.split = with_revset(function(id)
+  local state = get_state()
+  local utils = get_utils()
+
+  -- Open new tab for the split terminal
+  vim.cmd 'tabnew'
+
+  local cmd = string.format('cd %s && jj split -r %s', vim.fn.shellescape(state.cwd), id)
+  local job_id = vim.fn.termopen(cmd, {
+    on_exit = function(_, exit_code)
+      vim.schedule(function()
+        utils.clear_active_job()
+        -- Close terminal tab after brief delay to show result
+        vim.defer_fn(function()
+          -- Only close if still on the terminal buffer
+          if vim.bo.buftype == 'terminal' then
+            vim.cmd 'bdelete!'
+          end
+          utils.refresh_log()
+        end, exit_code == 0 and 500 or 2000) -- Longer delay on error
+      end)
+    end,
+  })
+
+  if job_id > 0 then
+    utils.set_active_job(job_id)
+  end
+
+  vim.cmd 'startinsert'
+end, { refresh = false })
+
+--------------------------------------------------------------------------------
 -- Git push
 --------------------------------------------------------------------------------
 

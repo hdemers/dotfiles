@@ -110,25 +110,29 @@ local function start_watcher()
   end
 
   M.state.watcher = vim.uv.new_fs_event()
-  M.state.watcher:start(op_heads_path, {}, vim.schedule_wrap(function(err, fname)
-    -- Ignore errors, invalid state, and lock file churn
-    if err or not state_is_valid() or fname == 'lock' then
-      return
-    end
-
-    -- Debounce, then check timestamp INSIDE the callback (critical for race safety)
-    debounce(function()
-      -- Check timestamp AFTER debounce - catches actions during debounce window
-      local now = vim.uv.now()
-      if now - M.state.last_refresh_time < M.CONST.REFRESH_DEDUP_MS then
+  M.state.watcher:start(
+    op_heads_path,
+    {},
+    vim.schedule_wrap(function(err, fname)
+      -- Ignore errors, invalid state, and lock file churn
+      if err or not state_is_valid() or fname == 'lock' then
         return
       end
 
-      if state_is_valid() then
-        M.utils.refresh_log()
-      end
-    end, M.CONST.WATCHER_DEBOUNCE_MS)
-  end))
+      -- Debounce, then check timestamp INSIDE the callback (critical for race safety)
+      debounce(function()
+        -- Check timestamp AFTER debounce - catches actions during debounce window
+        local now = vim.uv.now()
+        if now - M.state.last_refresh_time < M.CONST.REFRESH_DEDUP_MS then
+          return
+        end
+
+        if state_is_valid() then
+          M.utils.refresh_log()
+        end
+      end, M.CONST.WATCHER_DEBOUNCE_MS)
+    end)
+  )
 end
 
 local function stop_watcher()
@@ -157,7 +161,7 @@ local function safe_colorize()
     pcall(vim.keymap.del, 'n', '[[', { buffer = buf })
 
     -- Remove the TextChanged autocmd that moves cursor to last line
-    local autocmds = vim.api.nvim_get_autocmds({ buffer = buf, event = 'TextChanged' })
+    local autocmds = vim.api.nvim_get_autocmds { buffer = buf, event = 'TextChanged' }
     for _, au in ipairs(autocmds) do
       pcall(vim.api.nvim_del_autocmd, au.id)
     end
@@ -604,11 +608,16 @@ local function setup_keymaps(buf)
   vim.keymap.set('n', 'u', actions.undo, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'U', actions.redo, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'r', actions.rebase, { buffer = buf, nowait = true })
-  vim.keymap.set({ 'n', 'x' }, 'R', actions.rebase_interactive, { buffer = buf, nowait = true })
+  vim.keymap.set(
+    { 'n', 'x' },
+    'R',
+    actions.rebase_interactive,
+    { buffer = buf, nowait = true }
+  )
   vim.keymap.set('n', 'w', actions.switch_revisions, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'p', actions.push, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'P', actions.push_bookmark, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'l', actions.split, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'L', actions.split, { buffer = buf, nowait = true })
 
   -- UI
   vim.keymap.set(
@@ -619,7 +628,6 @@ local function setup_keymaps(buf)
   )
   vim.keymap.set('n', 'g?', preview.show_help, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'gq', close_flog, { buffer = buf, nowait = true })
-
 end
 
 --------------------------------------------------------------------------------

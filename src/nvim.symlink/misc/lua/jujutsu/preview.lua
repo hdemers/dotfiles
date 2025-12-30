@@ -426,7 +426,12 @@ function M.refresh()
   local utils = get_utils()
 
   -- Early exit if plugin was closed
-  if not state.cwd or not preview_is_valid() or not state.preview.change_id or utils.has_active_job() then
+  if
+    not state.cwd
+    or not preview_is_valid()
+    or not state.preview.change_id
+    or utils.has_active_job()
+  then
     return
   end
 
@@ -541,6 +546,7 @@ function M.show_help()
     '  x     abandon  - Abandon commit (confirm)',
     '  b     bookmark - Set bookmark on commit',
     '  B     bookmark - Move bookmark to commit',
+    '  L     Split    - Split revision',
     '  u     undo     - Undo last operation',
     '  U     redo     - Redo last undo',
     '  r     rebase   - Rebase revision(s) onto another',

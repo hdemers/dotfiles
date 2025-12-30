@@ -26,7 +26,7 @@ RED=$(printf '\033[01;31m')
 CYAN=$(printf '\033[0;36m')
 
 # Context color based on remaining percentage
-if [ "$REMAINING" -lt 10 ]; then
+if [ "$REMAINING" -lt 15 ]; then
     CONTEXT_COLOR="$RED"
 elif [ "$REMAINING" -lt 30 ]; then
     CONTEXT_COLOR="$YELLOW"

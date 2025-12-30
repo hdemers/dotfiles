@@ -124,6 +124,19 @@ Usage: jira create [OPTIONS]
 
   Create an issue.
 
+  Can be used in two modes:
+
+  1. Interactive mode (default or --interactive): Uses prompts like before
+  2. Non-interactive mode: Provide --project and --summary to create directly
+
+  Examples:
+      jira create
+      jira create --interactive
+
+      # Non-interactive mode
+      jira create --project ABC --summary "Fix login bug" --points 3
+      jira create -p ABC -s "Add new feature" --epic ABC-100 --assignee john.doe
+
 Options:
   -p, --project TEXT              Project key
   -s, --summary TEXT              Issue summary (required for non-interactive
@@ -144,7 +157,9 @@ Options:
   -i, --interactive               Use interactive mode (original behavior)
   -l, --labels TEXT               Comma-separated list of labels to assign to
                                   the issue
-  --help                          Show this message and exit.
+  --target-start [%Y-%m-%d]       Target start date for Epic (YYYY-MM-DD)
+  --target-end [%Y-%m-%d]         Target end date for Epic (YYYY-MM-DD)
+  --help
 ```
 
 `jira update --help`:
@@ -180,11 +195,20 @@ Usage: jira transition [OPTIONS] ISSUE [TO]
 
   New -> Refined -> In Dev -> In Review -> Merged -> Closed
 
-  Examples:     jira transition ABC-123 "In Dev"
+  Possible resolutions are: Fixed, Resolved, Cancelled, Duplicate, Works as
+  Designed, Won't Do, Done, Declined, Postponed, Not a Priority, No Longer
+  Applicable, Misconfiguration, Cannot Reproduce, Change Success, Change
+  Failure, Change Cancelled, Invalid, Rejected, Withdrawn, Change Partially
+  Implemented, Launched
+
+  Examples:
+      jira transition ABC-123 "In Dev"
+      jira transition ABC-123 Closed --resolution "Won't Do"
 
 Options:
-  -i, --interactive  Use interactive mode
-  --help             Show this message and exit.
+  -i, --interactive      Use interactive mode
+  -r, --resolution TEXT  Resolution name for closed transitions (e.g., 'Done')
+  --help                 Show this message and exit.
 ```
 
 `jira close --help`:
@@ -194,13 +218,29 @@ Usage: jira close [OPTIONS] ISSUE
   Close an issue by automatically transitioning through the workflow.
 
   This command will automatically transition an issue through the predefined
-  workflow states until it reaches 'Closed' status: New -> Refine -> Start Dev
-  -> Submit for Review -> Passed Review -> Close Issue
+  workflow states until it reaches 'Closed' status:
 
-  Examples:     jira close ABC-123     jira close def-456
+  New -> Refine -> Start Dev -> Submit for Review -> Passed Review -> Close
+  Issue
+
+  Use --cancelled to skip the workflow and close directly via Cancelled
+  transition.
+
+  Possible resolutions are: Fixed, Resolved, Cancelled, Duplicate, Works as
+  Designed, Won't Do, Done, Declined, Postponed, Not a Priority, No Longer
+  Applicable, Misconfiguration, Cannot Reproduce, Change Success, Change
+  Failure, Change Cancelled, Invalid, Rejected, Withdrawn, Change Partially
+  Implemented, Launched
+
+  Examples:
+      jira close ABC-123
+      jira close DEF-456 --resolution "Won't Do"
+      jira close GHI-789 --cancelled --resolution Duplicate
 
 Options:
-  --help  Show this message and exit.
+  -r, --resolution TEXT  Resolution name for closed transition (e.g., 'Done')
+  --cancelled            Use 'Cancelled' transition to close directly
+  --help                 Show this message and exit.
 ```
 
 

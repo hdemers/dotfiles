@@ -40,7 +40,7 @@ end
 
 config.font = wezterm.font { family = font_family }
 if font_family == 'Sudo' then
-  config.font_size = 12
+  config.font_size = 12.5
 elseif font_family == 'Hack' then
   config.font_size = 11
   config.line_height = 1.00

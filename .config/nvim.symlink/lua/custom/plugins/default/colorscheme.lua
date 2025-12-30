@@ -137,11 +137,7 @@ return {
       require('nordic').setup {
         ts_context = { dark_background = false },
         telescope = { style = 'flat' },
-        on_highlight = function(highlights, palette)
-          -- highlights.spell = { link = '@spell' }
-          -- highlights.DiagnosticUnderlineError = {}
-          highlights.TelescopeMatching = { link = 'IncSearch' }
-        end,
+        on_highlight = function(highlights, palette) end,
       }
     end,
   },
@@ -169,7 +165,7 @@ return {
     config = function()
       require('obscure').setup {
         on_highlights = function(hl, c)
-          hl.DiffChange = { bg = c.cyan, fg = c.black, underline = false }
+          -- hl.DiffChange = { bg = c.cyan, fg = c.black, underline = false }
         end,
       }
     end,
@@ -301,11 +297,34 @@ return {
     'ray-x/aurora',
     init = function()
       vim.g.aurora_italic = 1
-      vim.g.aurora_transparent = 1
-      vim.g.aurora_bold = 1
+      vim.g.aurora_transparent = 0
+      vim.g.aurora_bold = 0
     end,
     config = function()
-      vim.api.nvim_set_hl(0, '@number', { fg = '#e933e3' })
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        pattern = 'aurora',
+        callback = function()
+          -- Aurora doesn't set GUI background, add one for termguicolors
+          vim.api.nvim_set_hl(0, 'Normal', { bg = '#1a1a2e', fg = '#dddff7' })
+        end,
+      })
+    end,
+  },
+  {
+    'MartelleV/kaimandres.nvim',
+    lazy = false,
+    config = function()
+      require('kaimandres').setup {
+        -- leave empty to use default setup!
+      }
+      -- Some tweaks
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        pattern = 'kaimandres',
+        callback = function()
+          -- Remove annoying darker blocks in Lualine (if this happens to you)
+          vim.api.nvim_set_hl(0, 'StatusLine', { bg = '#16161e' })
+        end,
+      })
     end,
   },
 }

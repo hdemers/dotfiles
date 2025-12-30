@@ -509,26 +509,58 @@ return {
   {
     'MeanderingProgrammer/render-markdown.nvim',
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
-    ---@module 'render-markdown'
-    ---@type render.md.UserConfig
-    opts = {
-      file_types = {
-        'markdown',
-        'quarto',
-        'rmd',
-        'codecompanion',
-        'copilot-chat',
-        'Avante',
-      },
-      code = {
-        -- style = 'normal',
-        language_name = false,
-        language_icon = false,
-        language_pad = 0,
-        sign = false,
-        border = 'thick',
-      },
-    },
+    config = function()
+      -- Helper to darken a hex color by a percentage
+      local function darken_color(hex, percent)
+        hex = hex:gsub('#', '')
+        local r = tonumber(hex:sub(1, 2), 16)
+        local g = tonumber(hex:sub(3, 4), 16)
+        local b = tonumber(hex:sub(5, 6), 16)
+        r = math.floor(r * (1 - percent))
+        g = math.floor(g * (1 - percent))
+        b = math.floor(b * (1 - percent))
+        return string.format('#%02x%02x%02x', r, g, b)
+      end
+
+      -- Set darker code block background if colorscheme doesn't provide one
+      local function setup_code_block_bg()
+        local normal = vim.api.nvim_get_hl(0, { name = 'Normal' })
+        local code_hl = vim.api.nvim_get_hl(0, { name = 'RenderMarkdownCode' })
+        -- Only override if Normal has bg and code block doesn't have a distinct one
+        if normal.bg and (not code_hl.bg or code_hl.bg == normal.bg) then
+          local darker_bg = darken_color(string.format('#%06x', normal.bg), 0.1)
+          vim.api.nvim_set_hl(0, 'RenderMarkdownCode', { bg = darker_bg })
+        end
+      end
+
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        desc = 'Ensure render-markdown code blocks have darker background',
+        callback = setup_code_block_bg,
+      })
+
+      -- Run once for current colorscheme
+      setup_code_block_bg()
+
+      ---@module 'render-markdown'
+      ---@type render.md.UserConfig
+      require('render-markdown').setup {
+        file_types = {
+          'markdown',
+          'quarto',
+          'rmd',
+          'codecompanion',
+          'copilot-chat',
+          'Avante',
+        },
+        code = {
+          language_name = false,
+          language_icon = false,
+          language_pad = 0,
+          sign = false,
+          border = 'thick',
+        },
+      }
+    end,
   },
   {
     'nvim-neo-tree/neo-tree.nvim',

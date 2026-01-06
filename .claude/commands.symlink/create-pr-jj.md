@@ -25,15 +25,16 @@ MANDATORY: You have all the informatin you need below, DO NOT attempt to run
 
 !`cat .github/PULL_REQUEST_TEMPLATE.md 2>/dev/null || echo "no pre-existing PR template."`
 
-## Process:
+## Standard Operating Procedure:
 1. Draft a PR description from the above commit messages and diffs.
 2. Use the PR template, if any pre-existing exists, otherwise use a sensible structure.
 3. Use Markdown formatting for the PR description.
 4. Assign the PR to me.
 5. Set reviewers to: !`printenv CLAUDE_REVIEWERS`
 6. Set `--head` to !`printenv CLAUDE_BOOKMARK` when calling `gh pr create`.
-6. Set `--base` to !`printenv CLAUDE_PR_BASE` when calling `gh pr create`.
-7. Once the PR has been successfully opened, use the _jira-ticket_ skill to transition
+7. Set `--base` to !`printenv CLAUDE_PR_BASE` when calling `gh pr create`.
+8. IMPORTANT: you do not need to change directory. You are in the correct one.
+9. Once the PR has been successfully opened, use the _jira-ticket_ skill to transition
    the associated ticket (if any) to "In Review", going through all
    intermediate states if necessary
     `New -> Refined -> "In Dev" -> "In Review" -> Merged -> Closed`

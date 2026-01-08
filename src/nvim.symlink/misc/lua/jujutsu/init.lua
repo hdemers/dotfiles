@@ -14,7 +14,7 @@ M.CONST = {
   EDITOR_POLL_MAX_ATTEMPTS = 50,
   CURSOR_RESTORE_DELAY_MS = 100,
   FLOAT_WIDTH = 100,
-  HELP_WIDTH = 63,
+  HELP_WIDTH = 73,
   WATCHER_DEBOUNCE_MS = 200,
   REFRESH_DEDUP_MS = 300,
 }
@@ -590,33 +590,34 @@ local function setup_keymaps(buf)
     vim.keymap.set({ 'n', 'x' }, def.key, def.action, { buffer = buf, nowait = true })
   end
 
-  -- Preview actions
-  vim.keymap.set({ 'n', 'x' }, '<CR>', actions.show, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'D', actions.cdescribe, { buffer = buf, nowait = true })
-  vim.keymap.set({ 'n', 'x' }, 'd', actions.describe, { buffer = buf, nowait = true })
-  vim.keymap.set({ 'n', 'x' }, 's', actions.squash, { buffer = buf, nowait = true })
-  vim.keymap.set({ 'n', 'x' }, 'S', actions.squash_into, { buffer = buf, nowait = true })
+  -- Commit operations (c-prefix)
+  vim.keymap.set('n', 'cn', actions.new, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'cN', actions.new_current, { buffer = buf, nowait = true })
+  vim.keymap.set({ 'n', 'x' }, 'cd', actions.describe, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'cD', actions.cdescribe, { buffer = buf, nowait = true })
+  vim.keymap.set({ 'n', 'x' }, 'cs', actions.squash, { buffer = buf, nowait = true })
+  vim.keymap.set({ 'n', 'x' }, 'cS', actions.squash_into, { buffer = buf, nowait = true })
 
-  -- Edit actions
+  -- Rebase operations (r-prefix)
+  vim.keymap.set({ 'n', 'x' }, 'rr', actions.rebase, { buffer = buf, nowait = true })
+  vim.keymap.set({ 'n', 'x' }, 'ri', actions.rebase_interactive, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'rw', actions.switch_revisions, { buffer = buf, nowait = true })
+
+  -- Bookmark operations (b-prefix)
+  vim.keymap.set('n', 'bb', actions.bookmark, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'bm', actions.move_bookmark, { buffer = buf, nowait = true })
+
+  -- Git operations (g-prefix)
+  vim.keymap.set('n', 'gf', actions.fetch, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'gp', actions.push, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'gP', actions.push_bookmark, { buffer = buf, nowait = true })
+
+  -- Single-key actions
   vim.keymap.set('n', 'e', actions.edit, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'n', actions.new, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'N', actions.new_current, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'x', actions.abandon, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'a', actions.absorb, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'b', actions.bookmark, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'B', actions.move_bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'u', actions.undo, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'U', actions.redo, { buffer = buf, nowait = true })
-  vim.keymap.set({ 'n', 'x' }, 'r', actions.rebase, { buffer = buf, nowait = true })
-  vim.keymap.set(
-    { 'n', 'x' },
-    'R',
-    actions.rebase_interactive,
-    { buffer = buf, nowait = true }
-  )
-  vim.keymap.set('n', 'w', actions.switch_revisions, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'p', actions.push, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'P', actions.push_bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'L', actions.split, { buffer = buf, nowait = true })
 
   -- UI

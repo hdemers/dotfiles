@@ -486,6 +486,12 @@ function M.push()
   utils.refresh_log()
 end
 
+function M.fetch()
+  local utils = get_utils()
+  utils.run_jj_cmd('git fetch', '')
+  utils.refresh_log()
+end
+
 M.move_bookmark = with_revset(function(id)
   local utils = get_utils()
   local bookmarks = get_bookmarks()

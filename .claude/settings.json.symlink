@@ -12,6 +12,12 @@
       "Edit(/var/home/hdemers/.cache/jira/**)",
       "Edit(/var/home/hdemers/.distrobox/homes/grubhub-dev/.cache/jira/**)",
       "Edit(/tmp/**)",
+      "WebFetch(domain:dev-jenkins.gdp.data.grubhub.com)",
+      "WebFetch(domain:dev-azkaban-dr.gdp.data.grubhub.com)",
+      "Edit(/home/hdemers/.cache/uv/**)",
+      "Edit(/home/hdemers/.distrobox/homes/grubhub-dev/.cache/uv/**)",
+      "Edit(/var/home/hdemers/.cache/uv/**)",
+      "Edit(/var/home/hdemers/.distrobox/homes/grubhub-dev/.cache/uv/**)",
       "Bash(jira:*)"
     ],
     "deny": []
@@ -52,10 +58,19 @@
     "pyright-lsp@claude-plugins-official": true
   },
   "sandbox": {
-    "enabled": true,
+    "enabled": false,
     "autoAllowBashIfSandboxed": true,
     "excludedCommands": [
-      "jira:*"
+      "jira:*",
+      "projects:*",
+      "schedule:*",
+      "flowlogs:*",
+      "listemr:*",
+      "trino:*",
+      "pr-discussions:*",
+      "jenkins:*",
+      "jj git push:*",
+      "notify:*"
     ]
   }
 }

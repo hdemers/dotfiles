@@ -1,6 +1,6 @@
 ---
 name: planning
-description: Proactively use when making a plan.
+description: Proactively use when making a plan, e.g. the user says "Let's make a plan".
 tools: 
 ---
 

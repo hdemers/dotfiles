@@ -4,7 +4,7 @@ description: Proactively use this skill when you need to read, create, update, o
 tools: Bash(jira:*)
 ---
 
-Use the `jira` CLI to create, update, and manage Jira ticket.
+Use the `jira` CLI to create, update, and manage Jira tickets.
 
 **Core Skills**:
 

@@ -1,12 +1,13 @@
 ---
 allowed-tools: Bash(printenv:*), Bash(jj diff:*), Bash(jj log:*), Bash(jira:*)
 description: Create a ticket
-model: sonnet-4.5
+model: sonnet
 ---
 
-Use the jira-ticket skill. 
+## Standard Operating Procedure
 
-Create a ticket using the `jira` CLI and the context information found below.
+1. Run the jira-ticket skill. 
+2. Create a ticket using the `jira` CLI and the context information found below.
 
 ## Context
 - Current description: !`jj log -r "$AGENT_REVSET" -T description --no-graph`

@@ -93,3 +93,5 @@ token.json
 .venv
 
 digest.txt
+
+*.cast

@@ -11,12 +11,13 @@ show_help() {
     cat << EOF
 Usage: cdescribe <revset> [OPTIONS]
 
-Have Claude AI generate a description for a Jujutsu commit.
+Have an agent generate a description for a Jujutsu commit.
 
 ARGUMENTS:
     <revset>     A Jujutsu revset or change ID (required)
 
 OPTIONS:
+    --agent <name>  AI agent CLI to use (default: claude)
     --ticket <id>   Append a ticket ID to the commit description
     --help          Display this help message and exit
 
@@ -37,7 +38,6 @@ ENVIRONMENT:
     TRACE        Set to '1' to enable bash tracing
 
 DEPENDENCIES:
-    - claude     Claude AI CLI
     - jj         Jujutsu version control
     - gum        Terminal UI tool
 
@@ -47,6 +47,7 @@ EOF
 main() {
     local revset=""
     local ticket_id=""
+    local agent="claude"
 
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do
@@ -57,6 +58,14 @@ main() {
                 ;;
             --ticket)
                 ticket_id="$2"
+                shift 2
+                ;;
+            --agent)
+                if [[ -z "${2-}" ]]; then
+                    gum log --level error "Error: --agent requires a value"
+                    return 1
+                fi
+                agent="$2"
                 shift 2
                 ;;
             -*)
@@ -91,16 +100,16 @@ main() {
         return 1
     fi
 
-    export CLAUDE_REVSET="${revset}"
+    export AGENT_REVSET="${revset}"
     # This is a workaround for the fact that TMPDIR is not set correctly by
     # Claude Code when running in sandbox mode.
     # See https://github.com/anthropics/claude-code/issues/10952
     export TMPDIR=/tmp/claude
 
-    gum spin --spinner meter --title "Claude is describing your commit '${revset}'..." -- \
-        claude "/describe ${revset}" | jj describe -r "${revset}" --stdin
+    gum spin --spinner meter --title "$agent is describing your commit '${revset}'..." -- \
+        $agent "/describe ${revset}" | jj describe -r "${revset}" --stdin
 
-    unset CLAUDE_REVSET
+    unset AGENT_REVSET
     unset TMPDIR
 
     # Modify the description of the commit to add the ticket ID on the last line

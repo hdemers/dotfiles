@@ -15,8 +15,8 @@ commit body. The footer MUST consist of uppercase text BREAKING CHANGE,
 followed by a colon, space and description.
 
 ## Context
-- Current description: !`jj log -r $CLAUDE_REVSET`
-- Current diff: !`jj diff --git -r $CLAUDE_REVSET`
+- Current description: !`jj log -r $AGENT_REVSET`
+- Current diff: !`jj diff --git -r $AGENT_REVSET`
 
 ##  Format
 - Uses conventional commit format with descriptive emojis from the
@@ -43,4 +43,4 @@ Example format:
 - Limit the title of the commit message to 50 characters and the body to 79.
 - Write in imperative mood ("Add feature" NOT "Added feature")
 - Explain why, not just what
-- Exclude Claude co-authorship footer from commits
+- Exclude co-authorship footer from commits

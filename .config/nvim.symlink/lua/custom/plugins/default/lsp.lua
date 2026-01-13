@@ -187,13 +187,13 @@ return {
             client.server_capabilities.definitionProvider = true
           end,
         },
-        beancount = {
-          settings = {
-            init_options = {
-              journal_file = '/var/home/hdemers/Projets/budget/src/budget/data/hugues/preamble.beancount',
-            },
-          },
-        },
+        -- beancount = {
+        --   settings = {
+        --     init_options = {
+        --       journal_file = '/var/home/hdemers/Projets/budget/src/budget/data/preamble.beancount',
+        --     },
+        --   },
+        -- },
         -- beanhub_cli = {},
         arduino_language_server = {
           cmd = {

@@ -492,31 +492,40 @@ function M.fetch()
   utils.refresh_log()
 end
 
-M.move_bookmark = with_revset(function(id)
-  local utils = get_utils()
-  local bookmarks = get_bookmarks()
-  if not bookmarks or #bookmarks == 0 then
-    vim.notify('No bookmarks found from trunk()..', vim.log.levels.WARN)
-    return
-  end
-
-  vim.ui.select(bookmarks, {
-    prompt = 'Move bookmark to ' .. id .. ':',
-    format_item = function(item)
-      return item
-    end,
-  }, function(choice)
-    if not choice then
+local function move_bookmark_impl(opts)
+  opts = opts or {}
+  return with_revset(function(id)
+    local utils = get_utils()
+    local bookmarks = get_bookmarks()
+    if not bookmarks or #bookmarks == 0 then
+      vim.notify('No bookmarks found from trunk()..', vim.log.levels.WARN)
       return
     end
-    local bookmark_name = choice:match '^%S+%s+(%S+)'
-    if bookmark_name then
-      bookmark_name = bookmark_name:gsub('%*$', '')
-      utils.run_jj_cmd('bookmark move', bookmark_name .. ' -t ' .. id)
-      utils.refresh_log()
-    end
-  end)
-end, { refresh = false })
+
+    vim.ui.select(bookmarks, {
+      prompt = 'Move bookmark to ' .. id .. ':',
+      format_item = function(item)
+        return item
+      end,
+    }, function(choice)
+      if not choice then
+        return
+      end
+      local bookmark_name = choice:match '^%S+%s+(%S+)'
+      if bookmark_name then
+        bookmark_name = bookmark_name:gsub('%*$', '')
+        local args = bookmark_name .. ' -t ' .. id
+        if opts.allow_backwards then
+          args = args .. ' --allow-backwards'
+        end
+        utils.run_jj_cmd('bookmark move', args)
+        utils.refresh_log()
+      end
+    end)
+  end, { refresh = false })
+end
+
+M.move_bookmark = move_bookmark_impl
 
 function M.push_bookmark()
   local utils = get_utils()

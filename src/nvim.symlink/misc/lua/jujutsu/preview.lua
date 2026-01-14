@@ -547,6 +547,7 @@ function M.show_help()
     '  Bookmark (b-prefix):',
     '  bb    bookmark  - Set bookmark on commit',
     '  bm    bookmark  - Move bookmark to commit',
+    '  bM    bookmark  - Move bookmark to commit with --allow-backwards',
     '',
     '  Git (g-prefix):',
     '  gf    fetch     - Git fetch from remote',

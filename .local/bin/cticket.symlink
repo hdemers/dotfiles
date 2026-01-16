@@ -101,7 +101,7 @@ main() {
         --prompt='Select an epic for the ticket > ' \
     )
 
-    assignee=$(gum choose "me" "<leave unassigned>" --header="Select assignee for the ticket:")
+    assignee=$(gum choose "hdemers" "<leave unassigned>" --header="Select assignee for the ticket:")
 
     if [ -z "${revset:-}" ]; then
         . "$HOME"/.shellrc.d/05-jj-functions.sh

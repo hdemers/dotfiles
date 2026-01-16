@@ -321,6 +321,7 @@ jjoplog() {
         | fzf \
         --read0 \
         --ansi \
+        --height 100% \
         --highlight-line \
         --preview 'jj op show {1} --summary --color always' \
         --bind 'ctrl-r:become(jj op restore {1})' \

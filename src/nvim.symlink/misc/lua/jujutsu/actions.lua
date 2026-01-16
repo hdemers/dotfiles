@@ -337,6 +337,38 @@ M.rebase_interactive = with_revset(function(revset)
   end)
 end, { refresh = false })
 
+M.duplicate = with_revset(function(revset)
+  local modes = vim.tbl_map(function(key)
+    return { mode = key, desc = REBASE_MODES[key].desc }
+  end, { 'before', 'after', 'onto' })
+
+  vim.ui.select(modes, {
+    prompt = 'Duplicate ' .. revset .. ':',
+    format_item = function(item)
+      return item.desc
+    end,
+  }, function(mode_choice)
+    if not mode_choice then
+      return
+    end
+    select_destination('Select destination revision:', function(dest_id)
+      local utils = get_utils()
+      utils.run_jj_cmd('duplicate', '-r ' .. revset .. ' ' .. REBASE_MODES[mode_choice.mode].flag .. ' ' .. dest_id)
+      utils.refresh_log()
+    end)
+  end)
+end, { refresh = false })
+
+M.parallelize = with_revset(function(revset)
+  local utils = get_utils()
+  -- Check if revset contains '::' (range) indicating multiple revisions
+  if not revset:find('::') then
+    vim.notify('Parallelize requires multiple revisions (use visual selection)', vim.log.levels.WARN)
+    return
+  end
+  utils.run_jj_cmd('parallelize', revset)
+end)
+
 --------------------------------------------------------------------------------
 -- Navigation
 --------------------------------------------------------------------------------

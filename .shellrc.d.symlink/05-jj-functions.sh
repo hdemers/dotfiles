@@ -152,103 +152,6 @@ jwr() {
     gum log -sl info "Directory '${workspace_path}' was not deleted."
 }
 
-_extract_ticket() {
-    local change_id="$1"
-    local base="${2:-trunk()}"
-
-    jj log -T builtin_log_compact_full_description -r "${base}..${change_id}" \
-            | grep -oE "[A-Z]+-[0-9]+" \
-            | uniq
-}
-
-_jpreview() {
-    local pr_number="$1"
-    local change_id="$2"
-
-    # Check that change_id exists. If not, try change_id@origin.
-    if ! jj log -r "${change_id}" >/dev/null 2>&1; then
-        if ! jj log -r "${change_id}@origin" >/dev/null 2>&1; then
-            printf "\033[38;5;196mError: Change ID '%s' not found.\033[0m\n" "${change_id}"
-            return 1
-        else
-            change_id="${change_id}@origin"
-        fi
-    fi
-
-    if echo "$FZF_PROMPT" | grep -q "Pull"; then
-        base=$(gh pr view "${pr_number}" --json baseRefName -q .baseRefName)
-        jj log --color always -r "${base}..${change_id}" --stat -T builtin_log_detailed
-        printf "\033[38;5;242m"
-        printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g"
-        printf "\033[0m\n"
-        env GH_FORCE_TTY=1 gh pr view --comments "${pr_number}"
-    else
-        jira view --rich "$(_extract_ticket "${change_id}")"
-    fi
-}
-
-jb(){
-    local width=${COLUMNS:-$(tput cols)}
-
-    # Fetch PR data once and store it
-    local pr_data
-    pr_data=$(env GH_FORCE_TTY="100%" gh pr list \
-        --json number,title,headRefName,updatedAt,author \
-        --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\n" .number .title .headRefName (timeago .updatedAt) .author.name}}{{end}}')
-
-    # Calculate maximum branch name length (dynamic width)
-    local max_branch_width
-    max_branch_width=$(echo "$pr_data" | awk -F'\t' 'BEGIN {max=0} {if (length($3) > max) max=length($3)} END {print max}')
-
-    # Set fixed column widths
-    local branch_width=$max_branch_width  # Dynamic: never truncate
-    local title_width=60                  # Fixed: truncate if longer
-    local time_width=15                   # Fixed: truncate if longer
-    local author_width=20                 # Fixed: truncate if longer
-
-    echo "$pr_data" | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v timew="$time_width" -v aw="$author_width" '{
-        # Color codes
-        reset = "\033[0m"
-        pr_color = "\033[1;36m"      # Bright cyan for PR numbers
-        title_color = "\033[1;37m"   # Bright white for titles
-        branch_color = "\033[1;33m"  # Bright yellow for branches
-        time_color = "\033[0;32m"    # Green for timestamps
-        author_color = "\033[0;35m"  # Magenta for authors
-
-        # Strip emojis and non-ASCII characters from title for proper alignment
-        gsub(/[^\x00-\x7F]/, "", $2)
-
-        # Truncate title and author if needed, but never truncate branch
-        title = (length($2) > tw) ? substr($2, 1, tw-1) "…" : $2
-        branch = $3  # Never truncate branch name
-        author = (length($5) > aw) ? substr($5, 1, aw-1) "…" : $5
-
-        # Format with fixed widths and preserve tabs
-        printf "%s%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n",
-               pr_color, $1, reset,
-               title_color, tw, title, reset,
-               branch_color, bw, branch, reset,
-               time_color, timew, $4, reset,
-               author_color, aw, author, reset
-    }' \
-    | fzf \
-        --ansi \
-        --preview-window 'top,90%' \
-        --with-shell "$HOME/.local/bin/fzf-shell.sh" \
-        --height 100% \
-        --delimiter '\t' \
-        --preview "_jpreview {1} {3}" \
-        --bind "ctrl-i:become(jintegrate {1} {3})" \
-        --bind "ctrl-b:become(jdeploy {3})" \
-        --bind 'ctrl-w:execute-silent(gh pr view --web {1})' \
-        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
-        --bind 'ctrl-m:become(pr-discussions {1} --human)' \
-        --prompt 'Pull Request> ' \
-        --border-label-pos 5:bottom \
-        --border 'rounded' \
-        --border-label '  ctrl-i: integrate | ctrl-b: deploy branch | ctrl-w: web | ctrl-s: toggle view | ctr-m: list comments'
-}
-
 _jjhistory() {
     jj log -T \
         "builtin_log_compact" \
@@ -368,31 +271,7 @@ jjreview() {
     | xargs --no-run-if-empty jj new
 }
 
-jintegrate() {
-    local pr_number="$1"
-    local bookmark="$2"
-    local ticket
-
-    ticket=$(_extract_ticket "${bookmark}")
-
-    if [ "$(jj log -r "${bookmark} & ~remote_bookmarks()" --no-graph | wc -l)" -gt 0 ]; then
-        gum confirm "Bookmark ${bookmark} needs push first. Now?" \
-            && jj git push -b "${bookmark}"
-    fi
-
-    cmd="jenkins integrate -p ${pr_number} \
-       && jira close ${ticket} \
-       && notify 'Pull Request ${pr_number} integrated and ticket ${ticket} closed.'"
-
-    gum confirm "Integrate PR ${pr_number} (${bookmark}) and close ticket ${ticket}?" \
-        && zellij_float_cmd "$cmd"
-
-
-}
-
 # Export functions for subshells, but only in bash (not zsh)
 if [[ -n "$BASH_VERSION" ]]; then
-    export -f _jpreview
-    export -f jintegrate
-    export -f _select_bookmark 
+    export -f _select_bookmark
 fi

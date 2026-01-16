@@ -1,0 +1,323 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+    set -o xtrace
+fi
+
+show_help() {
+    cat << EOF
+Usage: jb [OPTIONS]
+
+Browse GitHub Pull Requests interactively with fzf.
+
+This script provides an interactive interface for browsing PRs with:
+  - Preview of PR details, commits, and comments
+  - Quick actions for integration, deployment, and more
+  - Toggle between PR view and Jira ticket view
+
+OPTIONS:
+    --help     Display this help message and exit
+
+KEYBINDINGS:
+    ctrl-i     Integrate PR (merge and close Jira ticket)
+    ctrl-b     Deploy branch to Jenkins
+    ctrl-w     Open PR in web browser
+    ctrl-s     Toggle between PR view and Jira ticket view
+    ctrl-m     List PR discussion comments
+    enter      Exit
+
+ENVIRONMENT:
+    TRACE      Set to '1' to enable bash tracing
+
+DEPENDENCIES:
+    - gh       GitHub CLI
+    - fzf      Fuzzy finder
+    - jj       Jujutsu version control
+    - jira     Jira CLI tool
+    - gum      Terminal UI tool
+    - notify   Notification tool
+    - zellij   Terminal multiplexer
+    - jenkins  Jenkins CLI tool
+
+EOF
+}
+
+_extract_ticket() {
+    local change_id="$1"
+    local base="${2:-trunk()}"
+
+    jj log -T builtin_log_compact_full_description -r "${base}..${change_id}" \
+        | grep -oE "[A-Z]+-[0-9]+" \
+        | uniq
+}
+
+# Find PRs that depend on a given branch (directly or transitively)
+# Outputs a tree structure showing the dependency chain
+_find_dependent_prs() {
+    local target_branch="$1"
+    local indent="${2:-}"
+    local visited="${3:-}"
+
+    # Fetch all open PRs with their branch info (cached in global var for recursion)
+    if [ -z "${_PR_CACHE:-}" ]; then
+        _PR_CACHE=$(gh pr list --json number,headRefName,baseRefName,title \
+            --template '{{range .}}{{printf "%v\t%s\t%s\t%s\n" .number .headRefName .baseRefName .title}}{{end}}')
+        export _PR_CACHE
+    fi
+
+    # Find PRs where baseRefName matches our target branch
+    local dependents
+    dependents=$(echo "$_PR_CACHE" | awk -F'\t' -v branch="$target_branch" '$3 == branch {print $1 "\t" $2 "\t" $4}')
+
+    if [ -z "$dependents" ]; then
+        return
+    fi
+
+    while IFS=$'\t' read -r pr_num head_branch title; do
+        # Skip if we've already visited this branch (cycle detection)
+        if echo "$visited" | grep -q ":${head_branch}:"; then
+            continue
+        fi
+
+        # Output this PR
+        printf "%s├── PR #%s (%s): %s\n" "$indent" "$pr_num" "$head_branch" "$title"
+
+        # Recursively find dependents of this PR's branch
+        _find_dependent_prs "$head_branch" "${indent}│   " "${visited}:${head_branch}:"
+    done <<< "$dependents"
+}
+
+# Get list of direct dependent PR numbers (for rebasing)
+_get_direct_dependent_prs() {
+    local target_branch="$1"
+
+    gh pr list --json number,baseRefName \
+        --template '{{range .}}{{if eq .baseRefName "'"$target_branch"'"}}{{.number}}{{"\n"}}{{end}}{{end}}'
+}
+
+# Rebase dependent PRs onto master
+_rebase_dependent_prs() {
+    local target_branch="$1"
+    local direct_deps
+
+    direct_deps=$(_get_direct_dependent_prs "$target_branch")
+
+    if [ -z "$direct_deps" ]; then
+        return 0
+    fi
+
+    for pr_num in $direct_deps; do
+        gum log --level info "Changing base of PR #${pr_num} to master..."
+        if gh pr edit "$pr_num" --base master; then
+            gum log --level info "PR #${pr_num} base changed to master"
+        else
+            gum log --level error "Failed to change base of PR #${pr_num}"
+            return 1
+        fi
+    done
+}
+
+_jpreview() {
+    local pr_number="$1"
+    local change_id="$2"
+
+    # Check that change_id exists. If not, try change_id@origin.
+    if ! jj log -r "${change_id}" >/dev/null 2>&1; then
+        if ! jj log -r "${change_id}@origin" >/dev/null 2>&1; then
+            printf "\033[38;5;196mError: Change ID '%s' not found.\033[0m\n" "${change_id}"
+            return 1
+        else
+            change_id="${change_id}@origin"
+        fi
+    fi
+
+    if echo "$FZF_PROMPT" | grep -q "Pull"; then
+        base=$(gh pr view "${pr_number}" --json baseRefName -q .baseRefName)
+        jj log --color always -r "${base}..${change_id}" --stat -T builtin_log_detailed
+        printf "\033[38;5;242m"
+        printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g"
+        printf "\033[0m\n"
+        env GH_FORCE_TTY=1 gh pr view --comments "${pr_number}"
+    else
+        jira view --rich "$(_extract_ticket "${change_id}")"
+    fi
+}
+
+jintegrate() {
+    local pr_number="$1"
+    local bookmark="$2"
+    local ticket
+
+    # Check that PR is based on master (not a stacked PR)
+    local base_branch
+    base_branch=$(gh pr view "$pr_number" --json baseRefName -q .baseRefName)
+
+    if [ "$base_branch" != "master" ] && [ "$base_branch" != "main" ]; then
+        # Find the parent PR (the one with headRefName == base_branch)
+        local parent_pr
+        parent_pr=$(gh pr list --json number,headRefName \
+            --template '{{range .}}{{if eq .headRefName "'"$base_branch"'"}}{{.number}}{{end}}{{end}}')
+
+        if [ -n "$parent_pr" ]; then
+            printf "❌ PR #%s is based on '%s', not master.\n" "$pr_number" "$base_branch" \
+                | gum style --padding "1 2" --foreground red
+            gum log --level error "Integrate PR #${parent_pr} (${base_branch}) first, then rebase this PR onto master."
+        else
+            printf "❌ PR #%s is based on '%s', not master.\n" "$pr_number" "$base_branch" \
+                | gum style --padding "1 2" --foreground red
+            gum log --level error "No open PR found for branch '${base_branch}'. Rebase this PR onto master first."
+        fi
+        return 1
+    fi
+
+    ticket=$(_extract_ticket "${bookmark}")
+
+    # Check for dependent PRs before integration
+    unset _PR_CACHE  # Clear cache to get fresh data
+    local dep_tree
+    dep_tree=$(_find_dependent_prs "$bookmark")
+
+    if [ -n "$dep_tree" ]; then
+        printf "⚠️  The following PRs depend on branch '%s':\n\n%s\n" "$bookmark" "$dep_tree" \
+            | gum style --padding "1 2" --foreground yellow
+
+        local direct_deps
+        direct_deps=$(_get_direct_dependent_prs "$bookmark")
+        local dep_count
+        dep_count=$(echo "$direct_deps" | grep -c . || echo 0)
+
+        if ! gum confirm "Rebase ${dep_count} direct dependent PR(s) onto master before integrating?"; then
+            gum log --level warn "Integration aborted. Dependent PRs must be rebased first."
+            return 1
+        fi
+
+        if ! _rebase_dependent_prs "$bookmark"; then
+            gum log --level error "Failed to rebase dependent PRs. Integration aborted."
+            return 1
+        fi
+
+        gum log --level info "All direct dependent PRs rebased onto master."
+    fi
+
+    if [ "$(jj log -r "${bookmark} & ~remote_bookmarks()" --no-graph | wc -l)" -gt 0 ]; then
+        gum confirm "Bookmark ${bookmark} needs push first. Now?" \
+            && jj git push -b "${bookmark}"
+    fi
+
+    cmd="jenkins integrate -p ${pr_number} \
+       && jira close ${ticket} \
+       && notify 'Pull Request ${pr_number} integrated and ticket ${ticket} closed.'"
+
+    gum confirm "Integrate PR ${pr_number} (${bookmark}) and close ticket ${ticket}?" \
+        && zellij run -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
+}
+
+main() {
+    # Parse command-line arguments
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --help|-h)
+                show_help
+                return 0
+                ;;
+            *)
+                gum log --level error "Unknown option: $1"
+                show_help
+                return 1
+                ;;
+        esac
+    done
+
+    # Export functions for fzf subshells
+    export -f _extract_ticket
+    export -f _jpreview
+    export -f _find_dependent_prs
+    export -f _get_direct_dependent_prs
+    export -f _rebase_dependent_prs
+    export -f jintegrate
+
+    # Fetch PR data once and store it
+    local pr_data
+    pr_data=$(env GH_FORCE_TTY="100%" gh pr list \
+        --json number,title,headRefName,updatedAt,author,reviewDecision \
+        --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\t%s\n" .number .title .headRefName (timeago .updatedAt) .author.name .reviewDecision}}{{end}}')
+
+    if [ -z "$pr_data" ]; then
+        gum log --level info "No open pull requests found."
+        return 0
+    fi
+
+    # Calculate maximum branch name length (dynamic width)
+    local max_branch_width
+    max_branch_width=$(echo "$pr_data" | awk -F'\t' 'BEGIN {max=0} {if (length($3) > max) max=length($3)} END {print max}')
+
+    # Set fixed column widths
+    local branch_width=$max_branch_width  # Dynamic: never truncate
+    local title_width=60                  # Fixed: truncate if longer
+    local time_width=15                   # Fixed: truncate if longer
+    local author_width=20                 # Fixed: truncate if longer
+
+    echo "$pr_data" | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v timew="$time_width" -v aw="$author_width" '{
+        # Color codes
+        reset = "\033[0m"
+        pr_color = "\033[1;36m"      # Bright cyan for PR numbers
+        title_color = "\033[1;37m"   # Bright white for titles
+        branch_color = "\033[1;33m"  # Bright yellow for branches
+        time_color = "\033[0;32m"    # Green for timestamps
+        author_color = "\033[0;35m"  # Magenta for authors
+        green = "\033[0;32m"
+        red = "\033[0;31m"
+        yellow = "\033[0;33m"
+
+        # Review status indicator
+        review = $6
+        if (review == "APPROVED") {
+            status = green "✓" reset
+        } else if (review == "CHANGES_REQUESTED") {
+            status = red "✗" reset
+        } else {
+            status = yellow "○" reset
+        }
+
+        # Strip emojis and non-ASCII characters from title for proper alignment
+        gsub(/[^\x00-\x7F]/, "", $2)
+
+        # Truncate title and author if needed, but never truncate branch
+        title = (length($2) > tw) ? substr($2, 1, tw-1) "…" : $2
+        branch = $3  # Never truncate branch name
+        author = (length($5) > aw) ? substr($5, 1, aw-1) "…" : $5
+
+        # Format with fixed widths and preserve tabs
+        # Status at the front as first column
+        printf "%s\t%s%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n",
+               status,
+               pr_color, $1, reset,
+               title_color, tw, title, reset,
+               branch_color, bw, branch, reset,
+               time_color, timew, $4, reset,
+               author_color, aw, author, reset
+    }' \
+    | fzf \
+        --ansi \
+        --preview-window 'top,90%' \
+        --with-shell "$HOME/.local/bin/fzf-shell.sh" \
+        --height 100% \
+        --delimiter '\t' \
+        --preview "_jpreview {2} {4}" \
+        --bind "ctrl-i:become(jintegrate {2} {4})" \
+        --bind "ctrl-b:become(jdeploy {4})" \
+        --bind 'ctrl-w:execute-silent(gh pr view --web {2})' \
+        --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
+        --bind 'ctrl-m:become(pr-discussions {2} --human)' \
+        --prompt 'Pull Request> ' \
+        --border-label-pos 5:bottom \
+        --border 'rounded' \
+        --border-label '  ctrl-i: integrate | ctrl-b: deploy branch | ctrl-w: web | ctrl-s: toggle view | ctrl-m: list comments'
+}
+
+main "$@"
+
+# vim: set ft=sh

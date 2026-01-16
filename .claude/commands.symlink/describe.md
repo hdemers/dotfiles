@@ -1,45 +1,38 @@
 ---
-allowed-tools: Bash(jj diff:*), Bash(jj log:*)
 description: Provide a Jujutsu commit description and ONLY the description.
-model: haiku
+allowed-tools: Bash(jj diff:*), Bash(jj log:*)
 ---
-# Describe Jujutsu commit
 
-Create well-formatted description for Jujutsu commits with conventional
-commit messages and emojis
-
-MANDATORY: ultrathink carefully to analyze the commit for breaking changes in
-the public API. If found, breaking changes MUST be indicated by a ! immediately
-before the :. Moreover, breaking changes must be described in a footer of the
-commit body. The footer MUST consist of uppercase text BREAKING CHANGE,
-followed by a colon, space and description.
-
-## Context
+# Context
 - Current description: !`jj log -r $AGENT_REVSET`
 - Current diff: !`jj diff --git -r $AGENT_REVSET`
 
-##  Format
-- Uses conventional commit format with descriptive emojis from the
-[gitmoji](https://gitmoji.dev/) set.
-- Include scope in summary if applicable.
-- MANDATORY: your answer must contain only the commit message, nothing else.
-- MANDATORY: do not wrap the commit message in triple quotes ``` ```
+# Standard Operating Procedure
 
-Example format:
-```
+1. Based on the above context, generate a descriptive commit message
+2. Perform a careful breaking change analysis in the public API. Ultrathink.
+3. Use conventional commit standard with [gitmoji](https://gitmoji.dev/).
+4. Write summary, one line, maximum of 50 characters.
+5. Add body for complex changes explaining why, limit lines to 79 characters.
+6. If breaking changes found:
+   1. add ! immediately after the colon in the summary. 
+   2. Add a footer. It must consist of the uppercase text BREAKING CHANGE,
+      followed by a colon, space and description.
+
+##  Format
+
 <emoji><type>(<scope>)[!]: <summary>
 
 <body>
 
 [BREAKING CHANGE: <description>]
-```
 
-## TODOs:
-1. Based on the above context, generate a descriptive commit message
-2. Write summary, one line, maximum of 50 characters.
-3. Add body for complex changes explaining why, limit lines to 79 characters.
 
-## Best Practices:
+# Best Practices
+
+- Include scope in summary if applicable.
+- MANDATORY: your answer must contain only the commit message, nothing else.
+- MANDATORY: do not wrap the commit message in triple quotes ``` ```
 - Limit the title of the commit message to 50 characters and the body to 79.
 - Write in imperative mood ("Add feature" NOT "Added feature")
 - Explain why, not just what

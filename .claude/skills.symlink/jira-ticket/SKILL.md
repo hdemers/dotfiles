@@ -102,6 +102,7 @@ if you are provided with a plan, copy it here, as is.
 
 **CLI Usage Patterns**:
 - Use `jira issues` to list all tickets
+- Use `jira issues --current-sprint --mine` to list user's ticket in current sprint.
 - Use `jira issues --epics-only` to list epics only
 - Use `jira issues --programs-only` to list programs only
 - Use `jira issues --in-epic <EPIC>` to list issues in epic <EPIC>

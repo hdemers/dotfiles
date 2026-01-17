@@ -23,7 +23,6 @@
     ],
     "deny": []
   },
-  "model": "opus",
   "hooks": {
     "Notification": [
       {
@@ -74,5 +73,6 @@
       "jj git push:*",
       "notify:*"
     ]
-  }
+  },
+  "model": "opus"
 }

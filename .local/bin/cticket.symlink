@@ -121,6 +121,23 @@ main() {
             fi
         fi
         revset=${base}..${bookmark}
+
+        # Check for other bookmarks in the revset when not using --stacked
+        if [ "${stacked}" = false ]; then
+            local other_bookmarks
+            other_bookmarks=$(jj log -r "${revset}" --no-graph -T 'if(bookmarks, bookmarks ++ "\n")' \
+                | grep -v "^${bookmark}$" \
+                | grep -v "^$" \
+                || true)
+
+            if [ -n "$other_bookmarks" ]; then
+                gum log --level warn "Found other bookmarks in the revset: ${other_bookmarks//$'\n'/, }"
+                gum confirm "Did you forget to use --stacked? Continue anyway?" || {
+                    gum log --level info "Ticket creation cancelled. Rerun with --stacked if needed."
+                    return 0
+                }
+            fi
+        fi
     fi
 
     export AGENT_REVSET="${revset}"

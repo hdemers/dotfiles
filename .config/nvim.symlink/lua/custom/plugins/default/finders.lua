@@ -245,8 +245,50 @@ return {
 
       -- Show Jira issues.
 
-      local function show_jira_issues(args)
+      -- State tracking for Jira issues view
+      local jira_current_view = 'active_sprint'
+      local jira_current_epic = nil
+
+      -- Prompt labels for each view type
+      local jira_prompts = {
+        active_sprint = 'Active Sprint> ',
+        all_issues = 'All Issues> ',
+        epics = 'Epics> ',
+        programs = 'Programs> ',
+        epic_issues = 'Epic Issues> ', -- Will be updated with ticket
+      }
+
+      -- Get reload args based on current view state
+      local function get_jira_reload_args()
+        if jira_current_view == 'active_sprint' then
+          return '--mine --current-sprint'
+        elseif jira_current_view == 'all_issues' then
+          return ''
+        elseif jira_current_view == 'epics' then
+          return '--epics-only'
+        elseif jira_current_view == 'programs' then
+          return '--programs-only'
+        elseif jira_current_view == 'epic_issues' and jira_current_epic then
+          return '--in-epic ' .. jira_current_epic
+        else
+          return '--mine --current-sprint'
+        end
+      end
+
+      local function show_jira_issues(args, view_type, epic)
         local Terminal = require('toggleterm.terminal').Terminal
+
+        -- Update state
+        jira_current_view = view_type or 'active_sprint'
+        if epic then
+          jira_current_epic = epic
+        end
+
+        -- Build prompt based on view type
+        local prompt = jira_prompts[jira_current_view] or 'Active Sprint> '
+        if jira_current_view == 'epic_issues' and jira_current_epic then
+          prompt = string.format('Epic Issues (%s)> ', jira_current_epic)
+        end
 
         local cmd = string.format('jira issues --rich %s', args or '')
 
@@ -255,7 +297,8 @@ return {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
-            ['--border-label'] = 'ctrl-s: my sprint | ctrl-t: transition | ctrl-d: close | ctrl-i: new | ctrl-e: epics | ctrl-r: programs | ctrl-h: all | ctrl-l: in epic | ctrl-u: update | ctrl-y: yank link | ctrl-o: open',
+            ['--prompt'] = prompt,
+            ['--border-label'] = 'c-s: my sprint | c-t: transition | c-d: close | c-i: new | c-e: epics | c-r: programs | c-h: all | c-l: in epic | c-u: update | c-y: yank url | c-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
@@ -266,17 +309,21 @@ return {
             ['ctrl-t'] = {
               fn = function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                -- Capture current state before opening terminal
+                local saved_view = jira_current_view
+                local saved_epic = jira_current_epic
                 Terminal
                   :new({
                     direction = 'float',
                     cmd = string.format('jira transition --interactive %s', key),
                     hidden = false,
                     float_opts = { width = 60, height = 30 },
-                    on_close = fzflua.actions.resume,
+                    on_close = function()
+                      show_jira_issues(get_jira_reload_args(), saved_view, saved_epic)
+                    end,
                   })
                   :open()
               end,
-              reload = true,
             },
             ['ctrl-d'] = {
               fn = function(selected)
@@ -297,15 +344,19 @@ return {
             },
             ['ctrl-i'] = {
               fn = function()
+                -- Capture current state before opening terminal
+                local saved_view = jira_current_view
+                local saved_epic = jira_current_epic
                 Terminal:new({
                   direction = 'float',
                   cmd = 'jira create',
                   hidden = false,
                   float_opts = { width = 200, height = 50 },
-                  on_close = fzflua.actions.resume,
+                  on_close = function()
+                    show_jira_issues(get_jira_reload_args(), saved_view, saved_epic)
+                  end,
                 }):open()
               end,
-              reload = true,
             },
             ['enter'] = function(selected)
               -- Store `selected` in the system clipboard
@@ -315,32 +366,32 @@ return {
             end,
             ['ctrl-e'] = {
               fn = function(_)
-                show_jira_issues ' --epics-only'
+                show_jira_issues('--epics-only', 'epics')
               end,
               reload = true,
             },
             ['ctrl-s'] = {
               function(_)
-                show_jira_issues ' --mine --current-sprint'
+                show_jira_issues('--mine --current-sprint', 'active_sprint')
               end,
               fzflua.actions.resume,
             },
             ['ctrl-r'] = {
               function(_)
-                show_jira_issues ' --programs-only'
+                show_jira_issues('--programs-only', 'programs')
               end,
               fzflua.actions.resume,
             },
             ['ctrl-h'] = {
               function(_)
-                show_jira_issues()
+                show_jira_issues('', 'all_issues')
               end,
               fzflua.actions.resume,
             },
             ['ctrl-l'] = {
               function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
-                show_jira_issues(string.format(' --in-epic %s', key))
+                show_jira_issues(string.format('--in-epic %s', key), 'epic_issues', key)
               end,
               fzflua.actions.resume,
             },
@@ -366,15 +417,19 @@ return {
             ['ctrl-u'] = {
               fn = function(selected)
                 local key = vim.split(selected[1], ' ', { trimempty = true })[1]
+                -- Capture current state before opening terminal
+                local saved_view = jira_current_view
+                local saved_epic = jira_current_epic
                 Terminal:new({
                   direction = 'float',
                   cmd = string.format('jira update %s', key),
                   hidden = false,
                   float_opts = { width = 200, height = 50 },
-                  on_close = fzflua.actions.resume,
+                  on_close = function()
+                    show_jira_issues(get_jira_reload_args(), saved_view, saved_epic)
+                  end,
                 }):open()
               end,
-              reload = true,
             },
           },
           preview = {
@@ -387,14 +442,11 @@ return {
           },
         })
       end
-      vim.keymap.set(
-        'n',
-        '<leader>sJ',
-        show_jira_issues,
-        { desc = 'Search all Jira tickets', silent = true }
-      )
+      vim.keymap.set('n', '<leader>sJ', function()
+        show_jira_issues('', 'all_issues')
+      end, { desc = 'Search all Jira tickets', silent = true })
       vim.keymap.set('n', '<leader>sj', function()
-        show_jira_issues '--mine --current-sprint'
+        show_jira_issues('--mine --current-sprint', 'active_sprint')
       end, { desc = 'Search my Jira tickets', silent = true })
 
       -- Show pip list

@@ -401,27 +401,40 @@ js() {
 
     jira issues -r --current-sprint --mine  \
         | fzf \
-        --height 90% \
+        --height 100% \
         --ansi \
+        --prompt 'Active Sprint> ' \
         --preview 'jira view -r {1}' \
         --preview-window 'top,60%' \
         --header-lines 1 \
         --scheme history \
         --bind 'enter:execute(wl-copy {1})+abort' \
-        --bind 'ctrl-t:execute(jira transition --interactive {1})+reload(jira issues -r)' \
-        --bind 'ctrl-i:execute(jira create)+reload(jira issues -r)' \
-        --bind 'ctrl-l:reload(jira issues -r --in-epic {1})+clear-query' \
-        --bind 'ctrl-h:reload(jira issues -r)+clear-query' \
-        --bind 'ctrl-e:reload(jira issues -r --epics-only)' \
-        --bind 'ctrl-r:reload(jira issues -r --programs-only)' \
+        --bind 'ctrl-t:execute(jira transition --interactive {1})+transform:
+            if [[ $FZF_PROMPT =~ "Active Sprint" ]]; then echo "reload(jira issues -r --current-sprint --mine)";
+            elif [[ $FZF_PROMPT =~ "All Issues" ]]; then echo "reload(jira issues -r)";
+            elif [[ $FZF_PROMPT =~ "Epics" ]]; then echo "reload(jira issues -r --epics-only)";
+            elif [[ $FZF_PROMPT =~ "Programs" ]]; then echo "reload(jira issues -r --programs-only)";
+            elif [[ $FZF_PROMPT =~ "Epic Issues" ]]; then epic=$(cat /tmp/fzf_jira_epic); echo "change-prompt(Epic Issues ($epic)> )+reload(jira issues -r --in-epic $epic)";
+            else echo "reload(jira issues -r --current-sprint --mine)"; fi' \
+        --bind 'ctrl-i:execute(jira create)+transform:
+            if [[ $FZF_PROMPT =~ "Active Sprint" ]]; then echo "reload(jira issues -r --current-sprint --mine)";
+            elif [[ $FZF_PROMPT =~ "All Issues" ]]; then echo "reload(jira issues -r)";
+            elif [[ $FZF_PROMPT =~ "Epics" ]]; then echo "reload(jira issues -r --epics-only)";
+            elif [[ $FZF_PROMPT =~ "Programs" ]]; then echo "reload(jira issues -r --programs-only)";
+            elif [[ $FZF_PROMPT =~ "Epic Issues" ]]; then epic=$(cat /tmp/fzf_jira_epic); echo "change-prompt(Epic Issues ($epic)> )+reload(jira issues -r --in-epic $epic)";
+            else echo "reload(jira issues -r --current-sprint --mine)"; fi' \
+        --bind 'ctrl-l:transform:epic={1}; echo $epic > /tmp/fzf_jira_epic; echo "change-prompt(Epic Issues ($epic)> )+reload(jira issues -r --in-epic $epic)+clear-query"' \
+        --bind 'ctrl-h:change-prompt(All Issues> )+reload(jira issues -r)+clear-query' \
+        --bind 'ctrl-e:change-prompt(Epics> )+reload(jira issues -r --epics-only)' \
+        --bind 'ctrl-r:change-prompt(Programs> )+reload(jira issues -r --programs-only)' \
         --bind "ctrl-y:execute(wl-copy ${url}/{1})" \
         --bind "ctrl-o:execute(${cmd} ${url}/{1})" \
         --bind "ctrl-u:execute(jira update {1})" \
-        --bind "ctrl-s:reload(jira issues -r --current-sprint --mine)" \
+        --bind "ctrl-s:change-prompt(Active Sprint> )+reload(jira issues -r --current-sprint --mine)" \
         --bind "ctrl-v:execute(COLUMNS=120 jira view -r {1} | less -R)" \
         --border-label-pos 5:bottom \
         --border 'rounded' \
-        --border-label "  ctrl-s: mine | ctrl-t: transition | ctrl-e: epics | ctrl-r: programs | ctrl-i: new | ctrl-l: to epic | ctrl-j: all | ctrl-y: yank url | ctrl-o: open url | ctrl-u: update | ctrl-v: view"
+        --border-label "  c-s: mine | c-t: transition | c-e: epics | c-r: programs | c-i: new | c-l: in epic | c-h: all | c-y: yank url | c-o: open | c-u: update | c-v: view"
 }
 
 # Export functions for subshells, but only in bash (not zsh)

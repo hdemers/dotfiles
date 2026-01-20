@@ -110,6 +110,15 @@ cpr() {
 
 }
 
+_extract_ticket() {
+    local change_id="$1"
+    local base="${2:-trunk()}"
+
+    jj log -T builtin_log_compact_full_description -r "${base}..${change_id}" \
+        | grep -oE "[A-Z]+-[0-9]+" \
+        | uniq
+}
+
 mdescribe() {
     # Have Claude describe a Jujutsu commit
     local revset=$1

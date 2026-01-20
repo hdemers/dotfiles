@@ -5,7 +5,7 @@ description: Create a ticket
 
 ## Standard Operating Procedure
 
-1. Run the jira-ticket skill. 
+1. MANDATORY: Run the jira-ticket skill. 
 2. Create a ticket using the `jira` CLI and the context information found below.
 
 ## Context

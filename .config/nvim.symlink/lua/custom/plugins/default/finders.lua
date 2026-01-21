@@ -156,12 +156,13 @@ return {
           fzf_opts = {
             ['--header-lines'] = '1',
             ['--preview-window'] = 'border-none,top,75%',
-            ['--border-label'] = 'ctrl-r: toggle remote | ctrl-e: delete | ctrl-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
           winopts = {
             width = 175,
+            border = 'none',
+            title = ' ctrl-r: toggle remote | ctrl-e: delete | ctrl-o: open ',
           },
           actions = {
             ['default'] = {
@@ -298,12 +299,13 @@ return {
             ['--preview-window'] = 'border-none,top,50%',
             ['--scheme'] = 'history',
             ['--prompt'] = prompt,
-            ['--border-label'] = 'c-s: my sprint | c-t: transition | c-d: close | c-i: new | c-e: epics | c-r: programs | c-h: all | c-l: in epic | c-u: update | c-y: yank url | c-o: open',
             ['--border-label-pos'] = '5:bottom',
             ['--border'] = 'rounded',
           },
           winopts = {
             width = 200,
+            border = 'none',
+            title = ' c-s: my sprint | c-t: transition | c-d: close | c-i: new | c-e: epics | c-r: programs | c-h: all | c-l: in epic | c-u: update | c-y: yank url | c-o: open ',
           },
           actions = {
             ['ctrl-t'] = {

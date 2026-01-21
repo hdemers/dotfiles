@@ -177,6 +177,17 @@ keybinds clear-defaults=true {
               name "Project Launcher"
           }
         }
+        bind "Alt ;" {
+          Run "bash" "-ic" "js" {
+              floating true
+              x "15%"
+              y "5%"
+              width "70%"
+              height "90%"
+              close_on_exit true
+              name "Jira Issues"
+          }
+        }
     }
     shared_except "locked" "renametab" "renamepane" {
         // bind "Ctrl g" { SwitchToMode "locked"; }

@@ -10,7 +10,6 @@ return {
         neotest = true,
         noice = true,
         notify = true,
-        overseer = true,
         lsp_trouble = true,
         dadbod_ui = true,
         gitgutter = true,

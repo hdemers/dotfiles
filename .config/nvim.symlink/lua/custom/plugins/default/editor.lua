@@ -106,25 +106,6 @@ return {
       -- set use_icons to true if you have a Nerd Font
       statusline.setup { use_icons = vim.g.have_nerd_font }
 
-      -- You can configure sections in the statusline by overriding their
-      -- default behavior. For example, here we set the section for
-      -- cursor location to LINE:COLUMN
-      statusline.section_location = function()
-        local tasks = require('overseer.task_list').list_tasks { unique = false }
-        local tasks_by_status = require('overseer.util').tbl_group_by(tasks, 'status')
-        -- If we have running tasks, show them in the statusline
-        local line = '%2l:%-2v'
-        if tasks_by_status.RUNNING then
-          line = line .. ' ▶ ' .. #tasks_by_status.RUNNING
-        end
-        if tasks_by_status.FAILURE then
-          line = line .. ' ✗ ' .. #tasks_by_status.FAILURE
-        end
-        if tasks_by_status.SUCCESS then
-          line = line .. ' ✔ ' .. #tasks_by_status.SUCCESS
-        end
-        return line
-      end
       -- Remove the file info section. Don't need that.
       statusline.section_fileinfo = function()
         return ''

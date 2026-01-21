@@ -126,7 +126,7 @@ main() {
         if [ "${stacked}" = false ]; then
             local other_bookmarks
             other_bookmarks=$(jj log -r "${revset}" --no-graph -T 'if(bookmarks, bookmarks ++ "\n")' \
-                | grep -v "^${bookmark}$" \
+                | grep -v "^${bookmark}\*\?$" \
                 | grep -v "^$" \
                 || true)
 

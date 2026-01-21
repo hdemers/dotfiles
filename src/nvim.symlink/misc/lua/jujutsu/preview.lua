@@ -559,6 +559,7 @@ function M.show_help()
     '  Actions:',
     '  e     edit      - Edit (checkout) commit',
     '  x     abandon   - Abandon commit (confirm)',
+    '  y     yank      - Yank revision(s) (visual: earliest::latest)',
     '  a     absorb    - Absorb working copy changes into revision',
     '  L     split     - Split revision',
     '  u     undo      - Undo last operation',

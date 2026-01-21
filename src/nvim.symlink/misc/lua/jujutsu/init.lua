@@ -618,6 +618,7 @@ local function setup_keymaps(buf)
   -- Single-key actions
   vim.keymap.set('n', 'e', actions.edit, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'x', actions.abandon, { buffer = buf, nowait = true })
+  vim.keymap.set({ 'n', 'x' }, 'y', actions.yank, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'a', actions.absorb, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'u', actions.undo, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'U', actions.redo, { buffer = buf, nowait = true })

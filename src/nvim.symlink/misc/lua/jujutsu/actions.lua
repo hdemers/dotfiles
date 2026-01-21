@@ -369,6 +369,11 @@ M.parallelize = with_revset(function(revset)
   utils.run_jj_cmd('parallelize', revset)
 end)
 
+M.yank = with_revset(function(revset)
+  vim.fn.setreg('+', revset)
+  vim.notify('Yanked: ' .. revset)
+end, { refresh = false })
+
 --------------------------------------------------------------------------------
 -- Navigation
 --------------------------------------------------------------------------------

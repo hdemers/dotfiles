@@ -17,31 +17,14 @@ Obsidian vault located at /home/hdemers/Dropbox/Documents/Obsidian/Grubhub/
 
 ## Jujutsu Repositories
 
-Don't assume a repository uses Git, most of them are using Jujutsu.
+Most repositories use Jujutsu, not Git.
 
-The layout of most Jujutsu repositories looks something like this:
+- `master`|`main` — production, tagged releases
+- `dev` (when present) — boundary marker separating private work from PRs in review
+- Revisions between `master` and `dev` — part of PRs in review
+- Work above `dev` — private, not yet shared
 
-@  xsylloqz email@example.com 2026-01-16 09:11:56 097cb3d1
-│  (no description set)
-│ ○  lqzpqmqy email@example.com 2026-01-15 11:18:08 d7a4d743
-├─╯  🩹 fix(scope-3): fix a broken function
-│ ○  xuztksoy email@example.com 2026-01-15 11:18:08 a9ff8359
-├─╯  ✨ feat(scope-1): add a requested feature
-◆      mywuvnxw email@example.com 2026-01-15 11:18:08 dev* 94067318
-├─┬─╮  (empty) 🚧 hdemers dev commit
-│ ◇ │  tzqslqlp email@example.com 2026-01-15 11:18:08 bookmark-1 4cf62e12
-│ ├─╯  ✨ feat(scope-1): Support editable pip installations
-◇ │  sppvptnr email@example.com 2026-01-15 11:18:08 bookmark-2 8eaa1944
-├─╯  🐛 fix(scope-2): Fix some bugs
-◆  ronrryqk email@example.com 2026-01-15 11:17:18 master 0.1.150 9134bc80
-│  ✨ feat(scope-3): Add some new cool features
-
-Layout:
-
-- Everything after the empty `dev` commit is considered private.
-- Everything between `master` and `dev` is considered shared and in review.
-- In order to deploy code we need a bookmark (aka branch) and we need to rebase
-  between `master` and `dev`.
-- In the above example, `bookmark-1` and `bookmark-2` are two branches with PRs.
+When there's no `dev` commit, all work above `master` is treated as
+in-progress. The `dev` commit is always empty and should stay empty.
 
 <!-- vim: set filetype=markdown: -->

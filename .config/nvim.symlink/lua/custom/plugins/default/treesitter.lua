@@ -12,6 +12,7 @@ return {
         'html',
         'lua',
         'markdown',
+        'sql',
         'vim',
         'vimdoc',
         'python',

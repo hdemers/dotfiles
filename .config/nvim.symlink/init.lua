@@ -235,6 +235,7 @@ vim.filetype.add {
     mdc = 'markdown',
   },
 }
+
 -- ─────────────────────────────────────────────────────────────────────────────
 -- [[ Install `lazy.nvim` plugin manager ]]
 

@@ -3,6 +3,8 @@ description: Provide a Jujutsu commit description and ONLY the description.
 allowed-tools: Bash(jj diff:*), Bash(jj log:*)
 ---
 
+- MANDATORY: your answer must contain only the commit message, nothing else.
+
 # Context
 - Current description: !`jj log -r $AGENT_REVSET`
 - Current diff: !`jj diff --git -r $AGENT_REVSET`

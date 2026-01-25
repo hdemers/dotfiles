@@ -9,12 +9,6 @@ Use the CLI `notify <message>` to notify the user.
 2. Favor functions over classes.
 3. Follow established codebase patterns.
 
-## Obsidian Vault
-
-When writing a report use the report-writing skill to write to the
-Obsidian vault located at /home/hdemers/Dropbox/Documents/Obsidian/Grubhub/
-(or might also be under /var/home/hdemers/...)
-
 ## Jujutsu Repositories
 
 Most repositories use Jujutsu, not Git.

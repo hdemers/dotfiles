@@ -33,15 +33,6 @@ else
 fi
 
 ###############################################################################
-# Github copilot aliases
-
-if command -v gh &> /dev/null; then
-    if gh copilot --help &> /dev/null; then
-        eval "$(gh copilot alias -- ${CURRENT_SHELL})"
-    fi
-fi
-
-###############################################################################
 # Zellij Zsh hook
 #
 if [[ "$CURRENT_SHELL" = "zsh" && -n "$ZELLIJ" ]]; then

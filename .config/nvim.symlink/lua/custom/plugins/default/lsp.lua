@@ -132,78 +132,22 @@ return {
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         ruff = {},
-        -- ty does not support rename, so we use pyright for that. All other capabilities are disabled.
-        basedpyright = {
-          enable = false,
-          on_attach = function(client, _)
-            -- Disable all capabilities except rename
-            client.server_capabilities.hoverProvider = false
-            client.server_capabilities.completionProvider = false
-            client.server_capabilities.signatureHelpProvider = false
-            client.server_capabilities.definitionProvider = true
-            client.server_capabilities.referencesProvider = false
-            client.server_capabilities.documentHighlightProvider = false
-            client.server_capabilities.documentSymbolProvider = false
-            client.server_capabilities.codeActionProvider = false
-            client.server_capabilities.codeLensProvider = false
-            client.server_capabilities.documentFormattingProvider = false
-            client.server_capabilities.documentRangeFormattingProvider = false
-            client.server_capabilities.documentOnTypeFormattingProvider = false
-            client.server_capabilities.declarationProvider = false
-            client.server_capabilities.typeDefinitionProvider = false
-            client.server_capabilities.implementationProvider = false
-            client.server_capabilities.documentLinkProvider = false
-            client.server_capabilities.colorProvider = false
-            client.server_capabilities.foldingRangeProvider = false
-            client.server_capabilities.selectionRangeProvider = false
-            client.server_capabilities.semanticTokensProvider = false
-            client.server_capabilities.inlayHintProvider = false
-            client.server_capabilities.workspaceSymbolProvider = false
-            client.server_capabilities.executeCommandProvider = false
-            client.server_capabilities.renameProvider = true
-          end,
-          settings = {
-            python = {
-              analysis = {
-                typeCheckingMode = 'off',
-                autoSearchPaths = true,
-                useLibraryCodeForTypes = true,
-                diagnosticMode = 'off',
-                autoImportCompletions = false,
-              },
-              linting = {
-                enabled = false,
-              },
-            },
-          },
-          -- Disable all diagnostics from Pyright
-          handlers = {
-            ['textDocument/publishDiagnostics'] = function() end,
-          },
-        },
         ty = {
           enable = true,
-          on_attach = function(client, _)
-            client.server_capabilities.definitionProvider = true
-          end,
+          -- on_attach = function(client, _)
+          --   client.server_capabilities.definitionProvider = true
+          -- end,
         },
-        -- beancount = {
-        --   settings = {
-        --     init_options = {
-        --       journal_file = '/var/home/hdemers/Projets/budget/src/budget/data/preamble.beancount',
-        --     },
-        --   },
-        -- },
-        -- beanhub_cli = {},
-        arduino_language_server = {
-          cmd = {
-            'arduino-language-server',
-            '-clangd',
-            '~/.local/share/nvim/mason/bin/clangd',
+        beancount = {
+          init_options = {
+            journal_file = '/home/hdemers/Projets/budget/src/budget/data/preamble.beancount',
+            formatting = {
+              currency_column = 97,
+            },
           },
         },
         clangd = {},
-        jdtls = {}, -- Add Java language server
+        jdtls = {},
         jsonls = {},
         lua_ls = {
           settings = {

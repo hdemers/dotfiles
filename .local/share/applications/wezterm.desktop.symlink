@@ -3,13 +3,11 @@
 Type=Application
 Version=1.0
 Name=Wezterm
-GenericName=Wezterm Terminal
+GenericName=My-Wezterm-Terminal
 Comment=Wezterm terminal emulator
-Exec=/home/linuxbrew/.linuxbrew/bin/wezterm
-
+Exec=/home/linuxbrew/.linuxbrew/bin/wezterm start zsh -i -c "zellij attach -c host"
 StartupNotify=true
 Terminal=false
 Categories=Utility;ConsoleOnly;
-Keywords=terminal
-StartupNotify=true
-StartupWMClass=wezterm
+Keywords=terminal;
+StartupWMClass=Wezterm

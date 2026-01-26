@@ -7,8 +7,6 @@ GenericName=Neovim in Zellij
 Comment=Neovim running in Zellij running in a terminal
 Icon=/var/home/hdemers/.local/share/icons/neovim.svg
 Exec=env ZELLIJ_NVIM=true /home/linuxbrew/.linuxbrew/bin/wezterm start zsh -i -c "printf '\\033]0;zellij-nvim\\007'; /home/linuxbrew/.linuxbrew/bin/zellij attach -c nvim"
-
-StartupNotify=true
 Terminal=false
 Categories=Utility;ConsoleOnly;
 Keywords=editor;vim;terminal;tmux

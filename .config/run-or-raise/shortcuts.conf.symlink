@@ -69,7 +69,7 @@
 <Super>f,gtk-launch org.mozilla.firefox.desktop,org.mozilla.firefox,
 
 # Terminal
-<Super>l,gtk-launch org.gnome.Ptyxis.desktop,org.gnome.Ptyxis,
+<Super>l,gtk-launch wezterm.desktop,,/Wezterm/,
 
 # Todoist
 <Super>t,flatpak run com.todoist.Todoist,Todoist,,

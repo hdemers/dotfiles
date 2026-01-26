@@ -6,11 +6,12 @@ local wezterm = require 'wezterm'
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-config.color_scheme = 'Tokyo Night Storm'
+config.color_scheme = 'Kanagawa (Gogh)'
 config.window_decorations = 'TITLE|RESIZE'
+config.status_update_interval = 100
 
 -- Default font
-local font_family = 'Hack'
+local font_family = 'Sudo'
 
 if os.getenv 'ZELLIJ_NVIM' == 'true' then
   font_family = 'Sudo'
@@ -34,15 +35,13 @@ if os.getenv 'ZELLIJ_NVIM' == 'true' then
     local _, _, window = mux.spawn_window(cmd or {})
     window:gui_window():maximize()
   end)
-else
-  font_family = 'Monaspace Krypton'
 end
 
 config.font = wezterm.font { family = font_family }
 if font_family == 'Sudo' then
   config.font_size = 12.5
 elseif font_family == 'Hack' then
-  config.font_size = 11
+  config.font_size = 12
   config.line_height = 1.00
 elseif font_family == 'FiraCode Nerd Font' then
   config.font_size = 10
@@ -53,7 +52,7 @@ elseif font_family == 'GeistMono' then
 elseif string.match(font_family, '^Iosevka') then
   config.font_size = 12
 elseif string.match(font_family, '^Monaspace') then
-  config.font_size = 11
+  config.font_size = 13
   config.harfbuzz_features = {
     'calt',
     'ss01',
@@ -77,25 +76,69 @@ end
 -- By default we launch zsh
 config.default_prog = { '/usr/bin/zsh' }
 
+-- Distrobox configurations: name -> color scheme
+local distroboxes = {
+  ['grubhub-dev'] = 'Tokyo Night Storm',
+  ['ubuntu'] = 'Catppuccin Mocha',
+}
+
+-- Returns the color scheme for a distrobox name (or nil for default)
+local function get_distrobox_scheme(name)
+  return distroboxes[name]
+end
+
+-- Creates a keybinding action to switch to or spawn a distrobox tab
+local function distrobox_tab_action(name)
+  return wezterm.action_callback(function(win, pane)
+    if os.getenv 'ZELLIJ_NVIM' == 'true' then
+      return
+    end
+
+    -- Search for existing tab with this distrobox
+    local mux_win = win:mux_window()
+    for _, tab in ipairs(mux_win:tabs()) do
+      for _, p in ipairs(tab:panes()) do
+        if p:get_user_vars().DISTROBOX == name then
+          tab:activate()
+          return
+        end
+      end
+    end
+
+    -- Not found, spawn new tab with user var
+    win:perform_action(
+      wezterm.action.SpawnCommandInNewTab {
+        args = {
+          '/bin/bash',
+          '-c',
+          'printf "\\033]1337;SetUserVar=%s=%s\\007" DISTROBOX "$(echo -n '
+            .. name
+            .. ' | base64 -w0)"; '
+            .. 'exec /usr/bin/distrobox enter '
+            .. name
+            .. ' -- /home/linuxbrew/.linuxbrew/bin/zellij attach -c '
+            .. name,
+        },
+      },
+      pane
+    )
+  end)
+end
+
 config.keys = {
-  -- I don't remember why I implemented this Ctrl-G in the first place. Doing
-  -- that from a zellij-nvim session messes things up.
-  -- {
-  --   key = 'g',
-  --   mods = 'CTRL',
-  --   action = wezterm.action.SpawnCommandInNewTab {
-  --     args = {
-  --       '/usr/bin/distrobox',
-  --       'enter',
-  --       'grubhub-dev',
-  --       '--',
-  --       '/home/linuxbrew/.linuxbrew/bin/zellij',
-  --       'attach',
-  --       '-c',
-  --       'grubhub-dev',
-  --     },
-  --   },
-  -- },
+  { key = 'g', mods = 'CTRL|ALT', action = distrobox_tab_action 'grubhub-dev' },
+  { key = 'u', mods = 'CTRL|ALT', action = distrobox_tab_action 'ubuntu' },
+  -- Tab navigation
+  {
+    key = 'h',
+    mods = 'CTRL|SHIFT',
+    action = wezterm.action.ActivateTabRelative(-1),
+  },
+  {
+    key = 'l',
+    mods = 'CTRL|SHIFT',
+    action = wezterm.action.ActivateTabRelative(1),
+  },
   -- Allow Shift-Enter to send a literal Enter to the terminal. Useful in Claude
   -- Code among other places.
   {
@@ -104,5 +147,46 @@ config.keys = {
     action = wezterm.action { SendString = '\x1b\r' },
   },
 }
+
+-- Fixed window title (except for zellij-nvim)
+wezterm.on('format-window-title', function(tab, pane, tabs, panes, cfg)
+  if os.getenv 'ZELLIJ_NVIM' == 'true' then
+    return nil -- use default behavior
+  end
+  return 'Wezterm'
+end)
+
+-- Instant color change when user var is set (on spawn)
+wezterm.on('user-var-changed', function(window, pane, name, value)
+  if name == 'DISTROBOX' then
+    local overrides = window:get_config_overrides() or {}
+    local desired = get_distrobox_scheme(value)
+    overrides.color_scheme = desired
+    window:set_config_overrides(overrides)
+    wezterm.GLOBAL.desired_scheme = desired
+  end
+end)
+
+-- Dynamic color scheme: format-tab-title detects changes, update-status applies them
+wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
+  if tab.is_active then
+    local distrobox = tab.active_pane.user_vars.DISTROBOX
+    local desired = get_distrobox_scheme(distrobox)
+    if wezterm.GLOBAL.desired_scheme ~= desired then
+      wezterm.GLOBAL.desired_scheme = desired
+      wezterm.GLOBAL.scheme_dirty = true
+    end
+  end
+  return nil
+end)
+
+wezterm.on('update-status', function(window, pane)
+  if wezterm.GLOBAL.scheme_dirty then
+    wezterm.GLOBAL.scheme_dirty = false
+    local overrides = window:get_config_overrides() or {}
+    overrides.color_scheme = wezterm.GLOBAL.desired_scheme
+    window:set_config_overrides(overrides)
+  end
+end)
 
 return config

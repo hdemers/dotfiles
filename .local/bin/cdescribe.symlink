@@ -106,7 +106,7 @@ main() {
     # See https://github.com/anthropics/claude-code/issues/10952
     export TMPDIR=/tmp/claude
 
-    gum log --level info "Using agent: ${agent} with key ${ANTHROPIC_API_KEY}"
+    gum log --level info "Using agent: ${agent} with key ${ANTHROPIC_API_KEY:-"<not set>"}"
     gum spin --spinner meter --title "$agent is describing your commit '${revset}'..." -- \
         $agent "/describe" | jj describe -r "${revset}" --stdin
 

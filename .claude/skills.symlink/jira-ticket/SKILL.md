@@ -32,22 +32,36 @@ Choose:
 
 ### Context
 
-The ticket can either be of type "Epic" or "Story". If not specified, assume
-"Story". If a mandatory item is not provided, STOP and ASK.
+The ticket can either be of type "Epic", "Story" or "Bug". If not specified,
+assume "Story". If a mandatory item is not provided, STOP and ASK.
 
 For Epic creation:
-- Work classification [MANDATORY]: possible values: A, B or C.
-- Capitalizable? [MANDATORY]: possible values: yes or no.
-- Assignee [MANDATORY]
+  - Work classification [MANDATORY]: possible values: A, B or C.
+  - Capitalizable? [MANDATORY]: possible values: yes or no.
+  - Assignee [MANDATORY]
 
 For Story creation:
-- Epic [MANDATORY]
-- Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
-  "active", use the `jira sprints` command to find the 'active' sprint. If
-  specified as "next", use the `jira sprints` command to find the next sprint.
-- Points [OPTIONAL]: if not provided, leave blank
-- Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
-  assume user specified by the environment variable `USER`.
+  - Epic [MANDATORY]
+  - Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
+    "active", use the `jira sprints` command to find the 'active' sprint. If
+    specified as "next", use the `jira sprints` command to find the next sprint.
+  - Points [OPTIONAL]: if not provided, leave blank
+  - Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
+    assume user specified by the environment variable `USER`.
+
+For Bug creation:
+  - Epic [MANDATORY]
+  - Bug Type [MANDATORY]: Pre-Production or Production
+  - Severity [MANDATORY]:  A = Critical, B = Major, C = Minor, D = Trivial
+  - Steps to Reproduce [MANDATORY]: Free text
+  - Actual Result [MANDATORY]: Free text
+  - Expected Result [MANDATORY]: Free text
+  - Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
+    "active", use the `jira sprints` command to find the 'active' sprint. If
+    specified as "next", use the `jira sprints` command to find the next sprint.
+  - Points [OPTIONAL]: if not provided, leave blank
+  - Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
+    assume user specified by the environment variable `USER`.
 
 
 ## Ticket Updates

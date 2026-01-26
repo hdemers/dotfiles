@@ -10,6 +10,7 @@ This skill allows you to write Markdown reports.
 1. Write report under
    /home/hdemers/Dropbox/Claude/<category>/!`[[ "$PWD" =~ [Gg]rubhub ]] && echo "grubhub" || echo "personal"`/!`basename "$(jj root 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null)" 2>/dev/null || echo "misc"`/
    where <category> is either 'brainstorm' or 'failure'.
+2. Report filenames shall be kebab-case with the following pattern: YYYY-MM-DD-<descriptive-name>.
 2. If multiple reports are being written as part of a given session, you shall
    reference the other documents, when applicable, using the markdown notation
       [Link Text](relative path to the file).

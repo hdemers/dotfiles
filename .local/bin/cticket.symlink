@@ -24,6 +24,7 @@ This interactive script guides you through creating a JIRA ticket by:
 OPTIONS:
     -r, --revset REVSET  Use a custom revset instead of the default
     --stacked            Create a stacked diff ticket (prompts for base bookmark)
+    --bug                Create a bug ticket (prompts for additional context)
     --help               Display this help message and exit
 
 EXAMPLES:
@@ -32,6 +33,9 @@ EXAMPLES:
 
     # Create a stacked diff ticket
     cticket --stacked
+
+    # Create a bug ticket
+    cticket --bug
 
     # Use a custom revset
     cticket -r 'ancestors(@, 3)'
@@ -54,6 +58,9 @@ main() {
     local bookmark
     local base="trunk()"
     local stacked=false
+    local bug=false
+    local ticket_type="story"
+    local bug_context=""
     local sprint
     local points
     local epic
@@ -75,11 +82,33 @@ main() {
                 stacked=true
                 shift
                 ;;
+            --bug)
+                bug=true
+                ticket_type="bug"
+                shift
+                ;;
             *)
                 shift
                 ;;
         esac
     done
+
+    # Prompt for bug context when --bug is given
+    if [ "${bug}" = true ]; then
+        local context_choice
+        context_choice=$(gum choose "Type it in" "Attach a file" "No context" --header="Provide additional context for the bug:")
+        case "$context_choice" in
+            "Type it in")
+                bug_context=$(gum write --placeholder "Describe the bug context..." --header "Bug Context")
+                ;;
+            "Attach a file")
+                bug_context=$(gum file --header "Select a file with bug context")
+                ;;
+            "No context")
+                bug_context=""
+                ;;
+        esac
+    fi
 
     sprint=$( { jira sprints \
         | grep DSSO \
@@ -146,9 +175,13 @@ main() {
     export AGENT_TICKET_POINTS="${points}"
     export AGENT_TICKET_ASSIGNEE="${assignee}"
     export AGENT_TICKET_PROJECT="DSSO"
+    export AGENT_TICKET_TYPE="${ticket_type}"
+    if [ -n "${bug_context}" ]; then
+        export AGENT_BUG_CONTEXT="${bug_context}"
+    fi
     export TMPDIR=/tmp/claude
 
-    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nRevset: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$revset" "$epic" "$sprint" "$points" "$assignee")" || {
+    gum confirm "$(printf 'Do you want to create a JIRA ticket for\nType: %s\nRevset: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$ticket_type" "$revset" "$epic" "$sprint" "$points" "$assignee")" || {
         gum log --level info "Ticket creation cancelled."
         return 0
     }
@@ -159,6 +192,8 @@ main() {
     unset AGENT_TICKET_POINTS
     unset AGENT_TICKET_ASSIGNEE
     unset AGENT_TICKET_PROJECT
+    unset AGENT_TICKET_TYPE
+    unset AGENT_BUG_CONTEXT
     unset TMPDIR
 
 

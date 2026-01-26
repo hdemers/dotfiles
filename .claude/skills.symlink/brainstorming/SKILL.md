@@ -1,17 +1,18 @@
 ---
 name: brainstorming
 description: Proactively use when brainstorming potential solutions to difficult problems.
-tools: 
 ---
 
 ## Standard Operating Procedure
+
+MANDATORY: Use the report-writing skill.
 
 ### Phase 1: Low-Handing Fruits
 
 1. Generate 4-5 solutions
 2. Do not assume backward compatibility, we want to explore the full space of
    solutions.
-3. Follow the best practices below
+3. Follow all best practices below
 4. STOP and ASK: validate solutions with user. DO NOT move to phase 2.
 5. If user selects a solution, do not start implementing. Always ask the user:
    should we make a plan first. Then, make a plan.
@@ -51,15 +52,14 @@ tools:
 ## Best Practices
 
 1. Implementing a solution is not the goal, rather writing a report is.
-2. Use the report-writing skill.
-3. When evolving a solution, amend the existing report instead of writing a new one.
-4. Complex solutions should be validated with throw-away scripts.
-5. Throw-away scripts shall be written to subdirectory ,scratch. The comma
+2. When evolving a solution, amend the existing report instead of writing a new one.
+3. Complex solutions should be validated with throw-away scripts.
+4. Throw-away scripts shall be written to subdirectory ,scratch. The comma
    prefix is not a typo.
-6. We do not care about implementation complexity.
-7. We do not care about level-of-effort.
-8. Reports shall have the following structure:
-   
+5. We do not care about implementation complexity.
+6. We do not care about level-of-effort.
+7. Reports shall have the following structure:
+
    ```markdown
     # Title
 
@@ -69,7 +69,7 @@ tools:
     ## Problem/Goal Statement
 
     ### Constraints
-    
+
     ## Solutions
 
     ### Solution 1

@@ -44,12 +44,8 @@ end
 -- Colorization
 --------------------------------------------------------------------------------
 
-local function safe_colorize()
-  if Snacks and Snacks.terminal and Snacks.terminal.colorize then
-    local saved_listchars = vim.opt.listchars:get()
-    Snacks.terminal.colorize()
-    vim.opt.listchars = saved_listchars
-  end
+local function safe_colorize(buf, lines)
+  get_utils().colorize_buffer(buf, lines, 'preview_terminal_channel')
 end
 
 --------------------------------------------------------------------------------
@@ -274,6 +270,7 @@ function M.close()
     vim.api.nvim_buf_delete(state.preview.buf, { force = true })
   end
   state.preview = { buf = nil, win = nil, type = nil, change_id = nil }
+  state.preview_terminal_channel = nil
 end
 
 function M.toggle_focus()
@@ -354,10 +351,11 @@ function M.open(content, preview_type, change_id, opts)
     -- Reuse existing preview window
     vim.bo[state.preview.buf].filetype = opts.filetype or 'diff'
     vim.bo[state.preview.buf].modifiable = true
-    vim.api.nvim_buf_set_lines(state.preview.buf, 0, -1, false, content_lines)
     vim.api.nvim_win_call(state.preview.win, function()
       if not opts.no_colorize then
-        safe_colorize()
+        safe_colorize(state.preview.buf, content_lines)
+      else
+        vim.api.nvim_buf_set_lines(state.preview.buf, 0, -1, false, content_lines)
       end
       if opts.filetype == 'jujutsu' then
         create_folds_for_diff(state.preview.win, content_lines)
@@ -393,10 +391,10 @@ function M.open(content, preview_type, change_id, opts)
     vim.bo[buf].buflisted = false
     vim.bo[buf].filetype = opts.filetype or 'diff'
 
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, content_lines)
-
     if not opts.no_colorize then
-      safe_colorize()
+      safe_colorize(buf, content_lines)
+    else
+      vim.api.nvim_buf_set_lines(buf, 0, -1, false, content_lines)
     end
     vim.bo[buf].modifiable = false
 

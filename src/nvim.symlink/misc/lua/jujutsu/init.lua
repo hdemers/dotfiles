@@ -38,6 +38,8 @@ M.state = {
   debounce_timer = nil, -- Timer for debounced preview updates
   watcher = nil, -- uv_fs_event_t handle for op_heads directory
   last_refresh_time = 0, -- Timestamp of last refresh (for dedup with watcher)
+  terminal_channel = nil, -- Terminal channel for ANSI colorization (log buffer)
+  preview_terminal_channel = nil, -- Terminal channel for ANSI colorization (preview buffer)
 }
 
 --------------------------------------------------------------------------------
@@ -143,29 +145,49 @@ local function stop_watcher()
   end
 end
 
--- Colorization helper
-local function safe_colorize()
-  if Snacks and Snacks.terminal and Snacks.terminal.colorize then
-    local buf = vim.api.nvim_get_current_buf()
-    local saved_listchars = vim.opt.listchars:get()
-
-    Snacks.terminal.colorize()
-
-    vim.opt.listchars = saved_listchars
-
-    -- Clear snacks.nvim's keymaps and autocmds that interfere with our buffer
-    -- colorize() sets up: q mapping, TextChanged autocmd (moves cursor to end!),
-    -- TermEnter autocmd, and ]] [[ navigation mappings
-    pcall(vim.keymap.del, 'n', 'q', { buffer = buf })
-    pcall(vim.keymap.del, 'n', ']]', { buffer = buf })
-    pcall(vim.keymap.del, 'n', '[[', { buffer = buf })
-
-    -- Remove the TextChanged autocmd that moves cursor to last line
-    local autocmds = vim.api.nvim_get_autocmds { buffer = buf, event = 'TextChanged' }
-    for _, au in ipairs(autocmds) do
-      pcall(vim.api.nvim_del_autocmd, au.id)
-    end
+-- Colorizes a buffer with ANSI escape codes using terminal emulation
+-- @param buf number - buffer to colorize
+-- @param lines table - lines to display
+-- @param channel_key string - state key for storing the terminal channel
+function M.utils.colorize_buffer(buf, lines, channel_key)
+  -- Trim trailing empty lines
+  while #lines > 0 and vim.trim(lines[#lines]) == '' do
+    lines[#lines] = nil
   end
+
+  local saved_listchars = vim.opt.listchars:get()
+
+  -- Close existing channel if we have one
+  local old_channel = M.state[channel_key]
+  if old_channel then
+    pcall(vim.fn.chanclose, old_channel)
+    M.state[channel_key] = nil
+  end
+
+  -- Set up window options for terminal display
+  vim.wo.number = false
+  vim.wo.relativenumber = false
+  vim.wo.statuscolumn = ''
+  vim.wo.signcolumn = 'no'
+  vim.opt.listchars = { space = ' ' }
+
+  vim.bo[buf].modifiable = true
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
+
+  local channel = vim.api.nvim_open_term(buf, {})
+  M.state[channel_key] = channel
+  vim.api.nvim_chan_send(channel, table.concat(lines, '\r\n'))
+
+  vim.cmd 'stopinsert'
+  vim.opt.listchars = saved_listchars
+end
+
+local function safe_colorize(buf, lines)
+  -- Ensure window is showing the correct buffer (might have changed after returning from terminal)
+  if vim.api.nvim_get_current_buf() ~= buf then
+    vim.api.nvim_win_set_buf(0, buf)
+  end
+  M.utils.colorize_buffer(buf, lines, 'terminal_channel')
 end
 
 -- Strip ANSI escape codes
@@ -525,16 +547,11 @@ function M.utils.refresh_log()
   local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
   local lines = vim.split(output, '\n')
 
-  vim.bo[M.state.buf].modifiable = true
-  vim.api.nvim_buf_set_lines(M.state.buf, 0, -1, false, lines)
-
-  -- Get line count BEFORE colorize (colorize may change buffer content)
   local line_count = #lines
 
   vim.api.nvim_win_call(M.state.win, function()
-    safe_colorize()
+    safe_colorize(M.state.buf, lines)
   end)
-  vim.bo[M.state.buf].modifiable = false
 
   -- Restore cursor, clamped to valid range
   local row = math.min(cursor[1], math.max(1, line_count))
@@ -566,6 +583,8 @@ local function close_flog()
   M.state.win = nil
   M.state.buf = nil
   M.state.active_job = nil
+  M.state.terminal_channel = nil
+  M.state.preview_terminal_channel = nil
   M.state.cwd = nil -- Mark as fully closed
 end
 
@@ -664,10 +683,8 @@ function M.jujutsu_flog()
   vim.bo[buf].bufhidden = 'wipe'
   vim.bo[buf].buflisted = false
 
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(output, '\n'))
-  vim.bo[buf].modifiable = true
-  safe_colorize()
-  vim.bo[buf].modifiable = false
+  local lines = vim.split(output, '\n')
+  safe_colorize(buf, lines)
 
   setup_keymaps(buf)
   preview.setup_dual_cursorline(buf, M.state.win)

@@ -120,7 +120,7 @@ main() {
     )
 
     points=$(gum choose "None" 0.5 1 2 3 5 8 13 --header="Select points for the ticket:")
-    epic=$(jira issues -er \
+    epic=$(jira issues --human --epics-only \
         | fzf \
         --ansi \
         --header-lines=1 \

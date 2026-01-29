@@ -291,7 +291,7 @@ return {
           prompt = string.format('Epic Issues (%s)> ', jira_current_epic)
         end
 
-        local cmd = string.format('jira issues --rich %s', args or '')
+        local cmd = string.format('jira issues --human %s', args or '')
 
         fzflua.fzf_exec(cmd, {
           fzf_opts = {
@@ -439,7 +439,7 @@ return {
             fn = function(items)
               -- Split items[1] by space and select the first one
               local key = vim.split(items[1], ' ', { trimempty = true })[1]
-              return string.format('jira view --rich %s', key)
+              return string.format('jira view --human %s', key)
             end,
           },
         })

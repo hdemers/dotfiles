@@ -1,0 +1,252 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+show_help() {
+    cat << EOF
+Usage: cpr [OPTIONS] [BOOKMARK]
+
+Create a GitHub pull request for a Jujutsu bookmark using Claude AI.
+
+This interactive script guides you through creating a PR by:
+  1. Running precommit checks (unless --no-verify)
+  2. Selecting a bookmark (Jujutsu branch)
+  3. Optionally selecting a base bookmark for stacked PRs
+  4. Selecting reviewers
+  5. Pushing the bookmark to the remote
+  6. Having Claude generate the PR
+
+OPTIONS:
+    --no-verify      Skip precommit checks
+    --no-push        Do not push the bookmark before creating the PR
+    --stacked        Create a stacked PR (prompts for base bookmark)
+    --help           Display this help message and exit
+
+ARGUMENTS:
+    BOOKMARK         Optional bookmark name. If not provided, will prompt for selection.
+
+EXAMPLES:
+    # Create a PR interactively
+    cpr
+
+    # Create a PR for a specific bookmark
+    cpr my-feature
+
+    # Create a stacked PR
+    cpr --stacked
+
+    # Skip precommit checks
+    cpr --no-verify
+
+ENVIRONMENT:
+    TRACE        Set to '1' to enable bash tracing
+
+DEPENDENCIES:
+    - jj         Jujutsu version control
+    - gum        Terminal UI tool
+    - gh         GitHub CLI
+    - fzf        Fuzzy finder
+    - claude     Claude AI CLI
+
+EOF
+}
+
+_check_prerequisites() {
+    if ! command -v gum &> /dev/null; then
+        echo "gum is not installed. Install it with 'brew install gum'."
+        return 1
+    fi
+
+    if ! command -v gh &> /dev/null; then
+        echo "gh (GitHub CLI) is not installed. Install it with 'brew install gh'."
+        return 1
+    fi
+}
+
+_select_bookmark() {
+    local bookmark="$1"
+    local header=${2:-"Select a bookmark:"}
+    local revset=${3:-"trunk():: ~ dev ~ trunk()"}
+
+    if [ -z "${bookmark}" ]; then
+        # Get bookmarks, clean up trailing '*', and present with gum
+        bookmark=$(jj bookmark list -r "${revset}" -T '"\n" ++ self.name()' \
+            | uniq | gum choose --header="${header}" || true)
+
+        if [ -z "${bookmark}" ]; then
+            # Ask if the user wants to create a new bookmark
+            if gum confirm "No bookmark selected. Do you want to create a new bookmark?"; then
+                bookmark=$(gum input --placeholder="Enter new bookmark name")
+                if [ -z "${bookmark}" ]; then
+                    gum log --level error "Error: Bookmark name cannot be empty"
+                    return 1
+                else
+                    revset=$(gum input --placeholder="Enter revset (default: @)")
+                    revset=${revset:-"@"}
+                    if ! jj log -r "${revset}" >/dev/null 2>&1; then
+                        gum log --level error "Error: revset '${revset}' not found"
+                        return 1
+
+                    fi
+                    if ! jj bookmark create -r "${revset}" "${bookmark}"; then
+                        gum log --level error "Error: Failed to create bookmark '${bookmark}'"
+                        return 1
+                    fi
+
+                fi
+            fi
+        fi
+    else
+        # Validate the provided bookmark
+        if ! jj log -r "${bookmark}" >/dev/null 2>&1; then
+            gum log --level error "Error: bookmark '${bookmark}' not found"
+            return 1
+        fi
+        gum log --level info "Using bookmark: ${bookmark}"
+    fi
+    echo "${bookmark}"
+}
+
+_extract_ticket() {
+    local change_id="$1"
+    local base="${2:-trunk()}"
+
+    jj log -T builtin_log_compact_full_description -r "${base}..${change_id}" \
+        | grep -oE "[A-Z]+-[0-9]+" \
+        | uniq \
+        || true
+}
+
+main() {
+    local bookmark=""
+    local no_verify=false
+    local no_push=false
+    local stacked=false
+    local jj_base="trunk()"
+    local pr_base
+    local empty_change_ids
+    local ticket
+    local reviewers
+
+    pr_base=$(git branch -r | grep -E 'origin/(main|master)$' | sed 's/.*\///')
+
+    # Check prerequisites
+    if ! _check_prerequisites; then return 1; fi
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --no-verify)
+                no_verify=true
+                shift
+                ;;
+            --no-push)
+                no_push=true
+                shift
+                ;;
+            --stacked)
+                stacked=true
+                shift
+                ;;
+            --help)
+                show_help
+                return 0
+                ;;
+            *)
+                bookmark="$1"
+                shift
+                ;;
+        esac
+    done
+
+    bookmark=$(_select_bookmark "${bookmark}")
+    if [ -z "$bookmark" ]; then
+        gum log --level error "You must provide a bookmark."
+        return 1
+    fi
+
+    # If no_verify is set, skip precommit checks
+    if [ "${no_verify}" = true ]; then
+        gum log --level info "Skipping precommit checks."
+    else
+        jj precommit -r "trunk()..${bookmark}" || {
+            gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
+            return 1
+        }
+    fi
+
+    # Check for other bookmarks in the revset when not using --stacked
+    if [ "${stacked}" = false ]; then
+        local other_bookmarks
+        other_bookmarks=$(jj log -r "${jj_base}..${bookmark}" --no-graph -T 'if(bookmarks, bookmarks ++ "\n")' \
+            | grep -v "^${bookmark}\*\?$" \
+            | grep -v "^$" \
+            || true)
+
+        if [ -n "$other_bookmarks" ]; then
+            gum log --level warn "Found other bookmarks in the revset: ${other_bookmarks//$'\n'/, }"
+            gum confirm "Continue as a stacked PR?" || {
+                gum log --level info "PR creation cancelled."
+                return 0
+            }
+            stacked=true
+        fi
+    fi
+
+    if [ "${stacked}" = true ]; then
+        jj_base=$(_select_bookmark "" "Select a base bookmark for the stacked PR:" "trunk()..${bookmark}-")
+        pr_base=${jj_base}
+        if [ -z "$jj_base" ]; then
+            gum log --level error "You must provide a base."
+            return 1
+        fi
+    fi
+
+    ticket=$(_extract_ticket "${bookmark}" "${pr_base}")
+
+    reviewers=$(gum choose \
+        --no-limit \
+        --header="Select reviewers" \
+        'None' $(gh api orgs/grubhubprod/teams/mlops/members --jq '.[].login' | grep -v hdemers || true) 'more...' || true)
+
+    # If reviewers equals 'more...', then start over with all members of that org
+    if [[ "${reviewers}" == *"more..."* ]]; then
+        reviewers=$(gh api orgs/grubhubprod/members --jq '.[].login' --paginate | fzf --multi)
+    fi
+
+    reviewers=$(echo "${reviewers}" | tr '\n' ',' | sed 's/,$//')
+
+    empty_change_ids=$(jj log -r "trunk()..${bookmark} & description(exact:'')" --no-graph -T 'change_id.short()')
+    [ -n "${empty_change_ids}" ] && jj describe -r "${empty_change_ids}"
+
+    if [ "${no_push}" = true ]; then
+        gum log --level info "Skipping push."
+    else
+        if ! jj git push --bookmark "${bookmark}"; then
+            gum log --level error "Failed to push bookmark '${bookmark}'."
+            return 1
+        fi
+    fi
+
+    export CLAUDE_BOOKMARK="${bookmark}"
+    export CLAUDE_REVIEWERS="${reviewers}"
+    export CLAUDE_JJ_BASE="${jj_base}"
+    export CLAUDE_PR_BASE="${pr_base}"
+    export CLAUDE_TICKET="${ticket}"
+    export TMPDIR=/tmp/claude
+    claude "/create-pr-jj"
+    unset CLAUDE_TICKET
+    unset CLAUDE_BOOKMARK
+    unset CLAUDE_REVIEWERS
+    unset CLAUDE_JJ_BASE
+    unset CLAUDE_PR_BASE
+    unset TMPDIR
+}
+
+main "$@"
+
+# vim: set ft=sh

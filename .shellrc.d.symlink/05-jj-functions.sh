@@ -211,11 +211,6 @@ jh() {
         --color='border:#6C7086,label:#CDD6F4'
 }
 
-bcheck() {
-    local bookmark="$1"
-    jj diff --name-only -r "trunk()::${bookmark}" | grep -E ".py" | xargs ruff check
-}
-
 jjoplog() {
     jj op log \
         -T 'self.id().short() ++ " " ++ self.time().start().ago() ++ " " ++ self.description() ++ "\n" ++ self.tags() ++ "\0"' \
@@ -243,32 +238,32 @@ jjoplog() {
         --border-label ' ctrl-r: restore'
 }
 
-jjadopt() {
-    jj log \
-        --color always \
-        -r 'untracked_remote_bookmarks()' \
-        -T 'bookmarks ++ "|" ++ author.email() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d %H:%M") ++ "|" ++ description.first_line() ++ "\n"' \
-        --no-graph \
-    | column -t -s "|" \
-    | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-limit --no-strip-ansi \
-    | cut -d ' ' -f 1 \
-    | xargs --no-run-if-empty printf ' -d %s' \
-    | xargs --no-run-if-empty jj rdev
-}
+jd() {
+    local bookmark=""
+    local cmd=""
 
-jjreview() {
-    jj log \
-        --color always \
-        -r 'remote_bookmarks()' \
-        -T 'bookmarks ++ "|" ++ author.name() ++ "|" ++ committer.timestamp().local().format("%Y-%m-%d %H:%M") ++ "|" ++ description.first_line() ++ "\n"' \
-        --no-graph \
-    | column -t -s "|" \
-    | grep -v "Hugues" \
-    | grep -v "master" \
-    | grep -v "main" \
-    | gum choose --selected.background='#33001d' --cursor.background='#33001d' --no-strip-ansi \
-    | cut -d ' ' -f 1 \
-    | xargs --no-run-if-empty jj new
+    bookmark=$(\
+        jj log \
+            -r "trunk()..dev" \
+            -T 'if(bookmarks, bookmarks.map(|b| b.name()).join("\n") ++ "\n")' \
+            --no-graph \
+        | gum choose --header="Select bookmark to deploy:" \
+    )
+
+    if [ -z "${bookmark}" ]; then
+        gum log --level error "No bookmark selected. Deployment cancelled."
+        return 1
+    fi
+
+    if [ "$(jj log -r "${bookmark} & ~remote_bookmarks()" --no-graph | wc -l)" -gt 0 ]; then
+        cmd="jj git push -b ${bookmark} && "
+    fi
+
+    cmd="${cmd}jenkins deploy-branch --branch ${bookmark} --no-unit-tests"
+
+    name="DEPLOYING BOOKMARK ${bookmark}"
+
+    zellij run -n "${name}" -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
 }
 
 # Export functions for subshells, but only in bash (not zsh)

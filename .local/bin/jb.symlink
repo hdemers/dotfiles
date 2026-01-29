@@ -206,13 +206,15 @@ jintegrate() {
         gum confirm "Bookmark ${bookmark} needs push first. Now?" \
             && jj git push -b "${bookmark}"
     fi
+    local name
+    name="INTEGRATING PR #${pr_number}"
 
     cmd="jenkins integrate -p ${pr_number} \
        && jira close ${ticket} \
        && notify 'Pull Request ${pr_number} integrated and ticket ${ticket} closed.'"
 
     gum confirm "Integrate PR ${pr_number} (${bookmark}) and close ticket ${ticket}?" \
-        && zellij run -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
+        && zellij run -n "${name}" -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
 }
 
 main() {

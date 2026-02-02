@@ -1,6 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-  "plansDirectory": "/home/hdemers/Dropbox/Claude/plans",
   "env": {
     "BASH_MAX_TIMEOUT_MS": "300000",
     "ENABLE_SEARCH_TOOL": "auto:1"
@@ -24,6 +23,7 @@
     ],
     "deny": []
   },
+  "model": "opus",
   "hooks": {},
   "statusLine": {
     "type": "command",
@@ -33,8 +33,7 @@
     "gdp@gdp-cli-marketplace": true,
     "on-call@gdp-cli-marketplace": false,
     "coding@gdp-cli-marketplace": false,
-    "pyright-lsp@claude-plugins-official": true,
-    "ralph-loop@claude-plugins-official": true
+    "pyright-lsp@claude-plugins-official": true
   },
   "sandbox": {
     "enabled": false,
@@ -52,5 +51,5 @@
       "notify:*"
     ]
   },
-  "model": "opus"
+  "plansDirectory": "/home/hdemers/Dropbox/Claude/plans"
 }

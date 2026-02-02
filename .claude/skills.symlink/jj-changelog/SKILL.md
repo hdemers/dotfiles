@@ -1,6 +1,6 @@
 ---
 name: jj-changelog
-description: Proactively use to generate or update a CHANGELOG.md file from Jujutsu commit history. Use when you need to create release notes, document changes between tags, or update the project changelog. Emphasizes breaking changes, new features, and user-facing bug fixes.
+description: Proactively use to generate or update a CHANGELOG.md file from Jujutsu commit history.
 ---
 
 # Jujutsu Changelog Generator

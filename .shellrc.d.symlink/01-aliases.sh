@@ -154,3 +154,5 @@ alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/ai-sandbox.Jus
 alias ccgh="env ANTHROPIC_MODEL=${GH_ANTHROPIC_MODEL} ANTHROPIC_SMALL_FAST_MODEL=${GH_ANTHROPIC_SMALL_FAST_MODEL} ANTHROPIC_USE_BEDROCK=1 claude"
 
 alias jjup="jj git fetch && jj rall && jj rdev && jj git push -r branches"
+
+alias gmore=" glow --pager -w 110"

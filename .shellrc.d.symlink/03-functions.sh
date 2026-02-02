@@ -110,7 +110,7 @@ fi
 # 1. Search for text in files using Ripgrep
 # 2. Interactively narrow down the list using fzf
 # 3. Open the file in Vim
-rfv() {
+rgf() {
     # If there are no argument provided to this function, exit with a proper
     # error message.
     if [ -z "$1" ]; then
@@ -435,6 +435,44 @@ js() {
         --border-label-pos 5:bottom \
         --border 'rounded' \
         --border-label "  c-s: mine | c-t: transition | c-e: epics | c-r: programs | c-i: new | c-l: in epic | c-h: all | c-y: yank url | c-o: open | c-u: update | c-v: view"
+}
+
+rplans() {
+    local plans_dir="$HOME/.claude/plans"
+
+    if [ ! -d "$plans_dir" ]; then
+        echo "Plans directory does not exist: $plans_dir"
+        return 1
+    fi
+
+    find "$plans_dir" -maxdepth 1 -type f -printf '%T@ %p\n' | sort -rn | \
+        awk -v now="$(date +%s)" '{
+            diff = now - $1
+            if (diff < 60) rel = int(diff) " secs ago"
+            else if (diff < 3600) rel = int(diff/60) " mins ago"
+            else if (diff < 86400) rel = int(diff/3600) " hours ago"
+            else if (diff < 604800) rel = int(diff/86400) " days ago"
+            else rel = int(diff/604800) " weeks ago"
+            filepath = substr($0, index($0, " ") + 1)
+            n = split(filepath, parts, "/")
+            filename = parts[n]
+            title = ""
+            while ((getline line < filepath) > 0) {
+                if (line ~ /^# /) {
+                    title = substr(line, 3)
+                    break
+                }
+            }
+            close(filepath)
+            printf "\033[36m%-18s\033[0m  \033[32m%s\033[0m  %s\t%s\n", rel, title, filename, filepath
+        }' | \
+        fzf --ansi \
+            --height 70% \
+            --delimiter='\t' \
+            --with-nth=1 \
+            --preview='CLICOLOR_FORCE=1 glow --style dracula {2}' \
+            --preview-window='top:60%' \
+            --bind='enter:execute(glow --pager {2})'
 }
 
 # Export functions for subshells, but only in bash (not zsh)

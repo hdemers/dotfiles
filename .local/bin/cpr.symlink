@@ -71,7 +71,12 @@ _check_prerequisites() {
 _select_bookmark() {
     local bookmark="$1"
     local header=${2:-"Select a bookmark:"}
-    local revset=${3:-"trunk():: ~ dev ~ trunk()"}
+    local default_revset="trunk():: ~ trunk()"
+    # If 'dev' bookmark exists, exclude it from the default revset
+    if jj bookmark list -r "dev" &>/dev/null && jj bookmark list -r "dev" | grep -q "^dev:"; then
+        default_revset="trunk():: ~ dev ~ trunk()"
+    fi
+    local revset=${3:-"${default_revset}"}
 
     if [ -z "${bookmark}" ]; then
         # Get bookmarks, clean up trailing '*', and present with gum
@@ -133,7 +138,7 @@ main() {
     local ticket
     local reviewers
 
-    pr_base=$(git branch -r | grep -E 'origin/(main|master)$' | sed 's/.*\///')
+    pr_base=$(jj log -r "trunk()" -T "bookmarks" --no-graph | grep -E '(main|master)$' | sed 's/.*\///')
 
     # Check prerequisites
     if ! _check_prerequisites; then return 1; fi
@@ -169,9 +174,11 @@ main() {
         return 1
     fi
 
-    # If no_verify is set, skip precommit checks
+    # If no_verify is set or pre-commit is not available, skip precommit checks
     if [ "${no_verify}" = true ]; then
         gum log --level info "Skipping precommit checks."
+    elif ! command -v pre-commit &>/dev/null; then
+        gum log --level info "pre-commit not available, skipping checks."
     else
         jj precommit -r "trunk()..${bookmark}" || {
             gum log --level error "Precommit checks failed for bookmark '${bookmark}'."

@@ -168,6 +168,7 @@ wezterm.on('user-var-changed', function(window, pane, name, value)
 end)
 
 -- Dynamic color scheme: format-tab-title detects changes, update-status applies them
+-- Also prevents applications from overriding the tab title
 wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
   if tab.is_active then
     local distrobox = tab.active_pane.user_vars.DISTROBOX
@@ -177,7 +178,25 @@ wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
       wezterm.GLOBAL.scheme_dirty = true
     end
   end
-  return nil
+
+  -- Return explicit title to prevent applications from changing it
+  local distrobox = tab.active_pane.user_vars.DISTROBOX
+  if distrobox and distrobox ~= '' then
+    return distrobox
+  end
+
+  -- Check if SSH is the foreground process
+  local process_name = tab.active_pane.foreground_process_name or ''
+  if process_name:match('ssh$') then
+    -- Try to extract hostname from pane title (often set by remote shell)
+    local title = tab.active_pane.title or ''
+    local host = title:match('@([^:%s]+)') or title:match('^([^@:%s]+)')
+    if host and host ~= '' then
+      return host
+    end
+  end
+
+  return wezterm.hostname()
 end)
 
 wezterm.on('update-status', function(window, pane)

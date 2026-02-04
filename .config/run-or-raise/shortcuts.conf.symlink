@@ -62,8 +62,8 @@
 
 # Google Calendar
 <Super>a,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Week of
-# Grubhub Calendar
-<Super>x,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Profile_3.desktop,,Google Calendar - Grubhub - Calendar
+# Wonder Calendar
+<Super>x,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Profile_3.desktop,,Google Calendar - Wonder - Calendar
 
 # Firefox
 <Super>f,gtk-launch org.mozilla.firefox.desktop,org.mozilla.firefox,

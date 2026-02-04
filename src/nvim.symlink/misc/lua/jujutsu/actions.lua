@@ -38,7 +38,11 @@ local function is_visual()
 end
 
 local function exit_visual_mode()
-  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('<Esc>', true, false, true), 'nx', false)
+  vim.api.nvim_feedkeys(
+    vim.api.nvim_replace_termcodes('<Esc>', true, false, true),
+    'nx',
+    false
+  )
 end
 
 --------------------------------------------------------------------------------
@@ -99,7 +103,8 @@ local function with_revset(action_fn, opts)
     local revset = get_revset()
 
     if not revset then
-      local msg = was_visual and 'No change IDs found in selection' or 'No change ID found on this line'
+      local msg = was_visual and 'No change IDs found in selection'
+        or 'No change ID found on this line'
       vim.notify(msg, vim.log.levels.WARN)
       return
     end
@@ -162,7 +167,8 @@ M.show = with_revset(function(id)
 
   -- Use diff for ranges (oldest::newest), show for single revisions
   local is_range = id:find '::'
-  local cmd = is_range and ('diff -r ' .. id .. ' --git') or ('show -r ' .. id .. ' --git')
+  local cmd = is_range and ('diff -r ' .. id .. ' --git')
+    or ('show -r ' .. id .. ' --git')
   local preview_type = is_range and 'diff' or 'show'
 
   local output = vim.fn.system(utils.build_jj_cmd(cmd))
@@ -285,7 +291,10 @@ end
 ---@param mode 'onto'|'before'|'after'
 local function do_rebase(revset, target_id, mode)
   local utils = get_utils()
-  utils.run_jj_cmd('rebase', '-r ' .. revset .. ' ' .. REBASE_MODES[mode].flag .. ' ' .. target_id)
+  utils.run_jj_cmd(
+    'rebase',
+    '-r ' .. revset .. ' ' .. REBASE_MODES[mode].flag .. ' ' .. target_id
+  )
   utils.run_jj_cmd 'rdev'
   utils.refresh_log()
 end
@@ -353,7 +362,10 @@ M.duplicate = with_revset(function(revset)
     end
     select_destination('Select destination revision:', function(dest_id)
       local utils = get_utils()
-      utils.run_jj_cmd('duplicate', '-r ' .. revset .. ' ' .. REBASE_MODES[mode_choice.mode].flag .. ' ' .. dest_id)
+      utils.run_jj_cmd(
+        'duplicate',
+        '-r ' .. revset .. ' ' .. REBASE_MODES[mode_choice.mode].flag .. ' ' .. dest_id
+      )
       utils.refresh_log()
     end)
   end)
@@ -362,8 +374,11 @@ end, { refresh = false })
 M.parallelize = with_revset(function(revset)
   local utils = get_utils()
   -- Check if revset contains '::' (range) indicating multiple revisions
-  if not revset:find('::') then
-    vim.notify('Parallelize requires multiple revisions (use visual selection)', vim.log.levels.WARN)
+  if not revset:find '::' then
+    vim.notify(
+      'Parallelize requires multiple revisions (use visual selection)',
+      vim.log.levels.WARN
+    )
     return
   end
   utils.run_jj_cmd('parallelize', revset)
@@ -417,7 +432,8 @@ M.cdescribe = with_revset(function(id)
   local utils = get_utils()
   local CONST = get_const()
 
-  local saved_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win) or nil
+  local saved_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)
+    or nil
 
   -- Cancel any pending preview updates
   utils.cancel_debounce()
@@ -504,9 +520,10 @@ end, { refresh = false })
 
 local function get_bookmarks()
   local utils = get_utils()
-  local template = [[if(!self.remote(), self.normal_target().change_id().shortest() ++ " " ++ self.name() ++ if(!self.synced(), "*", "") ++ " " ++ self.normal_target().commit_id().shortest() ++ "\n")]]
+  local template =
+    [[if(!self.remote(), self.normal_target().change_id().shortest() ++ " " ++ self.name() ++ if(!self.synced(), "*", "") ++ " " ++ self.normal_target().commit_id().shortest() ++ "\n")]]
   local cmd = 'bookmark list -r '
-    .. vim.fn.shellescape('trunk():: ~ dev ~ trunk()')
+    .. vim.fn.shellescape 'trunk():: ~ dev ~ trunk()'
     .. ' -T '
     .. vim.fn.shellescape(template)
   local output, success = utils.run_jj_cmd(cmd, nil, { notify = false })
@@ -556,6 +573,7 @@ local function move_bookmark_impl(opts)
           args = args .. ' --allow-backwards'
         end
         utils.run_jj_cmd('bookmark move', args)
+        utils.run_jj_cmd 'rdev'
         utils.refresh_log()
       end
     end)

@@ -12,8 +12,3 @@ elif [ "$arch" = "aarch64" ]; then
     tar xfz nvim-linux-arm64.tar.gz
     ln -s $HOME/src/nvim-linux-arm64/bin/nvim $HOME/.local/bin/nvim
 fi
-
-unset PIP_REQUIRE_VIRTUALENV
-
-cd $HOME
-pip3 install --user pyright mypy

@@ -479,3 +479,4 @@ rplans() {
 if [[ -n "$BASH_VERSION" ]]; then
     export -f ntfy
 fi
+

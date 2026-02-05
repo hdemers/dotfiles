@@ -104,6 +104,26 @@ main() {
         fi
     fi
 
+    # If no project specified, detect from src/projects/ subdirectories that contain an azkaban subdir
+    if [ -z "$project" ] && [ -d "src/projects" ]; then
+        local projects=()
+        while IFS= read -r -d '' dir; do
+            if [ -d "$dir/azkaban" ]; then
+                projects+=("$(basename "$dir")")
+            fi
+        done < <(find src/projects -mindepth 1 -maxdepth 1 -type d -print0 | sort -z)
+
+        if [ ${#projects[@]} -eq 1 ]; then
+            project="${projects[0]}"
+        elif [ ${#projects[@]} -gt 1 ]; then
+            project=$(printf '%s\n' "${projects[@]}" | gum choose --header "Select project:")
+            if [ -z "$project" ]; then
+                gum log --level error "You must select a project."
+                return 1
+            fi
+        fi
+    fi
+
     local project_opt=""
     if [ -n "$project" ]; then
         project_opt="--project ${project}"
@@ -113,11 +133,9 @@ main() {
         && jenkins deploy-branch --branch ${bookmark} ${unit_tests} ${project_opt} \
         && notify 'Bookmark ${bookmark} deployed.'"
 
-    if [ "$interactive" = true ]; then
-        gum confirm "Deploy bookmark '${bookmark}' now?" &&
-            zellij_float_cmd "$cmd"
-    else
-        zellij_float_cmd "$cmd"
+    if [ "$interactive" = false ] || gum confirm "Deploy bookmark '${bookmark}' now?"; then
+        name="DEPLOYING BOOKMARK ${bookmark}"
+        zellij run -n "${name}" -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
     fi
 }
 

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Send a command to a floating pane in a specific tab in a Zellij session
+
+set -euo pipefail
+
+usage() {
+    echo "Usage: zsend [-s session] <tab> <command>"
+    echo "  -s, --session  Zellij session name (default: grubhub-dev)"
+    echo "  tab            Tab name to switch to"
+    echo "  command        Command to run in a floating pane"
+    exit 1
+}
+
+session="grubhub-dev"
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -s|--session)
+            session="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [[ $# -lt 2 ]]; then
+    usage
+fi
+
+tab="$1"
+cmd="$2"
+
+zellij --session "$session" action go-to-tab-name "$tab"
+zellij --session "$session" run -f -- bash -c "$cmd"

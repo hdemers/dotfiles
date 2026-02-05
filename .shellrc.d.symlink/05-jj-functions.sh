@@ -238,34 +238,6 @@ jjoplog() {
         --border-label ' ctrl-r: restore'
 }
 
-jd() {
-    local bookmark=""
-    local cmd=""
-
-    bookmark=$(\
-        jj log \
-            -r "trunk()..dev" \
-            -T 'if(bookmarks, bookmarks.map(|b| b.name()).join("\n") ++ "\n")' \
-            --no-graph \
-        | gum choose --header="Select bookmark to deploy:" \
-    )
-
-    if [ -z "${bookmark}" ]; then
-        gum log --level error "No bookmark selected. Deployment cancelled."
-        return 1
-    fi
-
-    if [ "$(jj log -r "${bookmark} & ~remote_bookmarks()" --no-graph | wc -l)" -gt 0 ]; then
-        cmd="jj git push -b ${bookmark} && "
-    fi
-
-    cmd="${cmd}jenkins deploy-branch --branch ${bookmark} --no-unit-tests"
-
-    name="DEPLOYING BOOKMARK ${bookmark}"
-
-    zellij run -n "${name}" -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
-}
-
 # Export functions for subshells, but only in bash (not zsh)
 if [[ -n "$BASH_VERSION" ]]; then
     export -f _select_bookmark

@@ -188,6 +188,17 @@ keybinds clear-defaults=true {
               name "Jira Issues"
           }
         }
+        bind "Alt '" {
+          Run "bash" "-ic" "s3view" {
+              floating true
+              x "15%"
+              y "5%"
+              width "70%"
+              height "90%"
+              close_on_exit true
+              name "Grubhub S3 Browser"
+          }
+        }
     }
     shared_except "locked" "renametab" "renamepane" {
         // bind "Ctrl g" { SwitchToMode "locked"; }

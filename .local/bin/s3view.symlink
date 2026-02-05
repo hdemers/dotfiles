@@ -1,0 +1,376 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+MOUNTROOT="/tmp/s3mounts"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/s3view"
+CONFIG_FILE="${CONFIG_DIR}/mounts"
+
+# Locate AWS config directory: honor AWS_HOME, then check common paths.
+if [[ -n "${AWS_HOME-}" ]]; then
+    AWS_DIR="$AWS_HOME"
+elif [[ -d "$HOME/.aws" ]]; then
+    AWS_DIR="$HOME/.aws"
+elif [[ -d "/home/$(whoami)/.aws" ]]; then
+    AWS_DIR="/home/$(whoami)/.aws"
+else
+    AWS_DIR="$HOME/.aws"
+fi
+export AWS_SHARED_CREDENTIALS_FILE="${AWS_DIR}/credentials"
+export AWS_CONFIG_FILE="${AWS_DIR}/config"
+
+if command -v fusermount3 &>/dev/null; then
+    RCLONE_MOUNT="mount"
+    UNMOUNT_CMD=(fusermount3 -u)
+else
+    RCLONE_MOUNT="nfsmount"
+    UNMOUNT_CMD=(umount)
+fi
+
+show_help() {
+    cat << EOF
+Usage: s3view [COMMAND]
+
+Browse S3 data-asset buckets in a local file manager.
+
+COMMANDS:
+    ls           Browse mounted buckets in yazi (default)
+    mount        Mount all S3 buckets via rclone
+    unmount      Unmount all S3 buckets
+    remount      Unmount and remount (refreshes expired credentials)
+    config       Select which buckets and folders to mount
+
+OPTIONS:
+    --help       Display this help message and exit
+
+EXAMPLES:
+    # Browse buckets (mounts automatically if needed)
+    s3view
+
+    # Mount only
+    s3view mount
+
+    # Unmount everything
+    s3view unmount
+
+    # Re-select buckets and folders
+    s3view config
+
+ENVIRONMENT:
+    AWS_PROFILE  AWS profile to use (required, supports SSO and static credentials)
+    AWS_HOME     Override AWS config directory (default: ~/.aws or /home/\$USER/.aws)
+    TRACE        Set to '1' to enable bash tracing
+
+DEPENDENCIES:
+    - rclone     Cloud storage sync/mount tool
+    - yazi       Terminal file manager
+    - gum        Terminal UI tool
+    - fzf        Fuzzy finder
+    - fusermount3  (Linux) or umount (macOS)
+
+CONFIG:
+    ${CONFIG_DIR}/mounts
+
+EOF
+}
+
+ensure_prerequisites() {
+    local deps=("gum:Terminal UI tool" "aws:AWS CLI" "rclone:Cloud storage mount tool" "yazi:Fast terminal file manager" "fzf:Fuzzy finder")
+    local missing=()
+
+    for entry in "${deps[@]}"; do
+        local cmd="${entry%%:*}"
+        if ! command -v "$cmd" &>/dev/null; then
+            missing+=("$entry")
+        fi
+    done
+
+    [[ ${#missing[@]} -eq 0 ]] && return 0
+
+    echo "Missing dependencies:"
+    for entry in "${missing[@]}"; do
+        local cmd="${entry%%:*}"
+        local desc="${entry#*:}"
+        echo "  - ${cmd} (${desc})"
+    done
+    echo
+    echo "These can be uninstalled anytime with: brew uninstall <name>"
+    echo
+
+    # gum might not be available yet, fall back to read
+    local reply
+    read -rp "Install all via brew? [y/N] " reply
+    if [[ "$reply" =~ ^[Yy]$ ]]; then
+        local names=()
+        for entry in "${missing[@]}"; do
+            local cmd="${entry%%:*}"
+            [[ "$cmd" == "aws" ]] && cmd="awscli"
+            names+=("$cmd")
+        done
+        brew install "${names[@]}"
+    else
+        exit 1
+    fi
+}
+
+is_sso_profile() {
+    aws configure get sso_session --profile "$1" &>/dev/null
+}
+
+get_profile_region() {
+    local region
+    region=$(aws configure get region --profile "$1" 2>/dev/null) && echo "$region" && return
+    echo "us-east-1"
+}
+
+ensure_auth() {
+    if [[ -z "${AWS_PROFILE-}" ]]; then
+        gum log --level error "AWS_PROFILE is not set."
+        echo
+        echo "Available profiles:"
+        aws configure list-profiles | sed 's/^/  /'
+        echo
+        echo "Set one with: export AWS_PROFILE=<profile>"
+        exit 1
+    fi
+
+    if aws sts get-caller-identity --profile "$AWS_PROFILE" &>/dev/null; then
+        return 0
+    fi
+
+    if is_sso_profile "$AWS_PROFILE"; then
+        gum log --level warn "SSO session expired for profile '$AWS_PROFILE'."
+        aws sso login --profile "$AWS_PROFILE"
+    else
+        gum log --level error "Credentials invalid for profile '$AWS_PROFILE'."
+        gum log --level info "Check ${AWS_SHARED_CREDENTIALS_FILE}"
+        exit 1
+    fi
+}
+
+load_config() {
+    MOUNTS=()
+    while IFS= read -r line; do
+        [[ -z "$line" || "$line" == \#* ]] && continue
+        MOUNTS+=("$line")
+    done < "$CONFIG_FILE"
+
+    if [[ ${#MOUNTS[@]} -eq 0 ]]; then
+        gum log --level error "Config file is empty: $CONFIG_FILE"
+        gum log --level info "Run 's3view config' to set up buckets."
+        exit 1
+    fi
+}
+
+ensure_config() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        return 0
+    fi
+    gum log --level info "No configuration found. Starting first-time setup."
+    do_config
+}
+
+write_config() {
+    local paths=("$@")
+    mkdir -p "$CONFIG_DIR"
+    {
+        echo "# s3view mount configuration"
+        echo "# One mount path per line: bucket/folder"
+        echo "# Re-run 's3view config' to change."
+        for path in "${paths[@]}"; do
+            echo "$path"
+        done
+    } > "$CONFIG_FILE"
+    gum log --level info "Saved ${#paths[@]} mount path(s) to ${CONFIG_FILE}"
+}
+
+do_config() {
+    ensure_auth
+
+    read -ra DEFAULT_S3_MOUNTS <<< "${DEFAULT_S3_MOUNTS}"
+
+    echo
+    echo "Default mounts:"
+    for path in "${DEFAULT_S3_MOUNTS[@]}"; do
+        echo "  - ${path}"
+    done
+    echo
+    if ! gum confirm "Use defaults? (No = pick your own buckets/folders)"; then
+        do_config_custom
+        return
+    fi
+
+    write_config "${DEFAULT_S3_MOUNTS[@]}"
+}
+
+do_config_custom() {
+    gum log --level info "Fetching bucket list..."
+    local buckets
+    buckets=$(aws s3 ls s3:// | awk '{print $3}' | sed 's/\/$//')
+
+    echo
+    echo "Select buckets to mount (use Tab to multi-select, Enter to confirm)."
+    echo "You can change this later with: s3view config"
+    echo
+    local selected_buckets
+    selected_buckets=$(echo "$buckets" | fzf --multi --header="Tab=select  Enter=confirm")
+
+    if [[ -z "$selected_buckets" ]]; then
+        gum log --level error "No buckets selected."
+        exit 1
+    fi
+
+    local mount_paths=()
+    while IFS= read -r bucket; do
+        gum log --level info "Fetching top-level folders for ${bucket}..."
+        local folders
+        folders=$(aws s3 ls "s3://${bucket}/" | awk '$1 == "PRE" {print $2}' | sed 's/\/$//')
+
+        if [[ -z "$folders" ]]; then
+            gum log --level warn "No folders found in ${bucket}, mounting bucket root."
+            mount_paths+=("$bucket")
+            continue
+        fi
+
+        echo
+        echo "Select folders in ${bucket} (use Tab to multi-select, Enter to confirm)."
+        echo "This is needed because bucket roots can have too many entries for FUSE."
+        echo
+        local selected_folders
+        selected_folders=$(echo "$folders" | fzf --multi --header="Tab=select  Enter=confirm  (bucket: ${bucket})")
+
+        if [[ -z "$selected_folders" ]]; then
+            gum log --level warn "No folders selected for ${bucket}, skipping."
+            continue
+        fi
+
+        while IFS= read -r folder; do
+            mount_paths+=("${bucket}/${folder}")
+        done <<< "$selected_folders"
+    done <<< "$selected_buckets"
+
+    if [[ ${#mount_paths[@]} -eq 0 ]]; then
+        gum log --level error "No mount paths configured."
+        exit 1
+    fi
+
+    write_config "${mount_paths[@]}"
+}
+
+do_mount() {
+    ensure_config
+    load_config
+    ensure_auth
+
+    local region
+    region=$(get_profile_region "$AWS_PROFILE")
+
+    # rclone cannot resolve SSO session profiles directly; export credentials
+    # as environment variables so --s3-env-auth picks them up.
+    if is_sso_profile "$AWS_PROFILE"; then
+        eval "$(aws configure export-credentials --profile "$AWS_PROFILE" --format env)"
+    fi
+
+    for entry in "${MOUNTS[@]}"; do
+        local mountpoint="${MOUNTROOT}/${entry}"
+        if mountpoint -q "$mountpoint" 2>/dev/null; then
+            if ls "$mountpoint" &>/dev/null; then
+                gum log --level info "Already mounted at ${mountpoint}"
+                continue
+            fi
+            gum log --level warn "Stale mount at ${mountpoint}, remounting..."
+            "${UNMOUNT_CMD[@]}" "$mountpoint" 2>/dev/null || true
+        fi
+        mkdir -p "$mountpoint"
+        local profile_flags=()
+        if ! is_sso_profile "$AWS_PROFILE"; then
+            profile_flags=(
+              --s3-profile="$AWS_PROFILE"
+              --s3-shared-credentials-file="$AWS_SHARED_CREDENTIALS_FILE"
+            )
+        fi
+        rclone "$RCLONE_MOUNT" ":s3:${entry}" "$mountpoint" \
+          --s3-env-auth=true \
+          "${profile_flags[@]}" \
+          --s3-region="$region" \
+          --s3-provider=AWS \
+          --vfs-cache-mode full \
+          --dir-cache-time 30s \
+          --daemon
+        sleep 1
+        if ls "$mountpoint" &>/dev/null; then
+            gum log --level info "Mounted s3://${entry} at ${mountpoint}"
+        else
+            gum log --level error "Failed to mount s3://${entry}"
+        fi
+    done
+}
+
+do_unmount() {
+    if [[ ! -d "$MOUNTROOT" ]]; then
+        return 0
+    fi
+    local failed=0
+    # Find all active rclone mountpoints under MOUNTROOT
+    while IFS= read -r mountpoint; do
+        if "${UNMOUNT_CMD[@]}" "$mountpoint" 2>/dev/null; then
+            gum log --level info "Unmounted ${mountpoint}"
+        else
+            gum log --level warn "Failed to unmount ${mountpoint} (busy?)"
+            failed=1
+        fi
+    done < <(mount | grep "$MOUNTROOT" | awk '{print $3}')
+    if [[ "$failed" -eq 0 ]]; then
+        rm -rf "$MOUNTROOT" 2>/dev/null
+    fi
+}
+
+do_remount() {
+    do_unmount
+    do_mount
+}
+
+do_ls() {
+    do_mount
+    yazi "$MOUNTROOT"
+}
+
+main() {
+    ensure_prerequisites
+
+    local cmd="${1:-ls}"
+    case "$cmd" in
+        --help)
+            show_help
+            ;;
+        ls)
+            do_ls
+            ;;
+        mount)
+            do_mount
+            ;;
+        unmount)
+            do_unmount
+            ;;
+        remount)
+            do_remount
+            ;;
+        config)
+            do_config
+            ;;
+        *)
+            gum log --level error "Unknown command: $cmd"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
+
+# vim: set ft=sh:

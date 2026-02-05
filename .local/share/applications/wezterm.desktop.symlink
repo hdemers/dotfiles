@@ -11,3 +11,4 @@ Terminal=false
 Categories=Utility;ConsoleOnly;
 Keywords=terminal;
 StartupWMClass=Wezterm
+Icon=/home/hdemers/.local/share/icons/wezterm-ghifarit53-3.svg

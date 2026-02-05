@@ -39,12 +39,6 @@
 # Tmux-vim
 <Super>j,gtk-launch zellij-nvim.desktop,,/.*nvim.*/
 
-# Spotify
-<Super>s,flatpak run com.spotify.Client,Spotify,Spotify
-
-# YouTube Music
-<Super>y,gtk-launch com.google.Chrome.flextop.chrome-cinhimbnkkaeohfgghhklpknlkffjgod-Default.desktop,,YouTube Music
-
 # KeePassXC
 <Super>p,flatpak run org.keepassxc.KeePassXC,KeePassXC,KeePassXC
 
@@ -64,6 +58,8 @@
 <Super>a,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Week of
 # Wonder Calendar
 <Super>x,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Profile_3.desktop,,Google Calendar - Wonder - Calendar
+# Google Meet
+<Super>y,gtk-launch grubhub-dev-chrome-kjgfgldnnfoeklkmfkjfagphfepbbdan-Default.desktop,,Google Meet
 
 # Firefox
 <Super>f,gtk-launch org.mozilla.firefox.desktop,org.mozilla.firefox,
@@ -79,6 +75,9 @@
 
 # Btop
 <Super>b,gtk-launch btop.desktop,,/.*btop.*/
+
+# Obsidian
+<Super>k,flatpak run md.obsidian.Obsidian,obsidian,
 
 #
 # =============

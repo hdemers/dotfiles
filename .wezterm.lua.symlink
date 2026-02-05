@@ -146,6 +146,11 @@ config.keys = {
     mods = 'SHIFT',
     action = wezterm.action { SendString = '\x1b\r' },
   },
+  {
+    key = ']',
+    mods = 'CMD|SHIFT',
+    action = wezterm.action.ToggleAlwaysOnTop,
+  },
 }
 
 -- Fixed window title (except for zellij-nvim)
@@ -187,10 +192,10 @@ wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
 
   -- Check if SSH is the foreground process
   local process_name = tab.active_pane.foreground_process_name or ''
-  if process_name:match('ssh$') then
+  if process_name:match 'ssh$' then
     -- Try to extract hostname from pane title (often set by remote shell)
     local title = tab.active_pane.title or ''
-    local host = title:match('@([^:%s]+)') or title:match('^([^@:%s]+)')
+    local host = title:match '@([^:%s]+)' or title:match '^([^@:%s]+)'
     if host and host ~= '' then
       return host
     end

@@ -389,6 +389,23 @@ M.yank = with_revset(function(revset)
   vim.notify('Yanked: ' .. revset)
 end, { refresh = false })
 
+M.yank_bookmark = with_revset(function(revset)
+  local utils = get_utils()
+  local output, success =
+    utils.run_jj_cmd('bookmark list -r ' .. revset .. ' -T \'name ++ "\\n"\'', nil, { notify = false })
+  if not success then
+    vim.notify('Failed to get bookmarks for ' .. revset, vim.log.levels.ERROR)
+    return
+  end
+  local bookmark = vim.trim(output):match('[^\n]+')
+  if not bookmark or bookmark == '' then
+    vim.notify('No bookmark on ' .. revset, vim.log.levels.WARN)
+    return
+  end
+  vim.fn.setreg('+', bookmark)
+  vim.notify('Yanked bookmark: ' .. bookmark)
+end, { refresh = false })
+
 --------------------------------------------------------------------------------
 -- Navigation
 --------------------------------------------------------------------------------

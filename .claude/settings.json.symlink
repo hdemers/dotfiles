@@ -33,7 +33,8 @@
     "gdp@gdp-cli-marketplace": true,
     "on-call@gdp-cli-marketplace": false,
     "coding@gdp-cli-marketplace": false,
-    "pyright-lsp@claude-plugins-official": true
+    "pyright-lsp@claude-plugins-official": true,
+    "misc@gdp-cli-marketplace": true
   },
   "sandbox": {
     "enabled": false,

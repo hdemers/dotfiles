@@ -21,14 +21,14 @@ Choose:
 4. Use present tense.
 5. Write ticket as if the work is to be done.
 6. Summary starts with the name of the repo in square brackets:
-     [REPO-NAME] <SUMMARY>
+   [REPO-NAME] <SUMMARY>
 7. Craft detailed descriptions including:
-    - Problem statement or feature description
-    - Expected work product
-    - Technical details when relevant
+   - Problem statement or feature description
+   - Expected work product
+   - Technical details when relevant
 8. Use the Jira Text Formatting language:
-    - Use `{{monospace}}` instead of `{code}..{code}` for inline code.
-    - Code blocks should specify the language: `{code:language} some code {code}`.
+   - Use `{{monospace}}` instead of `{code}..{code}` for inline code.
+   - Code blocks should specify the language: `{code:language} some code {code}`.
 
 ### Context
 
@@ -36,33 +36,35 @@ The ticket can either be of type "Epic", "Story" or "Bug". If not specified,
 assume "Story". If a mandatory item is not provided, STOP and ASK.
 
 For Epic creation:
-  - Work classification [MANDATORY]: possible values: A, B or C.
-  - Capitalizable? [MANDATORY]: possible values: yes or no.
-  - Assignee [MANDATORY]
+
+- Work classification [MANDATORY]: possible values: A (sustaining), B (engineering excellence) or C (product).
+- Capitalizable? [MANDATORY]: possible values: yes or no.
+- Assignee [MANDATORY]
 
 For Story creation:
-  - Epic [MANDATORY]
-  - Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
-    "active", use the `jira sprints` command to find the 'active' sprint. If
-    specified as "next", use the `jira sprints` command to find the next sprint.
-  - Points [OPTIONAL]: if not provided, leave blank
-  - Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
-    assume user specified by the environment variable `USER`.
+
+- Epic [MANDATORY]
+- Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
+  "active", use the `jira sprints` command to find the 'active' sprint. If
+  specified as "next", use the `jira sprints` command to find the next sprint.
+- Points [OPTIONAL]: if not provided, leave blank
+- Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
+  assume user specified by the environment variable `USER`.
 
 For Bug creation:
-  - Epic [MANDATORY]
-  - Bug Type [MANDATORY]: Pre-Production or Production
-  - Severity [MANDATORY]:  A = Critical, B = Major, C = Minor, D = Trivial
-  - Steps to Reproduce [MANDATORY]: Free text
-  - Actual Result [MANDATORY]: Free text
-  - Expected Result [MANDATORY]: Free text
-  - Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
-    "active", use the `jira sprints` command to find the 'active' sprint. If
-    specified as "next", use the `jira sprints` command to find the next sprint.
-  - Points [OPTIONAL]: if not provided, leave blank
-  - Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
-    assume user specified by the environment variable `USER`.
 
+- Epic [MANDATORY]
+- Bug Type [MANDATORY]: Pre-Production or Production
+- Severity [MANDATORY]: A = Critical, B = Major, C = Minor, D = Trivial
+- Steps to Reproduce [MANDATORY]: Free text
+- Actual Result [MANDATORY]: Free text
+- Expected Result [MANDATORY]: Free text
+- Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
+  "active", use the `jira sprints` command to find the 'active' sprint. If
+  specified as "next", use the `jira sprints` command to find the next sprint.
+- Points [OPTIONAL]: if not provided, leave blank
+- Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
+  assume user specified by the environment variable `USER`.
 
 ## Ticket Updates
 
@@ -72,8 +74,8 @@ For Bug creation:
 4. Link related tickets when appropriate
 5. Update time tracking information if provided
 6. Use the Jira Text Formatting language:
-    - Use `{{monospace}}` instead of `{code}..{code}` for inline code.
-    - Code blocks should specify the language: `{code:language} some code {code}`.
+   - Use `{{monospace}}` instead of `{code}..{code}` for inline code.
+   - Code blocks should specify the language: `{code:language} some code {code}`.
 
 # Template
 
@@ -82,16 +84,16 @@ You must strictly adhere to the following template to write the ticket descripti
 ```markdown
 h3. Description
 
-* Work needed. Be as detailed as possible to allow coworkers to points the level of effort needed.
-* DO NOT make a judgement call on the level of effort itself, only describe it.
+- Work needed. Be as detailed as possible to allow coworkers to points the level of effort needed.
+- DO NOT make a judgement call on the level of effort itself, only describe it.
 
 h3. Expected work product
 
-* Is this a code change? If so, provide the URL of the repository.
-* Is the output a document? If so what type:
+- Is this a code change? If so, provide the URL of the repository.
+- Is the output a document? If so what type:
   - Google Docs?
   - Jupyter/Quarto Notebook?
-* Keep this section real simple.
+- Keep this section real simple.
 
 h3. Acceptance Criteria
 
@@ -106,8 +108,8 @@ h3. Out of Scope
 
 h3. Any background context you want to provide
 
-* What is the broader context of this work?
-* Why are we doing this?
+- What is the broader context of this work?
+- Why are we doing this?
 
 h3. Plan
 
@@ -115,6 +117,7 @@ if you are provided with a plan, copy it here, as is.
 ```
 
 **CLI Usage Patterns**:
+
 - Use `jira issues` to list all tickets
 - Use `jira issues --current-sprint --mine` to list user's ticket in current sprint.
 - Use `jira issues --epics-only` to list epics only

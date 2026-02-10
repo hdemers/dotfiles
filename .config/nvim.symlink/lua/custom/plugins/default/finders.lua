@@ -344,7 +344,7 @@ return {
               end,
               reload = true,
             },
-            ['ctrl-i'] = {
+            ['ctrl-n'] = {
               fn = function()
                 -- Capture current state before opening terminal
                 local saved_view = jira_current_view

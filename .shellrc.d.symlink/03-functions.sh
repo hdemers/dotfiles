@@ -409,7 +409,8 @@ js() {
         --preview-window 'top,60%' \
         --header-lines 1 \
         --scheme history \
-        --bind 'enter:execute(wl-copy {1})+abort' \
+        --multi \
+        --bind 'enter:execute(wl-copy {+1})+abort' \
         --bind 'ctrl-t:execute(jira transition --interactive {1})+transform:
             if [[ $FZF_PROMPT =~ "Active Sprint" ]]; then echo "reload(jira --format human issues --current-sprint --mine)";
             elif [[ $FZF_PROMPT =~ "All Issues" ]]; then echo "reload(jira --format human issues)";
@@ -417,7 +418,7 @@ js() {
             elif [[ $FZF_PROMPT =~ "Programs" ]]; then echo "reload(jira --format human issues --programs-only)";
             elif [[ $FZF_PROMPT =~ "Epic Issues" ]]; then epic=$(cat /tmp/fzf_jira_epic); echo "change-prompt(Epic Issues ($epic)> )+reload(jira --format human issues --in-epic $epic)";
             else echo "reload(jira --format human issues --current-sprint --mine)"; fi' \
-        --bind 'ctrl-i:execute(jira create)+transform:
+        --bind 'ctrl-n:execute(jira create)+transform:
             if [[ $FZF_PROMPT =~ "Active Sprint" ]]; then echo "reload(jira --format human issues --current-sprint --mine)";
             elif [[ $FZF_PROMPT =~ "All Issues" ]]; then echo "reload(jira --format human issues)";
             elif [[ $FZF_PROMPT =~ "Epics" ]]; then echo "reload(jira --format human issues --epics-only)";

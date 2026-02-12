@@ -48,6 +48,10 @@ M.state = {
 
 M.utils = {}
 
+-- Forward declarations for functions defined later but used in refresh_log
+local setup_keymaps
+local setup_buffer_cleanup
+
 local function is_win_valid(win)
   return win and vim.api.nvim_win_is_valid(win)
 end
@@ -145,8 +149,12 @@ local function stop_watcher()
   end
 end
 
--- Colorizes a buffer with ANSI escape codes using terminal emulation
--- @param buf number - buffer to colorize
+-- Colorizes a buffer with ANSI escape codes using terminal emulation.
+-- The buffer must be fresh (no prior terminal). Callers that need to
+-- re-render should create a new buffer instead of reusing one that
+-- already had a terminal — Neovim does not fully clear terminal
+-- scrollback on a buffer, which can leak old lines at the top.
+-- @param buf number - fresh buffer to colorize
 -- @param lines table - lines to display
 -- @param channel_key string - state key for storing the terminal channel
 function M.utils.colorize_buffer(buf, lines, channel_key)
@@ -156,13 +164,6 @@ function M.utils.colorize_buffer(buf, lines, channel_key)
   end
 
   local saved_listchars = vim.opt.listchars:get()
-
-  -- Close existing channel if we have one
-  local old_channel = M.state[channel_key]
-  if old_channel then
-    pcall(vim.fn.chanclose, old_channel)
-    M.state[channel_key] = nil
-  end
 
   -- Set up window options for terminal display
   vim.wo.number = false
@@ -538,6 +539,8 @@ function M.utils.refresh_log()
     return
   end
 
+  local preview = require 'jujutsu.preview'
+
   -- Track refresh time for watcher deduplication
   M.state.last_refresh_time = vim.uv.now()
 
@@ -546,12 +549,40 @@ function M.utils.refresh_log()
 
   local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
   local lines = vim.split(output, '\n')
-
   local line_count = #lines
 
+  -- Close old terminal channel
+  if M.state.terminal_channel then
+    pcall(vim.fn.chanclose, M.state.terminal_channel)
+    M.state.terminal_channel = nil
+  end
+
+  -- Create fresh buffer to avoid terminal scrollback leakage on re-render
+  local old_buf = M.state.buf
+  local new_buf = vim.api.nvim_create_buf(false, true)
+  vim.bo[new_buf].bufhidden = 'wipe'
+  vim.bo[new_buf].buflisted = false
+  M.state.buf = new_buf
+
+  -- Suppress old buffer's BufWipeout so it doesn't clear plugin state
+  pcall(vim.api.nvim_clear_autocmds, { buffer = old_buf, event = 'BufWipeout' })
+
+  -- Swap new buffer into window and discard old one (frees the JJ-log name)
+  vim.api.nvim_win_set_buf(M.state.win, new_buf)
+  if is_buf_valid(old_buf) then
+    pcall(vim.api.nvim_buf_delete, old_buf, { force = true })
+  end
+  vim.api.nvim_buf_set_name(new_buf, 'JJ-log')
+
+  -- Render to new buffer
   vim.api.nvim_win_call(M.state.win, function()
-    safe_colorize(M.state.buf, lines)
+    safe_colorize(new_buf, lines)
   end)
+
+  -- Re-setup keymaps and autocmds on new buffer
+  setup_keymaps(new_buf)
+  preview.setup_dual_cursorline(new_buf, M.state.win)
+  setup_buffer_cleanup(new_buf)
 
   -- Restore cursor, clamped to valid range
   local row = math.min(cursor[1], math.max(1, line_count))
@@ -594,7 +625,7 @@ M.close = close_flog
 -- Keymaps
 --------------------------------------------------------------------------------
 
-local function setup_keymaps(buf)
+setup_keymaps = function(buf)
   local actions = require 'jujutsu.actions'
   local preview = require 'jujutsu.preview'
 
@@ -656,6 +687,42 @@ local function setup_keymaps(buf)
 end
 
 --------------------------------------------------------------------------------
+-- Buffer lifecycle helpers
+--------------------------------------------------------------------------------
+
+-- Sets up close/cleanup infrastructure on a log buffer.
+-- Called once on initial creation and again each time refresh_log
+-- replaces the buffer.
+setup_buffer_cleanup = function(buf)
+  -- Intercept :tabclose to use proper cleanup (prevents crashes)
+  vim.api.nvim_buf_call(buf, function()
+    vim.cmd.cnoreabbrev '<buffer> tabclose JJClose'
+  end)
+  vim.api.nvim_buf_create_user_command(buf, 'JJClose', function()
+    close_flog()
+  end, { bang = true })
+  vim.keymap.set('n', '<leader>w', close_flog, { buffer = buf, nowait = true })
+
+  -- Cleanup when buffer is wiped (e.g., by tabclose)
+  vim.api.nvim_create_autocmd('BufWipeout', {
+    buffer = buf,
+    once = true,
+    callback = function()
+      M.utils.cancel_debounce()
+      stop_watcher()
+      if M.state.active_job then
+        pcall(vim.fn.jobstop, M.state.active_job)
+      end
+      M.state.preview = { buf = nil, win = nil, type = nil, change_id = nil }
+      M.state.win = nil
+      M.state.buf = nil
+      M.state.active_job = nil
+      M.state.cwd = nil
+    end,
+  })
+end
+
+--------------------------------------------------------------------------------
 -- Public API
 --------------------------------------------------------------------------------
 
@@ -689,36 +756,7 @@ function M.jujutsu_flog()
 
   setup_keymaps(buf)
   preview.setup_dual_cursorline(buf, M.state.win)
-
-  -- Intercept :tabclose to use proper cleanup (prevents crashes)
-  -- Use abbreviation since we can't override built-in commands
-  vim.cmd.cnoreabbrev '<buffer> tabclose JJClose'
-  vim.api.nvim_buf_create_user_command(buf, 'JJClose', function()
-    close_flog()
-  end, { bang = true })
-  -- Override <leader>w if user has it mapped to :tabclose
-  vim.keymap.set('n', '<leader>w', close_flog, { buffer = buf, nowait = true })
-
-  -- Cleanup when buffer is wiped (e.g., by tabclose)
-  vim.api.nvim_create_autocmd('BufWipeout', {
-    buffer = buf,
-    once = true,
-    callback = function()
-      M.utils.cancel_debounce()
-      stop_watcher()
-      -- Stop any active job to prevent on_exit callback from firing after cleanup
-      if M.state.active_job then
-        pcall(vim.fn.jobstop, M.state.active_job)
-      end
-      -- Don't call preview.close() here - Neovim is already closing everything
-      -- Just clear state to prevent callbacks from accessing invalid handles
-      M.state.preview = { buf = nil, win = nil, type = nil, change_id = nil }
-      M.state.win = nil
-      M.state.buf = nil
-      M.state.active_job = nil
-      M.state.cwd = nil -- Mark as fully closed
-    end,
-  })
+  setup_buffer_cleanup(buf)
 
   -- Start file watcher for external jj changes
   start_watcher()

@@ -23,6 +23,15 @@ setopt hist_reduce_blanks    # Remove superfluous blanks from each command line 
 setopt autocd extendedglob nomatch notify
 bindkey -v
 export KEYTIMEOUT=1
+
+# Vim mode yank/put copies to/from Wayland clipboard
+function vi-yank-wl {
+  zle vi-yank
+  print -rn -- "$CUTBUFFER" | wl-copy
+}
+zle -N vi-yank-wl
+bindkey -M vicmd 'y' vi-yank-wl
+
 # End of lines configured by zsh-newuser-install
 
 # Autocompletion using arrow keys (based on history)

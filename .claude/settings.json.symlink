@@ -23,7 +23,6 @@
     ],
     "deny": []
   },
-  "model": "opus",
   "hooks": {},
   "statusLine": {
     "type": "command",
@@ -52,5 +51,7 @@
       "notify:*"
     ]
   },
-  "plansDirectory": "/home/hdemers/Dropbox/Claude/plans"
+  "plansDirectory": "/home/hdemers/Dropbox/Claude/plans",
+  "skipDangerousModePermissionPrompt": true,
+  "effortLevel": "medium"
 }

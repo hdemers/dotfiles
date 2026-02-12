@@ -180,7 +180,7 @@ keybinds clear-defaults=true {
           }
         }
         bind "Alt ;" {
-          Run "bash" "-ic" "js" {
+          Run "bash" "-ic" "source /home/hdemers/Projets/grubhub/.envrc && jira tui" {
               floating true
               x "15%"
               y "5%"

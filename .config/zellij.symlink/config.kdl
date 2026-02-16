@@ -187,7 +187,7 @@ keybinds clear-defaults=true {
               width "70%"
               height "90%"
               close_on_exit true
-              name "Jira Issues"
+              name "Jira"
           }
         }
         bind "Alt '" {
@@ -198,7 +198,7 @@ keybinds clear-defaults=true {
               width "70%"
               height "90%"
               close_on_exit true
-              name "Grubhub S3 Browser"
+              name "S3 Browser"
           }
         }
     }

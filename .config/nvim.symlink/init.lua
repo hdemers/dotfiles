@@ -96,7 +96,7 @@ vim.opt.fillchars = {
 -- Sets the Python executable to be used by Neovim. This requires the existence
 -- of a virtualenv named `nvim` with packages `pynvim` and `jupyter_client`
 -- installed.
-vim.g.python3_host_prog = vim.env.HOME .. '/.virtualenvs/nvim/bin/python'
+-- vim.g.python3_host_prog = vim.env.HOME .. '/.virtualenvs/nvim/bin/python'
 
 vim.o.shell = '/usr/bin/zsh'
 

@@ -128,6 +128,7 @@ local function distrobox_tab_action(name)
 end
 
 config.keys = {
+  { key = 'n', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
   { key = 'g', mods = 'CTRL|ALT', action = distrobox_tab_action 'grubhub-dev' },
   { key = 'u', mods = 'CTRL|ALT', action = distrobox_tab_action 'ubuntu' },
   -- Tab navigation

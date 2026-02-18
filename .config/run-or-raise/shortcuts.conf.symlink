@@ -48,9 +48,6 @@
 # Google-Chrome
 #<Super><Shift>c,gtk-launch com.google.Chrome.desktop,,/.*Google Chrome$/
 
-# Gemini
-<Super>g,gtk-launch com.google.Chrome.flextop.chrome-mojogeknlbnppmajemmkcfkilgaapppk-Default.desktop,,Google AI Studio
-
 # Messages
 <Super>i,gtk-launch com.google.Chrome.flextop.chrome-hpfldicfbfomlpcikngkocigghgafkph-Default.desktop,,Messages for web
 

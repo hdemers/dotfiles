@@ -1,0 +1,69 @@
+tab_template name="ui" {
+    pane size=1 borderless=true {
+        plugin location="compact-bar"
+    }
+    children
+}
+
+swap_tiled_layout name="split" {
+    ui exact_panes=3 {
+        pane split_direction="vertical" {
+            pane size="33%"
+            pane {
+                pane size="75%"
+                pane size="25%"
+            }
+        }
+    }
+    ui min_panes=4 {
+        pane split_direction="vertical" {
+            pane size="33%" { children; }
+            pane {
+                pane size="75%"
+                pane size="25%"
+            }
+        }
+    }
+}
+
+swap_tiled_layout name="stacked-right" {
+    ui exact_panes=3 {
+        pane split_direction="vertical" {
+            pane size="33%"
+            pane stacked=true { children; }
+        }
+    }
+    ui min_panes=4 {
+        pane split_direction="vertical" {
+            pane size="33%" { children; }
+            pane stacked=true {
+                pane
+                pane
+            }
+        }
+    }
+}
+
+swap_tiled_layout name="stacked-left" {
+    ui min_panes=4 {
+        pane split_direction="vertical" {
+            pane size="33%" stacked=true { children; }
+            pane {
+                pane size="75%"
+                pane size="25%"
+            }
+        }
+    }
+}
+
+swap_tiled_layout name="stacked-both" {
+    ui min_panes=4 {
+        pane split_direction="vertical" {
+            pane size="33%" stacked=true { children; }
+            pane stacked=true {
+                pane
+                pane
+            }
+        }
+    }
+}

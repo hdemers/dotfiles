@@ -8,9 +8,18 @@ export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
 --color=info:#7aa2f7,prompt:#7dcfff,pointer:#7dcfff 
 --color=marker:#9ece6a,spinner:#9ece6a,header:#9ece6a'
 
-dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | fzf --height 100%)
+if [ -d "$1" ]; then
+    dir=$(realpath "$1")
+elif [ -n "$1" ]; then
+    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | grep -F "$1" | head -1)
+else
+    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | fzf --height 100%)
+fi
+
+echo "got $dir"
 
 if [ -n "$dir" ]; then
+    echo "opening $dir"
     # Get the tab name from directory basename
     tab_name=$(basename "$dir")
 
@@ -22,9 +31,11 @@ if [ -n "$dir" ]; then
         zellij action go-to-tab-name "$tab_name"
     else
         # Tab doesn't exist, create new one
-        zellij action new-tab --name "$tab_name"
+        zellij action new-tab --name "$tab_name" --layout project --cwd "$dir"
         sleep 2
-        zellij action write-chars "cd $dir && exec /home/linuxbrew/.linuxbrew/bin/nvim"
+        zellij action move-focus right
+        zellij action move-focus up
+        zellij action write-chars "/home/linuxbrew/.linuxbrew/bin/nvim"
         zellij action write 13
     fi
 fi

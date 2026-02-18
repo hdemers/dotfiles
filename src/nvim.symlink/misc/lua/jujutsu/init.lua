@@ -188,7 +188,15 @@ local function safe_colorize(buf, lines)
   if vim.api.nvim_get_current_buf() ~= buf then
     vim.api.nvim_win_set_buf(0, buf)
   end
+
+  -- Temporarily widen window to prevent terminal from wrapping lines
+  local saved_width = vim.api.nvim_win_get_width(M.state.win)
+  vim.api.nvim_win_set_width(M.state.win, 9999)
+
   M.utils.colorize_buffer(buf, lines, 'terminal_channel')
+
+  -- Restore original window width
+  pcall(vim.api.nvim_win_set_width, M.state.win, saved_width)
 end
 
 -- Strip ANSI escape codes
@@ -245,7 +253,7 @@ local DEFAULT_REVISION_TEMPLATE =
 
 function M.utils.build_jj_cmd(args, cwd)
   cwd = cwd or M.state.cwd
-  local parts = { 'cd', vim.fn.shellescape(cwd), '&&', 'jj' }
+  local parts = { 'cd', vim.fn.shellescape(cwd), '&&', 'COLUMNS=9999', 'jj' }
   if type(args) == 'string' then
     table.insert(parts, args)
   else
@@ -640,9 +648,12 @@ setup_keymaps = function(buf)
     vim.keymap.set({ 'n', 'x' }, def.key, def.action, { buffer = buf, nowait = true })
   end
 
+  -- New commit operations (n-prefix)
+  vim.keymap.set('n', 'nn', actions.new, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'nc', actions.new_current, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'nd', actions.new_dev, { buffer = buf, nowait = true })
+
   -- Commit operations (c-prefix)
-  vim.keymap.set('n', 'cn', actions.new, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'cN', actions.new_current, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'cd', actions.describe, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'cD', actions.cdescribe, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'cs', actions.squash, { buffer = buf, nowait = true })

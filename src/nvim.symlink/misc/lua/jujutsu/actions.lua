@@ -145,6 +145,18 @@ function M.new_current()
   utils.refresh_log()
 end
 
+function M.new_dev()
+  local utils = get_utils()
+  -- Check if dev bookmark exists
+  local output, success =
+    utils.run_jj_cmd('bookmark list -r dev', nil, { notify = false })
+  if success and output and vim.trim(output) ~= '' then
+    utils.run_jj_cmd('new', 'dev')
+    utils.refresh_log()
+  end
+  -- If dev doesn't exist, do nothing (no-op)
+end
+
 M.describe = with_revset(function(id)
   local utils = get_utils()
   utils.run_jj_with_editor('describe ' .. id, ' Describe ' .. id .. ' ')

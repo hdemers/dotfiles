@@ -1,7 +1,6 @@
 ---
 name: report-writing
 description: Use this still to write reports.
-allowed-tools: Bash(awk:*)
 ---
 
 This skill allows you to write Markdown reports.
@@ -9,8 +8,8 @@ This skill allows you to write Markdown reports.
 # Standard Operating Procedure
 
 1. Write report under
-   /home/hdemers/Dropbox/Claude/<category>/!`awk 'BEGIN{print (ENVIRON["PWD"] ~ /[Gg]rubhub/ ? "grubhub" : "personal")}'`/!`awk 'BEGIN{n=split(ENVIRON["PWD"],a,"/"); print a[n]}'`/
-   where <category> is either 'brainstorm' or 'failure'.
+   `/home/hdemers/Dropbox/Claude/<brainstorm|failure>/<grubhub|personal>/<repository>`
+   where repository must match exactly, but without any leading dot.
 2. Report filenames shall be kebab-case with the following pattern: YYYY-MM-DD-<descriptive-name>.
 3. If multiple reports are being written as part of a given session, you shall
    reference the other documents, when applicable, using the markdown notation

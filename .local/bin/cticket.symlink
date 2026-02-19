@@ -11,7 +11,7 @@ show_help() {
     cat << EOF
 Usage: cticket [OPTIONS]
 
-Create a JIRA ticket for a Jujutsu bookmark using Claude AI.
+Create a JIRA ticket for a Jujutsu bookmark using an AI.
 
 This interactive script guides you through creating a JIRA ticket by:
   1. Selecting a bookmark (Jujutsu branch)
@@ -19,13 +19,16 @@ This interactive script guides you through creating a JIRA ticket by:
   3. Assigning story points
   4. Selecting an epic
   5. Choosing an assignee
-  6. Having Claude generate the ticket content
+  6. Having an agent generate the ticket content
 
 OPTIONS:
-    -r, --revset REVSET  Use a custom revset instead of the default
-    --stacked            Create a stacked diff ticket (prompts for base bookmark)
-    --bug                Create a bug ticket (prompts for additional context)
-    --help               Display this help message and exit
+    -r, --revset REVSET      Use a custom revset instead of the default
+    -p, --project PROJECT    Jira project key (default: DSSO)
+    --stacked                Create a stacked diff ticket (prompts for base bookmark)
+    --agent <name>           AI agent CLI to use (default: claude)
+    --model <model>          Model to use (default: claude-sonnet-4-6)
+    --bug                    Create a bug ticket (prompts for additional context)
+    --help                   Display this help message and exit
 
 EXAMPLES:
     # Create a regular ticket
@@ -44,17 +47,35 @@ ENVIRONMENT:
     TRACE        Set to '1' to enable bash tracing
 
 DEPENDENCIES:
-    - jira       JIRA CLI tool
-    - gum        Terminal UI tool
-    - fzf        Fuzzy finder
-    - claude     Claude AI CLI
-    - jj         Jujutsu version control
+    - jira             JIRA CLI tool
+    - gum              Terminal UI tool
+    - fzf              Fuzzy finder
+    - claude/gemini    Claude Code or Gemini CLI
+    - jj               Jujutsu version control
 
 EOF
 }
 
+_invoke_agent() {
+    local agent="$1"
+    local skill_name="$2"
+    local context_file="$3"
+    local model="$4"
+
+    case "$agent" in
+        gemini)
+            gemini --allowed-tools activate_skill --include-directories /tmp -p "Using the '${skill_name}' skill, create a JIRA ticket using the context found in file ${context_file}. MANDATORY: use the '${skill_name}' skill."
+            ;;
+        claude)
+            claude --model "$model" "/${skill_name} $(cat "$context_file")"
+            ;;
+        *)
+            "$agent" "/${skill_name} $(cat "$context_file")"
+            ;;
+    esac
+}
+
 main() {
-    # Have Claude create a JIRA ticket
     local bookmark
     local base="trunk()"
     local stacked=false
@@ -66,6 +87,10 @@ main() {
     local epic
     local assignee
     local revset
+    local agent="gemini"
+    local model="gemini-3.1-pro-preview"
+    local project="DSSO"
+    local context_file=""
 
     # Parse command-line arguments first
     while [[ $# -gt 0 ]]; do
@@ -78,9 +103,21 @@ main() {
                 revset="$2"
                 shift 2
                 ;;
+            -p|--project)
+                project="$2"
+                shift 2
+                ;;
             --stacked)
                 stacked=true
                 shift
+                ;;
+            --agent)
+                agent="$2"
+                shift 2
+                ;;
+            --model)
+                model="$2"
+                shift 2
                 ;;
             --bug)
                 bug=true
@@ -111,7 +148,7 @@ main() {
     fi
 
     sprint=$( { jira sprints \
-        | grep DSSO \
+        | grep "${project}" \
         | cut -d '|' -f1,2 \
         | column -s '|' -t; \
         echo "Backlog"; } \
@@ -126,7 +163,7 @@ main() {
         --header-lines=1 \
         --bind='enter:become(echo {1})' \
         --preview-window=up:50% \
-        --preview='jira view --rich {1}' \
+        --preview='jira --format human view {1}' \
         --prompt='Select an epic for the ticket > ' \
     )
 
@@ -169,32 +206,50 @@ main() {
         fi
     fi
 
-    export AGENT_REVSET="${revset}"
-    export AGENT_TICKET_EPIC="${epic}"
-    export AGENT_TICKET_SPRINT="${sprint}"
-    export AGENT_TICKET_POINTS="${points}"
-    export AGENT_TICKET_ASSIGNEE="${assignee}"
-    export AGENT_TICKET_PROJECT="DSSO"
-    export AGENT_TICKET_TYPE="${ticket_type}"
-    if [ -n "${bug_context}" ]; then
-        export AGENT_BUG_CONTEXT="${bug_context}"
-    fi
-    export TMPDIR=/tmp/claude
-
     gum confirm "$(printf 'Do you want to create a JIRA ticket for\nType: %s\nRevset: %s\nEpic: %s\nSprint: %s\nPoints: %s\nAssignee: %s' "$ticket_type" "$revset" "$epic" "$sprint" "$points" "$assignee")" || {
         gum log --level info "Ticket creation cancelled."
         return 0
     }
-    claude "/jj-ticket"
-    unset AGENT_REVSET
-    unset AGENT_TICKET_EPIC
-    unset AGENT_TICKET_SPRINT
-    unset AGENT_TICKET_POINTS
-    unset AGENT_TICKET_ASSIGNEE
-    unset AGENT_TICKET_PROJECT
-    unset AGENT_TICKET_TYPE
-    unset AGENT_BUG_CONTEXT
-    unset TMPDIR
+
+    context_file=$(mktemp --tmpdir ,XXXXXX)
+    trap '[ -n "${context_file:-}" ] && rm -f "${context_file:-}"' EXIT
+
+    {
+        echo "## Standard Operating Procedure"
+        echo
+        echo "Create a ticket using the \`jira\` CLI and the context information found below."
+        echo
+        echo "## Context"
+        echo "- Current description:"
+        jj log -r "${revset}" -T description --no-graph
+        echo
+        echo "- Current diff:"
+        jj diff --git -r "${revset}"
+        echo
+        echo "- Project: ${project}"
+        echo "- Type: ${ticket_type}"
+        echo "- Epic: ${epic}"
+        echo "- Sprint: ${sprint}"
+        echo "- Points: ${points}"
+        echo "- Assignee: ${assignee}"
+        echo "- Bug context:"
+        if [ -n "${bug_context}" ]; then
+             if [ -f "${bug_context}" ]; then
+                 cat "${bug_context}"
+             else
+                 printf "%s\n" "${bug_context}"
+             fi
+        else
+             echo "None"
+        fi
+        echo
+        echo "## Command"
+        echo
+        echo "\`jira create --project ${project} --type ${ticket_type} --sprint '${sprint}' --summary <summary> --epic '${epic}' --points ${points} --assignee '${assignee}' --description <description>\`"
+    } > "$context_file"
+
+    gum log --level info "Using agent: ${agent} (${model})${ANTHROPIC_API_KEY:+" with API key"}"
+    _invoke_agent "$agent" "jira-ticket" "$context_file" "$model"
 
 
 }

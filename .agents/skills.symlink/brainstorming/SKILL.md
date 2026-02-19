@@ -1,5 +1,5 @@
 ---
-name: brainstorming
+name: brainstorm
 description: Proactively use when brainstorming potential solutions to difficult problems.
 ---
 

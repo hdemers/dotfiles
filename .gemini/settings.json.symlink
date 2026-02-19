@@ -1,0 +1,40 @@
+{
+  "selectedAuthType": "gemini-api-key",
+  "theme": "Atom One",
+  "security": {
+    "auth": {
+      "selectedType": "oauth-personal"
+    }
+  },
+  "general": {
+    "vimMode": false,
+    "previewFeatures": true,
+    "preferredEditor": "neovim",
+    "sessionRetention": {
+      "warningAcknowledged": true,
+      "enabled": true,
+      "maxAge": "120d"
+    }
+  },
+  "tools": {
+    "shell": {
+      "showColor": true,
+      "enableInteractiveShell": false
+    }
+  },
+  "experimental": {
+    "plan": true
+  },
+  "ui": {
+    "theme": "ANSI"
+  },
+  "model": {
+    "name": "gemini-3.1-pro-preview"
+  },
+  "context": {
+    "fileName": [
+      "AGENTS.md",
+      "AGENTS.local.md"
+    ]
+  }
+}

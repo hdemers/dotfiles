@@ -156,3 +156,5 @@ alias ccgh="env ANTHROPIC_MODEL=${GH_ANTHROPIC_MODEL} ANTHROPIC_SMALL_FAST_MODEL
 alias jjup="jj git fetch && jj rall && jj rdev && jj git push -r branches"
 
 alias gmore=" glow --pager -w 110"
+
+alias geminy="gemini --yolo"

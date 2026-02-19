@@ -1,0 +1,31 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "opencode-gemini-auth@1.3.11"
+  ],
+  "provider": {
+    "google": {
+      "options": {
+        "projectId": "wonder-sandbox"
+      },
+      "models": {
+        "gemini-3-pro-preview": {
+          "options": {
+            "thinkingConfig": {
+              "thinkingLevel": "high",
+              "includeThoughts": true
+            }
+          }
+        },
+        "gemini-2.5-flash": {
+          "options": {
+            "thinkingConfig": {
+              "thinkingBudget": 8192,
+              "includeThoughts": true
+            }
+          }
+        }
+      }
+    }
+  }
+}

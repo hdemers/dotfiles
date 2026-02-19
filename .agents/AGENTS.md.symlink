@@ -1,0 +1,24 @@
+# Important
+
+## Notifications
+Use the CLI `notify <message>` to notify the user.
+
+## Contributing Code
+
+1. Try keeping things as simple as possible, but no simpler.
+2. Favor functions over classes.
+3. Follow established codebase patterns.
+
+## Jujutsu Repositories
+
+Most repositories use Jujutsu, not Git.
+
+- `master`|`main` — production, tagged releases
+- `dev` (when present) — boundary marker separating private work from PRs in review
+- Revisions between `master` and `dev` — part of PRs in review
+- Work above `dev` — private, not yet shared
+
+When there's no `dev` commit, all work above `master` is treated as
+in-progress. The `dev` commit is always empty and should stay empty.
+
+<!-- vim: set filetype=markdown: -->

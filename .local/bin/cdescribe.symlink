@@ -17,9 +17,10 @@ ARGUMENTS:
     <revset>     A Jujutsu revset or change ID (required)
 
 OPTIONS:
-    --agent <name>  AI agent CLI to use (default: claude)
-    --ticket <id>   Append a ticket ID to the commit description
-    --help          Display this help message and exit
+    --agent <name>   AI agent CLI to use (default: claude)
+    --model <model>  Model to use (default: claude-sonnet-4-6)
+    --ticket <id>    Append a ticket ID to the commit description
+    --help           Display this help message and exit
 
 EXAMPLES:
     # Describe the current commit
@@ -38,16 +39,44 @@ ENVIRONMENT:
     TRACE        Set to '1' to enable bash tracing
 
 DEPENDENCIES:
-    - jj         Jujutsu version control
-    - gum        Terminal UI tool
+    - jj               Jujutsu version control
+    - gum              Terminal UI tool
+    - claude/gemini    Claude Code or Gemini CLI
 
 EOF
+}
+
+_invoke_agent() {
+    local agent="$1"
+    local skill_name="$2"
+    local context_file="$3"
+    local model="$4"
+    local revset="${5:-}"
+
+    case "$agent" in
+        gemini)
+            local prompt="Using the '${skill_name}' skill, describe the commit using the context"
+            prompt+=" found in file ${context_file}."
+            prompt+=" MANDATORY: use the '${skill_name}' skill."
+            prompt+=" MANDATORY: do not include your thinking, only the commit message."
+
+            gum spin --show-output --spinner dot --title "Generating description for '${revset:0:8}' using ${agent} (${model}${ANTHROPIC_API_KEY:+" with API key"})..." -- \
+                gemini --include-directories /tmp -p "$prompt"
+            ;;
+        claude)
+            claude --model "$model" "/${skill_name} $(cat "$context_file")"
+            ;;
+        *)
+            "$agent" "/${skill_name} $(cat "$context_file")"
+            ;;
+    esac
 }
 
 main() {
     local revset=""
     local ticket_id=""
-    local agent="claude"
+    local agent="gemini"
+    local model="gemini-3.1-pro-preview"
 
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do
@@ -66,6 +95,14 @@ main() {
                     return 1
                 fi
                 agent="$2"
+                shift 2
+                ;;
+            --model)
+                if [[ -z "${2-}" ]]; then
+                    gum log --level error "Error: --model requires a value"
+                    return 1
+                fi
+                model="$2"
                 shift 2
                 ;;
             -*)
@@ -100,18 +137,19 @@ main() {
         return 1
     fi
 
-    export AGENT_REVSET="${revset}"
-    # This is a workaround for the fact that TMPDIR is not set correctly by
-    # Claude Code when running in sandbox mode.
-    # See https://github.com/anthropics/claude-code/issues/10952
-    export TMPDIR=/tmp/claude
+    local context_file
+    context_file=$(mktemp --tmpdir ,XXXXXX)
+    trap '[ -n "${context_file:-}" ] && rm -f "${context_file:-}"' EXIT
 
-    gum log --level info "Using agent: ${agent} with key ${ANTHROPIC_API_KEY:-"<not set>"}"
-    gum spin --spinner meter --title "$agent is describing your commit '${revset}'..." -- \
-        $agent "/describe" | jj describe -r "${revset}" --stdin
+    {
+        echo "# Context"
+        echo "- Current description:"
+        jj log -r "${revset}"
+        echo "- Current diff:"
+        jj diff --git -r "${revset}"
+    } > "$context_file"
 
-    unset AGENT_REVSET
-    unset TMPDIR
+    _invoke_agent "$agent" "describe" "$context_file" "$model" "$revset" | jj describe -r "${revset}" --stdin
 
     # Modify the description of the commit to add the ticket ID on the last line
     if [ -n "$ticket_id" ]; then

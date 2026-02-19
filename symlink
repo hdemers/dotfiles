@@ -51,6 +51,7 @@ def confirm(question):
 
 def get_symlinks():
     symlinks = []
+    base_abs = path.abspath(BASE_DIR)
     for dirpath, dirnames, filenames in os.walk(BASE_DIR):
         link_name = path.normpath(path.expanduser(path.join("~", dirpath)))
         source = path.abspath(dirpath)
@@ -61,7 +62,20 @@ def get_symlinks():
         for name in filenames + dirnames:
             root, ext = path.splitext(name)
             if ext == ".symlink":
-                symlinks.append((path.join(source, name), path.join(link_name, root)))
+                source_path = path.join(source, name)
+                dest_path = path.join(link_name, root)
+
+                # If source is itself a symlink to another .symlink file inside
+                # this repo, point the home-dir link at the home-dir equivalent
+                # of that target rather than at the repo file directly.
+                if path.islink(source_path):
+                    target = path.realpath(source_path)
+                    target_root, target_ext = path.splitext(target)
+                    if target_ext == ".symlink" and target.startswith(base_abs + os.sep):
+                        rel = path.relpath(target_root, base_abs)
+                        source_path = path.normpath(path.expanduser(path.join("~", rel)))
+
+                symlinks.append((source_path, dest_path))
     return symlinks
 
 

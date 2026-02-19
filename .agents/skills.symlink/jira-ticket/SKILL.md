@@ -32,26 +32,31 @@ Choose:
 
 ### Context
 
-The ticket can either be of type "Epic", "Story" or "Bug". If not specified,
-assume "Story". If a mandatory item is not provided, STOP and ASK.
+Ticket can be one of:
+- Epic
+- Story
+- Bug
 
-For Epic creation:
+If not specified, assume "Story". 
 
-- Work classification [MANDATORY]: possible values: A (sustaining), B (engineering excellence) or C (product).
+If a mandatory item is not provided, STOP and ASK.
+
+Epic creation:
+
+- Work classification [MANDATORY]: possible values: A (sustaining), B
+  (engineering excellence) or C (product).
 - Capitalizable? [MANDATORY]: possible values: yes or no.
 - Assignee [MANDATORY]
 
-For Story creation:
+Story creation:
 
 - Epic [MANDATORY]
-- Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
-  "active", use the `jira sprints` command to find the 'active' sprint. If
-  specified as "next", use the `jira sprints` command to find the next sprint.
+- Sprint [OPTIONAL]: if not provided, leave blank.
 - Points [OPTIONAL]: if not provided, leave blank
 - Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
   assume user specified by the environment variable `USER`.
 
-For Bug creation:
+Bug creation:
 
 - Epic [MANDATORY]
 - Bug Type [MANDATORY]: Pre-Production or Production
@@ -59,12 +64,13 @@ For Bug creation:
 - Steps to Reproduce [MANDATORY]: Free text
 - Actual Result [MANDATORY]: Free text
 - Expected Result [MANDATORY]: Free text
-- Sprint [OPTIONAL]: if not provided, leave blank. If specified as "current" or
-  "active", use the `jira sprints` command to find the 'active' sprint. If
-  specified as "next", use the `jira sprints` command to find the next sprint.
+- Sprint [OPTIONAL]: if not provided, leave blank.
 - Points [OPTIONAL]: if not provided, leave blank
 - Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
   assume user specified by the environment variable `USER`.
+
+Sprint can be specified as "current", "active", "next", "future", etc. in which
+case use the `jira sprints` commands to find the one.
 
 ## Ticket Updates
 

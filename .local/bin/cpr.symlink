@@ -11,7 +11,7 @@ show_help() {
     cat << EOF
 Usage: cpr [OPTIONS] [BOOKMARK]
 
-Create a GitHub pull request for a Jujutsu bookmark using Claude AI.
+Create a GitHub pull request for a Jujutsu bookmark using AI.
 
 This interactive script guides you through creating a PR by:
   1. Running precommit checks (unless --no-verify)
@@ -19,12 +19,14 @@ This interactive script guides you through creating a PR by:
   3. Optionally selecting a base bookmark for stacked PRs
   4. Selecting reviewers
   5. Pushing the bookmark to the remote
-  6. Having Claude generate the PR
+  6. Having an agent generate the PR
 
 OPTIONS:
     --no-verify      Skip precommit checks
     --no-push        Do not push the bookmark before creating the PR
     --stacked        Create a stacked PR (prompts for base bookmark)
+    --agent <name>   AI agent CLI to use (default: claude)
+    --model <model>  Model to use (default: claude-sonnet-4-6)
     --help           Display this help message and exit
 
 ARGUMENTS:
@@ -47,11 +49,11 @@ ENVIRONMENT:
     TRACE        Set to '1' to enable bash tracing
 
 DEPENDENCIES:
-    - jj         Jujutsu version control
-    - gum        Terminal UI tool
-    - gh         GitHub CLI
-    - fzf        Fuzzy finder
-    - claude     Claude AI CLI
+    - jj               Jujutsu version control
+    - gum              Terminal UI tool
+    - gh               GitHub CLI
+    - fzf              Fuzzy finder
+    - claude/gemini    Claude Code or Gemini CLI
 
 EOF
 }
@@ -127,6 +129,25 @@ _extract_ticket() {
         || true
 }
 
+_invoke_agent() {
+    local agent="$1"
+    local skill_name="$2"
+    local context_file="$3"
+    local model="$4"
+
+    case "$agent" in
+        gemini)
+            gemini --include-directories /tmp -i "Using the '${skill_name}' skill, open a PR on GitHub using the context found in file ${context_file}. MANDATORY: use the '${skill_name}' skill. MANDATORY: do not write the PR body to file, inline it in the gh command."
+            ;;
+        claude)
+            claude --model "$model" "/${skill_name} $(cat "$context_file")"
+            ;;
+        *)
+            "$agent" "/${skill_name} $(cat "$context_file")"
+            ;;
+    esac
+}
+
 main() {
     local bookmark=""
     local no_verify=false
@@ -137,8 +158,10 @@ main() {
     local empty_change_ids
     local ticket
     local reviewers
+    local agent="gemini"
+    local model="gemini-3.1-pro-preview"
 
-    pr_base=$(jj log -r "trunk()" -T "bookmarks" --no-graph | grep -E '(main|master)$' | sed 's/.*\///')
+    pr_base=$(jj log -r "trunk()" --no-graph -T 'bookmarks' | tr ' ' '\n' | sed 's/\*//' | grep -E '^(main|master)$' | head -1)
 
     # Check prerequisites
     if ! _check_prerequisites; then return 1; fi
@@ -156,6 +179,14 @@ main() {
             --stacked)
                 stacked=true
                 shift
+                ;;
+            --agent)
+                agent="$2"
+                shift 2
+                ;;
+            --model)
+                model="$2"
+                shift 2
                 ;;
             --help)
                 show_help
@@ -205,7 +236,7 @@ main() {
     fi
 
     if [ "${stacked}" = true ]; then
-        jj_base=$(_select_bookmark "" "Select a base bookmark for the stacked PR:" "trunk()..${bookmark}-")
+        jj_base=$(_select_bookmark "" "Select a base bookmark for the stacked PR:" "heads((trunk()..${bookmark}-) & bookmarks())")
         pr_base=${jj_base}
         if [ -z "$jj_base" ]; then
             gum log --level error "You must provide a base."
@@ -239,19 +270,33 @@ main() {
         fi
     fi
 
-    export CLAUDE_BOOKMARK="${bookmark}"
-    export CLAUDE_REVIEWERS="${reviewers}"
-    export CLAUDE_JJ_BASE="${jj_base}"
-    export CLAUDE_PR_BASE="${pr_base}"
-    export CLAUDE_TICKET="${ticket}"
-    export TMPDIR=/tmp/claude
-    claude "/create-pr-jj"
-    unset CLAUDE_TICKET
-    unset CLAUDE_BOOKMARK
-    unset CLAUDE_REVIEWERS
-    unset CLAUDE_JJ_BASE
-    unset CLAUDE_PR_BASE
-    unset TMPDIR
+    local context_file
+    context_file=$(mktemp --tmpdir ,XXXXXX)
+    trap '[ -n "${context_file:-}" ] && rm -f "${context_file:-}"' EXIT
+
+    {
+        echo "## Context"
+        echo
+        echo "### Current commit descriptions:"
+        jj log -r "${jj_base}..${bookmark}" --template description --no-graph
+        echo
+        echo "### Current diffs"
+        jj diff --git -r "${jj_base}..${bookmark}"
+        echo
+        echo "### Associated ticket (if any)"
+        jira view "${ticket}" 2>/dev/null || echo "no ticket"
+        echo
+        echo "### PR Template (if any)"
+        cat .github/PULL_REQUEST_TEMPLATE.md 2>/dev/null || echo "no pre-existing PR template."
+        echo
+        echo "## Parameters"
+        echo "- Bookmark (--head): ${bookmark}"
+        echo "- Base (--base): ${pr_base}"
+        echo "- Reviewers: ${reviewers}"
+    } > "$context_file"
+
+    gum log --level info "Using agent: ${agent} (${model})${ANTHROPIC_API_KEY:+" with API key"}"
+    _invoke_agent "$agent" "pr" "$context_file" "$model"
 }
 
 main "$@"

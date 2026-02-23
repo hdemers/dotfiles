@@ -112,12 +112,31 @@ fi
 # 2. Interactively narrow down the list using fzf
 # 3. Open the file in Vim
 rgf() {
+    local multi_mode=false
+    local args=()
+    for arg in "$@"; do
+        if [[ "$arg" == "--multi" ]]; then
+            multi_mode=true
+        else
+            args+=("$arg")
+        fi
+    done
+
     # If there are no argument provided to this function, exit with a proper
     # error message.
-    if [ -z "$1" ]; then
-        echo "Usage: rfv <search term>"
+    if [ ${#args[@]} -eq 0 ]; then
+        echo "Usage: rgf [--multi] <search term>"
         return 1
     fi
+
+    local fzf_opts=()
+    if $multi_mode; then
+        fzf_opts+=(--multi)
+        fzf_opts+=(--bind 'enter:accept')
+    else
+        fzf_opts+=(--bind 'enter:become(nvim {1} +{2})')
+    fi
+
     rg \
         --color=always \
         --no-ignore \
@@ -127,7 +146,7 @@ rgf() {
         --glob !'*.{venv,ruff_cache,pytest_cache,mypy_cache,tox}' \
         --glob !'{__pycache__}' \
         --hidden \
-        "$@" \
+        "${args[@]}" \
             | \
         fzf --ansi \
         --color='hl:#268BD2,hl+:reverse' \
@@ -138,7 +157,7 @@ rgf() {
             --style=numbers,changes' \
         --preview-window 'up,60%,border-bottom,+{2}+3/3,~3' \
         --height 100% \
-        --bind='enter:become(nvim {1} +{2})' \
+        "${fzf_opts[@]}" \
         --bind='ctrl-x:execute(rm {1})'
 }
 

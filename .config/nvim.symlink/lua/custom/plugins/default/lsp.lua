@@ -13,13 +13,24 @@ return {
 
       -- Allows extra capabilities provided by blink.cmp
       'saghen/blink.cmp',
-      'folke/neoconf.nvim',
     },
     config = function()
       --  This function gets run when an LSP attaches to a particular buffer.
       --    That is to say, every time a new file is opened that is associated with
       --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
       --    function will be executed to configure the current buffer
+      -- Re-sync LSP clients when a buffer is reloaded (e.g. via :e).
+      vim.api.nvim_create_autocmd('BufReadPost', {
+        group = vim.api.nvim_create_augroup('kickstart-lsp-reload', { clear = true }),
+        callback = function(event)
+          local clients = vim.lsp.get_clients { bufnr = event.buf }
+          for _, client in ipairs(clients) do
+            vim.lsp.buf_detach_client(event.buf, client.id)
+            vim.lsp.buf_attach_client(event.buf, client.id)
+          end
+        end,
+      })
+
       vim.api.nvim_create_autocmd('LspAttach', {
         group = vim.api.nvim_create_augroup('kickstart-lsp-attach', { clear = true }),
         callback = function(event)
@@ -132,12 +143,7 @@ return {
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         ruff = {},
-        ty = {
-          enable = true,
-          -- on_attach = function(client, _)
-          --   client.server_capabilities.definitionProvider = true
-          -- end,
-        },
+        ty = {},
         beancount = {
           init_options = {
             journal_file = '/home/hdemers/Projets/budget/src/budget/data/preamble.beancount',
@@ -163,22 +169,21 @@ return {
         bashls = {},
       }
 
-      local neoconf = require 'neoconf'
-      neoconf.setup()
-
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      -- Override the default configuration with the one found in .neoconf.json.
-      local project_servers = neoconf.get 'lspconfig'
-      if project_servers then
-        for server_name, config in pairs(project_servers) do
-          servers[server_name] = config
-        end
-      end
+      vim.lsp.config('*', {
+        capabilities = {
+          workspace = {
+            didChangeWatchedFiles = {
+              dynamicRegistration = true,
+            },
+          },
+        },
+      })
 
       for server_name, config in pairs(servers) do
         vim.lsp.config(server_name, config)

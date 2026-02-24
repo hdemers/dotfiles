@@ -203,17 +203,17 @@ vim.api.nvim_create_autocmd('FileType', {
 })
 
 -- Auto-reload
--- vim.go.autoread = true
--- vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold', 'CursorHoldI', 'BufEnter' }, {
---   desc = 'Reload files when focus is gained',
---   group = vim.api.nvim_create_augroup('kickstart-auto-reload', { clear = true }),
---   callback = function()
---     if vim.bo.modified then
---       return
---     end
---     vim.cmd 'checktime'
---   end,
--- })
+vim.go.autoread = true
+vim.api.nvim_create_autocmd({ 'FocusGained', 'CursorHold', 'CursorHoldI', 'BufEnter' }, {
+  desc = 'Reload files when focus is gained',
+  group = vim.api.nvim_create_augroup('kickstart-auto-reload', { clear = true }),
+  callback = function()
+    if vim.bo.modified then
+      return
+    end
+    vim.cmd 'checktime'
+  end,
+})
 
 -- ─────────────────────────────────────────────────────────────────────────────
 -- [[ New filetypes ]]

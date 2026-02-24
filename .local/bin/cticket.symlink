@@ -180,7 +180,7 @@ main() {
         fi
 
         if [ "${stacked}" = true ]; then
-            base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:")
+            base=$(_select_bookmark "" "Select a base bookmark for the stacked diffs:" "trunk()..${bookmark}-")
             if [ -z "$base" ]; then
                 gum log --level error "You must provide a base."
                 return 1

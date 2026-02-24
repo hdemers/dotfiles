@@ -5,11 +5,17 @@
 _select_bookmark() {
     local bookmark="$1"
     local header=${2:-"Select a bookmark:"}
+    local default_revset="trunk():: ~ trunk()"
+    # If 'dev' bookmark exists, exclude it from the default revset
+    if jj bookmark list -r "dev" &>/dev/null && jj bookmark list -r "dev" | grep -q "^dev:"; then
+        default_revset="trunk():: ~ dev ~ trunk()"
+    fi
+    local revset=${3:-"${default_revset}"}
 
     if [ -z "${bookmark}" ]; then
         # Get bookmarks, clean up trailing '*', and present with gum
-        bookmark=$(jj bookmark list -r "trunk():: ~ dev ~ trunk()" -T '"\n" ++ self.name()' \
-            | uniq | gum choose --header="${header}")
+        bookmark=$(jj bookmark list -r "${revset}" -T '"\n" ++ self.name()' \
+            | uniq | gum choose --header="${header}" || true)
 
         if [ -z "${bookmark}" ]; then
             # Ask if the user wants to create a new bookmark

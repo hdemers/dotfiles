@@ -493,7 +493,8 @@ rplans() {
             --with-nth=1 \
             --preview='CLICOLOR_FORCE=1 glow --style dracula {2}' \
             --preview-window='top:60%' \
-            --bind='enter:execute(glow --pager {2})'
+            --bind='enter:execute(glow --pager {2})' \
+            --bind='tab:execute-silent(echo -n {2} | wl-copy)+abort'
 }
 
 zellij_orphans() {

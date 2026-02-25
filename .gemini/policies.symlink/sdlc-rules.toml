@@ -1,0 +1,16 @@
+[[rule]]
+toolName = "run_shell_command"
+commandPrefix = "gh"
+decision = "allow"
+priority = 100
+
+[[rule]]
+toolName = "activate_skill"
+decision = "allow"
+priority = 100
+
+[[rule]]
+toolName = "read_file"
+argsPattern = '"file_path":"/tmp/,'
+decision = "allow"
+priority = 100

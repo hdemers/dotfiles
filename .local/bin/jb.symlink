@@ -209,11 +209,20 @@ jintegrate() {
     local name
     name="INTEGRATING PR #${pr_number}"
 
-    cmd="jenkins integrate -p ${pr_number} \
-       && jira close ${ticket} \
-       && notify 'Pull Request ${pr_number} integrated and ticket ${ticket} closed.'"
+    local close_ticket=0
+    if [ -n "$ticket" ] && gum confirm "Close ticket ${ticket}?"; then
+        close_ticket=1
+    fi
 
-    gum confirm "Integrate PR ${pr_number} (${bookmark}) and close ticket ${ticket}?" \
+    local notify_msg="Pull Request ${pr_number} integrated."
+    cmd="jenkins integrate -p ${pr_number}"
+    if [ "$close_ticket" = "1" ]; then
+        cmd+=" && jira close ${ticket}"
+        notify_msg="Pull Request ${pr_number} integrated and ticket ${ticket} closed."
+    fi
+    cmd+=" && notify '${notify_msg}'"
+
+    gum confirm "Integrate PR ${pr_number} (${bookmark})?" \
         && zellij run -n "${name}" -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
 }
 
@@ -231,6 +240,7 @@ main() {
                 return 1
                 ;;
         esac
+        shift
     done
 
     # Export functions for fzf subshells

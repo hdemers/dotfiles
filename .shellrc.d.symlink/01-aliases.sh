@@ -157,4 +157,4 @@ alias jjup="jj git fetch && jj rall && jj rdev && jj git push -r branches"
 
 alias gmore=" glow --pager -w 110"
 
-alias geminy="gemini --yolo"
+alias geminy="gemini --yolo --include-directories /home/hdemers/Dropbox/Claude/"

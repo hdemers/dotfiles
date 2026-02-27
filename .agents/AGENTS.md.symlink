@@ -1,6 +1,7 @@
 # Important
 
 ## Notifications
+
 Use the CLI `notify <message>` to notify the user.
 
 ## Contributing Code
@@ -20,5 +21,16 @@ Most repositories use Jujutsu, not Git.
 
 When there's no `dev` commit, all work above `master` is treated as
 in-progress. The `dev` commit is always empty and should stay empty.
+
+## Throw-away code/files
+
+Always prefix those files with a comma. Example: ,test_option1.py.
+
+### CRITICAL & MANDATORY: 
+
+- never ever use `pip --break-system-package`.
+  Rather use `uv run --with <package> ...`
+- clean-up throw-away files.
+
 
 <!-- vim: set filetype=markdown: -->

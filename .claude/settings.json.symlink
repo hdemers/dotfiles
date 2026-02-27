@@ -51,7 +51,7 @@
       "notify:*"
     ]
   },
-  "plansDirectory": "/home/hdemers/Dropbox/Claude/plans",
+  "plansDirectory": "/home/hdemers/Dropbox/Agents/plans",
   "skipDangerousModePermissionPrompt": true,
   "effortLevel": "medium"
 }

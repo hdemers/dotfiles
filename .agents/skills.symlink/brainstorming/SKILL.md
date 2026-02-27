@@ -24,10 +24,10 @@ MANDATORY: Use the report-writing skill.
    solutions.
 3. Launch 4-5 subagents each tasked with a slightly different possible solution.
 4. Subagent tasks:
-     1. Each subagents shall test their proposed solution with a throw-away
-        script demonstrating the validity of their approach.
-     2. Subagents shall not stop until they have a valid solution.
-     3. Subagents shall follow the best practices found below.
+   1. Each subagents shall test their proposed solution with a throw-away
+      script demonstrating the validity of their approach.
+   2. Subagents shall not stop until they have a valid solution.
+   3. Subagents shall follow the best practices found below.
 5. Summarize and rank each solutions
 6. STOP and ASK: validate solutions with user. DO NOT move to phase 3.
 7. If user selects a solution, do not start implementing. Always ask the user:
@@ -40,10 +40,10 @@ MANDATORY: Use the report-writing skill.
    solutions.
 3. Launch 4-5 subagents each tasked with the exact same ask/prompt.
 4. Subagent tasks:
-     1. Each subagents shall test their proposed solution with a throw-away
-        script demonstrating the validity of their approach.
-     2. Subagents shall not stop until they have a valid solution.
-     3. Subagents shall follow the best practices found below.
+   1. Each subagents shall test their proposed solution with a throw-away
+      script demonstrating the validity of their approach.
+   2. Subagents shall not stop until they have a valid solution.
+   3. Subagents shall follow the best practices found below.
 5. Summarize and rank each solutions
 6. STOP and ASK: validate solutions with user. DO NOT move to phase 3.
 7. If user selects a solution, do not start implementing. Always ask the user:
@@ -61,36 +61,37 @@ MANDATORY: Use the report-writing skill.
 7. Reports shall have the following structure:
 
    ```markdown
-    # Title
+   # Title
 
-    **Date**:
-    **Repository**:
+   **Date**:
+   **Repository**:
+   **Agent**: Claude|Gemini
 
-    ## Problem/Goal Statement
+   ## Problem/Goal Statement
 
-    ### Constraints
+   ### Constraints
 
-    ## Solutions
+   ## Solutions
 
-    ### Solution 1
+   ### Solution 1
 
-    Describe the solution works with code examples. Provide examples of how it
-    would be used in practices.
+   Describe the solution works with code examples. Provide examples of how it
+   would be used in practices.
 
-    **Advantages**:
-    - First advantage
-    - Second advantage
+   **Advantages**:
 
-    **Disadvantages**:
-    - First disadvantage
-    - Second disadvantage
+   - First advantage
+   - Second advantage
 
+   **Disadvantages**:
 
-    ### Solution 2
+   - First disadvantage
+   - Second disadvantage
 
+   ### Solution 2
 
-    ## Recommendation
+   ## Recommendation
 
-    Provide a recommendation with a short explanation of why. We do not care
-    about recommendation matrices.
+   Provide a recommendation with a short explanation of why. We do not care
+   about recommendation matrices.
    ```

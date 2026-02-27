@@ -33,13 +33,21 @@ Choose:
 ### Context
 
 Ticket can be one of:
+
 - Epic
 - Story
 - Bug
 
-If not specified, assume "Story". 
+If not specified, assume "Story".
 
-If a mandatory item is not provided, STOP and ASK.
+**GLOBAL RULES FOR FIELDS:**
+
+1. If a [MANDATORY] item is not provided, STOP and ASK.
+2. For ANY [OPTIONAL] field (like Sprint, Points, or Assignee), if the user
+   does not EXPLICITLY provide a value, you MUST leave it blank. DO NOT guess,
+   DO NOT default to 'active', and DO NOT infer from context.
+3. If Assignee is specified as "me", assume user specified by the environment
+   variable `USER`.
 
 Epic creation:
 
@@ -51,10 +59,9 @@ Epic creation:
 Story creation:
 
 - Epic [MANDATORY]
-- Sprint [OPTIONAL]: if not provided, leave blank.
-- Points [OPTIONAL]: if not provided, leave blank
-- Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
-  assume user specified by the environment variable `USER`.
+- Sprint [OPTIONAL]
+- Points [OPTIONAL]
+- Assignee [OPTIONAL]
 
 Bug creation:
 
@@ -64,10 +71,9 @@ Bug creation:
 - Steps to Reproduce [MANDATORY]: Free text
 - Actual Result [MANDATORY]: Free text
 - Expected Result [MANDATORY]: Free text
-- Sprint [OPTIONAL]: if not provided, leave blank.
-- Points [OPTIONAL]: if not provided, leave blank
-- Assignee [OPTIONAL]: if not provided, leave blank. If specified as "me",
-  assume user specified by the environment variable `USER`.
+- Sprint [OPTIONAL]
+- Points [OPTIONAL]
+- Assignee [OPTIONAL]
 
 Sprint can be specified as "current", "active", "next", "future", etc. in which
 case use the `jira sprints` commands to find the one.
@@ -142,3 +148,5 @@ if you are provided with a plan, copy it here, as is.
 - Acknowledge successful operations with ticket numbers (use `jira issues` to
   find newly create ticket).
 - NEVER use superlative terms like comprehensive.
+- CRITICAL: do not mention brainstorming files by name, rather attached the
+  brainstorming document to the ticket (using `--attach <filename>`)

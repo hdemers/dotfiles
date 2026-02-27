@@ -7,13 +7,17 @@
     }
   },
   "general": {
-    "vimMode": false,
+    "vimMode": true,
     "previewFeatures": true,
     "preferredEditor": "neovim",
     "sessionRetention": {
       "warningAcknowledged": true,
       "enabled": true,
       "maxAge": "120d"
+    },
+    "enableNotifications": true,
+    "plan": {
+      "directory": ".agents/,plans"
     }
   },
   "tools": {
@@ -23,7 +27,8 @@
     }
   },
   "experimental": {
-    "plan": true
+    "plan": true,
+    "enableAgents": true
   },
   "ui": {
     "theme": "ANSI"

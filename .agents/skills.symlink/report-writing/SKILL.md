@@ -8,7 +8,7 @@ This skill allows you to write Markdown reports.
 # Standard Operating Procedure
 
 1. Write report under
-   `/home/hdemers/Dropbox/Claude/<brainstorm|failure>/<grubhub|personal>/<repository>`
+   `/home/hdemers/Dropbox/Agents/<brainstorm|failure>/<grubhub|personal>/<repository>`
    where repository must match exactly, but without any leading dot.
 2. Report filenames shall be kebab-case with the following pattern: YYYY-MM-DD-<descriptive-name>.
 3. If multiple reports are being written as part of a given session, you shall

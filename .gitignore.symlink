@@ -85,6 +85,8 @@ scratch*
 
 # Claude Code related files
 CLAUDE.local.md
+AGENTS.local.md
+GEMINI.local.md
 settings.local.json
 *claude.json
 

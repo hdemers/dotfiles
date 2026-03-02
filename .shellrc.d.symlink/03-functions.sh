@@ -501,25 +501,29 @@ zellij_orphans() {
     # List possibly orphaned Zellij client processes.
     # A client is considered orphaned if its parent process is systemd (PID 1)
     # or if its controlling TTY no longer has an active session leader.
-    local header=0
-    for pid in $(pgrep -f "zellij attach" 2>/dev/null); do
-        local ppid tty parent_comm session_name
-        ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
-        tty=$(ps -o tty= -p "$pid" 2>/dev/null | tr -d ' ')
-        parent_comm=$(ps -o comm= -p "$ppid" 2>/dev/null || echo "DEAD")
-        session_name=$(ps -o args= -p "$pid" 2>/dev/null | grep -oP '(?<=-c )\S+')
+    local output
+    output=$(
+        local header=0
+        local ppid="" tty="" parent_comm="" session_name=""
+        for pid in $(pgrep -f "zellij attach" 2>/dev/null); do
+            ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+            tty=$(ps -o tty= -p "$pid" 2>/dev/null | tr -d ' ')
+            parent_comm=$(ps -o comm= -p "$ppid" 2>/dev/null || echo "DEAD")
+            session_name=$(ps -o args= -p "$pid" 2>/dev/null | grep -oP '(?<=-c )\S+' | head -n1 | tr -d '\n')
 
-        # Orphan signals: parent is dead, or reparented to systemd/init
-        if [[ "$parent_comm" == "DEAD" || "$ppid" == "1" || "$parent_comm" == "systemd" ]]; then
-            if [[ $header -eq 0 ]]; then
-                printf "%-8s %-8s %-12s %-8s %s\n" "PID" "PPID" "PARENT" "TTY" "SESSION"
-                header=1
+            if [[ "$parent_comm" == "DEAD" || "$ppid" == "1" || "$parent_comm" == "systemd" ]]; then
+                if [[ $header -eq 0 ]]; then
+                    echo "PID PPID PARENT TTY SESSION"
+                    header=1
+                fi
+                echo "$pid $ppid $parent_comm $tty ${session_name:-?}"
             fi
-            printf "%-8s %-8s %-12s %-8s %s\n" "$pid" "$ppid" "$parent_comm" "$tty" "${session_name:-?}"
-        fi
-    done
+        done
+    )
 
-    if [[ $header -eq 0 ]]; then
+    if [[ -n "$output" ]]; then
+        echo "$output" | column -t
+    else
         echo "No orphaned Zellij clients found."
     fi
 }

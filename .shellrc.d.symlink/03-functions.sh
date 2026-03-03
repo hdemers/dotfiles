@@ -92,7 +92,7 @@ if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
         fi
         # If command contains one of the following substrings, do not send notifications.
         local ignore_list=("ssh" "vim" "nvim" "lsemr" "js" "claude" "jb" "jj"
-            "rplans" "cpr" "cticket" "s3view" "gemini" "opencode")
+            "rplans" "cpr" "cticket" "s3view" "gemini" "opencode" "geminy")
 
         for ignore in "${ignore_list[@]}"; do
             if [[ "$cmd" == *"$ignore"* ]]; then
@@ -494,6 +494,7 @@ rplans() {
             --preview='CLICOLOR_FORCE=1 glow --style dracula {2}' \
             --preview-window='top:60%' \
             --bind='enter:execute(glow --pager {2})' \
+            --bind='e:execute(nvim {2})' \
             --bind='tab:execute-silent(echo -n {2} | wl-copy)+abort'
 }
 

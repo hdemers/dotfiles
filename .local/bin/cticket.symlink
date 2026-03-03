@@ -64,7 +64,7 @@ _invoke_agent() {
 
     case "$agent" in
         gemini)
-            gemini --allowed-tools activate_skill --include-directories /tmp -p "Using the '${skill_name}' skill, create a JIRA ticket using the context found in file ${context_file}. MANDATORY: use the '${skill_name}' skill."
+            gemini --allowed-tools activate_skill --include-directories "$(dirname "$context_file")" -p "@${context_file} Using the '${skill_name}' skill, create a JIRA ticket using the context. MANDATORY: use the '${skill_name}' skill."
             ;;
         claude)
             claude --model "$model" "/${skill_name} $(cat "$context_file")"
@@ -211,8 +211,10 @@ main() {
         return 0
     }
 
-    context_file=$(mktemp --tmpdir ,XXXXXX)
-    trap '[ -n "${context_file:-}" ] && rm -f "${context_file:-}"' EXIT
+    local context_dir
+    context_dir=$(mktemp -d /tmp/cticket.XXXXXX)
+    trap '[ -n "${context_dir:-}" ] && rm -rf "${context_dir:-}"' EXIT
+    local context_file="${context_dir}/context.txt"
 
     {
         echo "## Standard Operating Procedure"

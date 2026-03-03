@@ -137,7 +137,7 @@ _invoke_agent() {
 
     case "$agent" in
         gemini)
-            gemini --include-directories /tmp -i "Using the '${skill_name}' skill, open a PR on GitHub using the context found in file ${context_file}. MANDATORY: use the '${skill_name}' skill. MANDATORY: do not write the PR body to file, inline it in the gh command."
+            gemini --include-directories "$(dirname "$context_file")" -i "@${context_file} Using the '${skill_name}' skill, open a PR on GitHub using the context. MANDATORY: use the '${skill_name}' skill. MANDATORY: do not write the PR body to file, inline it in the gh command."
             ;;
         claude)
             claude --model "$model" "/${skill_name} $(cat "$context_file")"
@@ -270,9 +270,10 @@ main() {
         fi
     fi
 
-    local context_file
-    context_file=$(mktemp --tmpdir ,XXXXXX)
-    trap '[ -n "${context_file:-}" ] && rm -f "${context_file:-}"' EXIT
+    local context_dir
+    context_dir=$(mktemp -d /tmp/cpr.XXXXXX)
+    trap '[ -n "${context_dir:-}" ] && rm -rf "${context_dir:-}"' EXIT
+    local context_file="${context_dir}/context.txt"
 
     {
         echo "## Context"

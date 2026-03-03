@@ -55,13 +55,12 @@ _invoke_agent() {
 
     case "$agent" in
         gemini)
-            local prompt="Using the '${skill_name}' skill, describe the commit using the context"
-            prompt+=" found in file ${context_file}."
+            local prompt="Using the '${skill_name}' skill, describe the commit using the context."
             prompt+=" MANDATORY: use the '${skill_name}' skill."
             prompt+=" MANDATORY: do not include your thinking, only the commit message."
 
             gum spin --show-output --spinner dot --title "Generating description for '${revset:0:8}' using ${agent} (${model}${ANTHROPIC_API_KEY:+" with API key"})..." -- \
-                gemini --include-directories /tmp -p "$prompt"
+                gemini --include-directories "$(dirname "$context_file")" -p "@${context_file} $prompt"
             ;;
         claude)
             claude --model "$model" "/${skill_name} $(cat "$context_file")"
@@ -137,9 +136,10 @@ main() {
         return 1
     fi
 
-    local context_file
-    context_file=$(mktemp --tmpdir ,XXXXXX)
-    trap '[ -n "${context_file:-}" ] && rm -f "${context_file:-}"' EXIT
+    local context_dir
+    context_dir=$(mktemp -d /tmp/cdescribe.XXXXXX)
+    trap '[ -n "${context_dir:-}" ] && rm -rf "${context_dir:-}"' EXIT
+    local context_file="${context_dir}/context.txt"
 
     {
         echo "# Context"

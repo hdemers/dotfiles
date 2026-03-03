@@ -638,4 +638,11 @@ function M.push_bookmark()
   end)
 end
 
+M.move_trunk_bookmark = with_revset(function(id)
+  local utils = get_utils()
+  utils.run_jj_cmd('bookmark move', '--from "trunk()" -t ' .. id)
+  utils.run_jj_cmd('rdev')
+  utils.refresh_log()
+end, { refresh = false })
+
 return M

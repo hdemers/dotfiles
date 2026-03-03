@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Explorateur de voyage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Flex:opsz,wght@8..144,300..900&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0&display=swap" rel="stylesheet">
+<script>
+  (function(){
+    var mode = localStorage.getItem('explorer-mode') || 'light';
+    var tid  = localStorage.getItem('explorer-theme') || 'bleu-brume';
+    document.documentElement.className = mode;
+    document.documentElement.dataset.themeId = tid;
+  })();
+</script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style id="theme-css"></style>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── Aliases MD3 (shorthand → spec) ──────────────────── */
+:root {
+  --md-primary:              var(--md-sys-color-primary);
+  --md-on-primary:           var(--md-sys-color-on-primary);
+  --md-primary-container:    var(--md-sys-color-primary-container);
+  --md-on-primary-container: var(--md-sys-color-on-primary-container);
+  --md-secondary:            var(--md-sys-color-secondary);
+  --md-on-secondary:         var(--md-sys-color-on-secondary);
+  --md-secondary-container:  var(--md-sys-color-secondary-container);
+  --md-on-secondary-container: var(--md-sys-color-on-secondary-container);
+  --md-tertiary:             var(--md-sys-color-tertiary);
+  --md-on-tertiary:          var(--md-sys-color-on-tertiary);
+  --md-tertiary-container:   var(--md-sys-color-tertiary-container);
+  --md-on-tertiary-container: var(--md-sys-color-on-tertiary-container);
+  --md-error:                var(--md-sys-color-error);
+  --md-error-container:      var(--md-sys-color-error-container);
+  --md-background:           var(--md-sys-color-background);
+  --md-surface:              var(--md-sys-color-surface);
+  --md-surface-variant:      var(--md-sys-color-surface-variant);
+  --md-on-surface:           var(--md-sys-color-on-surface);
+  --md-on-surface-variant:   var(--md-sys-color-on-surface-variant);
+  --md-outline:              var(--md-sys-color-outline);
+  --md-outline-variant:      var(--md-sys-color-outline-variant);
+  --md-surface-container-lowest:   var(--md-sys-color-surface-container-lowest);
+  --md-surface-container-low:      var(--md-sys-color-surface-container-low);
+  --md-surface-container:          var(--md-sys-color-surface-container);
+  --md-surface-container-high:     var(--md-sys-color-surface-container-high);
+  --md-surface-container-highest:  var(--md-sys-color-surface-container-highest);
+
+  /* Airport badge colors — generic palette (light) */
+  --clr-ap0: #2563EB;
+  --clr-ap1: #DC2626;
+  --clr-ap2: #7C3AED;
+  --clr-ap3: #059669;
+  --clr-ap4: #D97706;
+  --clr-ap5: #DB2777;
+  --clr-ap6: #0891B2;
+  --clr-ap7: #65A30D;
+
+  /* Escales colors */
+  --clr-esc0: rgb(68 103 50);
+  --clr-esc1: rgb(180 120 0);
+  --clr-esc2: rgb(186 26 26);
+
+  /* Shape */
+  --shape-xl:  28px;
+  --shape-lg:  16px;
+  --shape-md:  12px;
+  --shape-sm:   8px;
+  --shape-xs:   4px;
+  --shape-full: 9999px;
+
+  /* Elevation shadows */
+  --elev1: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
+  --elev2: 0 2px 8px rgba(0,0,0,.14), 0 1px 4px rgba(0,0,0,.08);
+  --elev3: 0 4px 16px rgba(0,0,0,.16), 0 2px 8px rgba(0,0,0,.10);
+}
+
+.dark {
+  /* Airport badge colors — generic palette (dark) */
+  --clr-ap0: #60A5FA;
+  --clr-ap1: #F87171;
+  --clr-ap2: #C084FC;
+  --clr-ap3: #34D399;
+  --clr-ap4: #FCD34D;
+  --clr-ap5: #F472B6;
+  --clr-ap6: #22D3EE;
+  --clr-ap7: #A3E635;
+
+  /* Escales colors — dark */
+  --clr-esc0: rgb(169 210 145);
+  --clr-esc1: rgb(255 183 77);
+  --clr-esc2: rgb(255 180 171);
+
+  /* Elevation shadows — dark */
+  --elev1: 0 1px 3px rgba(0,0,0,.40), 0 1px 2px rgba(0,0,0,.25);
+  --elev2: 0 2px 8px rgba(0,0,0,.45), 0 1px 4px rgba(0,0,0,.25);
+  --elev3: 0 4px 16px rgba(0,0,0,.50), 0 2px 8px rgba(0,0,0,.30);
+}
+
+/* ── Reset & Base ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Roboto Flex', 'Roboto', sans-serif;
+  background: var(--md-background);
+  color: var(--md-on-surface);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.icon { font-family: 'Material Symbols Rounded'; font-style: normal;
+         line-height: 1; letter-spacing: normal; user-select: none;
+         display: inline-flex; align-items: center; justify-content: center; }
+
+/* ── Top App Bar ─────────────────────────────────────────── */
+.top-bar {
+  background: var(--md-surface-container);
+  padding: 0 20px;
+  height: 64px;
+  display: flex; align-items: center; gap: 16px;
+  box-shadow: var(--elev1);
+  position: sticky; top: 0; z-index: 1100;
+}
+.top-bar-logo {
+  font-size: 22px; font-weight: 700; color: var(--md-primary);
+  letter-spacing: -.5px; white-space: nowrap;
+}
+.top-bar-logo span { color: var(--md-on-surface); font-weight: 400; font-size: 15px; }
+.top-bar-stats {
+  display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; margin-right: 8px;
+}
+.stat-chip {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  border-radius: var(--shape-full);
+  padding: 4px 14px; font-size: 12px; font-weight: 600;
+  display: flex; align-items: center; gap: 5px;
+  white-space: nowrap;
+}
+.stat-chip .icon { font-size: 16px; }
+
+/* ── Section: Map ────────────────────────────────────────── */
+#map {
+  height: 400px; width: 100%;
+}
+#map-resizer {
+  height: 10px; width: 100%;
+  background: var(--md-surface-container-low);
+  border-top: 1px solid var(--md-outline-variant);
+  border-bottom: 1px solid var(--md-outline-variant);
+  cursor: ns-resize;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; user-select: none;
+}
+#map-resizer::before {
+  content: '';
+  width: 40px; height: 4px;
+  border-radius: 2px;
+  background: var(--md-outline-variant);
+}
+#map-resizer:hover::before,
+#map-resizer.dragging::before {
+  background: var(--md-primary);
+}
+#map-resizer.dragging {
+  background: color-mix(in srgb, var(--md-primary) 8%, var(--md-surface-container-low));
+}
+
+/* Leaflet popup customization */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--shape-lg) !important;
+  box-shadow: var(--elev3) !important;
+  padding: 0 !important;
+  background: var(--md-surface-container-high) !important;
+  color: var(--md-on-surface) !important;
+}
+.leaflet-popup-tip { background: var(--md-surface-container-high) !important; }
+.leaflet-popup-content { margin: 0 !important; }
+.popup-body { padding: 16px 20px; min-width: 200px; }
+.popup-dest { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--md-on-surface); }
+.popup-region { font-size: 12px; color: var(--md-on-surface-variant); margin-bottom: 10px; }
+.popup-info { font-size: 12px; color: var(--md-on-surface-variant); margin: 2px 0; display: flex; gap: 6px; align-items: center; }
+.popup-info .icon { font-size: 15px; color: var(--md-primary); }
+.popup-btn {
+  display: block; margin-top: 12px;
+  background: var(--md-primary); color: var(--md-on-primary);
+  border: none; border-radius: var(--shape-full);
+  padding: 8px 18px; font-size: 13px; font-weight: 600;
+  cursor: pointer; width: 100%; text-align: center;
+  transition: opacity .15s;
+}
+.popup-btn:hover { opacity: .88; }
+
+/* ── Filter Bar ──────────────────────────────────────────── */
+.filter-bar {
+  background: var(--md-surface-container-low);
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--md-outline-variant);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.filter-label {
+  font-size: 12px; font-weight: 600; color: var(--md-on-surface-variant);
+  text-transform: uppercase; letter-spacing: .6px;
+}
+.chip-group { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  border: 1.5px solid var(--md-outline);
+  background: transparent;
+  color: var(--md-on-surface);
+  border-radius: var(--shape-full);
+  padding: 5px 14px; font-size: 13px; font-weight: 500;
+  cursor: pointer; display: flex; align-items: center; gap: 5px;
+  transition: background .15s, border-color .15s, color .15s;
+  white-space: nowrap;
+}
+.chip:hover { background: color-mix(in srgb, var(--md-primary) 8%, transparent); }
+.chip.active {
+  background: var(--md-secondary-container);
+  border-color: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+}
+.chip .icon { font-size: 17px; }
+
+/* ── Main Layout ─────────────────────────────────────────── */
+.main { max-width: 1280px; margin: 0 auto; padding: 20px; }
+
+/* ── Tab Bar ─────────────────────────────────────────────── */
+.tab-bar {
+  display: flex; gap: 2px;
+  background: var(--md-surface-container);
+  border-radius: var(--shape-xl);
+  padding: 4px;
+  width: fit-content;
+  margin-bottom: 20px;
+  box-shadow: var(--elev1);
+}
+.tab {
+  padding: 10px 22px; border-radius: var(--shape-lg);
+  border: none; background: transparent;
+  font-size: 14px; font-weight: 500; cursor: pointer;
+  color: var(--md-on-surface-variant);
+  display: flex; align-items: center; gap: 8px;
+  transition: background .2s, color .2s;
+}
+.tab .icon { font-size: 20px; }
+.tab:hover { background: color-mix(in srgb, var(--md-primary) 8%, transparent); color: var(--md-primary); }
+.tab.active {
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  font-weight: 700;
+}
+.tab-count {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-radius: var(--shape-full);
+  padding: 1px 8px; font-size: 11px; font-weight: 700;
+  min-width: 20px; text-align: center;
+}
+.tab.active .tab-count {
+  background: var(--md-on-primary-container);
+  color: var(--md-primary-container);
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Active Destination Banner ───────────────────────────── */
+.dest-banner {
+  display: none;
+  background: var(--md-primary-container);
+  color: var(--md-on-primary-container);
+  border-radius: var(--shape-lg);
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  align-items: center; gap: 10px;
+  font-weight: 600; font-size: 15px;
+}
+.dest-banner.visible { display: flex; }
+.dest-banner .icon { font-size: 20px; }
+.dest-banner-clear {
+  margin-left: auto; border: none; background: transparent;
+  color: var(--md-on-primary-container);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  display: flex; align-items: center; gap: 4px;
+  padding: 6px 12px; border-radius: var(--shape-full);
+  transition: background .15s;
+}
+.dest-banner-clear:hover { background: color-mix(in srgb, var(--md-on-primary-container) 12%, transparent); }
+.dest-banner-clear .icon { font-size: 17px; }
+
+/* ── Hébergements Grid ───────────────────────────────────── */
+.heberg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.heberg-card {
+  background: var(--md-surface-container);
+  border-radius: var(--shape-xl);
+  box-shadow: var(--elev2);
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: box-shadow .2s, transform .2s;
+}
+.heberg-card:hover {
+  box-shadow: var(--elev3);
+  transform: translateY(-2px);
+}
+.heberg-card-header {
+  background: var(--md-secondary-container);
+  padding: 0;
+  position: relative;
+  min-height: 160px;
+}
+.heberg-card-header-img {
+  width: 100%; height: 160px;
+  object-fit: cover; display: block;
+}
+.heberg-card-header-fallback {
+  width: 100%; height: 160px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  background: linear-gradient(135deg, var(--md-secondary-container), var(--md-tertiary-container));
+}
+.heberg-card-header-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  padding: 10px 14px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,.72) 0%, transparent 100%);
+}
+.heberg-dest-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border-radius: var(--shape-full);
+  padding: 3px 10px; font-size: 11px; font-weight: 700;
+  margin-bottom: 6px;
+}
+.heberg-dest-badge .icon { font-size: 13px; }
+.heberg-title-overlay {
+  font-size: 14px; font-weight: 700; color: #FFF;
+  line-height: 1.3; display: -webkit-box;
+  -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+}
+/* badge+title now in overlay */
+.heberg-card-body { padding: 14px 16px; flex: 1; }
+.heberg-rating {
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 8px;
+}
+.heberg-stars {
+  color: #FCD34D; font-size: 18px; font-weight: 700;
+}
+.heberg-note {
+  font-size: 15px; font-weight: 700;
+}
+.heberg-avis {
+  font-size: 12px; color: var(--md-on-surface-variant);
+}
+.heberg-price {
+  font-size: 22px; font-weight: 800; color: var(--md-primary);
+  margin-bottom: 4px;
+}
+.heberg-price-total {
+  font-size: 12px; color: var(--md-on-surface-variant); margin-bottom: 12px;
+}
+.heberg-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.info-chip {
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+  border-radius: var(--shape-sm);
+  padding: 3px 8px; font-size: 11px; font-weight: 500;
+  display: flex; align-items: center; gap: 3px;
+}
+.info-chip .icon { font-size: 13px; }
+.btn-airbnb {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  border-radius: var(--shape-full);
+  padding: 8px; font-size: 14px;
+  text-decoration: none; width: fit-content;
+  margin-left: auto;
+  transition: opacity .15s;
+}
+.btn-airbnb:hover { opacity: .88; }
+.btn-airbnb .icon { font-size: 18px; }
+
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--md-on-surface-variant);
+}
+.empty-state .icon { font-size: 56px; margin-bottom: 12px; display: block; }
+.empty-state p { font-size: 16px; }
+
+/* ── Vols Table ──────────────────────────────────────────── */
+.vols-controls {
+  display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; align-items: center;
+}
+.vols-filter-group {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.filter-label-sm {
+  font-size: 12px; font-weight: 600; color: var(--md-on-surface-variant);
+  text-transform: uppercase; letter-spacing: .5px;
+}
+.heberg-controls {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+}
+.prix-slider {
+  accent-color: var(--md-primary);
+  width: 160px; cursor: pointer;
+}
+.prix-val {
+  font-size: 13px; font-weight: 600; color: var(--md-primary);
+  min-width: 72px;
+}
+.search-box {
+  border: 1.5px solid var(--md-outline);
+  border-radius: var(--shape-full);
+  padding: 8px 16px 8px 12px;
+  font-size: 14px; background: var(--md-surface-container);
+  color: var(--md-on-surface); outline: none;
+  display: flex; align-items: center; gap: 8px;
+  transition: border-color .15s;
+}
+.search-box:focus-within { border-color: var(--md-primary); }
+.search-box input {
+  border: none; outline: none; background: transparent;
+  font-size: 14px; color: var(--md-on-surface); width: 160px;
+}
+.search-box .icon { font-size: 18px; color: var(--md-on-surface-variant); }
+
+.table-wrap {
+  background: var(--md-surface-container);
+  border-radius: var(--shape-xl);
+  box-shadow: var(--elev2);
+  overflow: hidden;
+}
+.vols-table { width: 100%; border-collapse: collapse; }
+.vols-table thead th {
+  background: var(--md-secondary-container);
+  color: var(--md-on-secondary-container);
+  padding: 14px 14px;
+  text-align: left;
+  font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+  cursor: pointer; user-select: none; white-space: nowrap;
+}
+.vols-table thead th:hover { background: color-mix(in srgb, var(--md-secondary-container) 80%, var(--md-secondary)); }
+.vols-table thead th .sort-icon { font-size: 14px; vertical-align: middle; margin-left: 3px; opacity: .4; }
+.vols-table thead th.sorted .sort-icon { opacity: 1; color: var(--md-primary); }
+.vols-table tbody tr {
+  border-bottom: 1px solid var(--md-outline-variant);
+  transition: background .1s;
+}
+.vols-table tbody tr:last-child { border-bottom: none; }
+.vols-table tbody tr:hover { background: color-mix(in srgb, var(--md-primary) 5%, transparent); }
+.vols-table td { padding: 12px 14px; font-size: 13px; }
+.airport-badge {
+  display: inline-flex; align-items: center;
+  border-radius: var(--shape-sm);
+  padding: 3px 9px; font-size: 12px; font-weight: 700;
+  color: #FFF; letter-spacing: .5px;
+}
+.escales-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  border-radius: var(--shape-full);
+  padding: 3px 8px; font-size: 11px; font-weight: 700;
+}
+.escales-badge.esc0 { background: rgba(180,220,150,.15); color: var(--clr-esc0); border: 1px solid rgba(180,220,150,.35); }
+.escales-badge.esc1 { background: rgba(255,183, 77,.15); color: var(--clr-esc1); border: 1px solid rgba(255,183, 77,.35); }
+.escales-badge.esc2 { background: rgba(255,180,171,.15); color: var(--clr-esc2); border: 1px solid rgba(255,180,171,.35); }
+.prix-cell { font-weight: 700; }
+.prix-total { font-size: 11px; color: var(--md-on-surface-variant); }
+
+.vols-pagination {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--md-surface-container-low);
+  border-top: 1px solid var(--md-outline-variant);
+  font-size: 13px; color: var(--md-on-surface-variant);
+}
+.page-btns { display: flex; gap: 4px; }
+.page-btn {
+  border: 1.5px solid var(--md-outline-variant);
+  background: transparent; border-radius: var(--shape-sm);
+  padding: 5px 12px; font-size: 13px; cursor: pointer;
+  color: var(--md-on-surface);
+  transition: background .15s;
+  display: flex; align-items: center;
+}
+.page-btn:hover:not(:disabled) { background: var(--md-surface-container-high); }
+.page-btn:disabled { opacity: .38; cursor: default; }
+.page-btn .icon { font-size: 17px; }
+
+/* ── Autos Grid ──────────────────────────────────────────── */
+.autos-section { margin-bottom: 28px; }
+.autos-section h3 {
+  font-size: 16px; font-weight: 700; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px; color: var(--md-on-surface);
+}
+.autos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+}
+.auto-card {
+  background: var(--md-surface-container);
+  border-radius: var(--shape-xl);
+  box-shadow: var(--elev2);
+  overflow: hidden;
+  transition: box-shadow .2s, transform .2s;
+}
+.auto-card:hover {
+  box-shadow: var(--elev3);
+  transform: translateY(-2px);
+}
+.auto-card-header {
+  padding: 16px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+}
+.auto-vehicle { font-size: 17px; font-weight: 800; line-height: 1.2; }
+.auto-categorie { font-size: 12px; color: var(--md-on-surface-variant); margin-top: 3px; }
+.auto-card-body { padding: 0 16px 16px; }
+.auto-price {
+  font-size: 24px; font-weight: 800; color: var(--md-primary); margin: 10px 0 4px;
+}
+.auto-price-total { font-size: 12px; color: var(--md-on-surface-variant); margin-bottom: 12px; }
+.auto-features { display: flex; flex-direction: column; gap: 6px; }
+.auto-feat {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--md-on-surface-variant);
+}
+.auto-feat .icon { font-size: 17px; }
+.auto-feat.ok { color: var(--md-primary); }
+.auto-feat.no { color: var(--md-error); }
+.auto-feat.neu { color: var(--md-on-surface-variant); }
+
+/* ── Destinations ────────────────────────────────────────── */
+.dest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+.dest-card {
+  background: var(--md-surface-container);
+  border-radius: var(--shape-xl);
+  box-shadow: var(--elev2);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow .2s, transform .2s;
+}
+.dest-card:hover { box-shadow: var(--elev3); transform: translateY(-2px); }
+.dest-card-header {
+  background: var(--md-primary-container);
+  padding: 18px 20px 14px;
+}
+.dest-card-title {
+  font-size: 20px; font-weight: 700;
+  color: var(--md-on-primary-container);
+}
+.dest-card-region {
+  font-size: 12px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--md-on-primary-container);
+  opacity: .75; margin-top: 2px;
+}
+.dest-stats {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px;
+}
+.dest-stat {
+  display: flex; align-items: center; gap: 4px;
+  background: color-mix(in srgb, var(--md-primary) 15%, transparent);
+  color: var(--md-on-primary-container);
+  border-radius: var(--shape-full);
+  padding: 3px 10px; font-size: 12px; font-weight: 600;
+}
+.dest-stat .icon { font-size: 14px; }
+.dest-card-body { padding: 16px 20px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.dest-point-fort {
+  font-size: 13px; line-height: 1.5;
+  color: var(--md-on-surface);
+  border-left: 3px solid var(--md-primary);
+  padding-left: 10px;
+}
+.dest-section-label {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--md-on-surface-variant);
+  margin-bottom: 6px;
+}
+.dest-gondola {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; color: var(--md-on-surface);
+}
+.dest-gondola .icon { font-size: 18px; color: var(--md-primary); flex-shrink: 0; margin-top: 1px; }
+.dest-routes { display: flex; flex-direction: column; gap: 6px; }
+.dest-route {
+  background: var(--md-surface-container);
+  border-radius: var(--shape-md);
+  padding: 8px 12px;
+  font-size: 12px;
+}
+.dest-route-title {
+  font-weight: 600; color: var(--md-on-surface); margin-bottom: 2px;
+  display: flex; align-items: center; gap: 6px;
+}
+.dest-route-meta { color: var(--md-on-surface-variant); }
+.niveau-facile        { background: #d4edda; color: #155724; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+.niveau-intermédiaire { background: #fff3cd; color: #856404; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+.niveau-difficile     { background: #f8d7da; color: #721c24; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+.niveau-expert        { background: #d1ecf1; color: #0c5460; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+.dark .niveau-facile        { background: #1a3a22; color: #a3d9a5; }
+.dark .niveau-intermédiaire { background: #3a2e00; color: #ffd77a; }
+.dark .niveau-difficile     { background: #3a1a1a; color: #f1a1a8; }
+.dark .niveau-expert        { background: #0a2a30; color: #7ecbde; }
+.dest-notes {
+  font-size: 12px; color: var(--md-on-surface-variant); line-height: 1.5;
+}
+.dest-card-footer {
+  padding: 0 20px 16px;
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.btn-dest-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600;
+  color: var(--md-primary); text-decoration: none;
+  border: 1.5px solid var(--md-outline-variant);
+  border-radius: var(--shape-full);
+  padding: 4px 12px;
+  transition: background .15s;
+}
+.btn-dest-link:hover { background: var(--md-primary-container); }
+.dest-airports {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;
+}
+.dest-airport-chip {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 600;
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+  border-radius: var(--shape-full);
+  padding: 3px 10px;
+}
+.todo-badge {
+  display: inline-block;
+  background: var(--md-surface-container-high);
+  color: var(--md-on-surface-variant);
+  border-radius: 4px; padding: 2px 7px; font-size: 11px;
+  font-style: italic;
+}
+
+/* ── Theme Toggle Button ──────────────────────────────────── */
+.theme-toggle {
+  background: none; border: none; cursor: pointer; padding: 8px;
+  border-radius: var(--shape-full);
+  color: var(--md-on-surface-variant);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { background: color-mix(in srgb, var(--md-on-surface-variant) 12%, transparent); }
+.theme-toggle .icon { font-size: 22px; }
+.theme-picker { position: relative; margin-right: 4px; }
+.theme-picker-btn {
+  background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 8px; border-radius: var(--shape-full);
+  color: var(--md-on-surface-variant);
+  transition: background .2s;
+}
+.theme-picker-btn:hover { background: color-mix(in srgb, var(--md-on-surface-variant) 12%, transparent); }
+.theme-picker-btn .icon { font-size: 20px; }
+.theme-swatch-sm {
+  width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+  border: 1.5px solid color-mix(in srgb, var(--md-on-surface) 30%, transparent);
+}
+.theme-menu {
+  display: none; position: absolute; right: 0; top: calc(100% + 4px);
+  background: var(--md-surface-container-high); border-radius: var(--shape-md);
+  box-shadow: var(--elev2); min-width: 160px; z-index: 200; padding: 4px;
+}
+.theme-menu.open { display: block; }
+.theme-menu-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 8px 12px; border: none;
+  background: none; cursor: pointer; border-radius: var(--shape-sm);
+  color: var(--md-on-surface); font-size: 14px; text-align: left;
+  transition: background .15s;
+}
+.theme-menu-item:hover { background: color-mix(in srgb, var(--md-on-surface) 8%, transparent); }
+.theme-menu-item.active {
+  background: color-mix(in srgb, var(--md-primary) 12%, transparent);
+  color: var(--md-primary); font-weight: 600;
+}
+
+/* ── Sélection & barre récapitulative ────────────────────── */
+.heberg-card, .auto-card {
+  cursor: pointer;
+  position: relative;
+  transition: outline .15s, box-shadow .15s;
+}
+.heberg-card.selected {
+  outline: 3px solid var(--md-primary);
+  outline-offset: -3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-primary) 20%, transparent);
+}
+.auto-card.selected {
+  outline: 3px solid var(--md-primary);
+  outline-offset: -3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--md-primary) 20%, transparent);
+}
+.sel-badge {
+  float: right; margin: 0 0 6px 8px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--md-primary); color: var(--md-on-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Material Symbols Rounded'; font-size: 16px;
+  flex-shrink: 0;
+}
+.sel-check {
+  position: absolute; top: 10px; right: 10px; z-index: 10;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--md-primary); color: var(--md-on-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Material Symbols Rounded'; font-size: 18px;
+  pointer-events: none;
+}
+.vols-table tbody tr { cursor: pointer; }
+.vols-table tbody tr.selected {
+  background: color-mix(in srgb, var(--md-primary) 14%, transparent) !important;
+  outline: none;
+}
+.vols-table tbody tr.selected td:first-child {
+  border-left: 3px solid var(--md-primary);
+}
+
+/* Summary bar */
+#summary-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 1200;
+  background: var(--md-surface-container-high);
+  border-top: 2px solid var(--md-primary);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.18);
+  display: flex; align-items: stretch; gap: 0;
+  transform: translateY(100%);
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+}
+#summary-bar.visible { transform: translateY(0); }
+.sum-slot {
+  flex: 1; display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  border-right: 1px solid var(--md-outline-variant);
+  min-width: 0;
+}
+.sum-slot .icon { font-size: 20px; color: var(--md-primary); flex-shrink: 0; }
+.sum-slot-inner { min-width: 0; }
+.sum-slot-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--md-on-surface-variant); }
+.sum-slot-name  { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sum-slot-name.empty { color: var(--md-on-surface-variant); font-weight: 400; font-style: italic; }
+.sum-slot-price { font-size: 12px; color: var(--md-primary); font-weight: 700; }
+.sum-total {
+  padding: 10px 20px; display: flex; flex-direction: column;
+  align-items: flex-end; justify-content: center; gap: 2px; flex-shrink: 0;
+}
+.sum-total-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--md-on-surface-variant); }
+.sum-total-amount { font-size: 20px; font-weight: 800; color: var(--md-primary); }
+.sum-clear {
+  padding: 0 14px;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; cursor: pointer;
+  color: var(--md-on-surface-variant);
+  border-left: 1px solid var(--md-outline-variant);
+  transition: color .15s;
+  flex-shrink: 0;
+}
+.sum-clear:hover { color: var(--md-error); }
+.sum-clear .icon { font-size: 22px; }
+/* padding so content isn't hidden behind summary bar when visible */
+body.sum-visible { padding-bottom: 68px; }
+</style>
+</head>
+<body>
+
+<!-- ── Top App Bar ─────────────────────────────────────── -->
+<header class="top-bar">
+  <div class="top-bar-logo" id="logo-text"></div>
+  <div class="top-bar-stats" id="topStats">
+    <div class="stat-chip"><span class="icon">place</span><span id="statDest">0 destinations</span></div>
+    <div class="stat-chip"><span class="icon">flight</span><span id="statVols">0 vols</span></div>
+    <div class="stat-chip"><span class="icon">house</span><span id="statHeberg">0 hébergements</span></div>
+    <div class="stat-chip"><span class="icon">directions_car</span><span id="statAutos">0 transports</span></div>
+  </div>
+  <div class="theme-picker" id="themePicker"></div>
+  <button class="theme-toggle" id="themeToggle" title="Basculer thème sombre/clair" onclick="toggleTheme()">
+    <span class="icon" id="themeIcon">dark_mode</span>
+  </button>
+</header>
+
+<!-- ── Map ────────────────────────────────────────────── -->
+<div id="map"></div>
+<div id="map-resizer" title="Glisser pour redimensionner la carte"></div>
+
+<!-- ── Destination Filter Chips ───────────────────────── -->
+<div class="filter-bar">
+  <span class="filter-label">Destination</span>
+  <div class="chip-group" id="destChips"></div>
+</div>
+
+<!-- ── Main Content ───────────────────────────────────── -->
+<div class="main">
+
+  <!-- Active destination banner -->
+  <div class="dest-banner" id="destBanner">
+    <span class="icon">filter_alt</span>
+    <span id="destBannerText">Filtré par : —</span>
+    <button class="dest-banner-clear" onclick="clearDestFilter()">
+      <span class="icon">close</span> Tout afficher
+    </button>
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab active" data-tab="hebergements" onclick="switchTab('hebergements')">
+      <span class="icon">house</span>
+      Hébergements <span class="tab-count" id="countHeberg">—</span>
+    </button>
+    <button class="tab" data-tab="vols" onclick="switchTab('vols')">
+      <span class="icon">flight_takeoff</span>
+      Vols <span class="tab-count" id="countVols">—</span>
+    </button>
+    <button class="tab" data-tab="autos" onclick="switchTab('autos')">
+      <span class="icon">directions_car</span>
+      Autos <span class="tab-count" id="countAutos">—</span>
+    </button>
+    <button class="tab" data-tab="destinations" onclick="switchTab('destinations')">
+      <span class="icon">landscape</span>
+      Destinations <span class="tab-count" id="countDestinations">—</span>
+    </button>
+  </div>
+
+  <!-- Tab: Hébergements -->
+  <div class="tab-panel active" id="panel-hebergements">
+    <div class="heberg-controls">
+      <span class="filter-label-sm">Prix max / nuit</span>
+      <input type="range" class="prix-slider" id="prixSlider"
+             min="150" max="300" step="25" value="300"
+             oninput="setPrixFilter(+this.value)">
+      <span class="prix-val" id="prixVal">300 $/nuit</span>
+    </div>
+    <div class="heberg-grid" id="hebergGrid"></div>
+  </div>
+
+  <!-- Tab: Vols -->
+  <div class="tab-panel" id="panel-vols">
+    <div class="vols-controls">
+      <div class="vols-filter-group">
+        <span class="filter-label-sm">Aéroport</span>
+        <div class="chip-group" id="airportChips"></div>
+      </div>
+      <div class="vols-filter-group">
+        <span class="filter-label-sm">Escales</span>
+        <div class="chip-group" id="escalesChips"></div>
+      </div>
+      <div class="vols-filter-group" style="margin-left:auto;">
+        <div class="search-box">
+          <span class="icon">search</span>
+          <input type="text" id="volSearch" placeholder="Compagnie…" oninput="renderVols()">
+        </div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="vols-table">
+        <thead id="volsHead"></thead>
+        <tbody id="volsBody"></tbody>
+      </table>
+      <div class="vols-pagination">
+        <span id="volsPagInfo">—</span>
+        <div class="page-btns">
+          <button class="page-btn" id="btnPrev" onclick="changePage(-1)">
+            <span class="icon">chevron_left</span>
+          </button>
+          <div id="pageNums" style="display:flex;gap:4px;"></div>
+          <button class="page-btn" id="btnNext" onclick="changePage(1)">
+            <span class="icon">chevron_right</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Autos -->
+  <div class="tab-panel" id="panel-autos">
+    <div id="autosContainer"></div>
+  </div>
+
+  <!-- Tab: Destinations -->
+  <div class="tab-panel" id="panel-destinations">
+    <div class="dest-grid" id="destGrid"></div>
+  </div>
+
+</div>
+
+<!-- ── Scripts ─────────────────────────────────────────── -->
+<script>
+// ── Voyage Config ───────────────────────────────────────
+// ── Themes ──────────────────────────────────────────────
+const THEMES = [
+  { id: "bleu-brume", label: "Brume", swatch: "rgb(54 94 157)", css: `/* Theme: bleu-voyage — seed #769CDF — Light */
+/* Compatible Material Theme Builder export format */
+.light {
+  --md-sys-color-primary: rgb(54 94 157);
+  --md-sys-color-surface-tint: rgb(54 94 157);
+  --md-sys-color-on-primary: rgb(255 255 255);
+  --md-sys-color-primary-container: rgb(118 156 223);
+  --md-sys-color-on-primary-container: rgb(0 50 106);
+  --md-sys-color-secondary: rgb(81 95 121);
+  --md-sys-color-on-secondary: rgb(255 255 255);
+  --md-sys-color-secondary-container: rgb(210 224 255);
+  --md-sys-color-on-secondary-container: rgb(85 99 125);
+  --md-sys-color-tertiary: rgb(129 74 135);
+  --md-sys-color-on-tertiary: rgb(255 255 255);
+  --md-sys-color-tertiary-container: rgb(196 134 200);
+  --md-sys-color-on-tertiary-container: rgb(81 29 88);
+  --md-sys-color-error: rgb(186 26 26);
+  --md-sys-color-on-error: rgb(255 255 255);
+  --md-sys-color-error-container: rgb(255 218 214);
+  --md-sys-color-on-error-container: rgb(147 0 10);
+  --md-sys-color-background: rgb(249 249 255);
+  --md-sys-color-on-background: rgb(26 28 32);
+  --md-sys-color-surface: rgb(249 249 255);
+  --md-sys-color-on-surface: rgb(26 28 32);
+  --md-sys-color-surface-variant: rgb(223 226 238);
+  --md-sys-color-on-surface-variant: rgb(67 71 80);
+  --md-sys-color-outline: rgb(115 119 129);
+  --md-sys-color-outline-variant: rgb(195 198 210);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(47 48 53);
+  --md-sys-color-inverse-on-surface: rgb(241 240 246);
+  --md-sys-color-inverse-primary: rgb(170 199 255);
+  --md-sys-color-primary-fixed: rgb(214 227 255);
+  --md-sys-color-on-primary-fixed: rgb(0 27 62);
+  --md-sys-color-primary-fixed-dim: rgb(170 199 255);
+  --md-sys-color-on-primary-fixed-variant: rgb(25 70 131);
+  --md-sys-color-secondary-fixed: rgb(214 227 255);
+  --md-sys-color-on-secondary-fixed: rgb(13 28 50);
+  --md-sys-color-secondary-fixed-dim: rgb(185 199 229);
+  --md-sys-color-on-secondary-fixed-variant: rgb(58 71 96);
+  --md-sys-color-tertiary-fixed: rgb(255 214 254);
+  --md-sys-color-on-tertiary-fixed: rgb(53 1 62);
+  --md-sys-color-tertiary-fixed-dim: rgb(242 176 245);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(103 50 109);
+  --md-sys-color-surface-dim: rgb(218 217 223);
+  --md-sys-color-surface-bright: rgb(249 249 255);
+  --md-sys-color-surface-container-lowest: rgb(255 255 255);
+  --md-sys-color-surface-container-low: rgb(243 243 249);
+  --md-sys-color-surface-container: rgb(238 237 243);
+  --md-sys-color-surface-container-high: rgb(232 231 237);
+  --md-sys-color-surface-container-highest: rgb(226 226 232);
+}
+/* Theme: bleu-brume — seed #769CDF — Dark */
+/* Compatible Material Theme Builder export format */
+.dark {
+  --md-sys-color-primary: rgb(170 199 255);
+  --md-sys-color-surface-tint: rgb(170 199 255);
+  --md-sys-color-on-primary: rgb(0 47 100);
+  --md-sys-color-primary-container: rgb(118 156 223);
+  --md-sys-color-on-primary-container: rgb(0 50 106);
+  --md-sys-color-secondary: rgb(185 199 229);
+  --md-sys-color-on-secondary: rgb(35 49 72);
+  --md-sys-color-secondary-container: rgb(60 73 98);
+  --md-sys-color-on-secondary-container: rgb(171 185 214);
+  --md-sys-color-tertiary: rgb(242 176 245);
+  --md-sys-color-on-tertiary: rgb(77 26 85);
+  --md-sys-color-tertiary-container: rgb(196 134 200);
+  --md-sys-color-on-tertiary-container: rgb(81 29 88);
+  --md-sys-color-error: rgb(255 180 171);
+  --md-sys-color-on-error: rgb(105 0 5);
+  --md-sys-color-error-container: rgb(147 0 10);
+  --md-sys-color-on-error-container: rgb(255 218 214);
+  --md-sys-color-background: rgb(18 19 23);
+  --md-sys-color-on-background: rgb(226 226 232);
+  --md-sys-color-surface: rgb(18 19 23);
+  --md-sys-color-on-surface: rgb(226 226 232);
+  --md-sys-color-surface-variant: rgb(67 71 80);
+  --md-sys-color-on-surface-variant: rgb(195 198 210);
+  --md-sys-color-outline: rgb(141 144 155);
+  --md-sys-color-outline-variant: rgb(67 71 80);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(226 226 232);
+  --md-sys-color-inverse-on-surface: rgb(47 48 53);
+  --md-sys-color-inverse-primary: rgb(54 94 157);
+  --md-sys-color-primary-fixed: rgb(214 227 255);
+  --md-sys-color-on-primary-fixed: rgb(0 27 62);
+  --md-sys-color-primary-fixed-dim: rgb(170 199 255);
+  --md-sys-color-on-primary-fixed-variant: rgb(25 70 131);
+  --md-sys-color-secondary-fixed: rgb(214 227 255);
+  --md-sys-color-on-secondary-fixed: rgb(13 28 50);
+  --md-sys-color-secondary-fixed-dim: rgb(185 199 229);
+  --md-sys-color-on-secondary-fixed-variant: rgb(58 71 96);
+  --md-sys-color-tertiary-fixed: rgb(255 214 254);
+  --md-sys-color-on-tertiary-fixed: rgb(53 1 62);
+  --md-sys-color-tertiary-fixed-dim: rgb(242 176 245);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(103 50 109);
+  --md-sys-color-surface-dim: rgb(18 19 23);
+  --md-sys-color-surface-bright: rgb(56 57 63);
+  --md-sys-color-surface-container-lowest: rgb(12 14 18);
+  --md-sys-color-surface-container-low: rgb(26 28 32);
+  --md-sys-color-surface-container: rgb(30 32 36);
+  --md-sys-color-surface-container-high: rgb(40 42 46);
+  --md-sys-color-surface-container-highest: rgb(51 53 57);
+}` },
+  { id: "jaune-tournesol", label: "Tournesol", swatch: "rgb(109 94 15)", css: `.light {
+  --md-sys-color-primary: rgb(109 94 15);
+  --md-sys-color-surface-tint: rgb(109 94 15);
+  --md-sys-color-on-primary: rgb(255 255 255);
+  --md-sys-color-primary-container: rgb(248 226 135);
+  --md-sys-color-on-primary-container: rgb(83 70 0);
+  --md-sys-color-secondary: rgb(102 94 64);
+  --md-sys-color-on-secondary: rgb(255 255 255);
+  --md-sys-color-secondary-container: rgb(238 226 188);
+  --md-sys-color-on-secondary-container: rgb(78 71 42);
+  --md-sys-color-tertiary: rgb(67 102 78);
+  --md-sys-color-on-tertiary: rgb(255 255 255);
+  --md-sys-color-tertiary-container: rgb(197 236 206);
+  --md-sys-color-on-tertiary-container: rgb(44 78 56);
+  --md-sys-color-error: rgb(186 26 26);
+  --md-sys-color-on-error: rgb(255 255 255);
+  --md-sys-color-error-container: rgb(255 218 214);
+  --md-sys-color-on-error-container: rgb(147 0 10);
+  --md-sys-color-background: rgb(255 249 238);
+  --md-sys-color-on-background: rgb(30 27 19);
+  --md-sys-color-surface: rgb(255 249 238);
+  --md-sys-color-on-surface: rgb(30 27 19);
+  --md-sys-color-surface-variant: rgb(234 226 208);
+  --md-sys-color-on-surface-variant: rgb(75 71 57);
+  --md-sys-color-outline: rgb(124 119 103);
+  --md-sys-color-outline-variant: rgb(205 198 180);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(51 48 39);
+  --md-sys-color-inverse-on-surface: rgb(247 240 226);
+  --md-sys-color-inverse-primary: rgb(219 198 110);
+  --md-sys-color-primary-fixed: rgb(248 226 135);
+  --md-sys-color-on-primary-fixed: rgb(34 27 0);
+  --md-sys-color-primary-fixed-dim: rgb(219 198 110);
+  --md-sys-color-on-primary-fixed-variant: rgb(83 70 0);
+  --md-sys-color-secondary-fixed: rgb(238 226 188);
+  --md-sys-color-on-secondary-fixed: rgb(33 27 4);
+  --md-sys-color-secondary-fixed-dim: rgb(209 198 161);
+  --md-sys-color-on-secondary-fixed-variant: rgb(78 71 42);
+  --md-sys-color-tertiary-fixed: rgb(197 236 206);
+  --md-sys-color-on-tertiary-fixed: rgb(0 33 15);
+  --md-sys-color-tertiary-fixed-dim: rgb(169 208 179);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(44 78 56);
+  --md-sys-color-surface-dim: rgb(224 217 204);
+  --md-sys-color-surface-bright: rgb(255 249 238);
+  --md-sys-color-surface-container-lowest: rgb(255 255 255);
+  --md-sys-color-surface-container-low: rgb(250 243 229);
+  --md-sys-color-surface-container: rgb(244 237 223);
+  --md-sys-color-surface-container-high: rgb(238 232 218);
+  --md-sys-color-surface-container-highest: rgb(232 226 212);
+}
+.dark {
+  --md-sys-color-primary: rgb(219 198 110);
+  --md-sys-color-surface-tint: rgb(219 198 110);
+  --md-sys-color-on-primary: rgb(58 48 0);
+  --md-sys-color-primary-container: rgb(83 70 0);
+  --md-sys-color-on-primary-container: rgb(248 226 135);
+  --md-sys-color-secondary: rgb(209 198 161);
+  --md-sys-color-on-secondary: rgb(54 48 22);
+  --md-sys-color-secondary-container: rgb(78 71 42);
+  --md-sys-color-on-secondary-container: rgb(238 226 188);
+  --md-sys-color-tertiary: rgb(169 208 179);
+  --md-sys-color-on-tertiary: rgb(20 55 35);
+  --md-sys-color-tertiary-container: rgb(44 78 56);
+  --md-sys-color-on-tertiary-container: rgb(197 236 206);
+  --md-sys-color-error: rgb(255 180 171);
+  --md-sys-color-on-error: rgb(105 0 5);
+  --md-sys-color-error-container: rgb(147 0 10);
+  --md-sys-color-on-error-container: rgb(255 218 214);
+  --md-sys-color-background: rgb(21 19 11);
+  --md-sys-color-on-background: rgb(232 226 212);
+  --md-sys-color-surface: rgb(21 19 11);
+  --md-sys-color-on-surface: rgb(232 226 212);
+  --md-sys-color-surface-variant: rgb(75 71 57);
+  --md-sys-color-on-surface-variant: rgb(205 198 180);
+  --md-sys-color-outline: rgb(150 144 128);
+  --md-sys-color-outline-variant: rgb(75 71 57);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(232 226 212);
+  --md-sys-color-inverse-on-surface: rgb(51 48 39);
+  --md-sys-color-inverse-primary: rgb(109 94 15);
+  --md-sys-color-primary-fixed: rgb(248 226 135);
+  --md-sys-color-on-primary-fixed: rgb(34 27 0);
+  --md-sys-color-primary-fixed-dim: rgb(219 198 110);
+  --md-sys-color-on-primary-fixed-variant: rgb(83 70 0);
+  --md-sys-color-secondary-fixed: rgb(238 226 188);
+  --md-sys-color-on-secondary-fixed: rgb(33 27 4);
+  --md-sys-color-secondary-fixed-dim: rgb(209 198 161);
+  --md-sys-color-on-secondary-fixed-variant: rgb(78 71 42);
+  --md-sys-color-tertiary-fixed: rgb(197 236 206);
+  --md-sys-color-on-tertiary-fixed: rgb(0 33 15);
+  --md-sys-color-tertiary-fixed-dim: rgb(169 208 179);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(44 78 56);
+  --md-sys-color-surface-dim: rgb(21 19 11);
+  --md-sys-color-surface-bright: rgb(60 57 48);
+  --md-sys-color-surface-container-lowest: rgb(16 14 7);
+  --md-sys-color-surface-container-low: rgb(30 27 19);
+  --md-sys-color-surface-container: rgb(34 32 23);
+  --md-sys-color-surface-container-high: rgb(45 42 33);
+  --md-sys-color-surface-container-highest: rgb(56 53 43);
+}` },
+  { id: "rouge-rouille", label: "Rouille", swatch: "rgb(143 76 56)", css: `.light {
+  --md-sys-color-primary: rgb(143 76 56);
+  --md-sys-color-surface-tint: rgb(143 76 56);
+  --md-sys-color-on-primary: rgb(255 255 255);
+  --md-sys-color-primary-container: rgb(255 219 209);
+  --md-sys-color-on-primary-container: rgb(114 53 35);
+  --md-sys-color-secondary: rgb(119 87 78);
+  --md-sys-color-on-secondary: rgb(255 255 255);
+  --md-sys-color-secondary-container: rgb(255 219 209);
+  --md-sys-color-on-secondary-container: rgb(93 64 55);
+  --md-sys-color-tertiary: rgb(108 93 47);
+  --md-sys-color-on-tertiary: rgb(255 255 255);
+  --md-sys-color-tertiary-container: rgb(245 225 167);
+  --md-sys-color-on-tertiary-container: rgb(83 70 25);
+  --md-sys-color-error: rgb(186 26 26);
+  --md-sys-color-on-error: rgb(255 255 255);
+  --md-sys-color-error-container: rgb(255 218 214);
+  --md-sys-color-on-error-container: rgb(147 0 10);
+  --md-sys-color-background: rgb(255 248 246);
+  --md-sys-color-on-background: rgb(35 25 23);
+  --md-sys-color-surface: rgb(255 248 246);
+  --md-sys-color-on-surface: rgb(35 25 23);
+  --md-sys-color-surface-variant: rgb(245 222 216);
+  --md-sys-color-on-surface-variant: rgb(83 67 63);
+  --md-sys-color-outline: rgb(133 115 110);
+  --md-sys-color-outline-variant: rgb(216 194 188);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(57 46 43);
+  --md-sys-color-inverse-on-surface: rgb(255 237 232);
+  --md-sys-color-inverse-primary: rgb(255 181 160);
+  --md-sys-color-primary-fixed: rgb(255 219 209);
+  --md-sys-color-on-primary-fixed: rgb(58 11 1);
+  --md-sys-color-primary-fixed-dim: rgb(255 181 160);
+  --md-sys-color-on-primary-fixed-variant: rgb(114 53 35);
+  --md-sys-color-secondary-fixed: rgb(255 219 209);
+  --md-sys-color-on-secondary-fixed: rgb(44 21 15);
+  --md-sys-color-secondary-fixed-dim: rgb(231 189 178);
+  --md-sys-color-on-secondary-fixed-variant: rgb(93 64 55);
+  --md-sys-color-tertiary-fixed: rgb(245 225 167);
+  --md-sys-color-on-tertiary-fixed: rgb(35 27 0);
+  --md-sys-color-tertiary-fixed-dim: rgb(216 197 141);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(83 70 25);
+  --md-sys-color-surface-dim: rgb(232 214 210);
+  --md-sys-color-surface-bright: rgb(255 248 246);
+  --md-sys-color-surface-container-lowest: rgb(255 255 255);
+  --md-sys-color-surface-container-low: rgb(255 241 237);
+  --md-sys-color-surface-container: rgb(252 234 229);
+  --md-sys-color-surface-container-high: rgb(247 228 224);
+  --md-sys-color-surface-container-highest: rgb(241 223 218);
+}
+.dark {
+  --md-sys-color-primary: rgb(255 181 160);
+  --md-sys-color-surface-tint: rgb(255 181 160);
+  --md-sys-color-on-primary: rgb(86 31 15);
+  --md-sys-color-primary-container: rgb(114 53 35);
+  --md-sys-color-on-primary-container: rgb(255 219 209);
+  --md-sys-color-secondary: rgb(231 189 178);
+  --md-sys-color-on-secondary: rgb(68 42 34);
+  --md-sys-color-secondary-container: rgb(93 64 55);
+  --md-sys-color-on-secondary-container: rgb(255 219 209);
+  --md-sys-color-tertiary: rgb(216 197 141);
+  --md-sys-color-on-tertiary: rgb(59 47 5);
+  --md-sys-color-tertiary-container: rgb(83 70 25);
+  --md-sys-color-on-tertiary-container: rgb(245 225 167);
+  --md-sys-color-error: rgb(255 180 171);
+  --md-sys-color-on-error: rgb(105 0 5);
+  --md-sys-color-error-container: rgb(147 0 10);
+  --md-sys-color-on-error-container: rgb(255 218 214);
+  --md-sys-color-background: rgb(26 17 15);
+  --md-sys-color-on-background: rgb(241 223 218);
+  --md-sys-color-surface: rgb(26 17 15);
+  --md-sys-color-on-surface: rgb(241 223 218);
+  --md-sys-color-surface-variant: rgb(83 67 63);
+  --md-sys-color-on-surface-variant: rgb(216 194 188);
+  --md-sys-color-outline: rgb(160 140 135);
+  --md-sys-color-outline-variant: rgb(83 67 63);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(241 223 218);
+  --md-sys-color-inverse-on-surface: rgb(57 46 43);
+  --md-sys-color-inverse-primary: rgb(143 76 56);
+  --md-sys-color-primary-fixed: rgb(255 219 209);
+  --md-sys-color-on-primary-fixed: rgb(58 11 1);
+  --md-sys-color-primary-fixed-dim: rgb(255 181 160);
+  --md-sys-color-on-primary-fixed-variant: rgb(114 53 35);
+  --md-sys-color-secondary-fixed: rgb(255 219 209);
+  --md-sys-color-on-secondary-fixed: rgb(44 21 15);
+  --md-sys-color-secondary-fixed-dim: rgb(231 189 178);
+  --md-sys-color-on-secondary-fixed-variant: rgb(93 64 55);
+  --md-sys-color-tertiary-fixed: rgb(245 225 167);
+  --md-sys-color-on-tertiary-fixed: rgb(35 27 0);
+  --md-sys-color-tertiary-fixed-dim: rgb(216 197 141);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(83 70 25);
+  --md-sys-color-surface-dim: rgb(26 17 15);
+  --md-sys-color-surface-bright: rgb(66 55 52);
+  --md-sys-color-surface-container-lowest: rgb(20 12 10);
+  --md-sys-color-surface-container-low: rgb(35 25 23);
+  --md-sys-color-surface-container: rgb(39 29 27);
+  --md-sys-color-surface-container-high: rgb(50 40 37);
+  --md-sys-color-surface-container-highest: rgb(61 50 47);
+}` },
+  { id: "vert-menthe", label: "Menthe", swatch: "rgb(76 102 43)", css: `.light {
+  --md-sys-color-primary: rgb(76 102 43);
+  --md-sys-color-surface-tint: rgb(76 102 43);
+  --md-sys-color-on-primary: rgb(255 255 255);
+  --md-sys-color-primary-container: rgb(205 237 163);
+  --md-sys-color-on-primary-container: rgb(53 78 22);
+  --md-sys-color-secondary: rgb(88 98 73);
+  --md-sys-color-on-secondary: rgb(255 255 255);
+  --md-sys-color-secondary-container: rgb(220 231 200);
+  --md-sys-color-on-secondary-container: rgb(64 74 51);
+  --md-sys-color-tertiary: rgb(56 102 99);
+  --md-sys-color-on-tertiary: rgb(255 255 255);
+  --md-sys-color-tertiary-container: rgb(188 236 231);
+  --md-sys-color-on-tertiary-container: rgb(31 78 75);
+  --md-sys-color-error: rgb(186 26 26);
+  --md-sys-color-on-error: rgb(255 255 255);
+  --md-sys-color-error-container: rgb(255 218 214);
+  --md-sys-color-on-error-container: rgb(147 0 10);
+  --md-sys-color-background: rgb(249 250 239);
+  --md-sys-color-on-background: rgb(26 28 22);
+  --md-sys-color-surface: rgb(249 250 239);
+  --md-sys-color-on-surface: rgb(26 28 22);
+  --md-sys-color-surface-variant: rgb(225 228 213);
+  --md-sys-color-on-surface-variant: rgb(68 72 61);
+  --md-sys-color-outline: rgb(117 121 108);
+  --md-sys-color-outline-variant: rgb(197 200 186);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(47 49 42);
+  --md-sys-color-inverse-on-surface: rgb(241 242 230);
+  --md-sys-color-inverse-primary: rgb(177 209 138);
+  --md-sys-color-primary-fixed: rgb(205 237 163);
+  --md-sys-color-on-primary-fixed: rgb(16 32 0);
+  --md-sys-color-primary-fixed-dim: rgb(177 209 138);
+  --md-sys-color-on-primary-fixed-variant: rgb(53 78 22);
+  --md-sys-color-secondary-fixed: rgb(220 231 200);
+  --md-sys-color-on-secondary-fixed: rgb(21 30 11);
+  --md-sys-color-secondary-fixed-dim: rgb(191 203 173);
+  --md-sys-color-on-secondary-fixed-variant: rgb(64 74 51);
+  --md-sys-color-tertiary-fixed: rgb(188 236 231);
+  --md-sys-color-on-tertiary-fixed: rgb(0 32 30);
+  --md-sys-color-tertiary-fixed-dim: rgb(160 208 203);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(31 78 75);
+  --md-sys-color-surface-dim: rgb(218 219 208);
+  --md-sys-color-surface-bright: rgb(249 250 239);
+  --md-sys-color-surface-container-lowest: rgb(255 255 255);
+  --md-sys-color-surface-container-low: rgb(243 244 233);
+  --md-sys-color-surface-container: rgb(238 239 227);
+  --md-sys-color-surface-container-high: rgb(232 233 222);
+  --md-sys-color-surface-container-highest: rgb(226 227 216);
+}
+.dark {
+  --md-sys-color-primary: rgb(177 209 138);
+  --md-sys-color-surface-tint: rgb(177 209 138);
+  --md-sys-color-on-primary: rgb(31 55 1);
+  --md-sys-color-primary-container: rgb(53 78 22);
+  --md-sys-color-on-primary-container: rgb(205 237 163);
+  --md-sys-color-secondary: rgb(191 203 173);
+  --md-sys-color-on-secondary: rgb(42 51 30);
+  --md-sys-color-secondary-container: rgb(64 74 51);
+  --md-sys-color-on-secondary-container: rgb(220 231 200);
+  --md-sys-color-tertiary: rgb(160 208 203);
+  --md-sys-color-on-tertiary: rgb(0 55 53);
+  --md-sys-color-tertiary-container: rgb(31 78 75);
+  --md-sys-color-on-tertiary-container: rgb(188 236 231);
+  --md-sys-color-error: rgb(255 180 171);
+  --md-sys-color-on-error: rgb(105 0 5);
+  --md-sys-color-error-container: rgb(147 0 10);
+  --md-sys-color-on-error-container: rgb(255 218 214);
+  --md-sys-color-background: rgb(18 20 14);
+  --md-sys-color-on-background: rgb(226 227 216);
+  --md-sys-color-surface: rgb(18 20 14);
+  --md-sys-color-on-surface: rgb(226 227 216);
+  --md-sys-color-surface-variant: rgb(68 72 61);
+  --md-sys-color-on-surface-variant: rgb(197 200 186);
+  --md-sys-color-outline: rgb(143 146 133);
+  --md-sys-color-outline-variant: rgb(68 72 61);
+  --md-sys-color-shadow: rgb(0 0 0);
+  --md-sys-color-scrim: rgb(0 0 0);
+  --md-sys-color-inverse-surface: rgb(226 227 216);
+  --md-sys-color-inverse-on-surface: rgb(47 49 42);
+  --md-sys-color-inverse-primary: rgb(76 102 43);
+  --md-sys-color-primary-fixed: rgb(205 237 163);
+  --md-sys-color-on-primary-fixed: rgb(16 32 0);
+  --md-sys-color-primary-fixed-dim: rgb(177 209 138);
+  --md-sys-color-on-primary-fixed-variant: rgb(53 78 22);
+  --md-sys-color-secondary-fixed: rgb(220 231 200);
+  --md-sys-color-on-secondary-fixed: rgb(21 30 11);
+  --md-sys-color-secondary-fixed-dim: rgb(191 203 173);
+  --md-sys-color-on-secondary-fixed-variant: rgb(64 74 51);
+  --md-sys-color-tertiary-fixed: rgb(188 236 231);
+  --md-sys-color-on-tertiary-fixed: rgb(0 32 30);
+  --md-sys-color-tertiary-fixed-dim: rgb(160 208 203);
+  --md-sys-color-on-tertiary-fixed-variant: rgb(31 78 75);
+  --md-sys-color-surface-dim: rgb(18 20 14);
+  --md-sys-color-surface-bright: rgb(56 58 50);
+  --md-sys-color-surface-container-lowest: rgb(12 15 9);
+  --md-sys-color-surface-container-low: rgb(26 28 22);
+  --md-sys-color-surface-container: rgb(30 32 26);
+  --md-sys-color-surface-container-high: rgb(40 43 36);
+  --md-sys-color-surface-container-highest: rgb(51 54 46);
+}` },
+];
+
+const VOYAGE_CONFIG = {
+  titre: "Explorateur de voyage",
+  emoji: "🌍",
+  activite: "Vacances",
+  type: "tourisme",   // "velo" | "ski" | "tourisme"
+  devise: "CA$",
+  nb_nuits: 14,
+  nb_personnes: 2,
+  aeroport_depart: "YUL",
+};
+
+// ── Embedded Data ──────────────────────────────────────
+const DESTINATIONS = [];
+const VOLS_RAW = [];
+const HEBERGEMENTS = [];
+const AUTOS = [];
+const IMAGES = {};
+
+
+// ── Airport → destinations mapping ────────────────────
+function airportsForDest(nom) {
+  const d = DESTINATIONS.find(x => x.nom === nom);
+  return d ? d.aeroports : [];
+}
+
+// ── State ──────────────────────────────────────────────
+let state = {
+  destFilter:    null,   // destination name or null
+  airportFilter: null,   // airport code or null
+  escalFilter:   null,   // 0,1,2 or null
+  prixMaxFilter: 300,    // prix max par nuit
+  volSort:       { col: 'prix_par_personne', dir: 'asc' },
+  volPage:       1,
+  volPageSize:   25,
+  sel: { heberg: null, vol: null, auto: null },
+};
+
+// Add _idx to each vol for stable identification
+VOLS_RAW.forEach((v, i) => v._idx = i);
+
+// ── Airport Colors ─────────────────────────────────────
+function initAirportColors() {
+  const airports = [...new Set([
+    ...VOLS_RAW.map(v => v.aeroport_arrivee),
+    ...AUTOS.map(a => a.aeroport)
+  ])].filter(Boolean).sort();
+  const palette = ['--clr-ap0','--clr-ap1','--clr-ap2','--clr-ap3','--clr-ap4','--clr-ap5','--clr-ap6','--clr-ap7'];
+  const airportColors = {};
+  airports.forEach((ap, i) => {
+    const varName = palette[i % palette.length];
+    airportColors[ap] = varName;
+  });
+  // Generate CSS
+  let css = '';
+  airports.forEach(ap => {
+    const v = airportColors[ap];
+    css += `.airport-badge.${ap} { background: var(${v}); }\n`;
+    css += `.auto-card-header.${ap.toLowerCase()} { background: color-mix(in srgb, var(${v}) 12%, var(--md-surface-container)); }\n`;
+    css += `a[data-airport="${ap}"] { color: var(${v}); }\n`;
+  });
+  const style = document.createElement('style');
+  style.textContent = css;
+  document.head.appendChild(style);
+  window.airportColors = airportColors;
+}
+
+// ── Map ─────────────────────────────────────────────────
+let map, markers = {};
+
+function initMap() {
+  map = window.map = L.map('map', { zoomControl: true }).setView([46.6, 8.4], 8);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxZoom: 18
+  }).addTo(map);
+
+  DESTINATIONS.forEach(dest => {
+    const [lat, lng] = dest.coords;
+    const isActive = state.destFilter === dest.nom;
+    const marker = L.circleMarker([lat, lng], {
+      radius: 14,
+      fillColor: isActive ? '#006E1C' : '#FFFFFF',
+      color: '#006E1C',
+      weight: 3,
+      fillOpacity: isActive ? 1 : 0.9,
+    }).addTo(map);
+
+    const airports = dest.aeroports.join(', ');
+    const nbHeberg = HEBERGEMENTS.filter(h => h.destination === dest.nom).length;
+    const nbVols   = VOLS_RAW.filter(v => dest.aeroports.includes(v.aeroport_arrivee)).length;
+
+    marker.bindPopup(`
+      <div class="popup-body">
+        <div class="popup-dest">${dest.nom}</div>
+        <div class="popup-region">${dest.region}</div>
+        <div class="popup-info"><span class="icon">flight</span>${airports} · ${nbVols} vols</div>
+        <div class="popup-info"><span class="icon">house</span>${nbHeberg} hébergements</div>
+        ${dest.notes ? `<div class="popup-info"><span class="icon">info</span>${dest.notes.substring(0,80)}…</div>` : ''}
+        <button class="popup-btn" onclick="filterByDest('${dest.nom.replace(/'/g, "\'")}')">
+          Filtrer cette destination
+        </button>
+      </div>
+    `, { maxWidth: 280 });
+
+    markers[dest.nom] = marker;
+  });
+}
+
+function updateMarkers() {
+  DESTINATIONS.forEach(dest => {
+    const m = markers[dest.nom];
+    if (!m) return;
+    const isActive = state.destFilter === dest.nom;
+    m.setStyle({
+      fillColor: isActive ? '#006E1C' : '#FFFFFF',
+      fillOpacity: isActive ? 1 : 0.9,
+      radius: isActive ? 16 : 14,
+    });
+  });
+}
+
+// ── Destination filter ─────────────────────────────────
+function selectDestCard(nom) {
+  const dest = DESTINATIONS.find(d => d.nom === nom);
+  if (dest) map.flyTo(dest.coords, 12, { duration: 1.2 });
+}
+
+function filterByDest(nom) {
+  if (state.destFilter === nom) {
+    state.destFilter = null;
+  } else {
+    state.destFilter = nom;
+    // Reset airport/escal filters when dest changes
+    state.airportFilter = null;
+    state.escalFilter = null;
+  }
+  state.volPage = 1;
+  map.closePopup();
+  render();
+}
+
+function clearDestFilter() {
+  state.destFilter = null;
+  state.airportFilter = null;
+  state.escalFilter = null;
+  state.volPage = 1;
+  map.flyTo([46.6, 8.4], 8, { duration: 1.2 });
+  render();
+}
+
+// ── Tab switching ──────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+}
+
+// ── Destination chips ──────────────────────────────────
+function renderDestChips() {
+  const container = document.getElementById('destChips');
+  const allBtn = `<button class="chip ${!state.destFilter ? 'active' : ''}" onclick="clearDestFilter()">
+    <span class="icon">language</span> Toutes
+  </button>`;
+  const chips = DESTINATIONS.map(d => {
+    const active = state.destFilter === d.nom;
+    return `<button class="chip ${active ? 'active' : ''}" onclick="filterByDest('${d.nom.replace(/'/g, "\'")}')">
+      ${d.nom}
+    </button>`;
+  }).join('');
+  container.innerHTML = allBtn + chips;
+}
+
+// ── Hébergements ───────────────────────────────────────
+function setPrixFilter(val) {
+  state.prixMaxFilter = val;
+  document.getElementById('prixVal').textContent = val + ' $/nuit';
+  renderHebergements();
+}
+
+function renderHebergements() {
+  const filtered = HEBERGEMENTS.filter(h => {
+    if (state.destFilter && h.destination !== state.destFilter) return false;
+    if (h.prix_nuit_cad > state.prixMaxFilter) return false;
+    return true;
+  });
+
+  // Sort by score proxy: note DESC, then nb_avis DESC
+  filtered.sort((a,b) => {
+    if (b.note !== a.note) return b.note - a.note;
+    return (b.nb_avis||0) - (a.nb_avis||0);
+  });
+
+  document.getElementById('countHeberg').textContent = filtered.length;
+
+  if (filtered.length === 0) {
+    document.getElementById('hebergGrid').innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1">
+        <span class="icon">house</span>
+        <p>Aucun hébergement pour cette destination.</p>
+      </div>`;
+    return;
+  }
+
+  const cards = filtered.map(h => {
+    const stars = '★'.repeat(Math.round(h.note)) + '☆'.repeat(5 - Math.round(h.note));
+    const totalH = h.prix_nuit_cad * VOYAGE_CONFIG.nb_nuits;
+    const chips = [];
+    if (h.nb_chambres)  chips.push(`<span class="info-chip"><span class="icon">bed</span>${h.nb_chambres} ch.</span>`);
+    if (h.cuisinette)   chips.push(`<span class="info-chip"><span class="icon">countertops</span>Cuisinette</span>`);
+    if (h.stationnement) chips.push(`<span class="info-chip"><span class="icon">local_parking</span>Parking</span>`);
+    if (VOYAGE_CONFIG.type === 'velo') {
+      if (h.rangement_velos) chips.push(`<span class="info-chip"><span class="icon">pedal_bike</span>Vélos</span>`);
+      if (h.distance_remontee_km) chips.push(`<span class="info-chip"><span class="icon">cable_car</span>${h.distance_remontee_km} km remontées</span>`);
+    }
+    if (h.notes) chips.push(`<span class="info-chip"><span class="icon">info</span>${h.notes}</span>`);
+    const isSelH = state.sel.heberg?.airbnb_id === h.airbnb_id;
+    return `
+    <div class="heberg-card${isSelH ? ' selected' : ''}" onclick="selectHeberg('${h.airbnb_id}')">
+      <div class="heberg-card-header">
+        ${IMAGES[h.airbnb_id]
+          ? `<img class="heberg-card-header-img" src="${IMAGES[h.airbnb_id]}?im_w=480" alt="" loading="lazy" referrerpolicy="no-referrer"
+               onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'heberg-card-header-fallback',textContent:'${VOYAGE_CONFIG.emoji}'}))"`
+          + `>`
+          : `<div class="heberg-card-header-fallback">${VOYAGE_CONFIG.emoji}</div>`
+        }
+        <div class="heberg-card-header-overlay">
+          <div class="heberg-dest-badge"><span class="icon">place</span>${h.destination}</div>
+          <div class="heberg-title-overlay">${h.titre}</div>
+        </div>
+      </div>
+      <div class="heberg-card-body">
+        ${isSelH ? '<div class="sel-badge">check</div>' : ''}
+        <div class="heberg-rating">
+          <span class="heberg-stars">★</span>
+          <span class="heberg-note">${h.note}</span>
+          <span class="heberg-avis">(${h.nb_avis || '—'} avis)</span>
+        </div>
+        <div class="heberg-price">${VOYAGE_CONFIG.devise}${h.prix_nuit_cad}<span style="font-size:14px;font-weight:500;color:var(--md-on-surface-variant)">/nuit</span></div>
+        <div class="heberg-price-total">${VOYAGE_CONFIG.devise}${totalH.toLocaleString()} × ${VOYAGE_CONFIG.nb_nuits} nuits</div>
+        <div style="display:flex; align-items:flex-start; gap:8px;">
+          <div class="heberg-chips">${chips.join('')}</div>
+          <a href="${h.url}" target="_blank" class="btn-airbnb" title="Voir sur Airbnb">
+            <span class="icon">open_in_new</span>
+          </a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('hebergGrid').innerHTML = cards;
+}
+
+// ── Vols ───────────────────────────────────────────────
+const VOL_COLS = [
+  { key: 'date_depart',      label: 'Dates',       sortable: true },
+  { key: 'aeroport_arrivee', label: 'Aéroport',    sortable: true },
+  { key: 'compagnie',        label: 'Compagnie',   sortable: true },
+  { key: 'prix_par_personne',label: 'Prix/pers',   sortable: true },
+  { key: '_prix_total',      label: `Prix ×${VOYAGE_CONFIG.nb_personnes}`, sortable: true },
+  { key: 'duree_heures',     label: 'Durée',       sortable: true },
+  { key: 'escales',          label: 'Escales',     sortable: true },
+  { key: '_horaire',         label: 'Horaire',     sortable: false },
+];
+
+function getFilteredVols() {
+  const destAirports = state.destFilter
+    ? airportsForDest(state.destFilter)
+    : null;
+
+  const q = document.getElementById('volSearch')?.value.trim().toLowerCase() || '';
+
+  return VOLS_RAW.filter(v => {
+    if (destAirports && !destAirports.includes(v.aeroport_arrivee)) return false;
+    if (state.airportFilter && v.aeroport_arrivee !== state.airportFilter) return false;
+    if (state.escalFilter !== null && v.escales !== state.escalFilter) return false;
+    if (q && !v.compagnie.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderVolsHead() {
+  const ths = VOL_COLS.map(col => {
+    if (!col.sortable) return `<th>${col.label}</th>`;
+    const isSorted = state.volSort.col === col.key;
+    const arrow = isSorted ? (state.volSort.dir === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more';
+    return `<th class="${isSorted ? 'sorted' : ''}" onclick="sortVols('${col.key}')">
+      ${col.label} <span class="icon sort-icon">${arrow}</span>
+    </th>`;
+  }).join('');
+  document.getElementById('volsHead').innerHTML = `<tr>${ths}</tr>`;
+}
+
+function sortVols(col) {
+  if (state.volSort.col === col) {
+    state.volSort.dir = state.volSort.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    state.volSort.col = col;
+    state.volSort.dir = 'asc';
+  }
+  state.volPage = 1;
+  renderVols();
+}
+
+function renderAirportChips() {
+  const airports = [...new Set(VOLS_RAW.map(v => v.aeroport_arrivee))].sort();
+  const destAirports = state.destFilter ? airportsForDest(state.destFilter) : airports;
+  const airportColorVar = ap => (window.airportColors && window.airportColors[ap]) || '--clr-ap0';
+  const html = ['<button class="chip ' + (!state.airportFilter ? 'active' : '') + '" onclick="setAirportFilter(null)">Tous</button>',
+    ...destAirports.map(a => `<button class="chip ${state.airportFilter === a ? 'active' : ''}" onclick="setAirportFilter('${a}')">
+      <span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:var(${airportColorVar(a)});margin-right:3px;"></span>${a}
+    </button>`)
+  ].join('');
+  document.getElementById('airportChips').innerHTML = html;
+}
+
+function setAirportFilter(val) {
+  state.airportFilter = val;
+  state.volPage = 1;
+  renderVols();
+  renderAirportChips();
+}
+
+function renderEscalesChips() {
+  const opts = [
+    { val: null, label: 'Tous',    cls: '' },
+    { val: 0,    label: 'Non-stop', cls: 'esc0' },
+    { val: 1,    label: '1 escale', cls: 'esc1' },
+    { val: 2,    label: '2 escales', cls: 'esc2' },
+  ];
+  document.getElementById('escalesChips').innerHTML = opts.map(o => `
+    <button class="chip ${state.escalFilter === o.val ? 'active' : ''}" onclick="setEscalFilter(${JSON.stringify(o.val)})">
+      ${o.label}
+    </button>`).join('');
+}
+
+function setEscalFilter(val) {
+  state.escalFilter = val;
+  state.volPage = 1;
+  renderVols();
+  renderEscalesChips();
+}
+
+function changePage(delta) {
+  const filtered = getFilteredVols();
+  const maxPage = Math.ceil(filtered.length / state.volPageSize);
+  state.volPage = Math.max(1, Math.min(maxPage, state.volPage + delta));
+  renderVols();
+}
+
+function renderVols() {
+  const filtered = getFilteredVols();
+
+  // Sort
+  const col = state.volSort.col;
+  const dir = state.volSort.dir === 'asc' ? 1 : -1;
+  filtered.sort((a,b) => {
+    let av = col === '_prix_total' ? a.prix_par_personne * VOYAGE_CONFIG.nb_personnes
+           : col === '_horaire' ? (a.heure_depart || '')
+           : a[col];
+    let bv = col === '_prix_total' ? b.prix_par_personne * VOYAGE_CONFIG.nb_personnes
+           : col === '_horaire' ? (b.heure_depart || '')
+           : b[col];
+    if (av === null || av === undefined) av = '';
+    if (bv === null || bv === undefined) bv = '';
+    if (typeof av === 'string') return av.localeCompare(bv) * dir;
+    return (av - bv) * dir;
+  });
+
+  document.getElementById('countVols').textContent = filtered.length;
+
+  const total = filtered.length;
+  const pages = Math.ceil(total / state.volPageSize);
+  state.volPage = Math.min(state.volPage, pages || 1);
+  const start = (state.volPage - 1) * state.volPageSize;
+  const page  = filtered.slice(start, start + state.volPageSize);
+
+  // Pagination info
+  document.getElementById('volsPagInfo').textContent =
+    total === 0 ? 'Aucun vol' :
+    `${start+1}–${Math.min(start+state.volPageSize, total)} sur ${total} vols`;
+  document.getElementById('btnPrev').disabled = state.volPage <= 1;
+  document.getElementById('btnNext').disabled = state.volPage >= pages;
+
+  // Page numbers (up to 7)
+  const pageNums = document.getElementById('pageNums');
+  if (pages <= 1) { pageNums.innerHTML = ''; }
+  else {
+    let nums = [];
+    for (let p = 1; p <= pages; p++) {
+      if (p === 1 || p === pages || Math.abs(p - state.volPage) <= 2)
+        nums.push(p);
+      else if (nums[nums.length-1] !== '…') nums.push('…');
+    }
+    pageNums.innerHTML = nums.map(p => p === '…'
+      ? `<span style="padding:5px 4px;color:var(--md-on-surface-variant)">…</span>`
+      : `<button class="page-btn ${p === state.volPage ? 'active' : ''}"
+           style="${p === state.volPage ? 'background:var(--md-secondary-container);border-color:var(--md-secondary-container);font-weight:700;' : ''}"
+           onclick="goPage(${p})">${p}</button>`
+    ).join('');
+  }
+
+  renderVolsHead();
+
+  if (filtered.length === 0) {
+    document.getElementById('volsBody').innerHTML = `
+      <tr><td colspan="8" style="text-align:center;padding:48px;color:var(--md-on-surface-variant)">
+        Aucun vol pour ces filtres.
+      </td></tr>`;
+    return;
+  }
+
+  const rows = page.map(v => {
+    const isSelV = state.sel.vol?._idx === v._idx;
+    const escCls = v.escales === 0 ? 'esc0' : v.escales === 1 ? 'esc1' : 'esc2';
+    const escLabel = v.escales === 0 ? '✈ Non-stop' : v.escales === 1 ? '1 escale' : '2 escales';
+    const horaire = (v.heure_depart && v.heure_arrivee)
+      ? `${v.heure_depart} → ${v.heure_arrivee}`
+      : '—';
+    const duree = v.duree_heures ? `${v.duree_heures}h` : '—';
+    const prixTotal = v.prix_par_personne * VOYAGE_CONFIG.nb_personnes;
+    return `<tr class="${isSelV ? 'selected' : ''}" onclick="selectVol(${v._idx})">
+      <td>
+        <div style="font-weight:600">${v.date_depart}</div>
+        <div style="font-size:11px;color:var(--md-on-surface-variant)">→ ${v.date_retour}</div>
+      </td>
+      <td><span class="airport-badge ${v.aeroport_arrivee}">${v.aeroport_arrivee}</span></td>
+      <td>${v.compagnie}</td>
+      <td class="prix-cell">${VOYAGE_CONFIG.devise}${v.prix_par_personne.toLocaleString()}</td>
+      <td class="prix-cell">${VOYAGE_CONFIG.devise}${prixTotal.toLocaleString()}
+        <div class="prix-total">pour ${VOYAGE_CONFIG.nb_personnes} pers.</div>
+      </td>
+      <td>${duree}</td>
+      <td><span class="escales-badge ${escCls}">${escLabel}</span></td>
+      <td style="color:var(--md-on-surface-variant)">${horaire}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('volsBody').innerHTML = rows;
+}
+
+function goPage(p) {
+  state.volPage = p;
+  renderVols();
+}
+
+// ── Autos ──────────────────────────────────────────────
+function renderAutos() {
+  const airports = [...new Set(AUTOS.map(a => a.aeroport))].sort();
+  const destAirports = state.destFilter ? airportsForDest(state.destFilter) : airports;
+
+  const sections = destAirports.map(airport => {
+    const autos = AUTOS.filter(a => a.aeroport === airport);
+    if (autos.length === 0) return '';
+    const airportLabel = airport;
+
+    const clrCls = airport.toLowerCase();
+    const cards = autos.map((a, ai) => {
+      const aIdx = AUTOS.indexOf(a);
+      const isSelA = state.sel.auto?._idx_a === aIdx;
+      const totalA = a.prix_jour_cad * VOYAGE_CONFIG.nb_nuits;
+      return `
+      <div class="auto-card${isSelA ? ' selected' : ''}" onclick="selectAuto(${aIdx})" style="position:relative">
+        <div class="auto-card-header ${clrCls}">
+          <div>
+            <div class="auto-vehicle">${a.exemple_vehicule}</div>
+            <div class="auto-categorie">${a.categorie} · ${a.fournisseur}</div>
+          </div>
+          <span class="airport-badge ${airport}" style="flex-shrink:0">${airport}</span>
+        </div>
+        <div class="auto-card-body">
+          ${isSelA ? '<div class="sel-badge">check</div>' : ''}
+          <div class="auto-price">${VOYAGE_CONFIG.devise}${a.prix_jour_cad}<span style="font-size:14px;font-weight:500;color:var(--md-on-surface-variant)">/jour</span></div>
+          <div class="auto-price-total">${VOYAGE_CONFIG.devise}${totalA.toLocaleString()} × ${VOYAGE_CONFIG.nb_nuits} jours</div>
+          <div class="auto-features">
+            <div class="auto-feat ${a.km_illimite ? 'ok' : 'no'}">
+              <span class="icon">${a.km_illimite ? 'check_circle' : 'cancel'}</span>
+              Kilométrage illimité
+            </div>
+            <div class="auto-feat ${a.assurance_incluse ? 'ok' : 'no'}">
+              <span class="icon">${a.assurance_incluse ? 'check_circle' : 'cancel'}</span>
+              Assurance ${a.assurance_incluse ? 'incluse' : 'non incluse'}
+            </div>
+            ${VOYAGE_CONFIG.type === 'velo' && a.capacite_boites_velo ? `<div class="auto-feat ok"><span class="icon">inventory_2</span>${a.capacite_boites_velo} boîte${a.capacite_boites_velo > 1 ? 's' : ''} de vélo</div>` : ''}
+            ${a.notes ? `<div class="auto-feat ok"><span class="icon">info</span>${a.notes}</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `
+      <div class="autos-section">
+        <h3>
+          <span class="airport-badge ${airport}">${airport}</span>
+          ${airportLabel}
+          <span style="font-size:13px;font-weight:400;color:var(--md-on-surface-variant)">· ${autos.length} véhicules</span>
+        </h3>
+        <div class="autos-grid">${cards}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('autosContainer').innerHTML = sections || '<div class="empty-state"><span class="icon">directions_car</span><p>Aucune auto pour cette sélection.</p></div>';
+  document.getElementById('countAutos').textContent = destAirports.reduce((sum,ap) => sum + AUTOS.filter(a=>a.aeroport===ap).length, 0);
+}
+
+// ── Destinations ───────────────────────────────────────
+function renderDestinations() {
+  const dests = state.destFilter
+    ? DESTINATIONS.filter(d => d.nom === state.destFilter)
+    : DESTINATIONS;
+
+  document.getElementById('countDestinations').textContent = dests.length;
+
+  document.getElementById('destGrid').innerHTML = dests.map(d => {
+    // Stats row — vélo: altitude + trails; générique: d.stats[]
+    const stats = [];
+    if (d.altitude_village_m || d.altitude_sommet_m) {
+      const alt = [d.altitude_village_m, d.altitude_sommet_m].filter(Boolean).join('–') + ' m';
+      stats.push(`<span class="dest-stat"><span class="icon">landscape</span>${alt}</span>`);
+    }
+    if (d.trails_km)
+      stats.push(`<span class="dest-stat"><span class="icon">route</span>${d.trails_km} km trails</span>`);
+    if (d.stats)
+      d.stats.forEach(s => stats.push(`<span class="dest-stat"><span class="icon">${s.icon || 'info'}</span>${s.valeur}</span>`));
+
+    // Airports
+    const airports = d.aeroports.map(a =>
+      `<span class="dest-airport-chip"><span class="icon">flight</span>${a}${d.distance_aeroport_km && d.distance_aeroport_km[a] ? ' — ' + d.distance_aeroport_km[a] + ' km' : ''}</span>`
+    ).join('');
+
+    // Links
+    const links = [];
+    if (d.liens) {
+      Object.entries(d.liens).forEach(([k, url]) => {
+        if (url) links.push(`<a href="${url}" target="_blank" class="btn-dest-link"><span class="icon">open_in_new</span>${k}</a>`);
+      });
+    }
+
+    // Gravel routes HTML (vélo)
+    const routesHtml = d.gravel_routes && d.gravel_routes.length > 0
+      ? `<div>
+          <div class="dest-section-label">Routes suggérées</div>
+          <div class="dest-routes">
+            ${d.gravel_routes.map(r => `
+              <div class="dest-route">
+                <div class="dest-route-title">
+                  ${r.nom}
+                  ${r.niveau ? `<span class="niveau-${r.niveau}">${r.niveau}</span>` : ''}
+                </div>
+                <div class="dest-route-meta">
+                  ${r.distance_km} km${r.denivele_pos_m ? ' · +' + r.denivele_pos_m + ' m' : ''}${r.type ? ' · ' + r.type : ''}${r.description ? ' · ' + r.description : ''}
+                </div>
+              </div>`).join('')}
+          </div>
+        </div>`
+      : VOYAGE_CONFIG.type === 'velo' ? `<div class="todo-badge">Routes à documenter</div>` : '';
+
+    return `
+    <div class="dest-card" onclick="selectDestCard('${d.nom.replace(/'/g, "\\'")}')" style="cursor:pointer">
+      <div class="dest-card-header">
+        <div class="dest-card-title">${d.nom}</div>
+        <div class="dest-card-region">${d.region}</div>
+        <div class="dest-stats">${stats.join('')}</div>
+      </div>
+      <div class="dest-card-body">
+        ${d.point_fort
+          ? `<div class="dest-point-fort">${d.point_fort}</div>`
+          : '<div class="todo-badge">Point fort à documenter</div>'}
+        ${(d.remontee_nom || VOYAGE_CONFIG.type === 'velo') ? `<div>
+          <div class="dest-section-label">Remontées mécaniques</div>
+          <div class="dest-gondola">
+            <span class="icon">cable_car</span>
+            <span>${d.remontee_nom || 'À documenter'}${d.remontee_accepte_velos === true ? ' — vélos ✓' : d.remontee_accepte_velos === false ? ' — vélos ✗' : ''}</span>
+            ${d.remontee_mois_ouverts ? `<span style="font-size:11px;color:var(--md-on-surface-variant)"> (mois ${d.remontee_mois_ouverts.join(', ')})</span>` : ''}
+          </div>
+        </div>` : ''}
+        ${d.activites && d.activites.length > 0 ? `<div>
+          <div class="dest-section-label">Activités</div>
+          <div class="dest-gondola">
+            ${d.activites.map(a => `<span class="info-chip"><span class="icon">star</span>${a}</span>`).join(' ')}
+          </div>
+        </div>` : ''}
+        <div>
+          <div class="dest-section-label">Aéroports</div>
+          <div class="dest-airports">${airports}</div>
+        </div>
+        ${routesHtml}
+        ${d.notes ? `<div class="dest-notes">${d.notes}</div>` : ''}
+      </div>
+      ${links.length > 0 ? `<div class="dest-card-footer">${links.join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Banner ─────────────────────────────────────────────
+function renderBanner() {
+  const banner = document.getElementById('destBanner');
+  if (state.destFilter) {
+    banner.classList.add('visible');
+    document.getElementById('destBannerText').textContent = `Filtré par : ${state.destFilter}`;
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+// ── Main render ────────────────────────────────────────
+function render() {
+  renderBanner();
+  renderDestChips();
+  updateMarkers();
+  renderHebergements();
+  renderAirportChips();
+  renderEscalesChips();
+  renderDestinations();
+  renderVols();
+  renderAutos();
+  document.getElementById('statDest').textContent = DESTINATIONS.length + ' destinations';
+  document.getElementById('statVols').textContent = VOLS_RAW.length + ' vols';
+  document.getElementById('statHeberg').textContent = HEBERGEMENTS.length + ' hébergements';
+  document.getElementById('statAutos').textContent = AUTOS.length + ' transports';
+}
+
+// ── Init ───────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initAirportColors();
+  initMap();
+  renderAirportChips();
+  renderEscalesChips();
+  // Set title and logo from config
+  document.getElementById('logo-text').innerHTML = VOYAGE_CONFIG.emoji + ' ' + VOYAGE_CONFIG.titre + ' <span>' + VOYAGE_CONFIG.activite + '</span>';
+  document.title = VOYAGE_CONFIG.emoji + ' ' + VOYAGE_CONFIG.titre;
+  render();
+});
+</script>
+
+<script>
+
+// ── Sélection ──────────────────────────────────────────────
+function selectHeberg(airbnbId) {
+  const h = HEBERGEMENTS.find(x => x.airbnb_id === airbnbId);
+  if (!h) return;
+  state.sel.heberg = state.sel.heberg?.airbnb_id === airbnbId ? null : h;
+  updateSummary();
+  renderHebergements();
+}
+function selectVol(idx) {
+  const v = VOLS_RAW[idx];
+  if (!v) return;
+  state.sel.vol = state.sel.vol?._idx === idx ? null : v;
+  updateSummary();
+  renderVols();
+}
+function selectAuto(idx) {
+  const a = AUTOS[idx];
+  if (!a) return;
+  state.sel.auto = state.sel.auto?._idx_a === idx ? null : { ...a, _idx_a: idx };
+  updateSummary();
+  renderAutos();
+}
+function clearSelection() {
+  state.sel = { heberg: null, vol: null, auto: null };
+  updateSummary();
+  renderHebergements(); renderVols(); renderAutos();
+}
+function updateSummary() {
+  const { heberg, vol, auto } = state.sel;
+  const bar = document.getElementById('summary-bar');
+  const any = heberg || vol || auto;
+
+  // Show/hide bar
+  bar.classList.toggle('visible', !!any);
+  document.body.classList.toggle('sum-visible', !!any);
+
+  // Hébergement slot
+  const nameH = document.getElementById('sumNameHeberg');
+  const priceH = document.getElementById('sumPriceHeberg');
+  if (heberg) {
+    nameH.textContent = heberg.titre;
+    nameH.className = 'sum-slot-name';
+    const cost = heberg.prix_nuit_cad * VOYAGE_CONFIG.nb_nuits;
+    priceH.textContent = `${VOYAGE_CONFIG.devise}${cost.toLocaleString()} · ${VOYAGE_CONFIG.nb_nuits} nuits`;
+  } else {
+    nameH.textContent = 'Non sélectionné';
+    nameH.className = 'sum-slot-name empty';
+    priceH.textContent = '';
+  }
+
+  // Vol slot
+  const nameV = document.getElementById('sumNameVol');
+  const priceV = document.getElementById('sumPriceVol');
+  if (vol) {
+    nameV.textContent = vol.compagnie + ' · ' + vol.date_depart;
+    nameV.className = 'sum-slot-name';
+    const cost = vol.prix_par_personne * VOYAGE_CONFIG.nb_personnes;
+    priceV.textContent = `${VOYAGE_CONFIG.devise}${cost.toLocaleString()} · ${VOYAGE_CONFIG.nb_personnes} pers.`;
+  } else {
+    nameV.textContent = 'Non sélectionné';
+    nameV.className = 'sum-slot-name empty';
+    priceV.textContent = '';
+  }
+
+  // Auto slot
+  const nameA = document.getElementById('sumNameAuto');
+  const priceA = document.getElementById('sumPriceAuto');
+  if (auto) {
+    nameA.textContent = auto.exemple_vehicule + ' · ' + auto.fournisseur;
+    nameA.className = 'sum-slot-name';
+    const cost = auto.prix_jour_cad * VOYAGE_CONFIG.nb_nuits;
+    priceA.textContent = `${VOYAGE_CONFIG.devise}${cost.toLocaleString()} · ${VOYAGE_CONFIG.nb_nuits} jours`;
+  } else {
+    nameA.textContent = 'Non sélectionné';
+    nameA.className = 'sum-slot-name empty';
+    priceA.textContent = '';
+  }
+
+  // Total
+  const totalEl = document.getElementById('sumTotal');
+  if (heberg && vol && auto) {
+    const total = (heberg.prix_nuit_cad * VOYAGE_CONFIG.nb_nuits) + (vol.prix_par_personne * VOYAGE_CONFIG.nb_personnes) + (auto.prix_jour_cad * VOYAGE_CONFIG.nb_nuits);
+    totalEl.textContent = VOYAGE_CONFIG.devise + total.toLocaleString();
+  } else {
+    totalEl.textContent = '—';
+  }
+}
+
+// Map resizer
+(function() {
+  const resizer = document.getElementById('map-resizer');
+  const mapEl   = document.getElementById('map');
+  const MIN_H = 150, MAX_H = window.innerHeight - 120;
+  let startY, startH;
+
+  resizer.addEventListener('mousedown', e => {
+    startY = e.clientY;
+    startH = mapEl.offsetHeight;
+    resizer.classList.add('dragging');
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+
+    function onMove(e) {
+      const h = Math.min(MAX_H, Math.max(MIN_H, startH + e.clientY - startY));
+      mapEl.style.height = h + 'px';
+      if (window.map) window.map.invalidateSize();
+    }
+    function onUp() {
+      resizer.classList.remove('dragging');
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    e.preventDefault();
+  });
+})();
+
+// ── Theme system ───────────────────────────────────────
+function applyMode(mode) {
+  document.documentElement.className = mode;
+  const icon = document.getElementById('themeIcon');
+  if (icon) icon.textContent = mode === 'dark' ? 'light_mode' : 'dark_mode';
+  localStorage.setItem('explorer-mode', mode);
+}
+function applyColorTheme(themeId) {
+  const t = THEMES.filter(Boolean).find(t => t.id === themeId) || THEMES.filter(Boolean)[0];
+  if (t.css) document.getElementById('theme-css').textContent = t.css;
+  document.documentElement.dataset.themeId = t.id;
+  localStorage.setItem('explorer-theme', t.id);
+  renderThemePicker();
+  const menu = document.getElementById('themeMenu');
+  if (menu) menu.classList.remove('open');
+}
+function renderThemePicker() {
+  const cur = document.documentElement.dataset.themeId || THEMES.filter(Boolean)[0].id;
+  const active = THEMES.filter(Boolean).find(t => t.id === cur) || THEMES.filter(Boolean)[0];
+  document.getElementById('themePicker').innerHTML =
+    `<button class="theme-picker-btn" onclick="toggleThemeMenu(event)" title="Changer de thème">
+      <span class="theme-swatch-sm" style="background:${active.swatch}"></span>
+      <span class="icon">palette</span>
+    </button>
+    <div class="theme-menu" id="themeMenu">
+      ${THEMES.filter(Boolean).map(t =>
+        `<button class="theme-menu-item${t.id === cur ? ' active' : ''}"
+           onclick="applyColorTheme('${t.id}')">
+          <span class="theme-swatch-sm" style="background:${t.swatch}"></span>
+          ${t.label}
+        </button>`
+      ).join('')}
+    </div>`;
+}
+function toggleThemeMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('themeMenu');
+  if (menu) menu.classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  const menu = document.getElementById('themeMenu');
+  if (menu) menu.classList.remove('open');
+});
+function toggleTheme() {
+  const cur = document.documentElement.className;
+  applyMode(cur === 'dark' ? 'light' : 'dark');
+}
+// Init theme
+(function() {
+  const mode = localStorage.getItem('explorer-mode') || 'light';
+  const tid  = localStorage.getItem('explorer-theme') || THEMES.filter(Boolean)[0].id;
+  applyMode(mode);
+  applyColorTheme(tid);
+})();
+</script>
+
+<!-- ── Summary Bar ──────────────────────────────────────── -->
+<div id="summary-bar">
+  <div class="sum-slot" id="sumSlotHeberg">
+    <span class="icon">house</span>
+    <div class="sum-slot-inner">
+      <div class="sum-slot-label">Hébergement</div>
+      <div class="sum-slot-name empty" id="sumNameHeberg">Non sélectionné</div>
+      <div class="sum-slot-price" id="sumPriceHeberg"></div>
+    </div>
+  </div>
+  <div class="sum-slot" id="sumSlotVol">
+    <span class="icon">flight</span>
+    <div class="sum-slot-inner">
+      <div class="sum-slot-label">Vol</div>
+      <div class="sum-slot-name empty" id="sumNameVol">Non sélectionné</div>
+      <div class="sum-slot-price" id="sumPriceVol"></div>
+    </div>
+  </div>
+  <div class="sum-slot" id="sumSlotAuto">
+    <span class="icon">directions_car</span>
+    <div class="sum-slot-inner">
+      <div class="sum-slot-label">Auto</div>
+      <div class="sum-slot-name empty" id="sumNameAuto">Non sélectionné</div>
+      <div class="sum-slot-price" id="sumPriceAuto"></div>
+    </div>
+  </div>
+  <div class="sum-total">
+    <div class="sum-total-label">Total du voyage</div>
+    <div class="sum-total-amount" id="sumTotal">—</div>
+  </div>
+  <button class="sum-clear" onclick="clearSelection()" title="Effacer la sélection">
+    <span class="icon">close</span>
+  </button>
+</div>
+</body></html>

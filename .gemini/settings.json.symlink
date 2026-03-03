@@ -4,10 +4,11 @@
   "security": {
     "auth": {
       "selectedType": "oauth-personal"
-    }
+    },
+    "enablePermanentToolApproval": true
   },
   "general": {
-    "vimMode": true,
+    "vimMode": false,
     "previewFeatures": true,
     "preferredEditor": "neovim",
     "sessionRetention": {
@@ -16,9 +17,7 @@
       "maxAge": "120d"
     },
     "enableNotifications": true,
-    "plan": {
-      "directory": ".agents/,plans"
-    }
+    "defaultApprovalMode": "default"
   },
   "tools": {
     "shell": {
@@ -28,10 +27,19 @@
   },
   "experimental": {
     "plan": true,
-    "enableAgents": true
+    "enableAgents": true,
+    "modelSteering": true
   },
   "ui": {
-    "theme": "ANSI"
+    "theme": "ANSI",
+    "footer": {
+      "hideSandboxStatus": true,
+      "hideContextPercentage": false
+    },
+    "showMemoryUsage": true,
+    "showLineNumbers": false,
+    "showUserIdentity": false,
+    "loadingPhrases": "off"
   },
   "model": {
     "name": "gemini-3.1-pro-preview"

@@ -25,15 +25,15 @@ description: Provide a Jujutsu commit description and ONLY the description.
 
 [BREAKING CHANGE: <description>]
 
-
 # Best Practices
 
 - Include scope in summary if applicable.
 - MANDATORY: your answer must contain only the commit message, nothing else.
-- MANDATORY: do not wrap the commit message in triple quotes ``` ```
+- MANDATORY: do not wrap the commit message in triple quotes ` `
 - Limit the title of the commit message to 50 characters and the body to 79.
 - Write in imperative mood ("Add feature" NOT "Added feature")
 - Explain why, not just what
 - Do not use emoji shortcodes (:sparkles:), use actual emoji characters (✨)
 - Respect newlines and spaces from the template.
 - Exclude co-authorship footer from commits
+- If this work has a ticket, include it at the very end: "\n<ticket>"

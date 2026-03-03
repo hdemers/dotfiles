@@ -1,7 +1,7 @@
 ---
 name: planning
 description: Proactively use when making a plan, e.g. the user says "Let's make a plan".
-tools: 
+tools:
 ---
 
 ## Standard Operating Procedure
@@ -20,4 +20,4 @@ tools:
    - Points: unpointed
    - Sprint: backlog
    - Assgnee: unassigned.
-6. Create ticket.
+6. Create ticket using the jira-ticket skill.

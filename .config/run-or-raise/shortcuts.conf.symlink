@@ -34,7 +34,7 @@
 # GMail
 <Super>r,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@gmail.com.*/
 # Grubhub mail
-<Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
+<Super>e,gtk-launch grubhub-dev-chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@grubhub.com.*/
 
 # Tmux-vim
 # <Super>j,gtk-launch zellij-nvim.desktop,,/.*nvim.*/
@@ -54,7 +54,7 @@
 # Google Calendar
 <Super>a,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Week of
 # Wonder Calendar
-<Super>x,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Profile_3.desktop,,Google Calendar - Wonder - Calendar
+<Super>x,gtk-launch grubhub-dev-chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Wonder - Calendar
 # Google Meet
 <Super>y,gtk-launch grubhub-dev-chrome-kjgfgldnnfoeklkmfkjfagphfepbbdan-Default.desktop,,Google Meet
 

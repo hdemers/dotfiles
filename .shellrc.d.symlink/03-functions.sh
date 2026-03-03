@@ -92,7 +92,7 @@ if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
         fi
         # If command contains one of the following substrings, do not send notifications.
         local ignore_list=("ssh" "vim" "nvim" "lsemr" "js" "claude" "jb" "jj"
-            "rplans" "cpr" "cticket" "s3view" "gemini" "opencode" "geminy")
+            "rplans" "gplans" "cpr" "cticket" "s3view" "gemini" "opencode" "geminy")
 
         for ignore in "${ignore_list[@]}"; do
             if [[ "$cmd" == *"$ignore"* ]]; then
@@ -467,6 +467,48 @@ rplans() {
     fi
 
     find "$plans_dir" -maxdepth 1 -type f -printf '%T@ %p\n' | sort -rn | \
+        awk -v now="$(date +%s)" '{
+            diff = now - $1
+            if (diff < 60) rel = int(diff) " secs ago"
+            else if (diff < 3600) rel = int(diff/60) " mins ago"
+            else if (diff < 86400) rel = int(diff/3600) " hours ago"
+            else if (diff < 604800) rel = int(diff/86400) " days ago"
+            else rel = int(diff/604800) " weeks ago"
+            filepath = substr($0, index($0, " ") + 1)
+            n = split(filepath, parts, "/")
+            filename = parts[n]
+            title = ""
+            while ((getline line < filepath) > 0) {
+                if (line ~ /^# /) {
+                    title = substr(line, 3)
+                    break
+                }
+            }
+            close(filepath)
+            printf "\033[36m%-18s\033[0m  \033[32m%s\033[0m  %s\t%s\n", rel, title, filename, filepath
+        }' | \
+        fzf --ansi \
+            --height 70% \
+            --delimiter='\t' \
+            --no-input \
+            --with-nth=1 \
+            --preview='CLICOLOR_FORCE=1 glow --style dracula {2}' \
+            --preview-window='top:60%' \
+            --bind='enter:execute(glow --pager {2})' \
+            --bind='ctrl-e:execute(nvim {2})' \
+            --bind 'ctrl-s:toggle-input' \
+            --bind='tab:execute-silent(echo -n {2} | wl-copy)+abort'
+}
+
+gplans() {
+    local base_dir="$HOME/.gemini/tmp"
+
+    if [ ! -d "$base_dir" ]; then
+        echo "Gemini tmp directory does not exist: $base_dir"
+        return 1
+    fi
+
+    find "$base_dir" -type f -name '*.md' -path '*/plans/*' -printf '%T@ %p\n' | sort -rn | \
         awk -v now="$(date +%s)" '{
             diff = now - $1
             if (diff < 60) rel = int(diff) " secs ago"

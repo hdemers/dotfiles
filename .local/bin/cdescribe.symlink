@@ -63,7 +63,8 @@ _invoke_agent() {
                 bash -c 'gemini --include-directories "$(dirname "$1")" -p "@${1} $2" 2> >(grep -v "Loaded cached credentials" >&2)' _ "$context_file" "$prompt"
             ;;
         claude)
-            claude --model "$model" "/${skill_name} $(cat "$context_file")"
+            gum spin --show-output --spinner dot --title "Generating description for '${revset:0:8}' using ${agent} (${model}${ANTHROPIC_API_KEY:+" with API key"})..." -- \
+                claude --model "$model" "/${skill_name} $(cat "$context_file")"
             ;;
         *)
             "$agent" "/${skill_name} $(cat "$context_file")"
@@ -75,7 +76,7 @@ main() {
     local revset=""
     local ticket_id=""
     local agent="gemini"
-    local model="gemini-3.1-pro-preview"
+    local model="gemini-3-flash-preview"
 
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do

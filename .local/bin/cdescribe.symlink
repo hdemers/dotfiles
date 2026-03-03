@@ -60,7 +60,7 @@ _invoke_agent() {
             prompt+=" MANDATORY: do not include your thinking, only the commit message."
 
             gum spin --show-output --spinner dot --title "Generating description for '${revset:0:8}' using ${agent} (${model}${ANTHROPIC_API_KEY:+" with API key"})..." -- \
-                gemini --include-directories "$(dirname "$context_file")" -p "@${context_file} $prompt"
+                bash -c 'gemini --include-directories "$(dirname "$1")" -p "@${1} $2" 2> >(grep -v "Loaded cached credentials" >&2)' _ "$context_file" "$prompt"
             ;;
         claude)
             claude --model "$model" "/${skill_name} $(cat "$context_file")"

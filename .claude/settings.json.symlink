@@ -52,6 +52,5 @@
     ]
   },
   "plansDirectory": "/home/hdemers/Dropbox/Agents/plans",
-  "skipDangerousModePermissionPrompt": true,
-  "effortLevel": "medium"
+  "skipDangerousModePermissionPrompt": true
 }

@@ -255,6 +255,83 @@ M.bookmark = with_revset(function(id)
   end)
 end, { refresh = false }) -- refresh handled in callback
 
+M.delete_bookmark = with_revset(function(revset)
+  local utils = get_utils()
+  local output, success = utils.run_jj_cmd(
+    'bookmark list -r ' .. revset .. ' -T \'if(!self.remote(), self.name() ++ "\\n")\'',
+    nil,
+    { notify = false }
+  )
+  if not success then
+    vim.notify('Failed to get bookmarks for ' .. revset, vim.log.levels.ERROR)
+    return
+  end
+  local bookmarks = vim.split(vim.trim(output), '\n', { trimempty = true })
+  if #bookmarks == 0 then
+    vim.notify('No bookmark on ' .. revset, vim.log.levels.WARN)
+    return
+  end
+
+  local function do_delete(bookmark)
+    vim.ui.select(
+      { 'Yes', 'No' },
+      { prompt = 'Delete bookmark ' .. bookmark .. '?' },
+      function(choice)
+        if choice == 'Yes' then
+          -- Check if it has a remote tracking bookmark before deleting
+          local has_remote = false
+          local remotes_out, remotes_success = utils.run_jj_cmd(
+            'bookmark list '
+              .. vim.fn.shellescape(bookmark)
+              .. ' -a -T \'if(self.remote(), self.remote() ++ "\\n")\'',
+            nil,
+            { notify = false }
+          )
+          if remotes_success and remotes_out then
+            for _, remote in
+              ipairs(vim.split(vim.trim(remotes_out), '\n', { trimempty = true }))
+            do
+              if remote ~= 'git' and remote ~= '' then
+                has_remote = true
+                break
+              end
+            end
+          end
+
+          utils.run_jj_cmd('bookmark delete', vim.fn.shellescape(bookmark))
+          utils.refresh_log()
+
+          if has_remote then
+            -- Give a small delay before showing the next prompt so the UI doesn't glitch
+            vim.defer_fn(function()
+              vim.ui.select(
+                { 'Yes', 'No' },
+                { prompt = 'Delete bookmark ' .. bookmark .. ' on remote too?' },
+                function(push_choice)
+                  if push_choice == 'Yes' then
+                    utils.run_jj_cmd('git push', '-b ' .. vim.fn.shellescape(bookmark))
+                    utils.refresh_log()
+                  end
+                end
+              )
+            end, 100)
+          end
+        end
+      end
+    )
+  end
+
+  if #bookmarks == 1 then
+    do_delete(bookmarks[1])
+  else
+    vim.ui.select(bookmarks, { prompt = 'Select bookmark to delete:' }, function(choice)
+      if choice then
+        do_delete(choice)
+      end
+    end)
+  end
+end, { refresh = false })
+
 function M.undo()
   local utils = get_utils()
   utils.run_jj_cmd('undo', '')
@@ -403,13 +480,16 @@ end, { refresh = false })
 
 M.yank_bookmark = with_revset(function(revset)
   local utils = get_utils()
-  local output, success =
-    utils.run_jj_cmd('bookmark list -r ' .. revset .. ' -T \'name ++ "\\n"\'', nil, { notify = false })
+  local output, success = utils.run_jj_cmd(
+    'bookmark list -r ' .. revset .. ' -T \'if(!self.remote(), self.name() ++ "\\n")\'',
+    nil,
+    { notify = false }
+  )
   if not success then
     vim.notify('Failed to get bookmarks for ' .. revset, vim.log.levels.ERROR)
     return
   end
-  local bookmark = vim.trim(output):match('[^\n]+')
+  local bookmark = vim.trim(output):match '[^\n]+'
   if not bookmark or bookmark == '' then
     vim.notify('No bookmark on ' .. revset, vim.log.levels.WARN)
     return
@@ -641,7 +721,7 @@ end
 M.move_trunk_bookmark = with_revset(function(id)
   local utils = get_utils()
   utils.run_jj_cmd('bookmark move', '--from "trunk()" -t ' .. id)
-  utils.run_jj_cmd('rdev')
+  utils.run_jj_cmd 'rdev'
   utils.refresh_log()
 end, { refresh = false })
 

@@ -668,6 +668,7 @@ setup_keymaps = function(buf)
 
   -- Bookmark operations (b-prefix)
   vim.keymap.set('n', 'bb', actions.bookmark, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'bd', actions.delete_bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'bm', actions.move_bookmark(), { buffer = buf, nowait = true })
   vim.keymap.set('n', 'bM', actions.move_bookmark({ allow_backwards = true }), { buffer = buf, nowait = true })
   vim.keymap.set('n', 'bt', actions.move_trunk_bookmark, { buffer = buf, nowait = true })

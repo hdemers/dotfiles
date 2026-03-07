@@ -17,8 +17,7 @@ ARGUMENTS:
     <revset>     A Jujutsu revset or change ID (required)
 
 OPTIONS:
-    --agent <name>   AI agent CLI to use (default: claude)
-    --model <model>  Model to use (default: claude-sonnet-4-6)
+    --model <model>  Model to use (default: gemini-3-flash-preview)
     --ticket <id>    Append a ticket ID to the commit description
     --help           Display this help message and exit
 
@@ -47,27 +46,42 @@ EOF
 }
 
 _invoke_agent() {
-    local agent="$1"
-    local skill_name="$2"
-    local context_file="$3"
-    local model="$4"
-    local revset="${5:-}"
+    local prompt="$1"
+    local context_file="${2:-}"
+    local model="$3"
+    local title="$4"
+    local agent="gemini"
+
+    case "$model" in
+        gemini-*) agent="gemini" ;;
+        *haiku*|*sonnet*|*opus*) agent="claude" ;;
+    esac
+
+    local full_title="${title} using ${agent}"
 
     case "$agent" in
         gemini)
-            local prompt="Using the '${skill_name}' skill, describe the commit using the context."
-            prompt+=" MANDATORY: use the '${skill_name}' skill."
-            prompt+=" MANDATORY: do not include your thinking, only the commit message."
-
-            gum spin --show-output --spinner dot --title "Generating description for '${revset:0:8}' using ${agent} (${model}${ANTHROPIC_API_KEY:+" with API key"})..." -- \
-                bash -c 'gemini --include-directories "$(dirname "$1")" -p "@${1} $2" 2> >(grep -v "Loaded cached credentials" >&2)' _ "$context_file" "$prompt"
+            if [ -n "$context_file" ]; then
+                gum spin --show-output --spinner dot --title "$full_title" -- \
+                    bash -c 'gemini --include-directories "$(dirname "$1")" -p "@${1} $2" 2> >(grep -v "Loaded cached credentials" >&2)' _ "${context_file}" "${prompt}"
+            else
+                gum spin --show-output --spinner dot --title "$full_title" -- \
+                    bash -c 'gemini -p "$1" 2> >(grep -v "Loaded cached credentials" >&2)' _ "$prompt"
+            fi
             ;;
         claude)
-            gum spin --show-output --spinner dot --title "Generating description for '${revset:0:8}' using ${agent} (${model}${ANTHROPIC_API_KEY:+" with API key"})..." -- \
-                claude --model "$model" "/${skill_name} $(cat "$context_file")"
+            local claude_prompt="$prompt"
+            full_title="${full_title} (${model}${ANTHROPIC_API_KEY:+" with API key"})..."
+
+            if [ -n "$context_file" ]; then
+                claude_prompt="$prompt $(cat "$context_file")"
+            fi
+            gum spin --show-output --spinner dot --title "$full_title" -- \
+                claude --model "$model" "$claude_prompt"
             ;;
         *)
-            "$agent" "/${skill_name} $(cat "$context_file")"
+            gum log --level error "Unknown agent: $agent"
+            return 1
             ;;
     esac
 }
@@ -75,8 +89,7 @@ _invoke_agent() {
 main() {
     local revset=""
     local ticket_id=""
-    local agent="gemini"
-    local model="gemini-3-flash-preview"
+    local model="${DESCRIBE_AI_MODEL:-gemini-3-flash-preview}"
 
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do
@@ -87,14 +100,6 @@ main() {
                 ;;
             --ticket)
                 ticket_id="$2"
-                shift 2
-                ;;
-            --agent)
-                if [[ -z "${2-}" ]]; then
-                    gum log --level error "Error: --agent requires a value"
-                    return 1
-                fi
-                agent="$2"
                 shift 2
                 ;;
             --model)
@@ -150,7 +155,14 @@ main() {
         jj diff --git -r "${revset}"
     } > "$context_file"
 
-    _invoke_agent "$agent" "describe" "$context_file" "$model" "$revset" | jj describe -r "${revset}" --stdin
+    local skill_name="describe"
+    local prompt="Using the '${skill_name}' skill, describe the commit '${revset}' using the context."
+    prompt+=" MANDATORY: use the '${skill_name}' skill."
+    prompt+=" MANDATORY: do not include your thinking, only the commit message."
+    
+    local title="Generating description for '${revset:0:8}'"
+
+    _invoke_agent "$prompt" "$context_file" "$model" "$title" | jj describe -r "${revset}" --stdin
 
     # Modify the description of the commit to add the ticket ID on the last line
     if [ -n "$ticket_id" ]; then

@@ -68,11 +68,6 @@ return {
     end,
   },
   {
-    name = 'fidget-spinner',
-    dir = '~/src/nvim/misc',
-    dependencies = { 'j-hui/fidget.nvim' },
-  },
-  {
     name = 'jujutsu',
     lazy = false,
     dir = '~/src/nvim/misc',

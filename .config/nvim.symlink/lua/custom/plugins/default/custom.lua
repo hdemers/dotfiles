@@ -12,6 +12,7 @@ return {
     lazy = false,
     dir = '~/src/nvim/misc',
     config = function()
+      -- Misc setup
       local misc = require 'misc'
       misc.setup()
 
@@ -34,6 +35,21 @@ return {
         '<localleader>bi',
         ':tabnew scratch/scratch.qmd | <CR>',
         { desc = 'Open interactive Quarto notebook', silent = true }
+      )
+
+      -- Jujutsu setup
+      local jujutsu = require 'jujutsu'
+      jujutsu.setup()
+
+      -- Agents setup
+      local agents = require 'agents'
+      agents.setup()
+
+      vim.keymap.set(
+        'n',
+        '<localleader>ap',
+        ':AgentsPlans<CR>',
+        { desc = 'Search Agent Plans', silent = true }
       )
     end,
     init = function()
@@ -65,15 +81,6 @@ return {
         callback = rename_zellij_tab,
         desc = 'Rename zellij tab when directory changes',
       })
-    end,
-  },
-  {
-    name = 'jujutsu',
-    lazy = false,
-    dir = '~/src/nvim/misc',
-    config = function()
-      local jujutsu = require 'jujutsu'
-      jujutsu.setup()
     end,
   },
 }

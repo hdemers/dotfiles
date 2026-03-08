@@ -170,8 +170,11 @@ return {
       }
 
       local ensure_installed = vim.tbl_keys(servers or {})
+      -- Replace LSP name with correct Mason package name where they differ
+      ensure_installed = vim.tbl_filter(function(v) return v ~= 'beancount' end, ensure_installed)
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
+        'beancount-language-server',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 

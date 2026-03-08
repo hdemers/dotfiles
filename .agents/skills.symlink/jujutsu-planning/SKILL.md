@@ -1,6 +1,6 @@
 ---
 name: jujutsu-planning
-description: Proactively use when planning a complex multi-step implementation.
+description: Proactively use when planning a complex/long multi-step implementation.
 ---
 
 # Project Planning with Jujutsu
@@ -13,17 +13,17 @@ the commit stack sequentially, implementing each feature as you go.
 1. Determine the phase you're starting in:
    1. If the user has provided a revset: Working Phase, jump to that phase.
    2. If not: Planning Phase.
-1. **Planning phase**. For each step of the plan, create a new commit
+2. **Planning phase**. For each step of the plan, create a new commit
    describing the plan:
    ```
    jj new -m "☐ <ticket>: <summary>\n\n<description>"
    ```
    The description must be as detailed as possible.
-1. **Review phase**. Review the commit stack:
+3. **Review phase**. Review the commit stack:
    1. Make sure tasks are in the right order.
    2. Make sure each revision's description is self contained and has all the
       details (no external reference like outside Markdown files).
-1. **Working phase**. Starting with the first commit, sequentially implement each
+4. **Working phase**. Starting with the first commit, sequentially implement each
    in turn. For each commit being worked on:
    1. run `jj edit <revision>`
    2. Implement

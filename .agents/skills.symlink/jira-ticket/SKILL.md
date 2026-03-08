@@ -26,9 +26,7 @@ Choose:
    - Problem statement or feature description
    - Expected work product
    - Technical details when relevant
-8. Use the Jira Text Formatting language:
-   - Use `{{monospace}}` instead of `{code}..{code}` for inline code.
-   - Code blocks should specify the language: `{code:language} some code {code}`.
+8. Use the Markdown.
 
 ### Context
 
@@ -85,9 +83,6 @@ case use the `jira sprints` commands to find the one.
 3. Add meaningful comments explaining changes
 4. Link related tickets when appropriate
 5. Update time tracking information if provided
-6. Use the Jira Text Formatting language:
-   - Use `{{monospace}}` instead of `{code}..{code}` for inline code.
-   - Code blocks should specify the language: `{code:language} some code {code}`.
 
 # Template
 

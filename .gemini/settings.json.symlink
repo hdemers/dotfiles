@@ -4,8 +4,7 @@
   "security": {
     "auth": {
       "selectedType": "oauth-personal"
-    },
-    "enablePermanentToolApproval": true
+    }
   },
   "general": {
     "vimMode": false,
@@ -17,7 +16,9 @@
       "maxAge": "120d"
     },
     "enableNotifications": true,
-    "defaultApprovalMode": "default"
+    "plan": {
+      "directory": ""
+    }
   },
   "tools": {
     "shell": {
@@ -32,14 +33,7 @@
   },
   "ui": {
     "theme": "ANSI",
-    "footer": {
-      "hideSandboxStatus": true,
-      "hideContextPercentage": false
-    },
-    "showMemoryUsage": true,
-    "showLineNumbers": false,
-    "showUserIdentity": false,
-    "loadingPhrases": "off"
+    "showLineNumbers": false
   },
   "model": {
     "name": "gemini-3.1-pro-preview"

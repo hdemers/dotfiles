@@ -235,6 +235,15 @@ function M.utils.get_diff_file_at_cursor()
   local cursor_line = vim.api.nvim_win_get_cursor(0)[1]
   local lines =
     vim.api.nvim_buf_get_lines(vim.api.nvim_get_current_buf(), 0, cursor_line, false)
+  -- Check summary format: "M path/to/file" (jj diff --summary)
+  local current = lines[cursor_line]
+  if current then
+    local summary_match = current:match '^[MADR] (.+)$'
+    if summary_match then
+      return summary_match
+    end
+  end
+  -- Fall back to git diff format: "diff --git a/path b/path"
   for i = #lines, 1, -1 do
     local match = lines[i]:match '^diff %-%-git a/(.-) b/'
     if match then
@@ -262,6 +271,31 @@ function M.utils.build_jj_cmd(args, cwd)
     end
   end
   return table.concat(parts, ' ')
+end
+
+-- Returns nil if the revision doesn't exist or jj errors out.
+function M.utils.build_preview_content(id)
+  if id:find '::' then
+    local summary = vim.fn.system(M.utils.build_jj_cmd('diff --summary -r ' .. id))
+    if vim.v.shell_error ~= 0 then
+      return nil
+    end
+    return 'Range: ' .. id .. '\n\n' .. summary
+  else
+    local header = vim.fn.system(
+      M.utils.build_jj_cmd('log --no-graph -r ' .. id .. ' -T builtin_log_detailed')
+    )
+    if vim.v.shell_error ~= 0 then
+      return nil
+    end
+    local summary = vim.fn.system(M.utils.build_jj_cmd('diff --summary -r ' .. id))
+    local conflicts = vim.fn.system(M.utils.build_jj_cmd('resolve --list -r ' .. id))
+    local result = header .. summary
+    if vim.v.shell_error == 0 and conflicts:match '%S' then
+      result = result .. '\nConflicts:\n' .. conflicts
+    end
+    return result
+  end
 end
 
 function M.utils.run_jj_cmd(cmd, change_id, opts)
@@ -484,59 +518,31 @@ end
 -- Log refresh
 --------------------------------------------------------------------------------
 
--- Refresh preview with revision under cursor (called after log refresh)
-local function refresh_preview_after_log()
-  -- Early exit if plugin was closed (cwd is nil when fully closed)
-  if not M.state.cwd then
+-- Refresh the preview for the given id (called after log refresh).
+-- The id is extracted from raw jj output, not from the terminal buffer,
+-- to avoid terminal rendering race conditions.
+local function refresh_preview_after_log(id)
+  if not M.state.cwd or not id then
     return
   end
-
   local preview = require 'jujutsu.preview'
-
-  if
-    not is_win_valid(M.state.preview.win)
-    or not M.state.preview.change_id
-    or M.utils.has_active_job()
-  then
+  if not is_win_valid(M.state.preview.win) then
     return
   end
 
   vim.schedule(function()
-    -- Re-check cwd since we're in a scheduled callback
     if
       not M.state.cwd
       or not is_win_valid(M.state.preview.win)
-      or not is_win_valid(M.state.win)
       or M.utils.has_active_job()
     then
       return
     end
-
-    -- Save cursor before any operations
-    local saved_cursor = vim.api.nvim_win_get_cursor(M.state.win)
-
-    -- Ensure we're in the log window
-    local prev_win = vim.api.nvim_get_current_win()
-    vim.api.nvim_set_current_win(M.state.win)
-
-    local id = M.utils.get_change_id_under_cursor()
-    if id then
-      local preview_type = M.state.preview.type or 'show'
-      local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git')
-        or ('show -r ' .. id .. ' --git')
-      local output = vim.fn.system(M.utils.build_jj_cmd(cmd))
+    local preview_type = M.state.preview.type or 'show'
+    local output = M.utils.build_preview_content(id)
+    if output then
       M.state.preview.change_id = nil -- force update
-      preview.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
-    end
-
-    -- Restore cursor after preview.open
-    if is_win_valid(M.state.win) then
-      pcall(vim.api.nvim_win_set_cursor, M.state.win, saved_cursor)
-    end
-
-    -- Restore previous window if different
-    if prev_win ~= M.state.win and vim.api.nvim_win_is_valid(prev_win) then
-      vim.api.nvim_set_current_win(prev_win)
+      preview.open(output, preview_type, id, { filetype = 'jujutsu' })
     end
   end)
 end
@@ -596,9 +602,13 @@ function M.utils.refresh_log()
   local row = math.min(cursor[1], math.max(1, line_count))
   pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, cursor[2] })
 
-  -- Refresh preview if open
-  if is_win_valid(M.state.preview.win) and M.state.preview.change_id then
-    refresh_preview_after_log()
+  -- Refresh preview if open — read id from raw lines (avoids terminal rendering race)
+  if is_win_valid(M.state.preview.win) then
+    local id = M.utils.get_change_id_from_line(lines[row])
+    if not id and row > 1 then
+      id = M.utils.get_change_id_from_line(lines[row - 1])
+    end
+    refresh_preview_after_log(id)
   end
 end
 

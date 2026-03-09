@@ -41,11 +41,105 @@ local function is_visual()
 end
 
 --------------------------------------------------------------------------------
--- Colorization
+-- Syntax highlighting for preview buffer
 --------------------------------------------------------------------------------
 
-local function safe_colorize(buf, lines)
-  get_utils().colorize_buffer(buf, lines, 'preview_terminal_channel')
+local preview_hl_ns = vim.api.nvim_create_namespace 'jujutsu_preview'
+
+-- Define fg-only highlight groups (default = true lets colorschemes override them)
+vim.api.nvim_set_hl(0, 'JJFileAdded', { link = 'String', default = true })
+vim.api.nvim_set_hl(
+  0,
+  'JJFileDeleted',
+  { link = 'Error', default = true, strikethrough = true }
+)
+vim.api.nvim_set_hl(0, 'JJFileModified', { link = 'Type', default = true })
+vim.api.nvim_set_hl(0, 'JJConflictHeader', { link = 'DiagnosticError', default = true })
+vim.api.nvim_set_hl(0, 'JJConflictFile', { link = 'DiagnosticWarn', default = true })
+vim.api.nvim_set_hl(0, 'JJHeaderKey', { link = 'Normal', default = true })
+vim.api.nvim_set_hl(0, 'JJCommitId', { link = 'Function', default = true })
+vim.api.nvim_set_hl(0, 'JJChangeId', { link = 'Conditional', default = true })
+vim.api.nvim_set_hl(0, 'JJAuthorName', { link = 'Constant', default = true })
+vim.api.nvim_set_hl(0, 'JJAuthorEmail', { link = 'Constant', default = true })
+vim.api.nvim_set_hl(0, 'JJTimestamp', { link = 'DiagnosticHint', default = true })
+vim.api.nvim_set_hl(0, 'JJBookmark', { link = 'Conditional', default = true })
+
+-- All builtin_log_detailed header lines have their colon aligned at byte 9 (0-indexed).
+-- "Commit ID: ..." / "Change ID: ..." / "Author   : ..." / "Committer: ..."
+-- nvim_buf_add_highlight uses 0-indexed lines and byte columns (col_end is exclusive).
+-- Lua string:find() returns 1-indexed positions; the Lua 1-indexed position of a char
+-- doubles as the 0-indexed exclusive end for that char, which we exploit below.
+
+local function hl(buf, group, lnum, col_start, col_end)
+  vim.api.nvim_buf_add_highlight(buf, preview_hl_ns, group, lnum, col_start, col_end)
+end
+
+-- Highlights "Author   : Name <email> (timestamp)" with per-part colors.
+local function highlight_person(buf, lnum, line, colon)
+  -- colon: 1-indexed Lua position of ':', also the 0-indexed exclusive end for key
+  hl(buf, 'JJHeaderKey', lnum, 0, colon)
+  local value_start = colon + 1 -- 0-indexed byte: skip space after colon
+  local lt = line:find('<', 1, true)
+  local gt = line:find('>', lt or 1, true)
+  if lt and gt then
+    -- Name: from value_start up to (but not including) the space before '<'
+    local raw = line:sub(value_start + 1, lt - 1) -- Lua 1-indexed slice
+    local name = raw:match '^(.-)%s*$' -- trim trailing whitespace
+    if #name > 0 then
+      hl(buf, 'JJAuthorName', lnum, value_start, value_start + #name)
+    end
+    -- Email: '<' through '>' inclusive
+    hl(buf, 'JJAuthorEmail', lnum, lt - 1, gt)
+    -- Timestamp: everything after '>'
+    if gt < #line then
+      hl(buf, 'JJTimestamp', lnum, gt, -1)
+    end
+  else
+    hl(buf, 'JJAuthorName', lnum, value_start, -1)
+  end
+end
+
+local function apply_preview_highlights(buf, lines)
+  vim.api.nvim_buf_clear_namespace(buf, preview_hl_ns, 0, -1)
+  local in_conflicts = false
+  for i, line in ipairs(lines) do
+    local lnum = i - 1
+    local colon = line:find ':%s' -- colon followed by space = header separator
+    if colon and line:match '^Commit%s+ID%s*:' then
+      hl(buf, 'JJHeaderKey', lnum, 0, colon)
+      hl(buf, 'JJCommitId', lnum, colon + 1, -1)
+    elseif colon and line:match '^Change%s+ID%s*:' then
+      hl(buf, 'JJHeaderKey', lnum, 0, colon)
+      hl(buf, 'JJChangeId', lnum, colon + 1, -1)
+    elseif colon and line:match '^Bookmarks%s*:' then
+      hl(buf, 'JJHeaderKey', lnum, 0, colon)
+      -- Highlight each bookmark name individually
+      local pos = colon + 2 -- Lua 1-indexed: skip colon + space
+      while pos <= #line do
+        local s, e = line:find('%S+', pos)
+        if not s then
+          break
+        end
+        hl(buf, 'JJBookmark', lnum, s - 1, e) -- s-1: 0-indexed start; e: 0-indexed exclusive end
+        pos = e + 1
+      end
+    elseif colon and line:match '^Author%s*:' then
+      highlight_person(buf, lnum, line, colon)
+    elseif colon and line:match '^Committer%s*:' then
+      highlight_person(buf, lnum, line, colon)
+    elseif line:match '^M ' or line:match '^R ' then
+      hl(buf, 'JJFileModified', lnum, 0, -1)
+    elseif line:match '^A ' then
+      hl(buf, 'JJFileAdded', lnum, 0, -1)
+    elseif line:match '^D ' then
+      hl(buf, 'JJFileDeleted', lnum, 0, -1)
+    elseif line == 'Conflicts:' then
+      hl(buf, 'JJConflictHeader', lnum, 0, -1)
+      in_conflicts = true
+    elseif in_conflicts and line:match '%S' then
+      hl(buf, 'JJConflictFile', lnum, 0, -1)
+    end
+  end
 end
 
 --------------------------------------------------------------------------------
@@ -121,33 +215,6 @@ function M.setup_dual_cursorline(buf, win)
   })
 
   vim.api.nvim_exec_autocmds('CursorMoved', { buffer = buf })
-end
-
---------------------------------------------------------------------------------
--- Fold creation for diffs
---------------------------------------------------------------------------------
-
-local function create_folds_for_diff(win, content_lines)
-  vim.api.nvim_win_call(win, function()
-    vim.wo.foldmethod = 'manual'
-    vim.cmd 'normal! zE'
-    vim.wo.foldenable = true
-    vim.wo.foldlevel = 0
-
-    local fold_starts = {}
-    for i, line in ipairs(content_lines) do
-      if line:match '^diff %-%-git' then
-        table.insert(fold_starts, i)
-      end
-    end
-    for i, start in ipairs(fold_starts) do
-      local end_line = (fold_starts[i + 1] or (#content_lines + 1)) - 1
-      if end_line > start then
-        vim.cmd(string.format('%d,%dfold', start, end_line))
-      end
-    end
-    vim.cmd 'normal! zM'
-  end)
 end
 
 --------------------------------------------------------------------------------
@@ -240,6 +307,17 @@ local function setup_preview_keymaps(buf)
     preview_nav 'k'
   end, { buffer = buf, nowait = true })
 
+  -- G goes to last non-empty line (terminal buffers have many trailing empty rows)
+  vim.keymap.set('n', 'G', function()
+    local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
+    for i = #lines, 1, -1 do
+      if vim.trim(lines[i]) ~= '' then
+        vim.api.nvim_win_set_cursor(0, { i, 0 })
+        return
+      end
+    end
+  end, { buffer = buf, nowait = true })
+
   -- Close entire jj-log from preview buffer
   vim.keymap.set('n', 'gq', function()
     require('jujutsu').close()
@@ -270,7 +348,6 @@ function M.close()
     vim.api.nvim_buf_delete(state.preview.buf, { force = true })
   end
   state.preview = { buf = nil, win = nil, type = nil, change_id = nil }
-  state.preview_terminal_channel = nil
 end
 
 function M.toggle_focus()
@@ -325,15 +402,11 @@ end
 function M.open(content, preview_type, change_id, opts)
   opts = opts or {}
   local state = get_state()
-  local CONST = get_const()
 
   -- Early exit if plugin was closed
   if not state.cwd then
     return nil
   end
-
-  local log_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)
-    or nil
 
   -- Same content already showing? Do nothing
   if
@@ -345,27 +418,19 @@ function M.open(content, preview_type, change_id, opts)
   end
 
   local content_lines = vim.split(content, '\n')
-  local created_new_window = false
 
   if preview_is_valid() then
-    -- Reuse existing preview window
-    vim.bo[state.preview.buf].filetype = opts.filetype or 'diff'
-    vim.bo[state.preview.buf].modifiable = true
-    vim.api.nvim_win_call(state.preview.win, function()
-      if not opts.no_colorize then
-        safe_colorize(state.preview.buf, content_lines)
-      else
-        vim.api.nvim_buf_set_lines(state.preview.buf, 0, -1, false, content_lines)
-      end
-      if opts.filetype == 'jujutsu' then
-        create_folds_for_diff(state.preview.win, content_lines)
-      end
-    end)
-    vim.bo[state.preview.buf].modifiable = false
+    -- Reuse existing buffer — update content in place (no terminal, no swapping)
+    local buf = state.preview.buf
+    vim.bo[buf].modifiable = true
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, content_lines)
+    apply_preview_highlights(buf, content_lines)
+    vim.bo[buf].modifiable = false
   else
-    created_new_window = true
+    -- Create new preview window and buffer
+    local log_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)
+      or nil
 
-    -- Clean up any existing JJ-preview buffer
     local existing = vim.fn.bufnr 'JJ-preview'
     if existing ~= -1 then
       vim.api.nvim_buf_delete(existing, { force = true })
@@ -389,32 +454,49 @@ function M.open(content, preview_type, change_id, opts)
     vim.bo[buf].buftype = 'nofile'
     vim.bo[buf].bufhidden = 'wipe'
     vim.bo[buf].buflisted = false
-    vim.bo[buf].filetype = opts.filetype or 'diff'
 
-    if not opts.no_colorize then
-      safe_colorize(buf, content_lines)
-    else
-      vim.api.nvim_buf_set_lines(buf, 0, -1, false, content_lines)
-    end
+    -- Window display options (no line numbers, no sign column)
+    vim.api.nvim_win_call(win, function()
+      vim.wo.number = false
+      vim.wo.relativenumber = false
+      vim.wo.statuscolumn = ''
+      vim.wo.signcolumn = 'no'
+      vim.wo.cursorline = true
+    end)
+
+    local augroup = vim.api.nvim_create_augroup('JJPreviewCursorline_' .. buf, { clear = true })
+    vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
+      group = augroup,
+      buffer = buf,
+      callback = function()
+        vim.wo.cursorline = true
+      end,
+    })
+    vim.api.nvim_create_autocmd({ 'WinLeave', 'BufLeave' }, {
+      group = augroup,
+      buffer = buf,
+      callback = function()
+        vim.wo.cursorline = false
+      end,
+    })
+
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, content_lines)
+    apply_preview_highlights(buf, content_lines)
     vim.bo[buf].modifiable = false
 
-    if opts.filetype == 'jujutsu' then
-      create_folds_for_diff(win, content_lines)
-    end
-
     setup_preview_keymaps(buf)
+
+    -- Return focus to log window
+    if is_win_valid(state.win) then
+      vim.api.nvim_set_current_win(state.win)
+      if log_cursor then
+        vim.api.nvim_win_set_cursor(state.win, log_cursor)
+      end
+    end
   end
 
   state.preview.type = preview_type
   state.preview.change_id = change_id
-
-  -- Return focus to log window only when we created a new window
-  if created_new_window and is_win_valid(state.win) then
-    vim.api.nvim_set_current_win(state.win)
-    if log_cursor then
-      vim.api.nvim_win_set_cursor(state.win, log_cursor)
-    end
-  end
 
   return state.preview.buf
 end
@@ -435,14 +517,14 @@ function M.refresh()
 
   local id = state.preview.change_id
   local preview_type = state.preview.type
-  local cmd = preview_type == 'diff' and ('diff -r ' .. id .. ' --git')
-    or ('show -r ' .. id .. ' --git')
-
-  local output = vim.fn.system(utils.build_jj_cmd(cmd))
+  local output = utils.build_preview_content(id)
+  if not output then
+    return
+  end
 
   -- Clear cached change_id to force update
   state.preview.change_id = nil
-  M.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
+  M.open(output, preview_type, id, { filetype = 'jujutsu' })
 end
 
 --------------------------------------------------------------------------------
@@ -513,9 +595,10 @@ preview_nav = function(direction)
   end)
 
   -- Update preview
-  local output =
-    vim.fn.system(utils.build_jj_cmd('show -r ' .. new_commit.id .. ' --git'))
-  M.open(output, 'show', new_commit.id, { filetype = 'jujutsu', no_colorize = true })
+  local output = utils.build_preview_content(new_commit.id)
+  if output then
+    M.open(output, 'show', new_commit.id, { filetype = 'jujutsu' })
+  end
 end
 
 --------------------------------------------------------------------------------

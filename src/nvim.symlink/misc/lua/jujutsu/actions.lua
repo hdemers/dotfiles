@@ -165,8 +165,10 @@ end, { refresh = false }) -- refresh handled by editor callback
 M.diff = with_revset(function(id)
   local utils = get_utils()
   local preview = get_preview()
-  local output = vim.fn.system(utils.build_jj_cmd('diff -r ' .. id .. ' --git'))
-  preview.open(output, 'diff', id, { filetype = 'jujutsu', no_colorize = true })
+  local output = utils.build_preview_content(id)
+  if output then
+    preview.open(output, 'diff', id, { filetype = 'jujutsu' })
+  end
 end, { refresh = false })
 
 M.show = with_revset(function(id)
@@ -177,14 +179,11 @@ M.show = with_revset(function(id)
   local cursor = vim.api.nvim_win_get_cursor(state.win)
   local win = state.win
 
-  -- Use diff for ranges (oldest::newest), show for single revisions
-  local is_range = id:find '::'
-  local cmd = is_range and ('diff -r ' .. id .. ' --git')
-    or ('show -r ' .. id .. ' --git')
-  local preview_type = is_range and 'diff' or 'show'
-
-  local output = vim.fn.system(utils.build_jj_cmd(cmd))
-  preview.open(output, preview_type, id, { filetype = 'jujutsu', no_colorize = true })
+  local preview_type = id:find '::' and 'diff' or 'show'
+  local output = utils.build_preview_content(id)
+  if output then
+    preview.open(output, preview_type, id, { filetype = 'jujutsu' })
+  end
 
   vim.defer_fn(function()
     if is_win_valid(win) then
@@ -519,9 +518,11 @@ local function nav(direction)
     return
   end
 
-  local cmd = is_visual() and 'diff' or 'show'
-  local output = vim.fn.system(utils.build_jj_cmd(cmd .. ' -r ' .. revset .. ' --git'))
-  preview.open(output, cmd, revset, { filetype = 'jujutsu', no_colorize = true })
+  local preview_type = is_visual() and 'diff' or 'show'
+  local output = utils.build_preview_content(revset)
+  if output then
+    preview.open(output, preview_type, revset, { filetype = 'jujutsu' })
+  end
 end
 
 function M.nav_down()
@@ -565,18 +566,31 @@ M.cdescribe = with_revset(function(id)
     on_exit = function()
       vim.schedule(function()
         utils.clear_active_job()
-        vim.cmd 'stopinsert'
+        -- Explicitly focus the float before stopinsert so it targets the terminal
+        -- float, not the log window. The log buffer is also a terminal buffer, so
+        -- calling stopinsert while the log window is current drops its cursor to
+        -- the bottom of the rendered terminal content.
         if vim.api.nvim_win_is_valid(win) then
+          vim.api.nvim_set_current_win(win)
+          vim.cmd 'stopinsert'
           vim.api.nvim_win_close(win, true)
         end
         if is_win_valid(state.win) then
           vim.api.nvim_set_current_win(state.win)
-          -- Restore cursor before refresh so refresh_log preserves it
           if saved_cursor then
             pcall(vim.api.nvim_win_set_cursor, state.win, saved_cursor)
           end
         end
         utils.refresh_log()
+        -- Belt-and-suspenders: re-apply cursor after refresh_log's terminal
+        -- rendering (nvim_chan_send) which may scroll the buffer asynchronously.
+        if saved_cursor and is_win_valid(state.win) then
+          vim.schedule(function()
+            if is_win_valid(state.win) then
+              pcall(vim.api.nvim_win_set_cursor, state.win, saved_cursor)
+            end
+          end)
+        end
       end)
     end,
   })

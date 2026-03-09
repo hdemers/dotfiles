@@ -1,94 +1,3 @@
-# vim: set ft=toml:
-# format = """
-# $username\
-# $hostname\
-# $localip\
-# $shlvl\
-# $singularity\
-# $kubernetes\
-# $directory\
-# $vcsh\
-# $fossil_branch\
-# $fossil_metrics\
-# $hg_branch\
-# $pijul_channel\
-# $docker_context\
-# $package\
-# $c\
-# $cmake\
-# $cobol\
-# $daml\
-# $dart\
-# $deno\
-# $dotnet\
-# $elixir\
-# $elm\
-# $erlang\
-# $fennel\
-# $gleam\
-# $golang\
-# $guix_shell\
-# $haskell\
-# $haxe\
-# $helm\
-# $java\
-# $julia\
-# $kotlin\
-# $gradle\
-# $lua\
-# $nim\
-# $nodejs\
-# $ocaml\
-# $opa\
-# $perl\
-# $php\
-# $pulumi\
-# $purescript\
-# $python\
-# $quarto\
-# $raku\
-# $rlang\
-# $red\
-# $ruby\
-# $rust\
-# $scala\
-# $solidity\
-# $swift\
-# $terraform\
-# $typst\
-# $vlang\
-# $vagrant\
-# $zig\
-# $buf\
-# $nix_shell\
-# $conda\
-# $meson\
-# $spack\
-# $memory_usage\
-# $custom\
-# $aws\
-# $gcloud\
-# $openstack\
-# $azure\
-# $nats\
-# $direnv\
-# $env_var\
-# $mise\
-# $crystal\
-# $sudo\
-# $cmd_duration\
-# $jobs\
-# $battery\
-# $time\
-# $line_break\
-# $status\
-# $os\
-# $container\
-# $netns\
-# $shell\
-# $character"""
-
-
 [aws]
 format = 'on [$symbol($profile )(\[$duration\] )]($style)'
 disabled = false
@@ -139,33 +48,12 @@ format = '[$time]($style) '
 style = 'blue'
 
 # custom module for jj status
+# See https://github.com/dmmulroy/jj-starship
 [custom.jj]
 description = "The current jj status"
 when = "jj-starship detect"
-shell = ["jj-starship", "--jj-symbol", " ", "--id-length", "6"]
+shell = ["jj-starship", "--jj-symbol", " ", "--id-length", "6", "--bookmarks-display-limit", "2"]
 format = "$output "
-# when = "jj --ignore-working-copy root"
-# symbol = "🥋 "
-# command = '''
-# jj log --revisions @ --no-graph --ignore-working-copy --color always --limit 1 --template '
-#   separate(" ",
-#     change_id.shortest(4),
-#     bookmarks,
-#     "|",
-#     concat(
-#       if(conflict, "💥"),
-#       if(divergent, "🚧"),
-#       if(hidden, "👻"),
-#       if(immutable, "🔒"),
-#     ),
-#     raw_escape_sequence("\x1b[1;32m") ++ if(empty, "(empty)"),
-#     raw_escape_sequence("\x1b[1;32m") ++ coalesce(
-#       truncate_end(50, description.first_line(), "…"),
-#       "(no description set)",
-#     ) ++ raw_escape_sequence("\x1b[0m"),
-#   )
-# '
-# '''
 
 # optionally disable git modules when JJ is found.
 # note that you'll need to add ${custom.git_branch}, ${custom.git_commit} etc
@@ -173,38 +61,14 @@ format = "$output "
 [git_status]
 disabled = true
 
-# [custom.git_status]
-# when = "! jj --ignore-working-copy root"
-# command = "starship module git_status"
-# style = "" # This disables the default "(bold green)" style
-# description = "Only show git_status if we're not in a jj repo"
-
 [git_commit]
 disabled = true
-
-# [custom.git_commit]
-# when = "! jj --ignore-working-copy root"
-# command = "starship module git_commit"
-# style = ""
-# description = "Only show git_commit if we're not in a jj repo"
 
 [git_metrics]
 disabled = true
 
-# [custom.git_metrics]
-# when = "! jj --ignore-working-copy root"
-# command = "starship module git_metrics"
-# description = "Only show git_metrics if we're not in a jj repo"
-# style = ""
-
 [git_branch]
 disabled = true
-
-# [custom.git_branch]
-# when = "! jj --ignore-working-copy root"
-# command = "starship module git_branch"
-# description = "Only show git_branch if we're not in a jj repo"
-# style = ""
 
 [fill]
 symbol = "─"

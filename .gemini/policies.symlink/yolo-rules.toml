@@ -1,5 +1,23 @@
 [[rule]]
 toolName = "run_shell_command"
+commandRegex = "rm(?![^\"]* (?!-|test_)[^\\s\"])[^\"]*\""
+decision = "allow"
+priority = 250
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = ".*\\brm\\b.*"
+decision = "ask_user"
+priority = 200
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = ".*\\bjj\\s+(absorb|rebase|squash|amend|abandon|edit|split|unsquash|restore|undo|op).*$"
+decision = "ask_user"
+priority = 200
+
+[[rule]]
+toolName = "run_shell_command"
 commandRegex = ".*"
 decision = "allow"
 priority = 100
@@ -15,6 +33,6 @@ decision = "allow"
 priority = 100
 
 [[rule]]
-toolName = "write_file"
+toolName = ["write_file", "replace"]
 decision = "allow"
 priority = 100

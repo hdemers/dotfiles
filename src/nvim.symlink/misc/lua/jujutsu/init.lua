@@ -590,8 +590,25 @@ function M.utils.refresh_log()
 
   -- Render to new buffer
   vim.api.nvim_win_call(M.state.win, function()
+    vim.wo.cursorline = true
     safe_colorize(new_buf, lines)
   end)
+
+  local cursorline_group = vim.api.nvim_create_augroup('JJLogCursorline_' .. new_buf, { clear = true })
+  vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
+    group = cursorline_group,
+    buffer = new_buf,
+    callback = function()
+      vim.wo.cursorline = true
+    end,
+  })
+  vim.api.nvim_create_autocmd({ 'WinLeave', 'BufLeave' }, {
+    group = cursorline_group,
+    buffer = new_buf,
+    callback = function()
+      vim.wo.cursorline = false
+    end,
+  })
 
   -- Re-setup keymaps and autocmds on new buffer
   setup_keymaps(new_buf)
@@ -774,6 +791,26 @@ function M.jujutsu_flog()
   vim.bo[buf].bufhidden = 'wipe'
   vim.bo[buf].buflisted = false
 
+  vim.api.nvim_win_call(M.state.win, function()
+    vim.wo.cursorline = true
+  end)
+
+  local cursorline_group = vim.api.nvim_create_augroup('JJLogCursorline_' .. buf, { clear = true })
+  vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
+    group = cursorline_group,
+    buffer = buf,
+    callback = function()
+      vim.wo.cursorline = true
+    end,
+  })
+  vim.api.nvim_create_autocmd({ 'WinLeave', 'BufLeave' }, {
+    group = cursorline_group,
+    buffer = buf,
+    callback = function()
+      vim.wo.cursorline = false
+    end,
+  })
+
   local lines = vim.split(output, '\n')
   safe_colorize(buf, lines)
 
@@ -804,6 +841,177 @@ function M.jujutsu_new()
   vim.notify(prefix .. output, level)
 end
 
+function M.jujutsu_file_history(file_path)
+  file_path = file_path or vim.fn.expand('%')
+  if file_path == '' then
+    vim.notify('No file to show history for', vim.log.levels.WARN)
+    return
+  end
+  local ft = vim.filetype.match { filename = file_path }
+
+  M.state.cwd = vim.fn.getcwd()
+
+  local cmd = M.utils.build_jj_cmd(
+    "log -r 'files(\"" .. file_path .. "\")' --no-graph -T builtin_log_oneline --color=always"
+  )
+  local output = vim.fn.system(cmd)
+
+  local left_name = 'JJ-left-' .. vim.fn.fnamemodify(file_path, ':t')
+  local right_name = 'JJ-right-' .. vim.fn.fnamemodify(file_path, ':t')
+  local bot_name = 'JJ-file-history-' .. vim.fn.fnamemodify(file_path, ':t')
+
+  for _, name in ipairs({ left_name, right_name, bot_name }) do
+    local existing = vim.fn.bufnr(name)
+    if existing ~= -1 then
+      vim.api.nvim_buf_delete(existing, { force = true })
+    end
+  end
+
+  -- Left window (old content)
+  vim.cmd('tabnew')
+  local left_win = vim.api.nvim_get_current_win()
+  local left_buf = vim.api.nvim_get_current_buf()
+  vim.api.nvim_buf_set_name(left_buf, left_name)
+  vim.bo[left_buf].buftype = 'nofile'
+  vim.bo[left_buf].bufhidden = 'wipe'
+  vim.bo[left_buf].buflisted = false
+  if ft then vim.bo[left_buf].filetype = ft end
+  vim.cmd('diffthis')
+
+  -- Right window (new content)
+  vim.cmd('rightbelow vsplit')
+  local right_win = vim.api.nvim_get_current_win()
+  local right_buf = vim.api.nvim_create_buf(false, true)
+  vim.api.nvim_win_set_buf(right_win, right_buf)
+  vim.api.nvim_buf_set_name(right_buf, right_name)
+  vim.bo[right_buf].buftype = 'nofile'
+  vim.bo[right_buf].bufhidden = 'wipe'
+  vim.bo[right_buf].buflisted = false
+  if ft then vim.bo[right_buf].filetype = ft end
+  vim.cmd('diffthis')
+
+  -- Bottom window (history log)
+  local total_height = vim.api.nvim_get_option('lines')
+  local bot_height = math.floor(total_height / 5)
+  vim.cmd('botright ' .. bot_height .. 'new')
+
+  local bot_win = vim.api.nvim_get_current_win()
+  local bot_buf = vim.api.nvim_get_current_buf()
+  vim.api.nvim_buf_set_name(bot_buf, bot_name)
+  vim.bo[bot_buf].buftype = 'nofile'
+  vim.bo[bot_buf].bufhidden = 'wipe'
+  vim.bo[bot_buf].buflisted = false
+
+  local function close_tabs()
+    vim.cmd('tabclose')
+  end
+  vim.keymap.set('n', 'q', close_tabs, { buffer = bot_buf, silent = true })
+  vim.keymap.set('n', 'q', close_tabs, { buffer = left_buf, silent = true })
+  vim.keymap.set('n', 'q', close_tabs, { buffer = right_buf, silent = true })
+
+  local function update_diffs()
+    if not is_win_valid(bot_win) then return end
+    local line = vim.api.nvim_buf_get_lines(bot_buf, vim.api.nvim_win_get_cursor(bot_win)[1] - 1, vim.api.nvim_win_get_cursor(bot_win)[1], false)[1]
+    if not line then return end
+
+    local clean = strip_ansi(line)
+    -- Optional match for '    ' at the start and then the change_id
+    local change_id = clean:match('^%s*([a-z0-9]+)')
+
+    if not change_id then return end
+
+    local old_cmd = M.utils.build_jj_cmd("file show -r " .. change_id .. "- " .. vim.fn.shellescape(file_path))
+    local old_output = vim.fn.system(old_cmd)
+    local old_lines = vim.v.shell_error == 0 and vim.split(old_output, '\n') or { "File not found in parent" }
+
+    local new_cmd = M.utils.build_jj_cmd("file show -r " .. change_id .. " " .. vim.fn.shellescape(file_path))
+    local new_output = vim.fn.system(new_cmd)
+    local new_lines = vim.v.shell_error == 0 and vim.split(new_output, '\n') or { "File not found in revision" }
+
+    if is_buf_valid(left_buf) then
+      vim.bo[left_buf].modifiable = true
+      vim.api.nvim_buf_set_lines(left_buf, 0, -1, false, old_lines)
+      vim.bo[left_buf].modifiable = false
+    end
+
+    if is_buf_valid(right_buf) then
+      vim.bo[right_buf].modifiable = true
+      vim.api.nvim_buf_set_lines(right_buf, 0, -1, false, new_lines)
+      vim.bo[right_buf].modifiable = false
+    end
+  end
+
+  local lines = vim.split(output, '\n')
+  local padded_lines = {
+    '    ' .. file_path,
+    '',
+  }
+  for _, line in ipairs(lines) do
+    table.insert(padded_lines, '    ' .. line)
+  end
+
+  local function next_rev()
+    if not is_win_valid(bot_win) then return end
+    local cursor = vim.api.nvim_win_get_cursor(bot_win)
+    local max_line = #padded_lines
+    if cursor[1] < max_line then
+      vim.api.nvim_win_set_cursor(bot_win, { cursor[1] + 1, 4 })
+      update_diffs()
+    end
+  end
+
+  local function prev_rev()
+    if not is_win_valid(bot_win) then return end
+    local cursor = vim.api.nvim_win_get_cursor(bot_win)
+    if cursor[1] > 3 then
+      vim.api.nvim_win_set_cursor(bot_win, { cursor[1] - 1, 4 })
+      update_diffs()
+    end
+  end
+
+  for _, buf in ipairs({ left_buf, right_buf, bot_buf }) do
+    vim.keymap.set('n', '<Tab>', next_rev, { buffer = buf, silent = true, desc = 'Older revision' })
+    vim.keymap.set('n', '<S-Tab>', prev_rev, { buffer = buf, silent = true, desc = 'Newer revision' })
+  end
+
+  M.utils.colorize_buffer(bot_buf, padded_lines, 'history_channel_' .. bot_buf)
+
+  vim.api.nvim_win_call(bot_win, function()
+    vim.wo.cursorline = true
+  end)
+
+  local augroup = vim.api.nvim_create_augroup('JJFileHistory_' .. bot_buf, { clear = true })
+
+  vim.api.nvim_create_autocmd('CursorMoved', {
+    group = augroup,
+    buffer = bot_buf,
+    callback = function()
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      local row = cursor[1]
+      local max_line = #padded_lines
+      if row < 3 then
+        row = 3
+      elseif row > max_line then
+        row = max_line
+      end
+      -- Always constrain column to 4 (5th column)
+      pcall(vim.api.nvim_win_set_cursor, 0, { row, 4 })
+
+      update_diffs()
+    end,
+  })
+
+  vim.api.nvim_set_current_win(bot_win)
+  update_diffs()end
+
+local function smart_history()
+  if is_jujutsu_repo() then
+    M.jujutsu_file_history()
+  else
+    vim.cmd 'DiffviewFileHistory %'
+  end
+end
+
 local function smart_log()
   if is_jujutsu_repo() then
     M.jujutsu_flog()
@@ -820,10 +1028,12 @@ function M.setup()
   -- Global keymaps
   vim.keymap.set('n', '<leader>jn', M.jujutsu_new, { desc = 'Create new Jujutsu commit' })
   vim.keymap.set('n', '<leader>gl', smart_log, { desc = 'Git/Jujutsu log (smart)' })
+  vim.keymap.set('n', '<leader>gh', smart_history, { desc = 'Diffview/Jujutsu file history (smart)' })
 
   -- User commands
   vim.api.nvim_create_user_command('JujutsuLog', M.jujutsu_flog, {})
   vim.api.nvim_create_user_command('JujutsuNew', M.jujutsu_new, {})
+  vim.api.nvim_create_user_command('JujutsuFileHistory', M.jujutsu_file_history, {})
 end
 
 return M

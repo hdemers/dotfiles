@@ -220,8 +220,24 @@ return {
       },
       {
         '<leader>gh',
-        ':DiffviewFileHistory %<CR>',
-        desc = 'Diffview: view current file history',
+        function()
+          local is_jj = false
+          local path = vim.fn.getcwd()
+          while path ~= '/' and path ~= '' do
+            if vim.fn.isdirectory(path .. '/.jj') == 1 then
+              is_jj = true
+              break
+            end
+            path = vim.fn.fnamemodify(path, ':h')
+          end
+
+          if is_jj then
+            require('jujutsu.init').jujutsu_file_history()
+          else
+            vim.cmd('DiffviewFileHistory %')
+          end
+        end,
+        desc = 'Smart file history (JJ / Diffview)',
         mode = { 'n', 'v' },
       },
       {

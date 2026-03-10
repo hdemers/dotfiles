@@ -149,7 +149,7 @@ end
 function M.setup_dual_cursorline(buf, win)
   local augroup = vim.api.nvim_create_augroup('JujutsuCursorline', { clear = true })
 
-  vim.api.nvim_create_autocmd({ 'CursorMoved', 'ModeChanged' }, {
+  vim.api.nvim_create_autocmd({ 'CursorMoved', 'ModeChanged', 'WinEnter', 'WinLeave' }, {
     group = augroup,
     buffer = buf,
     callback = function()
@@ -159,6 +159,28 @@ function M.setup_dual_cursorline(buf, win)
 
       local state = get_state()
       vim.api.nvim_buf_clear_namespace(buf, cursorline_ns, 0, -1)
+      
+      -- If we are not currently in the main log window, do not draw the normal cursorline,
+      -- but DO draw the stored visual range if it exists so we know what was selected.
+      if vim.api.nvim_get_current_win() ~= win then
+        if state.stored_visual_range then
+          local start_line = state.stored_visual_range[1]
+          local end_line = state.stored_visual_range[2]
+
+          for line = start_line, end_line do
+            vim.api.nvim_buf_set_extmark(buf, cursorline_ns, line - 1, 0, {
+              line_hl_group = 'Visual',
+            })
+          end
+          local line_count = vim.api.nvim_buf_line_count(buf)
+          if end_line < line_count then
+            vim.api.nvim_buf_set_extmark(buf, cursorline_ns, end_line, 0, {
+              line_hl_group = 'Visual',
+            })
+          end
+        end
+        return
+      end
 
       local mode = vim.fn.mode()
       local ok, cursor = pcall(vim.api.nvim_win_get_cursor, win)
@@ -220,6 +242,16 @@ end
 --------------------------------------------------------------------------------
 -- Side-by-side diff
 --------------------------------------------------------------------------------
+
+function M.open_file_history()
+  local utils = get_utils()
+  local file_path = utils.get_diff_file_at_cursor()
+  if not file_path then
+    vim.notify('No file found at cursor position', vim.log.levels.WARN)
+    return
+  end
+  require('jujutsu.init').jujutsu_file_history(file_path)
+end
 
 function M.open_side_by_side_diff()
   local state = get_state()
@@ -297,6 +329,7 @@ local function setup_preview_keymaps(buf)
 
   vim.keymap.set('n', 'O', M.open_side_by_side_diff, { buffer = buf, nowait = true })
   vim.keymap.set('n', '<CR>', M.open_side_by_side_diff, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'H', M.open_file_history, { buffer = buf, nowait = true })
   vim.keymap.set('n', '<leader>e', M.toggle_focus, { buffer = buf, nowait = true })
 
   -- Navigate revisions from preview (Tab/Shift-Tab)

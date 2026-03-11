@@ -51,6 +51,6 @@
       "notify:*"
     ]
   },
-  "plansDirectory": "/home/hdemers/Dropbox/Agents/plans",
+  "voiceEnabled": false,
   "skipDangerousModePermissionPrompt": true
 }

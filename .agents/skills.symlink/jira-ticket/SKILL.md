@@ -89,12 +89,12 @@ case use the `jira sprints` commands to find the one.
 You must strictly adhere to the following template to write the ticket description:
 
 ```markdown
-h3. Description
+### Description
 
 - Work needed. Be as detailed as possible to allow coworkers to points the level of effort needed.
 - DO NOT make a judgement call on the level of effort itself, only describe it.
 
-h3. Expected work product
+### Expected work product
 
 - Is this a code change? If so, provide the URL of the repository.
 - Is the output a document? If so what type:
@@ -102,23 +102,23 @@ h3. Expected work product
   - Jupyter/Quarto Notebook?
 - Keep this section real simple.
 
-h3. Acceptance Criteria
+### Acceptance Criteria
 
 - [ ] Criteria 1
 - [ ] Criteria 2
 
 NOTE: do not mention code reviews, these always happen.
 
-h3. Out of Scope
+### Out of Scope
 
 - Detail what is out of scope for this ticket.
 
-h3. Any background context you want to provide
+### Any background context you want to provide
 
 - What is the broader context of this work?
 - Why are we doing this?
 
-h3. Plan
+### Plan
 
 if you are provided with a plan, copy it here, as is.
 ```

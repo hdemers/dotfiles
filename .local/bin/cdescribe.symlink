@@ -57,16 +57,16 @@ _invoke_agent() {
         *haiku*|*sonnet*|*opus*) agent="claude" ;;
     esac
 
-    local full_title="${title} using ${agent}"
+    local full_title="${title} using ${agent} (model: ${model})"
 
     case "$agent" in
         gemini)
             if [ -n "$context_file" ]; then
                 gum spin --show-output --spinner dot --title "$full_title" -- \
-                    bash -c 'gemini --include-directories "$(dirname "$1")" -p "@${1} $2" 2> >(grep -v "Loaded cached credentials" >&2)' _ "${context_file}" "${prompt}"
+                    bash -c 'gemini --model "$1" --include-directories "$(dirname "$2")" -p "@${2} $3" 2> >(grep -v "Loaded cached credentials" >&2)' _ "${model}" "${context_file}" "${prompt}"
             else
                 gum spin --show-output --spinner dot --title "$full_title" -- \
-                    bash -c 'gemini -p "$1" 2> >(grep -v "Loaded cached credentials" >&2)' _ "$prompt"
+                    bash -c 'gemini --model "$1" -p "$2" 2> >(grep -v "Loaded cached credentials" >&2)' _ "${model}" "$prompt"
             fi
             ;;
         claude)

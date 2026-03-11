@@ -64,7 +64,7 @@ _invoke_agent() {
 
     case "$agent" in
         gemini)
-            gemini --allowed-tools activate_skill --include-directories "$(dirname "$context_file")" -p "@${context_file} Using the '${skill_name}' skill, create a JIRA ticket using the context. MANDATORY: use the '${skill_name}' skill." 2> >(grep -v "Loaded cached credentials" >&2)
+            gemini --include-directories "$(dirname "$context_file")" "Using the '${skill_name}' skill, create a JIRA ticket using the context from ${context_file}. MANDATORY: use the '${skill_name}' skill." 2> >(grep -v "Loaded cached credentials" >&2)
             ;;
         claude)
             claude --model "$model" "/${skill_name} $(cat "$context_file")"

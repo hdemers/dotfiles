@@ -205,18 +205,6 @@ main() {
         return 1
     fi
 
-    # If no_verify is set or pre-commit is not available, skip precommit checks
-    if [ "${no_verify}" = true ]; then
-        gum log --level info "Skipping precommit checks."
-    elif ! command -v pre-commit &>/dev/null; then
-        gum log --level info "pre-commit not available, skipping checks."
-    else
-        jj precommit -r "trunk()..${bookmark}" || {
-            gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
-            return 1
-        }
-    fi
-
     # Check for other bookmarks in the revset when not using --stacked
     if [ "${stacked}" = false ]; then
         local other_bookmarks
@@ -243,6 +231,19 @@ main() {
             return 1
         fi
     fi
+
+    # If no_verify is set or pre-commit is not available, skip precommit checks
+    if [ "${no_verify}" = true ]; then
+        gum log --level info "Skipping precommit checks."
+    elif ! command -v pre-commit &>/dev/null; then
+        gum log --level info "pre-commit not available, skipping checks."
+    else
+        jj precommit -r "${pr_base}..${bookmark}" || {
+            gum log --level error "Precommit checks failed for bookmark '${bookmark}'."
+            return 1
+        }
+    fi
+
 
     ticket=$(_extract_ticket "${bookmark}" "${pr_base}")
 

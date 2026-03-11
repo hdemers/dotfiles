@@ -12,7 +12,7 @@ M.CONST = {
   LINES_PER_COMMIT = 2,
   EDITOR_POLL_INTERVAL_MS = 100,
   EDITOR_POLL_MAX_ATTEMPTS = 50,
-  CURSOR_RESTORE_DELAY_MS = 100,
+  EDITOR_CLOSE_DELAY_MS = 100,
   FLOAT_WIDTH = 100,
   HELP_WIDTH = 73,
   WATCHER_DEBOUNCE_MS = 200,
@@ -38,9 +38,6 @@ M.state = {
   debounce_timer = nil, -- Timer for debounced preview updates
   watcher = nil, -- uv_fs_event_t handle for op_heads directory
   last_refresh_time = 0, -- Timestamp of last refresh (for dedup with watcher)
-  terminal_channel = nil, -- Terminal channel for ANSI colorization (log buffer)
-  preview_terminal_channel = nil, -- Terminal channel for ANSI colorization (preview buffer)
-  log_lines = {}, -- Raw log lines (for change_id lookup, avoids terminal rendering race)
 }
 
 --------------------------------------------------------------------------------
@@ -48,6 +45,9 @@ M.state = {
 --------------------------------------------------------------------------------
 
 M.utils = {}
+
+local jj_log_hl_ns = vim.api.nvim_create_namespace 'jujutsu_log'
+local jj_history_hl_ns = vim.api.nvim_create_namespace 'jujutsu_history'
 
 -- Forward declarations for functions defined later but used in refresh_log
 local setup_keymaps
@@ -150,69 +150,307 @@ local function stop_watcher()
   end
 end
 
--- Colorizes a buffer with ANSI escape codes using terminal emulation.
--- The buffer must be fresh (no prior terminal). Callers that need to
--- re-render should create a new buffer instead of reusing one that
--- already had a terminal — Neovim does not fully clear terminal
--- scrollback on a buffer, which can leak old lines at the top.
--- @param buf number - fresh buffer to colorize
--- @param lines table - lines to display
--- @param channel_key string - state key for storing the terminal channel
-function M.utils.colorize_buffer(buf, lines, channel_key)
-  -- Trim trailing empty lines
-  while #lines > 0 and vim.trim(lines[#lines]) == '' do
-    lines[#lines] = nil
+-- Build unique-prefix maps for change IDs and commit IDs by querying jj.
+-- Returns change_map {cid8 → unique_len} and commit_map {hex8 → unique_len}.
+-- Both are used to split ID highlights into bright unique prefix + dim suffix.
+local function build_unique_prefix_maps(cwd)
+  local template = table.concat({
+    'change_id.short(8)',
+    '" "',
+    'change_id.shortest()',
+    '" "',
+    'commit_id.short(8)',
+    '" "',
+    'commit_id.shortest()',
+    '"\\n"',
+  }, ' ++ ')
+  local cmd = M.utils.build_jj_cmd(
+    "log -r :: --no-graph -T '" .. template .. "'",
+    cwd
+  )
+  local output = vim.fn.system(cmd)
+  local change_map, commit_map = {}, {}
+  for line in output:gmatch '[^\n]+' do
+    local cid8, cprefix, xid8, xprefix =
+      line:match '^([a-z0-9]+)%s+([a-z0-9]+)%s+([0-9a-f]+)%s+([0-9a-f]+)$'
+    if cid8 and cprefix then
+      change_map[cid8] = #cprefix
+    end
+    if xid8 and xprefix then
+      commit_map[xid8] = #xprefix
+    end
   end
-
-  local saved_listchars = vim.opt.listchars:get()
-
-  -- Set up window options for terminal display
-  vim.wo.number = false
-  vim.wo.relativenumber = false
-  vim.wo.statuscolumn = ''
-  vim.wo.signcolumn = 'no'
-  vim.opt.listchars = { space = ' ' }
-
-  vim.bo[buf].modifiable = true
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, {})
-
-  local channel = vim.api.nvim_open_term(buf, {})
-  M.state[channel_key] = channel
-  vim.api.nvim_chan_send(channel, table.concat(lines, '\r\n'))
-
-  vim.cmd 'stopinsert'
-  vim.opt.listchars = saved_listchars
+  return change_map, commit_map
 end
 
-local function safe_colorize(buf, lines)
-  -- Ensure window is showing the correct buffer (might have changed after returning from terminal)
-  if vim.api.nvim_get_current_buf() ~= buf then
-    vim.api.nvim_win_set_buf(0, buf)
+-- Apply syntax highlights to the plain-text log buffer.
+-- Handles commit lines (marker + change_id + commit_id + bookmarks + date + description)
+-- and graph-only connector lines.
+-- change_map: optional {cid8 → unique_len} for change ID prefix split.
+-- commit_map: optional {hex8 → unique_len} for commit ID prefix split.
+local function apply_log_highlights(buf, lines, change_map, commit_map)
+  vim.api.nvim_buf_clear_namespace(buf, jj_log_hl_ns, 0, -1)
+
+  local function hl(lnum, group, col_start, col_end)
+    vim.api.nvim_buf_add_highlight(buf, jj_log_hl_ns, group, lnum, col_start, col_end)
   end
 
-  -- Temporarily widen window to prevent terminal from wrapping lines
-  local saved_width = vim.api.nvim_win_get_width(M.state.win)
-  vim.api.nvim_win_set_width(M.state.win, 9999)
+  local prev_was_commit = false
+  for i, line in ipairs(lines) do
+    if line == '' then goto continue end
+    local lnum = i - 1
 
-  M.utils.colorize_buffer(buf, lines, 'terminal_channel')
+    -- Elided line (~)
+    if line:match '^[%s│]*~' then
+      hl(lnum, 'JJElided', 0, -1)
+      prev_was_commit = false
+      goto continue
+    end
 
-  -- Restore original window width
-  pcall(vim.api.nvim_win_set_width, M.state.win, saved_width)
+    -- Detect commit line: requires marker + change_id pattern
+    local full_cid = line:match '[│%s]*[◆◇○@◉×~][│%s]*([a-z][a-z0-9]+%/?%d*)%s+[a-z0-9]+'
+    if not full_cid then
+      if prev_was_commit then
+        -- Description line: graph prefix as JJGraphLine, text with per-annotation colors
+        local graph_prefix = line:match '^[│╭╰╯╮─├┤┬┴┼ ]+'
+        local desc_col = graph_prefix and #graph_prefix or 0
+        hl(lnum, 'JJGraphLine', 0, desc_col)
+        if desc_col < #line then
+          local desc_text = line:sub(desc_col + 1)
+          local cur = desc_col -- 0-indexed current position
+          -- Highlight (empty) annotation if present
+          local saw_empty = false
+          if desc_text:sub(1, 7) == '(empty)' then
+            hl(lnum, 'String', cur, cur + 7)
+            cur = cur + 7
+            if desc_text:sub(8, 8) == ' ' then cur = cur + 1 end
+            desc_text = line:sub(cur + 1)
+            saw_empty = true
+          end
+          -- Remaining text
+          if cur < #line then
+            local rest_group = desc_text:find('(no description set)', 1, true)
+                and (saw_empty and 'String' or 'JJAuthorEmail')
+              or 'JJDescription'
+            hl(lnum, rest_group, cur, -1)
+          end
+        end
+      else
+        hl(lnum, 'JJGraphLine', 0, -1)
+      end
+      prev_was_commit = false
+      goto continue
+    end
+
+    -- Find byte position of change_id in the line
+    local cid_start = line:find(full_cid, 1, true)
+    if not cid_start then goto continue end
+    local before = line:sub(1, cid_start - 1)
+
+    -- Find marker character, its position in `before`, and its byte size
+    local marker_pos, marker_size
+    if before:find('@', 1, true) then
+      marker_pos = before:find('@', 1, true)
+      marker_size = 1
+    elseif before:find('◆', 1, true) then
+      marker_pos = before:find('◆', 1, true)
+      marker_size = 3
+    elseif before:find('×', 1, true) then
+      marker_pos = before:find('×', 1, true)
+      marker_size = 2
+    else
+      marker_pos = before:find('◇', 1, true)
+        or before:find('○', 1, true)
+        or before:find('◉', 1, true)
+      marker_size = 3
+    end
+
+    -- Determine color group from marker character + bookmarks
+    local marker_group
+    if before:find('@', 1, true) then
+      marker_group = 'JJWorkingCopy'
+    elseif before:find('◆', 1, true) then
+      marker_group = 'JJImmutable'
+      if line:find(' master ', 1, true) or line:find(' main ', 1, true) then
+        marker_group = 'JJTrunk'
+      end
+    elseif before:find('×', 1, true) then
+      marker_group = 'JJAbandoned'
+    else
+      marker_group = 'JJMutable'
+    end
+    -- dev bookmark overrides any marker color
+    if line:match ' dev%*? ' then
+      marker_group = 'JJDev'
+    end
+
+    -- Highlight graph prefix then marker
+    if marker_pos then
+      hl(lnum, 'JJGraphLine', 0, marker_pos - 1)
+      hl(lnum, marker_group, marker_pos - 1, marker_pos - 1 + marker_size)
+    else
+      hl(lnum, 'JJGraphLine', 0, cid_start - 1)
+    end
+
+    -- Check for (conflict) or (divergent) at the end of the line
+    local conflict_s = line:find '%(conflict%)%s*$' -- 1-indexed; nil if absent
+    local divergent_s = line:find '%(divergent%)%s*$' -- 1-indexed; nil if absent
+    local annotation_s = conflict_s or divergent_s
+
+    -- Change ID
+    -- Change ID: bright unique prefix, dim non-unique suffix
+    local base_cid, div_suffix = full_cid:match '^([a-z0-9]+)(/?%d*)$'
+    local cid_unique_len = change_map and change_map[base_cid:sub(1, 8)]
+    local unique_hl = divergent_s and 'Error' or 'JJChangeId'
+
+    if cid_unique_len and cid_unique_len < #base_cid then
+      hl(lnum, unique_hl, cid_start - 1, cid_start - 1 + cid_unique_len)
+      hl(lnum, 'JJChangeIdDim', cid_start - 1 + cid_unique_len, cid_start - 1 + #base_cid)
+    else
+      hl(lnum, unique_hl, cid_start - 1, cid_start - 1 + #base_cid)
+    end
+
+    if div_suffix and #div_suffix > 0 then
+      hl(lnum, 'Error', cid_start - 1 + #base_cid, cid_start - 1 + #full_cid)
+    end
+
+    -- Parse rest of line: commit_id, bookmarks, date, description
+    local after_start = cid_start + #full_cid
+    local rest = line:sub(after_start)
+
+    -- Commit ID: last hex token on the line, optionally followed by (conflict) or (divergent).
+    -- Computed early so description highlight can be clamped to stop before it.
+    local xid = line:match '%s([0-9a-f]+)%s+%(conflict%)%s*$'
+      or line:match '%s([0-9a-f]+)%s+%(divergent%)%s*$'
+      or line:match '%s([0-9a-f]+)%s*$'
+    local xid_abs_start -- 0-indexed; set below if xid is found
+    if xid and #xid >= 4 then
+      local line_before = annotation_s and line:sub(1, annotation_s - 1):match '^(.-)%s*$'
+        or line:match '^(.-)%s*$'
+      xid_abs_start = #line_before - #xid
+    end
+
+    local date_s, date_e = rest:find '%d%d%d%d%-%d%d%-%d%d %d%d:%d%d:%d%d'
+    if date_s then
+      -- Email: pre-date region
+      local pre_date = rest:sub(1, date_s - 1)
+      for bm_s, word, bm_e in pre_date:gmatch '()(%S+)()' do
+        if word:find('@', 1, true) then
+          hl(lnum, 'JJAuthorEmail', after_start - 1 + bm_s - 1, after_start - 1 + bm_e - 1)
+        end
+      end
+      -- Date+time
+      hl(lnum, 'JJTimestamp', after_start - 1 + date_s - 1, after_start - 1 + date_e)
+      -- Bookmarks: non-hex words between timestamp and commit ID
+      local xid_in_rest = xid_abs_start and (xid_abs_start - after_start + 2)
+      local post_date = rest:sub(date_e + 1, xid_in_rest and xid_in_rest - 1)
+      local post_date_base = after_start - 1 + date_e
+      for bm_s, word, bm_e in post_date:gmatch '()(%S+)()' do
+        if not word:match '^[0-9a-f]+$' then
+          hl(lnum, 'JJBookmark', post_date_base + bm_s - 1, post_date_base + bm_e - 1)
+        end
+      end
+    elseif after_start <= #line then
+      local desc_end = xid_abs_start or -1
+      hl(lnum, 'JJDescription', after_start - 1, desc_end)
+    end
+
+    -- Commit ID: applied last so it wins over any overlapping description highlight
+    if xid_abs_start then
+      local xid_unique_len = commit_map and commit_map[xid:sub(1, 8)]
+      if xid_unique_len and xid_unique_len < #xid then
+        hl(lnum, 'JJCommitId', xid_abs_start, xid_abs_start + xid_unique_len)
+        hl(lnum, 'JJCommitIdDim', xid_abs_start + xid_unique_len, xid_abs_start + #xid)
+      else
+        hl(lnum, 'JJCommitId', xid_abs_start, xid_abs_start + #xid)
+      end
+    end
+    -- (conflict) or (divergent) annotation at end of line 1
+    if conflict_s then
+      hl(lnum, 'Error', conflict_s - 1, -1)
+    end
+    if divergent_s then
+      hl(lnum, 'Error', divergent_s - 1, -1)
+    end
+
+    prev_was_commit = true
+    ::continue::
+  end
 end
 
--- Strip ANSI escape codes
-local function strip_ansi(str)
-  return str:gsub('\027%[[%d;]*m', '')
+-- Apply syntax highlights to the file-history bottom panel.
+-- padded_lines format: line 1 = file path header, line 2 = empty,
+-- lines 3+ = '    change_id [bookmarks] [date] description' (builtin_log_oneline)
+-- change_map: optional {cid8 → unique_len} from build_unique_prefix_maps.
+local function apply_history_log_highlights(buf, lines, change_map)
+  vim.api.nvim_buf_clear_namespace(buf, jj_history_hl_ns, 0, -1)
+
+  local function hl(lnum, group, col_start, col_end)
+    vim.api.nvim_buf_add_highlight(buf, jj_history_hl_ns, group, lnum, col_start, col_end)
+  end
+
+  for i, line in ipairs(lines) do
+    if line == '' then goto continue end
+    local lnum = i - 1
+
+    if i == 1 then
+      hl(lnum, 'JJHeaderKey', 0, -1)
+      goto continue
+    end
+
+    if i < 3 then goto continue end
+
+    -- Commit line: '    change_id ...'
+    local cid = line:match '^%s*([a-z][a-z0-9]+%/?%d*)'
+    if not cid then goto continue end
+
+    local divergent_s = line:find '%(divergent%)%s*$'
+    local cid_start = line:find(cid, 1, true)
+    local base_cid, div_suffix = cid:match '^([a-z0-9]+)(/?%d*)$'
+    local unique_len = change_map and change_map[base_cid:sub(1, 8)]
+    local unique_hl = divergent_s and 'Error' or 'JJChangeId'
+
+    if unique_len and unique_len < #base_cid then
+      hl(lnum, unique_hl, cid_start - 1, cid_start - 1 + unique_len)
+      hl(lnum, 'JJChangeIdDim', cid_start - 1 + unique_len, cid_start - 1 + #base_cid)
+    else
+      hl(lnum, unique_hl, cid_start - 1, cid_start - 1 + #base_cid)
+    end
+
+    if div_suffix and #div_suffix > 0 then
+      hl(lnum, 'Error', cid_start - 1 + #base_cid, cid_start - 1 + #cid)
+    end
+
+    local after_start = cid_start + #cid
+    local rest = line:sub(after_start)
+    local date_s, date_e = rest:find '%d%d%d%d%-%d%d%-%d%d'
+    if date_s then
+      hl(lnum, 'JJTimestamp', after_start - 1 + date_s - 1, after_start - 1 + date_e)
+      local desc_start = after_start - 1 + date_e
+      if desc_start < #line then
+        hl(lnum, 'JJDescription', desc_start, -1)
+      end
+    elseif after_start <= #line then
+      hl(lnum, 'JJDescription', after_start - 1, -1)
+    end
+
+    if divergent_s then
+      hl(lnum, 'Error', divergent_s - 1, -1)
+    end
+
+    ::continue::
+  end
 end
 
 function M.utils.get_change_id_from_line(line)
-  local clean = strip_ansi(line)
-  -- Require a commit marker (◆◇○@◉×~) to distinguish commit lines from description continuations
-  -- Description lines only have │ and spaces, so they won't match
-  local change_id =
-    clean:match '[│%s]*[◆◇○@◉×~][│%s]*([a-z][a-z0-9]+)%s+[a-z0-9]+'
-  if change_id and #change_id >= M.CONST.CHANGE_ID_LENGTH then
-    return change_id:sub(1, M.CONST.CHANGE_ID_LENGTH)
+  -- Plain text only: log buffer no longer contains ANSI codes
+  -- Require a commit marker (◆◇○@◉×~) to distinguish commit lines from graph/description lines
+  local change_id = line:match '[│%s]*[◆◇○@◉×~][│%s]*([a-z][a-z0-9]+%/?%d*)%s+[a-z0-9]+'
+  if change_id then
+    local base_cid, suffix = change_id:match '^([a-z0-9]+)(/?%d*)$'
+    if base_cid and #base_cid >= M.CONST.CHANGE_ID_LENGTH then
+      return base_cid:sub(1, M.CONST.CHANGE_ID_LENGTH) .. suffix
+    end
   end
   return nil
 end
@@ -422,7 +660,7 @@ local function open_editor_float(session, job_id, title)
     end
     vim.defer_fn(function()
       vim.fn.delete(session.waiting_marker)
-    end, M.CONST.CURSOR_RESTORE_DELAY_MS)
+    end, M.CONST.EDITOR_CLOSE_DELAY_MS)
   end
 
   local function cancel_edit()
@@ -554,75 +792,28 @@ function M.utils.refresh_log()
     return
   end
 
-  local preview = require 'jujutsu.preview'
-
   -- Track refresh time for watcher deduplication
   M.state.last_refresh_time = vim.uv.now()
 
   -- Save cursor before modifications
   local cursor = vim.api.nvim_win_get_cursor(M.state.win)
 
-  local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
+  local output = vim.fn.system(M.utils.build_jj_cmd 'log -r ::')
   local lines = vim.split(output, '\n')
-  M.state.log_lines = lines
   local line_count = #lines
 
-  -- Close old terminal channel
-  if M.state.terminal_channel then
-    pcall(vim.fn.chanclose, M.state.terminal_channel)
-    M.state.terminal_channel = nil
-  end
-
-  -- Create fresh buffer to avoid terminal scrollback leakage on re-render
-  local old_buf = M.state.buf
-  local new_buf = vim.api.nvim_create_buf(false, true)
-  vim.bo[new_buf].bufhidden = 'wipe'
-  vim.bo[new_buf].buflisted = false
-  M.state.buf = new_buf
-
-  -- Suppress old buffer's BufWipeout so it doesn't clear plugin state
-  pcall(vim.api.nvim_clear_autocmds, { buffer = old_buf, event = 'BufWipeout' })
-
-  -- Swap new buffer into window and discard old one (frees the JJ-log name)
-  vim.api.nvim_win_set_buf(M.state.win, new_buf)
-  if is_buf_valid(old_buf) then
-    pcall(vim.api.nvim_buf_delete, old_buf, { force = true })
-  end
-  vim.api.nvim_buf_set_name(new_buf, 'JJ-log')
-
-  -- Render to new buffer
-  vim.api.nvim_win_call(M.state.win, function()
-    vim.wo.cursorline = true
-    safe_colorize(new_buf, lines)
-  end)
-
-  local cursorline_group =
-    vim.api.nvim_create_augroup('JJLogCursorline_' .. new_buf, { clear = true })
-  vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
-    group = cursorline_group,
-    buffer = new_buf,
-    callback = function()
-      vim.wo.cursorline = true
-    end,
-  })
-  vim.api.nvim_create_autocmd({ 'WinLeave', 'BufLeave' }, {
-    group = cursorline_group,
-    buffer = new_buf,
-    callback = function()
-      vim.wo.cursorline = false
-    end,
-  })
-
-  -- Re-setup keymaps and autocmds on new buffer
-  setup_keymaps(new_buf)
-  preview.setup_dual_cursorline(new_buf, M.state.win)
-  setup_buffer_cleanup(new_buf)
+  -- Update buffer in-place (synchronous plain-text rendering, no terminal swap)
+  local change_map, commit_map = build_unique_prefix_maps(M.state.cwd)
+  vim.bo[M.state.buf].modifiable = true
+  vim.api.nvim_buf_set_lines(M.state.buf, 0, -1, false, lines)
+  apply_log_highlights(M.state.buf, lines, change_map, commit_map)
+  vim.bo[M.state.buf].modifiable = false
 
   -- Restore cursor, clamped to valid range
   local row = math.min(cursor[1], math.max(1, line_count))
   pcall(vim.api.nvim_win_set_cursor, M.state.win, { row, cursor[2] })
 
-  -- Refresh preview if open — read id from raw lines (avoids terminal rendering race)
+  -- Refresh preview if open
   if is_win_valid(M.state.preview.win) then
     local id = M.utils.get_change_id_from_line(lines[row])
     if not id and row > 1 then
@@ -652,8 +843,6 @@ local function close_flog()
   M.state.win = nil
   M.state.buf = nil
   M.state.active_job = nil
-  M.state.terminal_channel = nil
-  M.state.preview_terminal_channel = nil
   M.state.cwd = nil -- Mark as fully closed
 end
 
@@ -799,7 +988,7 @@ function M.jujutsu_flog()
 
   M.state.cwd = vim.fn.getcwd()
 
-  local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
+  local output = vim.fn.system(M.utils.build_jj_cmd 'log -r ::')
 
   vim.cmd 'tabnew'
   local buf = vim.api.nvim_get_current_buf()
@@ -811,8 +1000,14 @@ function M.jujutsu_flog()
   vim.bo[buf].bufhidden = 'wipe'
   vim.bo[buf].buflisted = false
 
+  -- Set window display options once at buffer creation
   vim.api.nvim_win_call(M.state.win, function()
+    vim.wo.number = false
+    vim.wo.relativenumber = false
+    vim.wo.statuscolumn = ''
+    vim.wo.signcolumn = 'no'
     vim.wo.cursorline = true
+    vim.wo.wrap = false
   end)
 
   local cursorline_group =
@@ -833,8 +1028,11 @@ function M.jujutsu_flog()
   })
 
   local lines = vim.split(output, '\n')
-  M.state.log_lines = lines
-  safe_colorize(buf, lines)
+  local change_map, commit_map = build_unique_prefix_maps(M.state.cwd)
+  vim.bo[buf].modifiable = true
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  apply_log_highlights(buf, lines, change_map, commit_map)
+  vim.bo[buf].modifiable = false
 
   setup_keymaps(buf)
   preview.setup_dual_cursorline(buf, M.state.win)
@@ -843,13 +1041,13 @@ function M.jujutsu_flog()
   -- Start file watcher for external jj changes
   start_watcher()
 
-  -- Debounced initial show
-  debounce(function()
+  -- Rendering is synchronous: use vim.schedule instead of a fixed delay
+  vim.schedule(function()
     if M.state.cwd and is_win_valid(M.state.win) and not M.utils.has_active_job() then
       vim.api.nvim_win_set_cursor(M.state.win, { 1, 0 })
       actions.show()
     end
-  end, M.CONST.CURSOR_RESTORE_DELAY_MS)
+  end)
 end
 
 M.jujutsu_quick_view = M.jujutsu_flog
@@ -879,9 +1077,7 @@ function M.jujutsu_file_history(file_path, target_cid)
   M.state.cwd = vim.fn.getcwd()
 
   local cmd = M.utils.build_jj_cmd(
-    'log -r \'files("'
-      .. file_path
-      .. '")\' --no-graph -T builtin_log_oneline --color=always'
+    'log -r \'files("' .. file_path .. '")\' --no-graph -T builtin_log_oneline'
   )
   local output = vim.fn.system(cmd)
 
@@ -956,13 +1152,12 @@ function M.jujutsu_file_history(file_path, target_cid)
       return
     end
 
-    local clean = strip_ansi(line)
-    local change_id = clean:match '^%s*([a-z0-9]+)'
+    local change_id = line:match '^%s*([a-z0-9]+)'
     if not change_id then
       return
     end
 
-    local show_cmd = M.utils.build_jj_cmd('show --types --color=always -r ' .. change_id)
+    local show_cmd = M.utils.build_jj_cmd('show --types -r ' .. change_id)
     local show_output = vim.fn.system(show_cmd)
     local show_lines = vim.split(show_output, '\n')
 
@@ -988,7 +1183,10 @@ function M.jujutsu_file_history(file_path, target_cid)
     vim.bo[popup_buf].buftype = 'nofile'
     vim.bo[popup_buf].bufhidden = 'wipe'
 
-    M.utils.colorize_buffer(popup_buf, show_lines, 'history_popup_' .. popup_buf)
+    vim.bo[popup_buf].modifiable = true
+    vim.api.nvim_buf_set_lines(popup_buf, 0, -1, false, show_lines)
+    require('jujutsu.preview').apply_highlights(popup_buf, show_lines)
+    vim.bo[popup_buf].modifiable = false
 
     vim.keymap.set(
       'n',
@@ -1015,7 +1213,7 @@ function M.jujutsu_file_history(file_path, target_cid)
     local cursor_row = vim.api.nvim_win_get_cursor(bot_win)[1]
     local line = vim.api.nvim_buf_get_lines(bot_buf, cursor_row - 1, cursor_row, false)[1]
     if not line then return end
-    local change_id = strip_ansi(line):match '^%s*([a-z0-9]+)'
+    local change_id = line:match '^%s*([a-z0-9]+)'
     if not change_id then return end
 
     vim.cmd 'tabclose'
@@ -1029,8 +1227,8 @@ function M.jujutsu_file_history(file_path, target_cid)
 
       vim.api.nvim_set_current_win(log_win)
 
-      local lines = #M.state.log_lines > 0 and M.state.log_lines
-        or vim.split(vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always'), '\n')
+      local log_buf = vim.fn.bufnr 'JJ-log'
+      local lines = log_buf ~= -1 and vim.api.nvim_buf_get_lines(log_buf, 0, -1, false) or {}
 
       local preview = require 'jujutsu.preview'
       for i, l in ipairs(lines) do
@@ -1076,9 +1274,7 @@ function M.jujutsu_file_history(file_path, target_cid)
       return
     end
 
-    local clean = strip_ansi(line)
-    -- Optional match for '    ' at the start and then the change_id
-    local change_id = clean:match '^%s*([a-z0-9]+)'
+    local change_id = line:match '^%s*([a-z0-9]+)'
 
     if not change_id then
       return
@@ -1158,9 +1354,17 @@ function M.jujutsu_file_history(file_path, target_cid)
     )
   end
 
-  M.utils.colorize_buffer(bot_buf, padded_lines, 'history_channel_' .. bot_buf)
+  local change_map, commit_map = build_unique_prefix_maps(M.state.cwd)
+  vim.bo[bot_buf].modifiable = true
+  vim.api.nvim_buf_set_lines(bot_buf, 0, -1, false, padded_lines)
+  apply_history_log_highlights(bot_buf, padded_lines, change_map)
+  vim.bo[bot_buf].modifiable = false
 
   vim.api.nvim_win_call(bot_win, function()
+    vim.wo.number = false
+    vim.wo.relativenumber = false
+    vim.wo.statuscolumn = ''
+    vim.wo.signcolumn = 'no'
     vim.wo.cursorline = true
   end)
 
@@ -1200,8 +1404,7 @@ function M.jujutsu_file_history(file_path, target_cid)
 
       for i = 3, #padded_lines do
         local line = padded_lines[i]
-        local clean_line = strip_ansi(line)
-        local id = clean_line:match('^%s*([a-z0-9]+)')
+        local id = line:match('^%s*([a-z0-9]+)')
 
         if id then
           if string.find(clean_target, id, 1, true) or string.find(id, clean_target, 1, true) then
@@ -1214,25 +1417,10 @@ function M.jujutsu_file_history(file_path, target_cid)
     end
   end
 
-  -- The terminal lines are appended asynchronously. Actively poll until the buffer 
-  -- has loaded enough lines to accept our target cursor position.
-  local max_retries = 20
-  local retries = 0
-
-  local function wait_and_set_cursor()
-    if not is_win_valid(bot_win) or not is_buf_valid(bot_buf) then return end
-
-    if vim.api.nvim_buf_line_count(bot_buf) >= target_row or retries > max_retries then
-      pcall(vim.api.nvim_win_set_cursor, bot_win, { target_row, 4 })
-      update_diffs()
-    else
-      retries = retries + 1
-      vim.defer_fn(wait_and_set_cursor, 10)
-    end
-  end
-
-  wait_and_set_cursor()
-  end
+  -- Rendering is synchronous: set cursor directly
+  pcall(vim.api.nvim_win_set_cursor, bot_win, { target_row, 4 })
+  update_diffs()
+end
 local function smart_history()
   if is_jujutsu_repo() then
     M.jujutsu_file_history()

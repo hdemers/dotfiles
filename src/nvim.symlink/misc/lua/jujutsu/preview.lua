@@ -60,9 +60,23 @@ vim.api.nvim_set_hl(0, 'JJHeaderKey', { link = 'Normal', default = true })
 vim.api.nvim_set_hl(0, 'JJCommitId', { link = 'Function', default = true })
 vim.api.nvim_set_hl(0, 'JJChangeId', { link = 'Conditional', default = true })
 vim.api.nvim_set_hl(0, 'JJAuthorName', { link = 'Constant', default = true })
-vim.api.nvim_set_hl(0, 'JJAuthorEmail', { link = 'Constant', default = true })
-vim.api.nvim_set_hl(0, 'JJTimestamp', { link = 'DiagnosticHint', default = true })
-vim.api.nvim_set_hl(0, 'JJBookmark', { link = 'Conditional', default = true })
+vim.api.nvim_set_hl(0, 'JJAuthorEmail', { link = 'WarningMsg', default = true })
+vim.api.nvim_set_hl(0, 'JJTimestamp', { link = 'Operator', default = true })
+vim.api.nvim_set_hl(0, 'JJBookmark', { link = 'JJChangeId', default = true })
+
+-- Log view highlight groups
+vim.api.nvim_set_hl(0, 'JJChangeIdDim', { link = 'LineNr', default = true })
+vim.api.nvim_set_hl(0, 'JJCommitId', { link = 'Function', default = true })
+vim.api.nvim_set_hl(0, 'JJCommitIdDim', { link = 'LineNr', default = true })
+vim.api.nvim_set_hl(0, 'JJGraphLine', { link = 'Normal', default = true })
+vim.api.nvim_set_hl(0, 'JJWorkingCopy', { link = 'DiagnosticOk', default = true })
+vim.api.nvim_set_hl(0, 'JJTrunk', { link = 'String', default = true })
+vim.api.nvim_set_hl(0, 'JJImmutable', { link = 'PreProc', default = true })
+vim.api.nvim_set_hl(0, 'JJDev', { link = 'DiagnosticWarn', default = true })
+vim.api.nvim_set_hl(0, 'JJMutable', { link = 'Normal', default = true })
+vim.api.nvim_set_hl(0, 'JJAbandoned', { link = 'Error', default = true })
+vim.api.nvim_set_hl(0, 'JJElided', { link = 'Comment', default = true })
+vim.api.nvim_set_hl(0, 'JJDescription', { link = 'Normal', default = true })
 
 -- All builtin_log_detailed header lines have their colon aligned at byte 9 (0-indexed).
 -- "Commit ID: ..." / "Change ID: ..." / "Author   : ..." / "Committer: ..."
@@ -159,7 +173,7 @@ function M.setup_dual_cursorline(buf, win)
 
       local state = get_state()
       vim.api.nvim_buf_clear_namespace(buf, cursorline_ns, 0, -1)
-      
+
       -- If we are not currently in the main log window, do not draw the normal cursorline,
       -- but DO draw the stored visual range if it exists so we know what was selected.
       if vim.api.nvim_get_current_win() ~= win then
@@ -177,6 +191,21 @@ function M.setup_dual_cursorline(buf, win)
             vim.api.nvim_buf_set_extmark(buf, cursorline_ns, end_line, 0, {
               line_hl_group = 'Visual',
             })
+          end
+        else
+          -- Still draw cursorline at log cursor position when focus is in preview
+          local ok, cursor = pcall(vim.api.nvim_win_get_cursor, win)
+          if ok then
+            local cursor_line = cursor[1]
+            local line_count = vim.api.nvim_buf_line_count(buf)
+            vim.api.nvim_buf_set_extmark(buf, cursorline_ns, cursor_line - 1, 0, {
+              line_hl_group = 'CursorLine',
+            })
+            if cursor_line < line_count then
+              vim.api.nvim_buf_set_extmark(buf, cursorline_ns, cursor_line, 0, {
+                line_hl_group = 'CursorLine',
+              })
+            end
           end
         end
         return
@@ -226,12 +255,14 @@ function M.setup_dual_cursorline(buf, win)
       else
         -- Constrain cursor to lines with change IDs
         local utils = get_utils()
-        local line_content = vim.api.nvim_buf_get_lines(buf, cursor_line - 1, cursor_line, false)[1]
+        local line_content =
+          vim.api.nvim_buf_get_lines(buf, cursor_line - 1, cursor_line, false)[1]
         if line_content and not utils.get_change_id_from_line(line_content) then
           -- If current line has no ID, scan backwards to find one
           local target_line = cursor_line - 1
           while target_line >= 1 do
-            local prev_content = vim.api.nvim_buf_get_lines(buf, target_line - 1, target_line, false)[1]
+            local prev_content =
+              vim.api.nvim_buf_get_lines(buf, target_line - 1, target_line, false)[1]
             if prev_content and utils.get_change_id_from_line(prev_content) then
               pcall(vim.api.nvim_win_set_cursor, win, { target_line, 4 })
               cursor_line = target_line
@@ -516,7 +547,8 @@ function M.open(content, preview_type, change_id, opts)
       vim.wo.cursorline = true
     end)
 
-    local augroup = vim.api.nvim_create_augroup('JJPreviewCursorline_' .. buf, { clear = true })
+    local augroup =
+      vim.api.nvim_create_augroup('JJPreviewCursorline_' .. buf, { clear = true })
     vim.api.nvim_create_autocmd({ 'WinEnter', 'BufEnter' }, {
       group = augroup,
       buffer = buf,
@@ -645,6 +677,8 @@ preview_nav = function(direction)
     vim.api.nvim_win_set_cursor(state.win, { new_commit.line, 0 })
     vim.cmd 'normal! zz'
   end)
+  -- Programmatic cursor moves don't fire CursorMoved; trigger it manually
+  vim.api.nvim_exec_autocmds('CursorMoved', { buffer = state.buf })
 
   -- Update preview
   local output = utils.build_preview_content(new_commit.id)
@@ -736,5 +770,8 @@ function M.show_help()
   vim.keymap.set('n', '<Esc>', close_help, { buffer = buf, nowait = true })
   vim.keymap.set('n', '?', close_help, { buffer = buf, nowait = true })
 end
+
+-- Export for use by file history popup and other callers
+M.apply_highlights = apply_preview_highlights
 
 return M

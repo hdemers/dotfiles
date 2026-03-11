@@ -584,9 +584,7 @@ M.cdescribe = with_revset(function(id)
       vim.schedule(function()
         utils.clear_active_job()
         -- Explicitly focus the float before stopinsert so it targets the terminal
-        -- float, not the log window. The log buffer is also a terminal buffer, so
-        -- calling stopinsert while the log window is current drops its cursor to
-        -- the bottom of the rendered terminal content.
+        -- float, not the log window (stopinsert must target the cdescribe terminal).
         if vim.api.nvim_win_is_valid(win) then
           vim.api.nvim_set_current_win(win)
           vim.cmd 'stopinsert'

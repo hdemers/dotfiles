@@ -224,6 +224,23 @@ function M.setup_dual_cursorline(buf, win)
           })
         end
       else
+        -- Constrain cursor to lines with change IDs
+        local utils = get_utils()
+        local line_content = vim.api.nvim_buf_get_lines(buf, cursor_line - 1, cursor_line, false)[1]
+        if line_content and not utils.get_change_id_from_line(line_content) then
+          -- If current line has no ID, scan backwards to find one
+          local target_line = cursor_line - 1
+          while target_line >= 1 do
+            local prev_content = vim.api.nvim_buf_get_lines(buf, target_line - 1, target_line, false)[1]
+            if prev_content and utils.get_change_id_from_line(prev_content) then
+              pcall(vim.api.nvim_win_set_cursor, win, { target_line, 4 })
+              cursor_line = target_line
+              break
+            end
+            target_line = target_line - 1
+          end
+        end
+
         vim.api.nvim_buf_set_extmark(buf, cursorline_ns, cursor_line - 1, 0, {
           line_hl_group = 'CursorLine',
         })
@@ -244,13 +261,15 @@ end
 --------------------------------------------------------------------------------
 
 function M.open_file_history()
+  local state = get_state()
   local utils = get_utils()
   local file_path = utils.get_diff_file_at_cursor()
   if not file_path then
     vim.notify('No file found at cursor position', vim.log.levels.WARN)
     return
   end
-  require('jujutsu.init').jujutsu_file_history(file_path)
+  local cid = state.preview.change_id
+  require('jujutsu.init').jujutsu_file_history(file_path, cid)
 end
 
 function M.open_side_by_side_diff()

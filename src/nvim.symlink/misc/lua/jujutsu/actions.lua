@@ -506,7 +506,20 @@ local function nav(direction)
   local utils = get_utils()
   local preview = get_preview()
 
-  vim.cmd('normal! 2' .. direction)
+  local current_line = vim.fn.line('.')
+  local last_line = vim.fn.line('$')
+  local step = direction == 'j' and 1 or -1
+  local target_line = current_line + step
+
+  while target_line >= 1 and target_line <= last_line do
+    local line_content = vim.fn.getline(target_line)
+    if utils.get_change_id_from_line(line_content) then
+      -- Jump to the line and explicitly set column to 4 (which is index 3) where the change ID usually starts.
+      vim.fn.cursor(target_line, 4)
+      break
+    end
+    target_line = target_line + step
+  end
 
   -- Skip preview update if an async job is running
   if utils.has_active_job() then

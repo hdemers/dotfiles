@@ -853,7 +853,12 @@ function M.jujutsu_new()
   vim.notify(prefix .. output, level)
 end
 
-function M.jujutsu_file_history(file_path)
+function M.jujutsu_file_history(file_path, target_cid)
+  -- Handle being called as a Neovim user command where the first arg is an opts table
+  if type(file_path) == 'table' then
+    file_path = nil
+  end
+
   file_path = file_path or vim.fn.expand '%'
   if file_path == '' then
     vim.notify('No file to show history for', vim.log.levels.WARN)
@@ -1104,7 +1109,8 @@ function M.jujutsu_file_history(file_path)
     vim.wo.cursorline = true
   end)
 
-  local augroup = vim.api.nvim_create_augroup('JJFileHistory_' .. bot_buf, { clear = true })
+  local augroup =
+    vim.api.nvim_create_augroup('JJFileHistory_' .. bot_buf, { clear = true })
 
   vim.api.nvim_create_autocmd('CursorMoved', {
     group = augroup,
@@ -1126,9 +1132,52 @@ function M.jujutsu_file_history(file_path)
   })
 
   vim.api.nvim_set_current_win(bot_win)
-  update_diffs()
-end
 
+  local target_row = 3 -- default to first valid row
+  if target_cid then
+    local oldest, newest = target_cid:match('^([^:]+)::(.+)$')
+    local targets = oldest and { newest, oldest } or { target_cid }
+
+    local found = false
+    for _, target in ipairs(targets) do
+      if found then break end
+      local clean_target = vim.trim(target)
+
+      for i = 3, #padded_lines do
+        local line = padded_lines[i]
+        local clean_line = strip_ansi(line)
+        local id = clean_line:match('^%s*([a-z0-9]+)')
+
+        if id then
+          if string.find(clean_target, id, 1, true) or string.find(id, clean_target, 1, true) then
+            target_row = i
+            found = true
+            break
+          end
+        end
+      end
+    end
+  end
+
+  -- The terminal lines are appended asynchronously. Actively poll until the buffer 
+  -- has loaded enough lines to accept our target cursor position.
+  local max_retries = 20
+  local retries = 0
+
+  local function wait_and_set_cursor()
+    if not is_win_valid(bot_win) or not is_buf_valid(bot_buf) then return end
+
+    if vim.api.nvim_buf_line_count(bot_buf) >= target_row or retries > max_retries then
+      pcall(vim.api.nvim_win_set_cursor, bot_win, { target_row, 4 })
+      update_diffs()
+    else
+      retries = retries + 1
+      vim.defer_fn(wait_and_set_cursor, 10)
+    end
+  end
+
+  wait_and_set_cursor()
+  end
 local function smart_history()
   if is_jujutsu_repo() then
     M.jujutsu_file_history()

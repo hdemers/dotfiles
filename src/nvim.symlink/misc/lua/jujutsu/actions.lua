@@ -176,6 +176,10 @@ M.show = with_revset(function(id)
   local utils = get_utils()
   local preview = get_preview()
 
+  if not state.win or not vim.api.nvim_win_is_valid(state.win) then
+    return
+  end
+
   local cursor = vim.api.nvim_win_get_cursor(state.win)
   local win = state.win
 

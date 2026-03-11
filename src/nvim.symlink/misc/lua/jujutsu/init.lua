@@ -40,6 +40,7 @@ M.state = {
   last_refresh_time = 0, -- Timestamp of last refresh (for dedup with watcher)
   terminal_channel = nil, -- Terminal channel for ANSI colorization (log buffer)
   preview_terminal_channel = nil, -- Terminal channel for ANSI colorization (preview buffer)
+  log_lines = {}, -- Raw log lines (for change_id lookup, avoids terminal rendering race)
 }
 
 --------------------------------------------------------------------------------
@@ -563,6 +564,7 @@ function M.utils.refresh_log()
 
   local output = vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always')
   local lines = vim.split(output, '\n')
+  M.state.log_lines = lines
   local line_count = #lines
 
   -- Close old terminal channel
@@ -781,12 +783,19 @@ function M.jujutsu_flog()
   local preview = require 'jujutsu.preview'
   local actions = require 'jujutsu.actions'
 
+  if state_is_valid() then
+    vim.api.nvim_set_current_win(M.state.win)
+    return
+  end
+
   -- Clean up any existing JJ-log buffer BEFORE setting state
   -- (deleting triggers BufWipeout which clears state)
   local existing = vim.fn.bufnr 'JJ-log'
   if existing ~= -1 then
+    pcall(vim.api.nvim_clear_autocmds, { buffer = existing, event = 'BufWipeout' })
     vim.api.nvim_buf_delete(existing, { force = true })
   end
+  require('jujutsu.preview').close()
 
   M.state.cwd = vim.fn.getcwd()
 
@@ -824,6 +833,7 @@ function M.jujutsu_flog()
   })
 
   local lines = vim.split(output, '\n')
+  M.state.log_lines = lines
   safe_colorize(buf, lines)
 
   setup_keymaps(buf)
@@ -1000,11 +1010,56 @@ function M.jujutsu_file_history(file_path, target_cid)
     )
   end
 
+  local function open_in_log()
+    if not is_win_valid(bot_win) then return end
+    local cursor_row = vim.api.nvim_win_get_cursor(bot_win)[1]
+    local line = vim.api.nvim_buf_get_lines(bot_buf, cursor_row - 1, cursor_row, false)[1]
+    if not line then return end
+    local change_id = strip_ansi(line):match '^%s*([a-z0-9]+)'
+    if not change_id then return end
+
+    vim.cmd 'tabclose'
+
+    vim.schedule(function()
+      local log_buf = vim.fn.bufnr 'JJ-log'
+      if log_buf == -1 then return end
+      local log_wins = vim.fn.win_findbuf(log_buf)
+      if #log_wins == 0 then return end
+      local log_win = log_wins[1]
+
+      vim.api.nvim_set_current_win(log_win)
+
+      local lines = #M.state.log_lines > 0 and M.state.log_lines
+        or vim.split(vim.fn.system(M.utils.build_jj_cmd 'log -r :: --color=always'), '\n')
+
+      local preview = require 'jujutsu.preview'
+      for i, l in ipairs(lines) do
+        local id = M.utils.get_change_id_from_line(l)
+        if id and (id:find(change_id, 1, true) or change_id:find(id, 1, true)) then
+          pcall(vim.api.nvim_win_set_cursor, log_win, { i, 4 })
+          vim.api.nvim_exec_autocmds('CursorMoved', { buffer = log_buf })
+          local output = M.utils.build_preview_content(id)
+          if output then
+            preview.open(output, 'show', id, { filetype = 'jujutsu' })
+          end
+          break
+        end
+      end
+    end)
+  end
+
   vim.keymap.set(
     'n',
     '<CR>',
     show_revision_info,
     { buffer = bot_buf, silent = true, desc = 'Show revision details' }
+  )
+
+  vim.keymap.set(
+    'n',
+    'L',
+    open_in_log,
+    { buffer = bot_buf, silent = true, desc = 'Open revision in log view' }
   )
 
   local function update_diffs()

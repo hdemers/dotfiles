@@ -1,0 +1,299 @@
+#!/usr/bin/env bash
+
+set -e
+
+usage() {
+    cat << 'EOF'
+Usage: jj-workspace <command> [options] [args]
+
+A CLI to manage Jujutsu (jj) workspaces based on branches/bookmarks.
+It mimics the behavior of 'jwa' and 'jwr' shell functions.
+
+Commands:
+  create [options] [branch]
+      Create a new jj workspace for a given branch/bookmark.
+      Options:
+        -i, --interactive   Prompt interactively using 'gum'.
+            --no-install    Do not run 'make install' after creation.
+        -h, --help          Show help for create.
+
+  remove [options] [workspace]
+      Remove (forget) an existing jj workspace.
+      Options:
+        -i, --interactive   Prompt interactively using 'gum'.
+        -h, --help          Show help for remove.
+
+  list
+      List all jj workspaces.
+
+Global Options:
+  -h, --help    Show this help message and exit.
+EOF
+}
+
+cmd_create() {
+    local branch=""
+    local interactive=0
+    local run_install=1
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -i|--interactive)
+                interactive=1
+                shift
+                ;;
+            --no-install)
+                run_install=0
+                shift
+                ;;
+            -h|--help)
+                cat << 'EOF'
+Usage: jj-workspace create [options] [branch]
+
+Create a new jj workspace for a given branch/bookmark.
+It creates a workspace at '../<branch>' and automatically copies:
+  - .envrc
+  - CLAUDE.local.md
+  - .claude/ directory
+
+Options:
+  -i, --interactive   Prompt interactively using 'gum' to select a branch,
+                      and to confirm running 'make install'.
+      --no-install    Do not run 'make install' after creating workspace.
+  -h, --help          Show this help message and exit.
+EOF
+                return 0
+                ;;
+            -*)
+                echo "Unknown option: $1"
+                return 1
+                ;;
+            *)
+                if [ -z "$branch" ]; then
+                    branch="$1"
+                else
+                    echo "Too many arguments: $1"
+                    return 1
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    # If no branch provided, require interactive mode or error
+    if [ -z "${branch}" ]; then
+        if [ "$interactive" -eq 1 ]; then
+            if ! command -v gum &> /dev/null; then
+                echo "gum is not installed. Please provide a branch name or install gum."
+                return 1
+            fi
+            branch=$(jj bookmark list -r "trunk():: ~ dev ~ trunk()" -T '"\n" ++ self.name()' \
+                | uniq | gum choose --header="Select a branch to create workspace for:")
+            if [ -z "${branch}" ]; then
+                echo "No branch selected."
+                return 1
+            fi
+        else
+            echo "Error: Branch name is required in non-interactive mode."
+            echo "Usage: jj-workspace create [options] <branch>"
+            return 1
+        fi
+    fi
+
+    local workspace_path="../${branch}"
+
+    if [ -d "${workspace_path}" ]; then
+        if command -v gum &> /dev/null; then
+            gum log -sl error "Workspace directory '${workspace_path}' already exists. Skipping creation."
+        else
+            echo "Error: Workspace directory '${workspace_path}' already exists. Skipping creation."
+        fi
+        return 1
+    fi
+
+    if ! jj workspace add -r "${branch}" "${workspace_path}"; then
+        if command -v gum &> /dev/null; then
+            gum log -sl error "Failed to create workspace '${workspace_path}'."
+        else
+            echo "Error: Failed to create workspace '${workspace_path}'."
+        fi
+        return 1
+    fi
+    
+    if command -v gum &> /dev/null; then
+        gum log -sl info "Workspace ${branch} created at ${workspace_path}"
+    else
+        echo "Workspace ${branch} created at ${workspace_path}"
+    fi
+
+    local main_workspace="$PWD"
+    cd "${workspace_path}" || return 1
+
+    if [ -f "${main_workspace}/.envrc" ]; then
+        cp "${main_workspace}/.envrc" .
+        if command -v gum &> /dev/null; then
+            gum log -sl info "file '.envrc' copied to new workspace."
+        else
+            echo "file '.envrc' copied to new workspace."
+        fi
+        direnv allow . || true
+    else
+        if command -v gum &> /dev/null; then
+            gum log -sl warn "No '.envrc' file found in the main workspace."
+        fi
+    fi
+
+    if [ -f "${main_workspace}/CLAUDE.local.md" ]; then
+        cp "${main_workspace}/CLAUDE.local.md" .
+        if command -v gum &> /dev/null; then
+            gum log -sl info "file 'CLAUDE.local.md' copied to new workspace."
+        else
+            echo "file 'CLAUDE.local.md' copied to new workspace."
+        fi
+    fi
+
+    if [ -d "${main_workspace}/.claude" ]; then
+        cp -r "${main_workspace}/.claude" .
+        if command -v gum &> /dev/null; then
+            gum log -sl info "'.claude' directory copied to new workspace."
+        else
+            echo "'.claude' directory copied to new workspace."
+        fi
+    fi
+
+    if [ "$run_install" -eq 1 ]; then
+        if [ "$interactive" -eq 1 ] && command -v gum &> /dev/null; then
+            if gum confirm "Do you want to run 'make install' in the new workspace?"; then
+                make install
+            else
+                gum log -sl warn "'make install' skipped."
+            fi
+        else
+            echo "Running 'make install'..."
+            make install || true
+        fi
+    else
+        if command -v gum &> /dev/null; then
+            gum log -sl warn "'make install' skipped due to --no-install."
+        else
+            echo "'make install' skipped due to --no-install."
+        fi
+    fi
+}
+
+cmd_remove() {
+    local workspace_to_remove=""
+    local interactive=0
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -i|--interactive)
+                interactive=1
+                shift
+                ;;
+            -h|--help)
+                cat << 'EOF'
+Usage: jj-workspace remove [options] [workspace]
+
+Remove (forget) an existing jj workspace.
+
+It uses 'jj workspace forget' under the hood. Note that this command does
+NOT delete the actual physical directory at '../<workspace>'.
+
+Options:
+  -i, --interactive   Prompt interactively using 'gum' to select a workspace.
+  -h, --help          Show this help message and exit.
+EOF
+                return 0
+                ;;
+            -*)
+                echo "Unknown option: $1"
+                return 1
+                ;;
+            *)
+                if [ -z "$workspace_to_remove" ]; then
+                    workspace_to_remove="$1"
+                else
+                    echo "Too many arguments: $1"
+                    return 1
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    if [ -z "${workspace_to_remove}" ]; then
+        if [ "$interactive" -eq 1 ]; then
+            if ! command -v gum &> /dev/null; then
+                echo "gum is not installed. Please provide a workspace path or install gum."
+                return 1
+            fi
+
+            workspace_to_remove=$(jj workspace list \
+                | awk -F: '{print $1}' \
+                | grep -v '^default$' \
+                | grep -v '^[[:space:]]*$' \
+                | tr -d ' ' \
+                | gum choose --header="Select a workspace to remove:")
+
+            if [ -z "${workspace_to_remove}" ]; then
+                if command -v gum &> /dev/null; then
+                    gum log -sl info "No workspace selected."
+                else
+                    echo "No workspace selected."
+                fi
+                return 1
+            fi
+        else
+            echo "Error: Workspace name is required in non-interactive mode."
+            echo "Usage: jj-workspace remove [options] <workspace_path>"
+            return 1
+        fi
+    fi
+
+    local workspace_path="../${workspace_to_remove}"
+
+    if [ ! -d "${workspace_path}" ]; then
+        if command -v gum &> /dev/null; then
+            gum log -sl error "Workspace directory '${workspace_path}' does not exist."
+        else
+            echo "Error: Workspace directory '${workspace_path}' does not exist."
+        fi
+        return 1
+    fi
+
+    jj workspace forget "${workspace_to_remove}"
+    if command -v gum &> /dev/null; then
+        gum log -sl info "Workspace '${workspace_to_remove}' removed."
+        gum log -sl info "Directory '${workspace_path}' was not deleted."
+    else
+        echo "Workspace '${workspace_to_remove}' removed."
+        echo "Directory '${workspace_path}' was not deleted."
+    fi
+}
+
+cmd_list() {
+    jj workspace list
+}
+
+case "$1" in
+    create)
+        shift
+        cmd_create "$@"
+        ;;
+    remove)
+        shift
+        cmd_remove "$@"
+        ;;
+    list)
+        cmd_list
+        ;;
+    -h|--help)
+        usage
+        exit 0
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac

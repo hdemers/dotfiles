@@ -1,6 +1,15 @@
 #!/bin/bash
 
 PROJET_DIR="/home/hdemers/Projets"
+FORCE=0
+
+# Parse arguments
+while [[ "$#" -gt 0 ]]; do
+    case $1 in
+        --force) FORCE=1; shift ;;
+        *) TARGET="$1"; shift ;;
+    esac
+done
 
 export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS' 
 --color=fg:#c0caf5,bg:#24283b,hl:#bb9af7
@@ -8,25 +17,22 @@ export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
 --color=info:#7aa2f7,prompt:#7dcfff,pointer:#7dcfff 
 --color=marker:#9ece6a,spinner:#9ece6a,header:#9ece6a'
 
-if [ -d "$1" ]; then
-    dir=$(realpath "$1")
-elif [ -n "$1" ]; then
-    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | grep -F "$1" | head -1)
+if [ -n "$TARGET" ] && [ -d "$TARGET" ]; then
+    dir=$(realpath "$TARGET")
+elif [ -n "$TARGET" ]; then
+    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | grep -F "$TARGET" | head -1)
 else
     dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | fzf --height 100%)
 fi
 
-echo "got $dir"
-
 if [ -n "$dir" ]; then
-    echo "opening $dir"
     # Get the tab name from directory basename
     tab_name=$(basename "$dir")
 
     # Query existing tab names and check if our tab exists
     existing_tabs=$(zellij action query-tab-names)
 
-    if echo "$existing_tabs" | grep -qx "$tab_name"; then
+    if [ "$FORCE" -eq 0 ] && echo "$existing_tabs" | grep -qx "$tab_name"; then
         # Tab exists, switch to it
         zellij action go-to-tab-name "$tab_name"
     else

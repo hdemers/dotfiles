@@ -7,11 +7,7 @@ email = "hdemers@gmail.com"
 [ui]
 default-command = "log"
 diff-editor = ["nvim", "-n", "-c", "DiffEditor $left $right $output"]
-# diff-formatter = "git"
-# Use Difftastic by default
 diff-formatter = ["difft", "--color=always", "--syntax-highlight=on", "$left", "$right"]
-# Use tool named "<name>" (see below)
-# diff-formatter = "<name>"
 
 [colors]
 "diff removed token" = { fg = "bright red", bg = "black", underline = false }
@@ -42,7 +38,10 @@ merge-tool-edits-conflict-markers = true
 'remotebranch(x)' = 'fork_point(x | trunk())+::x'
 
 [remotes.origin]
-auto-track-bookmarks = "glob:*"
+auto-track-bookmarks = "glob:*~dev"
+
+[git]
+private-commits = "bookmarks('dev')"
 
 [aliases]
 rdev = ["rebase", "-s", "dev", "-d", "mytrunkandbranches", "-d", "trunk()"]

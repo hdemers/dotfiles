@@ -459,6 +459,39 @@ function M.utils.get_change_id_under_cursor()
   return M.utils.get_change_id_from_line(vim.api.nvim_get_current_line())
 end
 
+--- Get the IDs of revisions related to a specific commit by offset (+ for children, - for parents)
+--- @param id string The change ID or commit ID
+--- @param offset string The offset character ('+' or '-')
+--- @return table|nil List of string IDs, or nil if error/none
+function M.utils.get_related_ids(id, offset)
+  -- The template ensures each ID is on its own line
+  local cmd = string.format('log -r "%s%s" --no-graph -T \'change_id ++ "\\n"\'', id, offset)
+  local output, success = M.utils.run_jj_cmd(cmd, nil, { notify = false })
+
+  if not success or not output or output == '' then
+    return nil
+  end
+
+  local ids = vim.split(vim.trim(output), '\n', { trimempty = true })
+  return #ids > 0 and ids or nil
+end
+
+--- Get the first parent ID of a revision
+--- @param id string The change ID
+--- @return string|nil The parent change ID
+function M.utils.get_parent_id(id)
+  local ids = M.utils.get_related_ids(id, '-')
+  return ids and ids[1] or nil
+end
+
+--- Get the first child ID (descendant) of a revision
+--- @param id string The change ID
+--- @return string|nil The child change ID
+function M.utils.get_child_id(id)
+  local ids = M.utils.get_related_ids(id, '+')
+  return ids and ids[1] or nil
+end
+
 local function is_jujutsu_repo()
   local path = vim.fn.getcwd()
   while path ~= '/' do
@@ -534,6 +567,66 @@ function M.utils.build_preview_content(id)
       result = result .. '\nConflicts:\n' .. conflicts
     end
     return result
+  end
+end
+
+function M.utils.build_preview_content_async(id, callback)
+  local function build_cmd(args)
+    return M.utils.build_jj_cmd(args)
+  end
+
+  local is_range = id:find '::' ~= nil
+
+  if is_range then
+    vim.fn.jobstart(build_cmd('diff --summary -r ' .. id), {
+      stdout_buffered = true,
+      on_exit = function(_, exit_code, _)
+        if exit_code ~= 0 then
+          callback(nil)
+          return
+        end
+      end,
+      on_stdout = function(_, data, _)
+        if #data > 0 then
+          local summary = table.concat(data, '\n')
+          callback('Range: ' .. id .. '\n\n' .. summary)
+        else
+          callback(nil)
+        end
+      end,
+    })
+  else
+    -- For single commits, we need to run multiple commands. We'll chain them or use a small helper script.
+    -- For simplicity and speed, a combined shell command works well.
+    local cmd = string.format(
+      "jj log --no-graph -r %s -T builtin_log_detailed && jj diff --summary -r %s && echo 'Conflicts:' && jj resolve --list -r %s",
+      vim.fn.shellescape(id),
+      vim.fn.shellescape(id),
+      vim.fn.shellescape(id)
+    )
+
+    -- Note: build_jj_cmd returns a table or string depending on OS. We'll assume a shell execution context.
+    local full_cmd = 'cd ' .. vim.fn.shellescape(M.state.cwd) .. ' && ' .. cmd
+
+    vim.fn.jobstart(full_cmd, {
+      stdout_buffered = true,
+      on_stdout = function(_, data, _)
+        if #data > 0 then
+          local result = table.concat(data, '\n')
+          -- Clean up empty 'Conflicts:' if none exist
+          result = result:gsub('\nConflicts:\n$', '')
+          callback(result)
+        else
+          callback(nil)
+        end
+      end,
+      on_exit = function(_, exit_code, _)
+        if exit_code ~= 0 then
+          -- If the command failed entirely, we might want to return nil
+          -- but jobstart async stdout fires before exit.
+        end
+      end,
+    })
   end
 end
 
@@ -778,11 +871,11 @@ local function refresh_preview_after_log(id)
       return
     end
     local preview_type = M.state.preview.type or 'show'
-    local output = M.utils.build_preview_content(id)
-    if output then
-      M.state.preview.change_id = nil -- force update
-      preview.open(output, preview_type, id, { filetype = 'jujutsu' })
-    end
+    M.state.preview.change_id = nil -- force update
+    vim.api.nvim_exec_autocmds('User', {
+      pattern = 'JujutsuRevisionSelected',
+      data = { id = id, type = preview_type },
+    })
   end)
 end
 
@@ -893,6 +986,7 @@ setup_keymaps = function(buf)
   -- Bookmark operations (b-prefix)
   vim.keymap.set('n', 'bb', actions.bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'bd', actions.delete_bookmark, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'bf', actions.forget_bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'bm', actions.move_bookmark(), { buffer = buf, nowait = true })
   vim.keymap.set(
     'n',
@@ -909,6 +1003,8 @@ setup_keymaps = function(buf)
 
   -- Single-key actions
   vim.keymap.set('n', 'e', actions.edit, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'J', actions.move_to_parent, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'K', actions.move_to_child, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'x', actions.abandon, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'y', actions.yank, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'yb', actions.yank_bookmark, { buffer = buf, nowait = true })
@@ -1233,13 +1329,13 @@ function M.jujutsu_file_history(file_path, target_cid)
       local preview = require 'jujutsu.preview'
       for i, l in ipairs(lines) do
         local id = M.utils.get_change_id_from_line(l)
-        if id and (id:find(change_id, 1, true) or change_id:find(id, 1, true)) then
+        if id and (vim.startswith(change_id, id) or vim.startswith(id, change_id)) then
           pcall(vim.api.nvim_win_set_cursor, log_win, { i, 4 })
           vim.api.nvim_exec_autocmds('CursorMoved', { buffer = log_buf })
-          local output = M.utils.build_preview_content(id)
-          if output then
-            preview.open(output, 'show', id, { filetype = 'jujutsu' })
-          end
+          vim.api.nvim_exec_autocmds('User', {
+            pattern = 'JujutsuRevisionSelected',
+            data = { id = id, type = 'show' },
+          })
           break
         end
       end

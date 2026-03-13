@@ -585,6 +585,56 @@ function M.open(content, preview_type, change_id, opts)
   return state.preview.buf
 end
 
+-- Initialize the async preview event listener
+local function setup_preview_event_listener()
+  local augroup = vim.api.nvim_create_augroup('JujutsuPreviewListener', { clear = true })
+
+  vim.api.nvim_create_autocmd('User', {
+    group = augroup,
+    pattern = 'JujutsuRevisionSelected',
+    callback = function(args)
+      local data = args.data
+      if not data or not data.id then return end
+
+      local utils = get_utils()
+      -- Use the existing debounce mechanism from init.lua (via utils)
+      utils.cancel_debounce()
+
+      local state = get_state()
+      state.debounce_timer = vim.uv.new_timer()
+      state.debounce_timer:start(
+        50, -- 50ms debounce threshold
+        0,
+        vim.schedule_wrap(function()
+          utils.cancel_debounce()
+          
+          -- Early exit if we moved on, closed flog, or are running a command
+          if not state.cwd or utils.has_active_job() then return end
+
+          -- Don't reload if the same content is already open
+          if preview_is_valid() and state.preview.type == data.type and state.preview.change_id == data.id then
+            return
+          end
+
+          -- Build content asynchronously and open when done
+          utils.build_preview_content_async(data.id, function(output)
+            vim.schedule(function()
+              -- Verify context is still valid after async wait
+              if not state.cwd or utils.has_active_job() then return end
+              if output then
+                M.open(output, data.type, data.id, { filetype = 'jujutsu' })
+              end
+            end)
+          end)
+        end)
+      )
+    end,
+  })
+end
+
+-- Call the setup immediately when the module is required
+setup_preview_event_listener()
+
 function M.refresh()
   local state = get_state()
   local utils = get_utils()
@@ -601,14 +651,13 @@ function M.refresh()
 
   local id = state.preview.change_id
   local preview_type = state.preview.type
-  local output = utils.build_preview_content(id)
-  if not output then
-    return
-  end
-
+  
   -- Clear cached change_id to force update
   state.preview.change_id = nil
-  M.open(output, preview_type, id, { filetype = 'jujutsu' })
+  vim.api.nvim_exec_autocmds('User', {
+    pattern = 'JujutsuRevisionSelected',
+    data = { id = id, type = preview_type },
+  })
 end
 
 --------------------------------------------------------------------------------
@@ -680,11 +729,11 @@ preview_nav = function(direction)
   -- Programmatic cursor moves don't fire CursorMoved; trigger it manually
   vim.api.nvim_exec_autocmds('CursorMoved', { buffer = state.buf })
 
-  -- Update preview
-  local output = utils.build_preview_content(new_commit.id)
-  if output then
-    M.open(output, 'show', new_commit.id, { filetype = 'jujutsu' })
-  end
+  -- Update preview via custom event
+  vim.api.nvim_exec_autocmds('User', {
+    pattern = 'JujutsuRevisionSelected',
+    data = { id = new_commit.id, type = 'show' },
+  })
 end
 
 --------------------------------------------------------------------------------
@@ -718,6 +767,8 @@ function M.show_help()
     '',
     '  Bookmark (b-prefix):',
     '  bb    bookmark  - Set bookmark on commit',
+    '  bd    bookmark  - Delete bookmark on commit',
+    '  bf    bookmark  - Forget bookmark on commit',
     '  bm    bookmark  - Move bookmark to commit',
     '  bM    bookmark  - Move bookmark to commit with --allow-backwards',
     '  bt    bookmark  - Move trunk() bookmark (main/master) to commit',
@@ -728,6 +779,8 @@ function M.show_help()
     '  gP    push      - Git push selected bookmark',
     '',
     '  Actions:',
+    '  J     jump      - Move cursor to parent commit',
+    '  K     jump      - Move cursor to child commit',
     '  e     edit      - Edit (checkout) commit',
     '  x     abandon   - Abandon commit (confirm)',
     '  y     yank      - Yank revision(s) (visual: earliest::latest)',

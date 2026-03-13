@@ -134,6 +134,62 @@ M.edit = with_revset(function(id)
   utils.run_jj_cmd('edit', id)
 end)
 
+local function find_and_jump_to_id(target_id)
+  if not target_id then return end
+  local state = get_state()
+  local utils = get_utils()
+  local preview = get_preview()
+  if not is_buf_valid(state.buf) or not is_win_valid(state.win) then return end
+
+  local lines = vim.api.nvim_buf_get_lines(state.buf, 0, -1, false)
+  for i, line in ipairs(lines) do
+    local line_id = utils.get_change_id_from_line(line)
+    -- Target ID from `get_related_ids` is now the FULL change ID.
+    -- `line_id` from the buffer is usually the short prefix (e.g. `qq`).
+    -- So we check if the full target_id starts with the line_id, 
+    -- OR if the line_id starts with the target_id (just in case).
+    if line_id and (vim.startswith(target_id, line_id) or vim.startswith(line_id, target_id)) then
+      pcall(vim.api.nvim_win_set_cursor, state.win, { i, 4 })
+      vim.api.nvim_exec_autocmds('CursorMoved', { buffer = state.buf })
+
+      -- Skip preview update if an async job is running
+      if utils.has_active_job() then
+        return true
+      end
+
+      local preview_type = is_visual() and 'diff' or 'show'
+      vim.api.nvim_exec_autocmds('User', {
+        pattern = 'JujutsuRevisionSelected',
+        data = { id = line_id, type = preview_type },
+      })
+
+      return true
+    end
+  end
+  vim.notify('Commit ' .. target_id .. ' not found in current log', vim.log.levels.INFO)
+  return false
+end
+
+M.move_to_parent = with_revset(function(id)
+  local utils = get_utils()
+  local parent_id = utils.get_parent_id(id)
+  if parent_id then
+    find_and_jump_to_id(parent_id)
+  else
+    vim.notify('No parent found for ' .. id, vim.log.levels.WARN)
+  end
+end, { refresh = false })
+
+M.move_to_child = with_revset(function(id)
+  local utils = get_utils()
+  local child_id = utils.get_child_id(id)
+  if child_id then
+    find_and_jump_to_id(child_id)
+  else
+    vim.notify('No child found for ' .. id, vim.log.levels.WARN)
+  end
+end, { refresh = false })
+
 M.new = with_revset(function(id)
   local utils = get_utils()
   utils.run_jj_cmd('new', id)
@@ -164,11 +220,10 @@ end, { refresh = false }) -- refresh handled by editor callback
 
 M.diff = with_revset(function(id)
   local utils = get_utils()
-  local preview = get_preview()
-  local output = utils.build_preview_content(id)
-  if output then
-    preview.open(output, 'diff', id, { filetype = 'jujutsu' })
-  end
+  vim.api.nvim_exec_autocmds('User', {
+    pattern = 'JujutsuRevisionSelected',
+    data = { id = id, type = 'diff' },
+  })
 end, { refresh = false })
 
 M.show = with_revset(function(id)
@@ -184,10 +239,10 @@ M.show = with_revset(function(id)
   local win = state.win
 
   local preview_type = id:find '::' and 'diff' or 'show'
-  local output = utils.build_preview_content(id)
-  if output then
-    preview.open(output, preview_type, id, { filetype = 'jujutsu' })
-  end
+  vim.api.nvim_exec_autocmds('User', {
+    pattern = 'JujutsuRevisionSelected',
+    data = { id = id, type = preview_type },
+  })
 
   vim.defer_fn(function()
     if is_win_valid(win) then
@@ -335,6 +390,47 @@ M.delete_bookmark = with_revset(function(revset)
   end
 end, { refresh = false })
 
+M.forget_bookmark = with_revset(function(revset)
+  local utils = get_utils()
+  local output, success = utils.run_jj_cmd(
+    'bookmark list -r ' .. revset .. ' -T \'if(!self.remote(), self.name() ++ "\\n")\'',
+    nil,
+    { notify = false }
+  )
+  if not success then
+    vim.notify('Failed to get bookmarks for ' .. revset, vim.log.levels.ERROR)
+    return
+  end
+  local bookmarks = vim.split(vim.trim(output), '\n', { trimempty = true })
+  if #bookmarks == 0 then
+    vim.notify('No bookmark on ' .. revset, vim.log.levels.WARN)
+    return
+  end
+
+  local function do_forget(bookmark)
+    vim.ui.select(
+      { 'Yes', 'No' },
+      { prompt = 'Forget bookmark ' .. bookmark .. '?' },
+      function(choice)
+        if choice == 'Yes' then
+          utils.run_jj_cmd('bookmark forget', vim.fn.shellescape(bookmark))
+          utils.refresh_log()
+        end
+      end
+    )
+  end
+
+  if #bookmarks == 1 then
+    do_forget(bookmarks[1])
+  else
+    vim.ui.select(bookmarks, { prompt = 'Select bookmark to forget:' }, function(choice)
+      if choice then
+        do_forget(choice)
+      end
+    end)
+  end
+end, { refresh = false })
+
 function M.undo()
   local utils = get_utils()
   utils.run_jj_cmd('undo', '')
@@ -406,11 +502,9 @@ end, { refresh = false })
 -- Swap revision with its parent
 M.switch_revisions = with_revset(function(id)
   local utils = get_utils()
-  local parent_cmd = 'log -r ' .. id .. '- --no-graph -T "change_id.shortest()"'
-  local parent_output = vim.fn.system(utils.build_jj_cmd(parent_cmd))
-  local parent_id = parent_output:gsub('%s+', '')
+  local parent_id = utils.get_parent_id(id)
 
-  if parent_id == '' then
+  if not parent_id then
     vim.notify('Could not find parent of ' .. id, vim.log.levels.WARN)
     return
   end
@@ -536,10 +630,10 @@ local function nav(direction)
   end
 
   local preview_type = is_visual() and 'diff' or 'show'
-  local output = utils.build_preview_content(revset)
-  if output then
-    preview.open(output, preview_type, revset, { filetype = 'jujutsu' })
-  end
+  vim.api.nvim_exec_autocmds('User', {
+    pattern = 'JujutsuRevisionSelected',
+    data = { id = revset, type = preview_type },
+  })
 end
 
 function M.nav_down()

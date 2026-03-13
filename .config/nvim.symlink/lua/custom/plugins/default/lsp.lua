@@ -103,20 +103,18 @@ return {
         severity_sort = true,
         float = { border = 'rounded', source = 'if_many' },
         underline = { severity = vim.diagnostic.severity.ERROR },
-        signs = vim.g.have_nerd_font
-            and {
-              text = {
-                -- [vim.diagnostic.severity.ERROR] = '■ ',
-                -- [vim.diagnostic.severity.WARN] = '▲ ',
-                -- [vim.diagnostic.severity.INFO] = 'ℹ ',
-                -- [vim.diagnostic.severity.HINT] = '󰌶 ',
-                [vim.diagnostic.severity.ERROR] = '󰅚 ',
-                [vim.diagnostic.severity.WARN] = '󰀪 ',
-                [vim.diagnostic.severity.INFO] = '󰋽 ',
-                [vim.diagnostic.severity.HINT] = '󰌶 ',
-              },
-            }
-          or {},
+        signs = vim.g.have_nerd_font and {
+          text = {
+            -- [vim.diagnostic.severity.ERROR] = '■ ',
+            -- [vim.diagnostic.severity.WARN] = '▲ ',
+            -- [vim.diagnostic.severity.INFO] = 'ℹ ',
+            -- [vim.diagnostic.severity.HINT] = '󰌶 ',
+            [vim.diagnostic.severity.ERROR] = '󰅚 ',
+            [vim.diagnostic.severity.WARN] = '󰀪 ',
+            [vim.diagnostic.severity.INFO] = '󰋽 ',
+            [vim.diagnostic.severity.HINT] = '󰌶 ',
+          },
+        } or {},
         virtual_text = {
           source = 'if_many',
           spacing = 2,
@@ -145,10 +143,17 @@ return {
         ruff = {},
         ty = {},
         beancount = {
+          on_attach = function(client, _)
+            -- Disable all capabilities except rename
+            client.server_capabilities.documentFormattingProvider = false
+            client.server_capabilities.documentRangeFormattingProvider = false
+            client.server_capabilities.documentOnTypeFormattingProvider = false
+          end,
           init_options = {
             journal_file = '/home/hdemers/Projets/budget/src/budget/data/preamble.beancount',
             formatting = {
               currency_column = 97,
+              num_width = 100,
             },
           },
         },
@@ -171,7 +176,9 @@ return {
 
       local ensure_installed = vim.tbl_keys(servers or {})
       -- Replace LSP name with correct Mason package name where they differ
-      ensure_installed = vim.tbl_filter(function(v) return v ~= 'beancount' end, ensure_installed)
+      ensure_installed = vim.tbl_filter(function(v)
+        return v ~= 'beancount'
+      end, ensure_installed)
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
         'beancount-language-server',

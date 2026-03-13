@@ -79,7 +79,7 @@ return {
         -- Text object
         map({ 'o', 'x' }, 'ih', ':<C-U>Gitsigns select_hunk<CR>')
 
-        -- Toggle base between HEAD and master
+        -- Cycle base between HEAD, master, and dev
         map('n', '<leader>gi', function()
           if base == 'HEAD' then
             gs.change_base 'master'
@@ -94,7 +94,28 @@ return {
             vim.notify('Gitsign base changed to HEAD', 'info')
             base = 'HEAD'
           end
-        end, { desc = 'Gitsigns: toggle base index|master' })
+        end, { desc = 'Gitsigns: cycle base HEAD|master|dev' })
+
+        -- Select commit to set as base
+        map('n', '<leader>gI', function()
+          local commits = vim.fn.systemlist 'git log --oneline -n 100'
+          if vim.v.shell_error ~= 0 then
+            vim.notify('Failed to get git commits', 'error')
+            return
+          end
+          vim.ui.select(commits, {
+            prompt = 'Select commit for Gitsigns base:',
+          }, function(choice)
+            if choice then
+              local commit_hash = choice:match '^%S+'
+              if commit_hash then
+                gs.change_base(commit_hash)
+                vim.notify('Gitsign base changed to ' .. commit_hash, 'info')
+                base = commit_hash
+              end
+            end
+          end)
+        end, { desc = 'Gitsigns: set base to commit' })
       end,
     },
   },
@@ -234,7 +255,7 @@ return {
           if is_jj then
             require('jujutsu.init').jujutsu_file_history()
           else
-            vim.cmd('DiffviewFileHistory %')
+            vim.cmd 'DiffviewFileHistory %'
           end
         end,
         desc = 'Smart file history (JJ / Diffview)',

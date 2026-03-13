@@ -3,16 +3,19 @@ input=$(cat)
 
 MODEL=$(echo "$input" | jq -r '.model.display_name')
 
-CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size')
-USAGE=$(echo "$input" | jq '.context_window.current_usage')
+REMAINING=$(echo "$input" | jq -r '.context_window.remaining_percentage // empty')
 
-if [ "$USAGE" != "null" ]; then
-    # Calculate current context from current_usage fields
-    CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
-    PERCENT_USED=$((CURRENT_TOKENS * 100 / CONTEXT_SIZE))
-    REMAINING=$((100 - PERCENT_USED))
-else
-    REMAINING=100
+if [ -z "$REMAINING" ]; then
+    CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size')
+    USAGE=$(echo "$input" | jq '.context_window.current_usage')
+    if [ "$USAGE" != "null" ]; then
+        # Fall back to manual calculation, including output_tokens
+        CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .output_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
+        PERCENT_USED=$((CURRENT_TOKENS * 100 / CONTEXT_SIZE))
+        REMAINING=$((100 - PERCENT_USED))
+    else
+        REMAINING=100
+    fi
 fi
 
 

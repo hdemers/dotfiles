@@ -85,6 +85,13 @@ if ! shopt -oq posix; then
   fi
 fi
 
+# Source completions.
+if [ -d "${HOME}/.local/share/bash-completion/completions" ]; then
+  for f in "${HOME}/.local/share/bash-completion/completions"/*; do
+    [ -f "$f" ] && . "$f"
+  done
+fi
+
 # Automatically source all files/links in the directory config_dir
 # If the auto-source folder exists and has files in it...
 config_dir="$HOME/.shellrc.d"

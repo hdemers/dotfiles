@@ -18,6 +18,12 @@ priority = 200
 
 [[rule]]
 toolName = "run_shell_command"
+commandRegex = "jj\\s+git\\b.*"
+decision = "allow"
+priority = 250
+
+[[rule]]
+toolName = "run_shell_command"
 commandRegex = ".*"
 decision = "allow"
 priority = 100

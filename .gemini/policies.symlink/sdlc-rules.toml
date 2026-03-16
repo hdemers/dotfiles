@@ -14,3 +14,18 @@ toolName = "read_file"
 argsPattern = '"file_path":"/tmp/,'
 decision = "allow"
 priority = 100
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = ".*\\bgit\\b.*"
+decision = "deny"
+deny_message = "Use jj instead of git to interact with the repository. If this is not a Jujutsu repository, ask user."
+priority = 200
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = "pip\\b.*"
+decision = "deny"
+deny_message = "Never use pip directly. Use `uv run --with <package> ...` instead or `uv pip ...`. If you don't have uv installed, ask user."
+priority = 200
+

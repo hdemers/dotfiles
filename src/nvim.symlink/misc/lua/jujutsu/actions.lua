@@ -750,12 +750,13 @@ end, { refresh = false })
 -- Git push
 --------------------------------------------------------------------------------
 
-local function get_bookmarks()
+local function get_bookmarks(revset)
   local utils = get_utils()
   local template =
     [[if(!self.remote(), self.normal_target().change_id().shortest() ++ " " ++ self.name() ++ if(!self.synced(), "*", "") ++ " " ++ self.normal_target().commit_id().shortest() ++ "\n")]]
+  local target_revset = revset or 'trunk():: ~ dev ~ trunk()'
   local cmd = 'bookmark list -r '
-    .. vim.fn.shellescape 'trunk():: ~ dev ~ trunk()'
+    .. vim.fn.shellescape(target_revset)
     .. ' -T '
     .. vim.fn.shellescape(template)
   local output, success = utils.run_jj_cmd(cmd, nil, { notify = false })
@@ -768,7 +769,7 @@ end
 
 function M.push()
   local utils = get_utils()
-  utils.run_jj_cmd('git push', '')
+  utils.run_jj_cmd('git push --tracked', '')
   utils.refresh_log()
 end
 
@@ -814,23 +815,15 @@ end
 
 M.move_bookmark = move_bookmark_impl
 
-function M.push_bookmark()
+M.push_bookmark = with_revset(function(id)
   local utils = get_utils()
-  local bookmarks = get_bookmarks()
+  local bookmarks = get_bookmarks(id)
   if not bookmarks or #bookmarks == 0 then
-    vim.notify('No bookmarks found from trunk()..', vim.log.levels.WARN)
+    vim.notify('No bookmarks found for the selected revision.', vim.log.levels.WARN)
     return
   end
 
-  vim.ui.select(bookmarks, {
-    prompt = 'Push bookmark:',
-    format_item = function(item)
-      return item
-    end,
-  }, function(choice)
-    if not choice then
-      return
-    end
+  local function do_push(choice)
     local bookmark_name = choice:match '^%S+%s+(%S+)'
     if bookmark_name then
       -- Remove trailing * if present (indicates unsynced)
@@ -838,8 +831,24 @@ function M.push_bookmark()
       utils.run_jj_cmd('git push', '-b ' .. bookmark_name)
       utils.refresh_log()
     end
-  end)
-end
+  end
+
+  if #bookmarks == 1 then
+    do_push(bookmarks[1])
+  else
+    vim.ui.select(bookmarks, {
+      prompt = 'Push bookmark:',
+      format_item = function(item)
+        return item
+      end,
+    }, function(choice)
+      if not choice then
+        return
+      end
+      do_push(choice)
+    end)
+  end
+end)
 
 M.move_trunk_bookmark = with_revset(function(id)
   local utils = get_utils()

@@ -38,6 +38,8 @@ M.state = {
   debounce_timer = nil, -- Timer for debounced preview updates
   watcher = nil, -- uv_fs_event_t handle for op_heads directory
   last_refresh_time = 0, -- Timestamp of last refresh (for dedup with watcher)
+  serial_queue = {}, -- FIFO queue of pending async repo-modifying operations
+  serial_running = false, -- whether a queued operation is active
 }
 
 --------------------------------------------------------------------------------
@@ -72,6 +74,23 @@ function M.utils.cancel_debounce()
     M.state.debounce_timer:close()
     M.state.debounce_timer = nil
   end
+end
+
+-- Enqueue an async repo-modifying operation so they run serially.
+-- `fn` receives a single `on_done` callback it must call when finished.
+function M.utils.enqueue(fn)
+  table.insert(M.state.serial_queue, fn)
+  M.utils.drain_queue()
+end
+
+function M.utils.drain_queue()
+  if M.state.serial_running or #M.state.serial_queue == 0 then return end
+  M.state.serial_running = true
+  local fn = table.remove(M.state.serial_queue, 1)
+  fn(function()
+    M.state.serial_running = false
+    M.utils.drain_queue()
+  end)
 end
 
 -- Debounce a function call (cancels previous pending call)
@@ -967,7 +986,7 @@ setup_keymaps = function(buf)
 
   -- Commit operations (c-prefix)
   vim.keymap.set({ 'n', 'x' }, 'cd', actions.describe, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'cD', actions.cdescribe, { buffer = buf, nowait = true })
+  vim.keymap.set({ 'n', 'x' }, 'cD', actions.cdescribe, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'cs', actions.squash, { buffer = buf, nowait = true })
   vim.keymap.set({ 'n', 'x' }, 'cS', actions.squash_into, { buffer = buf, nowait = true })
 

@@ -651,64 +651,87 @@ end
 M.cdescribe = with_revset(function(id)
   local state = get_state()
   local utils = get_utils()
-  local CONST = get_const()
 
-  local saved_cursor = is_win_valid(state.win) and vim.api.nvim_win_get_cursor(state.win)
-    or nil
+  -- Resolve revset to individual change IDs to avoid mangling descriptions
+  -- of multiple revisions (jj describe -r <range> applies the same msg to all).
+  local resolve_cmd = utils.build_jj_cmd(
+    string.format("log -r %s --no-graph -T 'change_id ++ \"\\n\"'", vim.fn.shellescape(id))
+  )
+  local output = vim.fn.system(resolve_cmd)
+  local ids = {}
+  for line in output:gmatch '[^\n]+' do
+    local cid = line:match '^%s*([k-z]+)%s*$'
+    if cid then
+      table.insert(ids, cid)
+    end
+  end
+
+  if #ids == 0 then
+    vim.notify('No revisions found for ' .. id, vim.log.levels.WARN, { title = 'Jujutsu' })
+    return
+  end
 
   -- Cancel any pending preview updates
   utils.cancel_debounce()
 
-  local buf = vim.api.nvim_create_buf(false, true)
-  local height = math.floor(vim.o.lines * 0.5)
-  local win = vim.api.nvim_open_win(buf, true, {
-    relative = 'editor',
-    row = math.floor((vim.o.lines - height) / 2),
-    col = math.floor((vim.o.columns - CONST.FLOAT_WIDTH) / 2),
-    width = CONST.FLOAT_WIDTH,
-    height = height,
-    border = 'rounded',
-    title = ' cdescribe ' .. id .. ' ',
-    title_pos = 'center',
-  })
+  local fidget_ok, fidget = pcall(require, 'fidget')
+  local total = #ids
+  local completed = 0
 
-  local cmd = string.format('cd %s && cdescribe %s', vim.fn.shellescape(state.cwd), id)
-  local job_id = vim.fn.termopen(cmd, {
-    on_exit = function()
-      vim.schedule(function()
-        utils.clear_active_job()
-        -- Explicitly focus the float before stopinsert so it targets the terminal
-        -- float, not the log window (stopinsert must target the cdescribe terminal).
-        if vim.api.nvim_win_is_valid(win) then
-          vim.api.nvim_set_current_win(win)
-          vim.cmd 'stopinsert'
-          vim.api.nvim_win_close(win, true)
-        end
-        if is_win_valid(state.win) then
-          vim.api.nvim_set_current_win(state.win)
-          if saved_cursor then
-            pcall(vim.api.nvim_win_set_cursor, state.win, saved_cursor)
+  for index, current_id in ipairs(ids) do
+    local queued_msg = total > 1
+        and string.format('Queued: %s (%d/%d)', current_id, index, total)
+      or string.format('Queued: %s', current_id)
+    local progress_handle = fidget_ok and fidget.progress.handle.create({
+      title = 'Jujutsu',
+      message = queued_msg,
+      lsp_client = { name = 'cdescribe' },
+    }) or nil
+
+    utils.enqueue(function(on_done)
+      local running_msg = total > 1
+          and string.format('Generating description for %s (%d/%d)...', current_id, index, total)
+        or string.format('Generating description for %s...', current_id)
+
+      if progress_handle then
+        progress_handle.message = running_msg
+      else
+        vim.notify(running_msg, vim.log.levels.INFO, { title = 'Jujutsu' })
+      end
+
+      vim.system({ 'cdescribe', current_id }, { cwd = state.cwd }, function(obj)
+        vim.schedule(function()
+          if progress_handle then
+            progress_handle:finish()
           end
-        end
-        utils.refresh_log()
-        -- Belt-and-suspenders: re-apply cursor after refresh_log's terminal
-        -- rendering (nvim_chan_send) which may scroll the buffer asynchronously.
-        if saved_cursor and is_win_valid(state.win) then
-          vim.schedule(function()
-            if is_win_valid(state.win) then
-              pcall(vim.api.nvim_win_set_cursor, state.win, saved_cursor)
+          if obj.code == 0 then
+            if total == 1 then
+              vim.notify('Generated description for ' .. current_id, vim.log.levels.INFO, { title = 'Jujutsu' })
             end
-          end)
-        end
+          else
+            local err = (obj.stderr ~= '' and obj.stderr or obj.stdout) or 'unknown error'
+            vim.notify(
+              'Failed to generate description for ' .. current_id .. ': ' .. err,
+              vim.log.levels.ERROR,
+              { title = 'Jujutsu' }
+            )
+          end
+          completed = completed + 1
+          if completed == total then
+            utils.refresh_log()
+            if total > 1 then
+              vim.notify(
+                string.format('Finished generating %d descriptions.', total),
+                vim.log.levels.INFO,
+                { title = 'Jujutsu' }
+              )
+            end
+          end
+          on_done()
+        end)
       end)
-    end,
-  })
-
-  if job_id > 0 then
-    utils.set_active_job(job_id)
+    end)
   end
-
-  vim.cmd 'startinsert'
 end, { refresh = false })
 
 --------------------------------------------------------------------------------

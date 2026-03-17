@@ -754,7 +754,7 @@ function M.show_help()
     '',
     '  Commit (c-prefix):',
     '  cd    describe  - Edit description (<CR> save, q cancel)',
-    '  cD    cdescribe - AI-generate description (interactive)',
+    '  cD    cdescribe - AI-generate description (async)',
     '  cs    squash    - Squash commit (visual: squash range)',
     '  cS    squash    - Squash into selected target (pick from list)',
     '',

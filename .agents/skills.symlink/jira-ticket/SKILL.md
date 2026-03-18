@@ -88,7 +88,7 @@ case use the `jira sprints` commands to find the one.
 
 You must strictly adhere to the following template to write the ticket description:
 
-```markdown
+<template>
 ### Description
 
 - Work needed. Be as detailed as possible to allow coworkers to points the level of effort needed.
@@ -120,8 +120,21 @@ NOTE: do not mention code reviews, these always happen.
 
 ### Plan
 
-if you are provided with a plan, copy it here, as is.
-```
+If you are provided with a plan, copy it here, as is.
+
+### Specs
+
+Include these instructions verbatim:
+<instructions>
+Instructions for agents:
+
+If a set of openspec files are attached, copy them as a new change, use the
+skill `openspec-propose`.
+</instructions>
+
+If you are working from a set of openspec files, add them all (even the
+proposal.md one) as attachments, and include the proposal inline here.
+</template>
 
 **CLI Usage Patterns**:
 

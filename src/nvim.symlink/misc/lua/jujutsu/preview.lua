@@ -303,6 +303,51 @@ function M.open_file_history()
   require('jujutsu.init').jujutsu_file_history(file_path, cid)
 end
 
+function M.view_file_at_revision()
+  local state = get_state()
+  local utils = get_utils()
+
+  local file_path = utils.get_diff_file_at_cursor()
+  if not file_path then
+    vim.notify('No file found at cursor position', vim.log.levels.WARN)
+    return
+  end
+  local cid = state.preview.change_id
+  if not cid then
+    vim.notify('No change ID in preview', vim.log.levels.WARN)
+    return
+  end
+
+  -- Handle range revsets - use newest for viewing
+  local target_id = cid:match '^[^:]+::(.+)$' or cid
+
+  local content = vim.fn.system(
+    utils.build_jj_cmd('file show -r ' .. target_id .. ' ' .. vim.fn.shellescape(file_path))
+  )
+  if vim.v.shell_error ~= 0 then
+    vim.notify('Failed to load file content', vim.log.levels.ERROR)
+    return
+  end
+
+  local ft = vim.filetype.match { filename = file_path }
+
+  vim.cmd 'tabnew'
+  local buf = vim.api.nvim_get_current_buf()
+  vim.api.nvim_buf_set_lines(buf, 0, -1, false, vim.split(content, '\n'))
+  vim.bo[buf].buftype = 'nofile'
+  vim.bo[buf].bufhidden = 'wipe'
+  vim.bo[buf].buflisted = false
+  vim.api.nvim_buf_set_name(buf, file_path .. ' (' .. target_id .. ')')
+  if ft then
+    vim.bo[buf].filetype = ft
+  end
+
+  vim.keymap.set('n', 'gq', function()
+    vim.cmd 'tabclose'
+  end, { buffer = buf, nowait = true })
+  vim.bo[buf].modifiable = false
+end
+
 function M.open_side_by_side_diff()
   local state = get_state()
   local utils = get_utils()
@@ -380,6 +425,7 @@ local function setup_preview_keymaps(buf)
   vim.keymap.set('n', 'O', M.open_side_by_side_diff, { buffer = buf, nowait = true })
   vim.keymap.set('n', '<CR>', M.open_side_by_side_diff, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'H', M.open_file_history, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'v', M.view_file_at_revision, { buffer = buf, nowait = true })
   vim.keymap.set('n', '<leader>e', M.toggle_focus, { buffer = buf, nowait = true })
 
   -- Navigate revisions from preview (Tab/Shift-Tab)
@@ -806,6 +852,7 @@ function M.show_help()
     '  <S-Tab>   prev  - Navigate to previous revision (in preview)',
     '  <CR>      focus - Toggle log/preview focus',
     '  O/<CR>    diff  - Open file diff side-by-side (in preview)',
+    '  v         view  - View file at revision (in preview)',
     '  g?        help  - Show this help',
     '  gq        close - Close flog',
   }

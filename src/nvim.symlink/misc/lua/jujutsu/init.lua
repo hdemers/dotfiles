@@ -1028,8 +1028,8 @@ setup_keymaps = function(buf)
   vim.keymap.set({ 'n', 'x' }, 'y', actions.yank, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'yb', actions.yank_bookmark, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'a', actions.absorb, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'u', actions.undo, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'U', actions.redo, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'U', actions.undo, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'R', actions.redo, { buffer = buf, nowait = true })
   vim.keymap.set('n', 'L', actions.split, { buffer = buf, nowait = true })
 
   -- UI

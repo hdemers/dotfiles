@@ -594,7 +594,9 @@ local function setup_preview_event_listener()
     pattern = 'JujutsuRevisionSelected',
     callback = function(args)
       local data = args.data
-      if not data or not data.id then return end
+      if not data or not data.id then
+        return
+      end
 
       local utils = get_utils()
       -- Use the existing debounce mechanism from init.lua (via utils)
@@ -607,12 +609,18 @@ local function setup_preview_event_listener()
         0,
         vim.schedule_wrap(function()
           utils.cancel_debounce()
-          
+
           -- Early exit if we moved on, closed flog, or are running a command
-          if not state.cwd or utils.has_active_job() then return end
+          if not state.cwd or utils.has_active_job() then
+            return
+          end
 
           -- Don't reload if the same content is already open
-          if preview_is_valid() and state.preview.type == data.type and state.preview.change_id == data.id then
+          if
+            preview_is_valid()
+            and state.preview.type == data.type
+            and state.preview.change_id == data.id
+          then
             return
           end
 
@@ -620,7 +628,9 @@ local function setup_preview_event_listener()
           utils.build_preview_content_async(data.id, function(output)
             vim.schedule(function()
               -- Verify context is still valid after async wait
-              if not state.cwd or utils.has_active_job() then return end
+              if not state.cwd or utils.has_active_job() then
+                return
+              end
               if output then
                 M.open(output, data.type, data.id, { filetype = 'jujutsu' })
               end
@@ -651,7 +661,7 @@ function M.refresh()
 
   local id = state.preview.change_id
   local preview_type = state.preview.type
-  
+
   -- Clear cached change_id to force update
   state.preview.change_id = nil
   vim.api.nvim_exec_autocmds('User', {
@@ -787,8 +797,8 @@ function M.show_help()
     '  yb    yank      - Yank bookmark name to clipboard',
     '  a     absorb    - Absorb working copy changes into revision',
     '  L     split     - Split revision',
-    '  u     undo      - Undo last operation',
-    '  U     redo      - Redo last undo',
+    '  U     undo      - Undo last operation',
+    '  R     redo      - Redo last undo',
     '',
     '  Navigation:',
     '  j/k       move  - Move by commit (2 lines)',

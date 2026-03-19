@@ -142,7 +142,7 @@ _jpreview() {
         printf "\033[0m\n"
         env GH_FORCE_TTY=1 gh pr view --comments "${pr_number}"
     else
-        jira view --rich "$(_extract_ticket "${change_id}")"
+        jira --format human view "$(_extract_ticket "${change_id}")"
     fi
 }
 
@@ -254,25 +254,29 @@ main() {
     # Fetch PR data once and store it
     local pr_data
     pr_data=$(env GH_FORCE_TTY="100%" gh pr list \
-        --json number,title,headRefName,updatedAt,author,reviewDecision \
-        --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\t%s\n" .number .title .headRefName (timeago .updatedAt) .author.name .reviewDecision}}{{end}}')
+        --json number,title,headRefName,baseRefName,updatedAt,author,reviewDecision \
+        --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\t%s\t%s\n" .number .title .headRefName .baseRefName (timeago .updatedAt) .author.name .reviewDecision}}{{end}}')
 
     if [ -z "$pr_data" ]; then
         gum log --level info "No open pull requests found."
         return 0
     fi
 
-    # Calculate maximum branch name length (dynamic width)
+    # Calculate maximum base and branch name lengths (dynamic width)
+    local max_base_width
+    max_base_width=$(echo "$pr_data" | awk -F'\t' 'BEGIN {max=0} {len=length($4); if (len > max) max=len} END {print max}')
+
     local max_branch_width
-    max_branch_width=$(echo "$pr_data" | awk -F'\t' 'BEGIN {max=0} {if (length($3) > max) max=length($3)} END {print max}')
+    max_branch_width=$(echo "$pr_data" | awk -F'\t' -v mbw="$max_base_width" 'BEGIN {max=0} {len=mbw + length(" ← " $3); if (len > max) max=len} END {print max}')
 
     # Set fixed column widths
     local branch_width=$max_branch_width  # Dynamic: never truncate
+    local base_width=$max_base_width      # Dynamic: base branch width
     local title_width=60                  # Fixed: truncate if longer
     local time_width=15                   # Fixed: truncate if longer
     local author_width=20                 # Fixed: truncate if longer
 
-    echo "$pr_data" | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v timew="$time_width" -v aw="$author_width" '{
+    echo "$pr_data" | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v bbw="$base_width" -v timew="$time_width" -v aw="$author_width" '{
         # Color codes
         reset = "\033[0m"
         pr_color = "\033[1;36m"      # Bright cyan for PR numbers
@@ -285,7 +289,7 @@ main() {
         yellow = "\033[0;33m"
 
         # Review status indicator
-        review = $6
+        review = $7
         if (review == "APPROVED") {
             status = green "✓" reset
         } else if (review == "CHANGES_REQUESTED") {
@@ -299,28 +303,49 @@ main() {
 
         # Truncate title and author if needed, but never truncate branch
         title = (length($2) > tw) ? substr($2, 1, tw-1) "…" : $2
-        branch = $3  # Never truncate branch name
-        author = (length($5) > aw) ? substr($5, 1, aw-1) "…" : $5
+        
+        base_branch = $4
+        if (base_branch == "master" || base_branch == "main") {
+            base_color = green
+        } else {
+            base_color = "\033[0;35m" # magenta
+        }
+        
+        base_padding = bbw - length(base_branch)
+        if (base_padding < 0) base_padding = 0
+        base_pad_spaces = sprintf("%*s", base_padding, "")
+        
+        visible_branch_len = bbw + length(" ← " $3)
+        padding = bw - visible_branch_len
+        if (padding < 0) padding = 0
+        pad_spaces = sprintf("%*s", padding, "")
+        
+        branch_formatted = base_color $4 reset base_pad_spaces " ← " branch_color $3 reset pad_spaces
+
+        author = (length($6) > aw) ? substr($6, 1, aw-1) "…" : $6
+        headRefName = $3
 
         # Format with fixed widths and preserve tabs
         # Status at the front as first column
-        printf "%s\t%s%-3s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\t%s%-*s%s\n",
+        printf "%s\t%s%-3s%s\t%s%-*s%s\t%s\t%s%-*s%s\t%s%-*s%s\t%s\n",
                status,
                pr_color, $1, reset,
                title_color, tw, title, reset,
-               branch_color, bw, branch, reset,
-               time_color, timew, $4, reset,
-               author_color, aw, author, reset
+               branch_formatted,
+               time_color, timew, $5, reset,
+               author_color, aw, author, reset,
+               headRefName
     }' \
     | fzf \
         --ansi \
+        --with-nth=1..6 \
         --preview-window 'top,90%' \
         --with-shell "$HOME/.local/bin/fzf-shell.sh" \
         --height 100% \
         --delimiter '\t' \
-        --preview "_jpreview {2} {4}" \
-        --bind "ctrl-i:become(jintegrate {2} {4})" \
-        --bind "ctrl-b:become(jdeploy {4})" \
+        --preview "_jpreview {2} {7}" \
+        --bind "ctrl-i:become(jintegrate {2} {7})" \
+        --bind "ctrl-b:become(jdeploy {7})" \
         --bind 'ctrl-w:execute-silent(gh pr view --web {2})' \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
         --bind 'ctrl-m:become(pr-discussions {2} --human)' \

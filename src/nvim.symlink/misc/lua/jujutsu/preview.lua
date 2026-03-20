@@ -60,7 +60,7 @@ vim.api.nvim_set_hl(0, 'JJHeaderKey', { link = 'Normal', default = true })
 vim.api.nvim_set_hl(0, 'JJCommitId', { link = 'Function', default = true })
 vim.api.nvim_set_hl(0, 'JJChangeId', { link = 'Conditional', default = true })
 vim.api.nvim_set_hl(0, 'JJAuthorName', { link = 'Constant', default = true })
-vim.api.nvim_set_hl(0, 'JJAuthorEmail', { link = 'WarningMsg', default = true })
+vim.api.nvim_set_hl(0, 'JJAuthorEmail', { link = '@variable.parameter', default = true })
 vim.api.nvim_set_hl(0, 'JJTimestamp', { link = 'Operator', default = true })
 vim.api.nvim_set_hl(0, 'JJBookmark', { link = 'JJChangeId', default = true })
 
@@ -134,7 +134,9 @@ local function apply_preview_highlights(buf, lines)
         if not s then
           break
         end
-        hl(buf, 'JJBookmark', lnum, s - 1, e) -- s-1: 0-indexed start; e: 0-indexed exclusive end
+        local word = line:sub(s, e)
+        local group = word:match '@$' and 'String' or 'JJBookmark'
+        hl(buf, group, lnum, s - 1, e) -- s-1: 0-indexed start; e: 0-indexed exclusive end
         pos = e + 1
       end
     elseif colon and line:match '^Author%s*:' then
@@ -152,6 +154,11 @@ local function apply_preview_highlights(buf, lines)
       in_conflicts = true
     elseif in_conflicts and line:match '%S' then
       hl(buf, 'JJConflictFile', lnum, 0, -1)
+    elseif not in_conflicts then
+      local no_desc_s, no_desc_e = line:find('(no description set)', 1, true)
+      if no_desc_s then
+        hl(buf, 'WarningMsg', lnum, no_desc_s - 1, no_desc_e)
+      end
     end
   end
 end
@@ -322,7 +329,9 @@ function M.view_file_at_revision()
   local target_id = cid:match '^[^:]+::(.+)$' or cid
 
   local content = vim.fn.system(
-    utils.build_jj_cmd('file show -r ' .. target_id .. ' ' .. vim.fn.shellescape(file_path))
+    utils.build_jj_cmd(
+      'file show -r ' .. target_id .. ' ' .. vim.fn.shellescape(file_path)
+    )
   )
   if vim.v.shell_error ~= 0 then
     vim.notify('Failed to load file content', vim.log.levels.ERROR)

@@ -366,7 +366,8 @@ local function apply_log_highlights(buf, lines, change_map, commit_map)
       local post_date_base = after_start - 1 + date_e
       for bm_s, word, bm_e in post_date:gmatch '()(%S+)()' do
         if not word:match '^[0-9a-f]+$' then
-          hl(lnum, 'JJBookmark', post_date_base + bm_s - 1, post_date_base + bm_e - 1)
+          local group = word:match '@$' and 'String' or 'JJBookmark'
+          hl(lnum, group, post_date_base + bm_s - 1, post_date_base + bm_e - 1)
         end
       end
     elseif after_start <= #line then

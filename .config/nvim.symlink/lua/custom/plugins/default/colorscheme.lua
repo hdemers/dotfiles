@@ -204,12 +204,6 @@ return {
     end,
   },
   {
-    '2giosangmitom/nightfall.nvim',
-    lazy = false,
-    priority = 1000,
-    opts = {},
-  },
-  {
     'sho-87/kanagawa-paper.nvim',
     lazy = false,
     priority = 1000,
@@ -229,23 +223,8 @@ return {
     end,
   },
   {
-    'ramojus/mellifluous.nvim',
-    lazy = false,
-    priority = 1000,
-  },
-  {
     'olimorris/onedarkpro.nvim',
     priority = 1000, -- Ensure it loads first
-  },
-  {
-    'sainnhe/edge',
-    lazy = false,
-    priority = 1000,
-    config = function()
-      -- Optionally configure and load the colorscheme
-      -- directly inside the plugin declaration.
-      vim.g.edge_enable_italic = true
-    end,
   },
   {
     'sainnhe/sonokai',
@@ -265,21 +244,6 @@ return {
     config = function()
       -- your optional config goes here, see below.
     end,
-  },
-  {
-    'rockyzhang24/arctic.nvim',
-    dependencies = { 'rktjmp/lush.nvim' },
-    name = 'arctic',
-    branch = 'main',
-    priority = 1000,
-  },
-  {
-    'ficcdaf/ashen.nvim',
-    -- optional but recommended,
-    -- pin to the latest stable release:
-    lazy = false,
-    priority = 1000,
-    -- configuration is optional!
   },
   { 'HoNamDuong/hybrid.nvim' },
   { 'samharju/synthweave.nvim' },

@@ -27,6 +27,8 @@ Choose:
    - Expected work product
    - Technical details when relevant
 8. Use the Markdown.
+9. If you are working from a set of openspec files, add them all as
+   attachments.
 
 ### Context
 
@@ -126,14 +128,10 @@ If you are provided with a plan, copy it here, as is.
 
 Include these instructions verbatim:
 <instructions>
-Instructions for agents:
-
-If a set of openspec files are attached, copy them as a new change, use the
-skill `openspec-propose`.
+Instructions for agents: if a set of openspec files are attached, copy them as
+a new change, use the skill `openspec-propose`.
 </instructions>
 
-If you are working from a set of openspec files, add them all (even the
-proposal.md one) as attachments, and include the proposal inline here.
 </template>
 
 **CLI Usage Patterns**:
@@ -156,5 +154,5 @@ proposal.md one) as attachments, and include the proposal inline here.
 - Acknowledge successful operations with ticket numbers (use `jira issues` to
   find newly create ticket).
 - NEVER use superlative terms like comprehensive.
-- CRITICAL: do not mention brainstorming files by name, rather attached the
-  brainstorming document to the ticket (using `--attach <filename>`)
+- CRITICAL: do not mention files by name, rather attached them to the ticket
+  (using `--attach <filename>`)

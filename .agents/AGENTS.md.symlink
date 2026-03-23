@@ -26,13 +26,13 @@ in-progress. The `dev` commit is always empty and should stay empty.
 
 Always prefix those files with a comma. Example: ,test_option1.py.
 
-### CRITICAL & MANDATORY:
+### Best Practices
 
-- Never ever use `pip --break-system-package`.
+- NEVER ever use `pip --break-system-package`.
   Rather use `uv run --with <package> ...`
 - Clean-up throw-away files.
-- Never use shell redirection unless absolutely necessary. Rather use the
-  proper tool:
+- CRITICAL & MANDATORY: Never use shell redirection unless absolutely
+  necessary. Rather use the proper tool:
   - replace
   - read_file
   - write_file

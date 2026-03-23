@@ -980,10 +980,10 @@ setup_keymaps = function(buf)
     vim.keymap.set({ 'n', 'x' }, def.key, def.action, { buffer = buf, nowait = true })
   end
 
-  -- New commit operations (n-prefix)
-  vim.keymap.set('n', 'nn', actions.new, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'nc', actions.new_current, { buffer = buf, nowait = true })
-  vim.keymap.set('n', 'nd', actions.new_dev, { buffer = buf, nowait = true })
+  -- Insert change operations (i-prefix)
+  vim.keymap.set('n', 'in', actions.new, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'ic', actions.new_current, { buffer = buf, nowait = true })
+  vim.keymap.set('n', 'id', actions.new_dev, { buffer = buf, nowait = true })
 
   -- Commit operations (c-prefix)
   vim.keymap.set({ 'n', 'x' }, 'cd', actions.describe, { buffer = buf, nowait = true })
@@ -1559,7 +1559,7 @@ end
 
 function M.setup()
   -- Global keymaps
-  vim.keymap.set('n', '<leader>jn', M.jujutsu_new, { desc = 'Create new Jujutsu commit' })
+  vim.keymap.set('n', '<leader>ji', M.jujutsu_new, { desc = 'Insert new Jujutsu change' })
   vim.keymap.set('n', '<leader>gl', smart_log, { desc = 'Git/Jujutsu log (smart)' })
   vim.keymap.set(
     'n',

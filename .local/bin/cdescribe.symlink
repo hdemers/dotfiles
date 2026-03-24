@@ -70,14 +70,15 @@ _invoke_agent() {
             fi
             ;;
         claude)
-            local claude_prompt="$prompt"
-            full_title="${full_title} (${model}${ANTHROPIC_API_KEY:+" with API key"})..."
+            full_title="${full_title} (${ANTHROPIC_API_KEY:+" with API key"})..."
 
             if [ -n "$context_file" ]; then
-                claude_prompt="$prompt $(cat "$context_file")"
+                gum spin --show-output --spinner dot --title "$full_title" -- \
+                    claude --model "$model" -p "$prompt" --append-system-prompt-file "$context_file"
+            else
+                gum spin --show-output --spinner dot --title "$full_title" -- \
+                    claude --model "$model" -p "$prompt"
             fi
-            gum spin --show-output --spinner dot --title "$full_title" -- \
-                claude --model "$model" "$claude_prompt"
             ;;
         *)
             gum log --level error "Unknown agent: $agent"

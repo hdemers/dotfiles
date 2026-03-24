@@ -60,7 +60,6 @@ vim.api.nvim_set_hl(0, 'JJHeaderKey', { link = 'Normal', default = true })
 vim.api.nvim_set_hl(0, 'JJCommitId', { link = 'Function', default = true })
 vim.api.nvim_set_hl(0, 'JJChangeId', { link = 'Conditional', default = true })
 vim.api.nvim_set_hl(0, 'JJAuthorName', { link = 'Constant', default = true })
-vim.api.nvim_set_hl(0, 'JJAuthorEmail', { link = '@variable.parameter', default = true })
 vim.api.nvim_set_hl(0, 'JJTimestamp', { link = 'Operator', default = true })
 vim.api.nvim_set_hl(0, 'JJBookmark', { link = 'JJChangeId', default = true })
 
@@ -77,6 +76,30 @@ vim.api.nvim_set_hl(0, 'JJMutable', { link = 'Normal', default = true })
 vim.api.nvim_set_hl(0, 'JJAbandoned', { link = 'Error', default = true })
 vim.api.nvim_set_hl(0, 'JJElided', { link = 'Comment', default = true })
 vim.api.nvim_set_hl(0, 'JJDescription', { link = 'Normal', default = true })
+
+-- Groups that prefer a treesitter/semantic link but need a fallback for colorschemes
+-- that don't define them. Each entry: { custom_group, preferred_link, fallback_link }
+local hl_with_fallback = {
+  { 'JJAuthorEmail', '@variable.parameter', '@module' },
+  { 'JJTimestamp', 'Operator', 'Function' },
+}
+
+local function setup_fallback_highlights()
+  local normal_fg = vim.api.nvim_get_hl(0, { name = 'Normal', link = false }).fg
+  for _, entry in ipairs(hl_with_fallback) do
+    local resolved = vim.api.nvim_get_hl(0, { name = entry[2], link = false })
+    -- Use preferred only if it has a fg color distinct from Normal (otherwise it's invisible)
+    local link = (resolved.fg ~= nil and resolved.fg ~= normal_fg) and entry[2]
+      or entry[3]
+    vim.api.nvim_set_hl(0, entry[1], { link = link })
+  end
+end
+
+setup_fallback_highlights()
+vim.api.nvim_create_autocmd(
+  'ColorScheme',
+  { pattern = '*', callback = setup_fallback_highlights }
+)
 
 -- All builtin_log_detailed header lines have their colon aligned at byte 9 (0-indexed).
 -- "Commit ID: ..." / "Change ID: ..." / "Author   : ..." / "Committer: ..."

@@ -300,7 +300,12 @@ end, { refresh = false }) -- refresh handled in callback
 
 M.absorb = with_revset(function(id)
   local utils = get_utils()
-  utils.run_jj_cmd('absorb', '-f ' .. id)
+  if id:find '::' then
+    local newest = id:match '::(.+)$'
+    utils.run_jj_cmd('absorb', string.format('-f %s -t %s', newest, id))
+  else
+    utils.run_jj_cmd('absorb', '-f ' .. id)
+  end
 end)
 
 M.bookmark = with_revset(function(id)

@@ -9,8 +9,8 @@ if [ -z "$REMAINING" ]; then
     CONTEXT_SIZE=$(echo "$input" | jq -r '.context_window.context_window_size')
     USAGE=$(echo "$input" | jq '.context_window.current_usage')
     if [ "$USAGE" != "null" ]; then
-        # Fall back to manual calculation, including output_tokens
-        CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens + .output_tokens + .cache_creation_input_tokens + .cache_read_input_tokens')
+        # input_tokens already reflects the full current context size
+        CURRENT_TOKENS=$(echo "$USAGE" | jq '.input_tokens')
         PERCENT_USED=$((CURRENT_TOKENS * 100 / CONTEXT_SIZE))
         REMAINING=$((100 - PERCENT_USED))
     else
@@ -18,15 +18,67 @@ if [ -z "$REMAINING" ]; then
     fi
 fi
 
-
 # Colors (using printf to create escape sequences)
 RESET=$(printf '\033[00m')
 GREEN=$(printf '\033[0;32m')
-BLUE=$(printf '\033[0;34m')
 MAGENTA=$(printf '\033[0;35m')
 YELLOW=$(printf '\033[01;33m')
 RED=$(printf '\033[01;31m')
 CYAN=$(printf '\033[0;36m')
+DIM=$(printf '\033[2m')
+
+# Rate limits (Pro/Max subscribers only, absent otherwise)
+FIVE_HOUR=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
+FIVE_HOUR_RESETS=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
+SEVEN_DAY=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
+SEVEN_DAY_RESETS=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
+
+rate_limit_color() {
+    local used_pct="$1"
+    # remaining = 100 - used
+    # used < 75  → ≥25% remaining → green
+    # used < 90  → ≥10% remaining → yellow
+    # used ≥ 90  → <10% remaining → red
+    if awk "BEGIN { exit !($used_pct < 75) }"; then
+        printf '%s' "$GREEN"
+    elif awk "BEGIN { exit !($used_pct < 90) }"; then
+        printf '%s' "$YELLOW"
+    else
+        printf '%s' "$RED"
+    fi
+}
+
+# Format a unix timestamp: show HH:MM if today, else "DayName"
+format_reset_time() {
+    local ts="$1"
+    local today
+    today=$(date +%Y-%m-%d)
+    local reset_day
+    reset_day=$(date -d "@$ts" +%Y-%m-%d 2>/dev/null || date -r "$ts" +%Y-%m-%d)
+    if [ "$reset_day" = "$today" ]; then
+        date -d "@$ts" +%H:%M 2>/dev/null || date -r "$ts" +%H:%M
+    else
+        date -d "@$ts" +%a 2>/dev/null || date -r "$ts" +%a
+    fi
+}
+
+RATE_LIMIT_DISPLAY=""
+if [ -n "$FIVE_HOUR" ]; then
+    COLOR=$(rate_limit_color "$FIVE_HOUR")
+    RESET_STR=""
+    if [ -n "$FIVE_HOUR_RESETS" ]; then
+        RESET_STR="${DIM}($(format_reset_time "$FIVE_HOUR_RESETS"))${RESET}"
+    fi
+    RATE_LIMIT_DISPLAY="${RATE_LIMIT_DISPLAY} ${COLOR}5h: $(printf '%.0f' "$FIVE_HOUR")%${RESET} ${RESET_STR}"
+fi
+if [ -n "$SEVEN_DAY" ]; then
+    COLOR=$(rate_limit_color "$SEVEN_DAY")
+    RESET_STR=""
+    if [ -n "$SEVEN_DAY_RESETS" ]; then
+        RESET_STR="${DIM}($(format_reset_time "$SEVEN_DAY_RESETS"))${RESET}"
+    fi
+    RATE_LIMIT_DISPLAY="${RATE_LIMIT_DISPLAY} ${COLOR}7d: $(printf '%.0f' "$SEVEN_DAY")%${RESET} ${RESET_STR}"
+fi
 
 # Context color based on remaining percentage
 if [ "$REMAINING" -lt 15 ]; then
@@ -39,4 +91,7 @@ fi
 
 PS1_PART="${GREEN}$(hostname -s)${RESET}:${CYAN}$(basename "$(pwd)")${RESET}"
 
-printf '%s %s[%s] %sContext: %s%%\n' "$PS1_PART" "$MAGENTA" "$MODEL" "$CONTEXT_COLOR" "$REMAINING"
+printf '%s %s[%s] %sContext: %s%%%s%s\n' \
+    "$PS1_PART" "$MAGENTA" "$MODEL" \
+    "$CONTEXT_COLOR" "$REMAINING" "$RESET" \
+    "$RATE_LIMIT_DISPLAY"

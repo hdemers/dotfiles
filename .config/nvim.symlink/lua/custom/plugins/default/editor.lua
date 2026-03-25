@@ -572,9 +572,11 @@ return {
     priority = 1000,
     lazy = false,
     opts = {
+      files = { ignored = false },
       styles = {},
       bigfile = { enabled = true },
       bufdelete = { enabled = true },
+      explorer = { enabled = true },
       notifier = {
         enabled = true,
         style = 'fancy',
@@ -602,6 +604,7 @@ return {
     -- stylua: ignore
     keys = { { '<leader>Q', function() Snacks.bufdelete() end, desc = 'Delete buffer' },
       { '<leader><leader>', function() Snacks.picker.buffers() end, desc = 'Buffers', },
+      { "<leader>e", function() Snacks.explorer() end, desc = "File Explorer" },
       { '<leader>sf', function() Snacks.picker.files() end, desc = 'Search files', },
       { '<leader>sF', function() Snacks.picker.files { hidden = true } end, desc = 'Search files including hidden', },
       { '<leader>si', function() Snacks.picker.git_files() end, desc = 'Search git files', },

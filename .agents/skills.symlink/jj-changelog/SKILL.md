@@ -7,34 +7,31 @@ description: Proactively use to generate or update a CHANGELOG.md file from Juju
 
 Generate or update a CHANGELOG.md file from Jujutsu history, emphasizing user-facing changes.
 
+MANDATORY: do not analyze the repository yourself, everything you need is
+provided by changes.sh.
+
 ## Standard Operating Procedure
 
-1. **Gather commit history** using the `changes.sh` script in this directory:
-   ```bash
-   ./changes.sh
-   ```
+1. Read CHANGELOG.md and identify the latest version tag.
+2. Gather history using `changes.sh --from-version <version-tag>`.
+3. Categorize each commit based on its description using conventional
+   commit prefixes or semantic analysis:
 
-2. **Categorize each commit** based on its description using conventional commit prefixes or semantic analysis:
+   | Category             | Prefixes/Keywords                     | Emphasis                     |
+   | -------------------- | ------------------------------------- | ---------------------------- |
+   | Breaking Changes     | `BREAKING:`, `!:`, `breaking change`  | **HIGH** - Always at top     |
+   | New Features         | `feat:`, `feature:`, `add:`           | **HIGH** - User-facing       |
+   | Bug Fixes (User)     | `fix:` affecting user-facing behavior | **MEDIUM**                   |
+   | Performance          | `perf:`                               | **MEDIUM** - If user-visible |
+   | Bug Fixes (Internal) | `fix:` for internal/dev issues        | LOW                          |
+   | Refactoring          | `refactor:`                           | LOW                          |
+   | Documentation        | `docs:`                               | LOW                          |
+   | Tests                | `test:`                               | LOW                          |
+   | Chores               | `chore:`, `ci:`, `build:`             | LOW                          |
 
-   | Category | Prefixes/Keywords | Emphasis |
-   |----------|-------------------|----------|
-   | Breaking Changes | `BREAKING:`, `!:`, `breaking change` | **HIGH** - Always at top |
-   | New Features | `feat:`, `feature:`, `add:` | **HIGH** - User-facing |
-   | Bug Fixes (User) | `fix:` affecting user-facing behavior | **MEDIUM** |
-   | Performance | `perf:` | **MEDIUM** - If user-visible |
-   | Bug Fixes (Internal) | `fix:` for internal/dev issues | LOW |
-   | Refactoring | `refactor:` | LOW |
-   | Documentation | `docs:` | LOW |
-   | Tests | `test:` | LOW |
-   | Chores | `chore:`, `ci:`, `build:` | LOW |
-
-3. **Format the CHANGELOG.md** with this structure:
+4. Update CHANGELOG.md following this template:
 
    ```markdown
-   # Changelog
-
-   All notable changes to this project are documented in this file.
-
    ## [version/tag] - YYYY-MM-DD
 
    ### Breaking Changes
@@ -62,7 +59,7 @@ Generate or update a CHANGELOG.md file from Jujutsu history, emphasizing user-fa
    </details>
    ```
 
-4. **Formatting rules**:
+5. Formatting rules:
    - Breaking changes MUST be at the top of each version section
    - Breaking changes MUST include migration guidance when possible
    - User-facing features and fixes get full descriptions
@@ -71,7 +68,7 @@ Generate or update a CHANGELOG.md file from Jujutsu history, emphasizing user-fa
    - Use imperative mood ("Add feature" not "Added feature")
    - Link to issues/PRs if referenced in commit messages
 
-5. **Write the changelog**:
+6. Write the changelog:
    - If CHANGELOG.md exists, update it (prepend new versions)
    - If it doesn't exist, create it
    - Preserve any manual edits in existing entries

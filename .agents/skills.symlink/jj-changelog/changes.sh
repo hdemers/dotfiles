@@ -6,9 +6,10 @@
 #   changes.sh [options]
 #
 # Options:
-#   -h, --help     Show this help message
-#   -r, --revset   Custom revset for tags (default: 'tags()')
-#   -s, --short    Show only first line of descriptions
+#   -h, --help           Show this help message
+#   -r, --revset         Custom revset for tags (default: 'tags()')
+#   -s, --short          Show only first line of descriptions
+#   -f, --from-version   Version tag to start the changelog from
 #
 
 set -euo pipefail
@@ -31,13 +32,15 @@ Usage: ${SCRIPT_NAME} [options]
 Generate a changelog grouped by tags from Jujutsu history.
 
 Options:
-    -h, --help     Show this help message
-    -r, --revset   Custom revset for tags (default: '${DEFAULT_TAG_REVSET}')
-    -s, --short    Show only first line of descriptions
+    -h, --help           Show this help message
+    -r, --revset         Custom revset for tags (default: '${DEFAULT_TAG_REVSET}')
+    -s, --short          Show only first line of descriptions
+    -f, --from-version   Version tag to start the changelog from
 
 Examples:
     ${SCRIPT_NAME}
     ${SCRIPT_NAME} --short
+    ${SCRIPT_NAME} --from-version v1.2.0
     ${SCRIPT_NAME} --revset 'tags() & ancestors(@)'
 EOF
 }
@@ -84,23 +87,10 @@ print_changes_between() {
     fi
 }
 
-print_unreleased() {
-    local last_tag="$1"
-    local template="$2"
-
-    local changes
-    changes=$(jj log -r "${last_tag}..@" -T "${template}" --no-graph --reversed 2>/dev/null || true)
-
-    if [[ -n "${changes}" ]]; then
-        echo "## Unreleased"
-        echo
-        echo "${changes}"
-    fi
-}
-
 generate_changelog() {
     local tag_revset="$1"
     local short="$2"
+    local from_version="$3"
 
     local template
     template=$(format_description "${short}")
@@ -118,6 +108,33 @@ generate_changelog() {
         tags+=("${tag}")
     done <<<"${tags_output}"
 
+    if [[ -n "${from_version}" ]]; then
+        local found=false
+        local filtered_tags=()
+        local prev_for_filter=""
+        local search_version="${from_version#v}"
+        
+        for tag in "${tags[@]}"; do
+            local current_tag_stripped="${tag#v}"
+            if [[ "${tag}" == "${from_version}" || "${current_tag_stripped}" == "${search_version}" ]]; then
+                found=true
+                if [[ -n "${prev_for_filter}" ]]; then
+                    filtered_tags+=("${prev_for_filter}")
+                fi
+            fi
+            if [[ "${found}" == "true" ]]; then
+                filtered_tags+=("${tag}")
+            fi
+            prev_for_filter="${tag}"
+        done
+
+        if [[ "${found}" == "false" ]]; then
+            echo "Error: --from-version tag '${from_version}' not found." >&2
+            return 1
+        fi
+        tags=("${filtered_tags[@]}")
+    fi
+
     local prev_tag=""
     for tag in "${tags[@]}"; do
         if [[ -n "${prev_tag}" ]]; then
@@ -125,11 +142,6 @@ generate_changelog() {
         fi
         prev_tag="${tag}"
     done
-
-    # Show unreleased changes (commits after last tag)
-    if [[ -n "${prev_tag}" ]]; then
-        print_unreleased "${prev_tag}" "${template}"
-    fi
 }
 
 # -----------------------------------------------------------------------------
@@ -139,6 +151,7 @@ generate_changelog() {
 main() {
     local tag_revset="${DEFAULT_TAG_REVSET}"
     local short="false"
+    local from_version=""
 
     while [[ $# -gt 0 ]]; do
         case "$1" in
@@ -155,6 +168,11 @@ main() {
                 short="true"
                 shift
                 ;;
+            -f|--from-version)
+                [[ $# -lt 2 ]] && die "option '$1' requires an argument"
+                from_version="$2"
+                shift 2
+                ;;
             -*)
                 die "unknown option: $1"
                 ;;
@@ -165,7 +183,7 @@ main() {
     done
 
     check_dependencies
-    generate_changelog "${tag_revset}" "${short}"
+    generate_changelog "${tag_revset}" "${short}" "${from_version}"
 }
 
 main "$@"

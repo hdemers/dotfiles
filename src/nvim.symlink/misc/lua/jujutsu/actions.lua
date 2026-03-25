@@ -256,9 +256,9 @@ M.squash = with_revset(function(revset)
   local cmd
   if revset:find '::' then
     local oldest = revset:match '^([^:]+)'
-    cmd = string.format('squash -f %s -t %s', revset, oldest)
+    cmd = string.format('squash -f "%s" -t "%s"', revset, oldest)
   else
-    cmd = 'squash -r ' .. revset
+    cmd = string.format('squash -r "%s"', revset)
   end
   utils.run_jj_with_editor(cmd, ' Squash ' .. revset .. ' ')
 end, { refresh = false })
@@ -282,7 +282,7 @@ M.squash_into = with_revset(function(revset)
     end
     local chosen_id = choice:match '^(%S+)'
     if chosen_id then
-      local cmd = string.format('squash -f %s -t %s', revset, chosen_id)
+      local cmd = string.format('squash -f "%s" -t "%s"', revset, chosen_id)
       utils.run_jj_with_editor(cmd, ' Squash ' .. revset .. ' into ' .. chosen_id .. ' ')
     end
   end)

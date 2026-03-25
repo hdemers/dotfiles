@@ -160,6 +160,7 @@ return {
         clangd = {},
         jdtls = {},
         jsonls = {},
+        kotlin_lsp = {},
         lua_ls = {
           settings = {
             Lua = {

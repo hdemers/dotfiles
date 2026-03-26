@@ -41,15 +41,7 @@ return {
   {
     'nvim-mini/mini.nvim',
     lazy = false,
-    keys = {
-      {
-        '<leader>se',
-        function()
-          require('mini.files').open()
-        end,
-        desc = 'search explorer',
-      },
-    },
+    keys = {},
     config = function()
       -- Better Around/Inside textobjects
       require('mini.ai').setup { n_lines = 500 }
@@ -70,8 +62,6 @@ return {
           suffix_next = 'n', -- Suffix to search with "next" method
         },
       }
-      -- File explorer
-      require('mini.files').setup()
       -- Go forward/backward with square brackets
       require('mini.bracketed').setup {
         -- First-level elements are tables describing behavior of a target:
@@ -544,30 +534,6 @@ return {
     end,
   },
   {
-    'nvim-neo-tree/neo-tree.nvim',
-    branch = 'v3.x',
-    dependencies = {
-      'nvim-lua/plenary.nvim',
-      'nvim-tree/nvim-web-devicons', -- not strictly required, but recommended
-      'MunifTanjim/nui.nvim',
-      -- "3rd/image.nvim", -- Optional image support in preview window: See `# Preview Mode` for more information
-    },
-    cmd = { 'Neotree' },
-    keys = {
-      {
-        '<leader>sx',
-        ':Neotree toggle<CR>',
-        desc = 'Toggle Neo-tree',
-      },
-    },
-    opts = {
-      filesystem = {
-        follow_current_file = true,
-        use_libuv_file_watcher = true,
-      },
-    },
-  },
-  {
     'folke/snacks.nvim',
     priority = 1000,
     lazy = false,
@@ -604,7 +570,7 @@ return {
     -- stylua: ignore
     keys = { { '<leader>Q', function() Snacks.bufdelete() end, desc = 'Delete buffer' },
       { '<leader><leader>', function() Snacks.picker.buffers() end, desc = 'Buffers', },
-      { "<leader>e", function() Snacks.explorer() end, desc = "File Explorer" },
+      { "<leader>se", function() Snacks.explorer() end, desc = "File Explorer" },
       { '<leader>sf', function() Snacks.picker.files() end, desc = 'Search files', },
       { '<leader>sF', function() Snacks.picker.files { hidden = true } end, desc = 'Search files including hidden', },
       { '<leader>si', function() Snacks.picker.git_files() end, desc = 'Search git files', },

@@ -49,3 +49,10 @@ commandRegex = ".*([^2]|^)>|.*<.*"
 decision = "deny"
 deny_message = "MANDATORY: never use shell redirection if you can use one of the available tool instead"
 priority = 300
+
+[[rule]]
+toolName = "run_shell_command"
+commandRegex = ".*uv\\s+pip\\s+install.*(--system|--break-system-packages).*"
+decision = "deny"
+deny_message = "Never ever use uv pip install with --system or --break-system-packages. ALWAYS use a virtual environment. If you don't have uv installed, ask user."
+priority = 250

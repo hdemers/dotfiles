@@ -298,6 +298,10 @@ local function apply_log_highlights(buf, lines, change_map, commit_map)
     else
       marker_group = 'JJMutable'
     end
+    -- staging bookmark overrides any marker color
+    if line:match ' staging%*? ' then
+      marker_group = 'JJDev'
+    end
     -- dev bookmark overrides any marker color
     if line:match ' dev%*? ' then
       marker_group = 'JJDev'

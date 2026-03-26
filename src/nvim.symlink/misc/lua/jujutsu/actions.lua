@@ -135,20 +135,27 @@ M.edit = with_revset(function(id)
 end)
 
 local function find_and_jump_to_id(target_id)
-  if not target_id then return end
+  if not target_id then
+    return
+  end
   local state = get_state()
   local utils = get_utils()
   local preview = get_preview()
-  if not is_buf_valid(state.buf) or not is_win_valid(state.win) then return end
+  if not is_buf_valid(state.buf) or not is_win_valid(state.win) then
+    return
+  end
 
   local lines = vim.api.nvim_buf_get_lines(state.buf, 0, -1, false)
   for i, line in ipairs(lines) do
     local line_id = utils.get_change_id_from_line(line)
     -- Target ID from `get_related_ids` is now the FULL change ID.
     -- `line_id` from the buffer is usually the short prefix (e.g. `qq`).
-    -- So we check if the full target_id starts with the line_id, 
+    -- So we check if the full target_id starts with the line_id,
     -- OR if the line_id starts with the target_id (just in case).
-    if line_id and (vim.startswith(target_id, line_id) or vim.startswith(line_id, target_id)) then
+    if
+      line_id
+      and (vim.startswith(target_id, line_id) or vim.startswith(line_id, target_id))
+    then
       pcall(vim.api.nvim_win_set_cursor, state.win, { i, 4 })
       vim.api.nvim_exec_autocmds('CursorMoved', { buffer = state.buf })
 
@@ -488,7 +495,7 @@ local function do_rebase(revset, target_id, mode)
     'rebase',
     '-r ' .. revset .. ' ' .. REBASE_MODES[mode].flag .. ' ' .. target_id
   )
-  utils.run_jj_cmd 'rdev'
+  utils.run_jj_cmd 'rstaging'
   utils.refresh_log()
 end
 
@@ -609,8 +616,8 @@ local function nav(direction)
   local utils = get_utils()
   local preview = get_preview()
 
-  local current_line = vim.fn.line('.')
-  local last_line = vim.fn.line('$')
+  local current_line = vim.fn.line '.'
+  local last_line = vim.fn.line '$'
   local step = direction == 'j' and 1 or -1
   local target_line = current_line + step
 
@@ -660,7 +667,10 @@ M.cdescribe = with_revset(function(id)
   -- Resolve revset to individual change IDs to avoid mangling descriptions
   -- of multiple revisions (jj describe -r <range> applies the same msg to all).
   local resolve_cmd = utils.build_jj_cmd(
-    string.format("log -r %s --no-graph -T 'change_id ++ \"\\n\"'", vim.fn.shellescape(id))
+    string.format(
+      'log -r %s --no-graph -T \'change_id ++ "\\n"\'',
+      vim.fn.shellescape(id)
+    )
   )
   local output = vim.fn.system(resolve_cmd)
   local ids = {}
@@ -672,7 +682,11 @@ M.cdescribe = with_revset(function(id)
   end
 
   if #ids == 0 then
-    vim.notify('No revisions found for ' .. id, vim.log.levels.WARN, { title = 'Jujutsu' })
+    vim.notify(
+      'No revisions found for ' .. id,
+      vim.log.levels.WARN,
+      { title = 'Jujutsu' }
+    )
     return
   end
 
@@ -687,15 +701,22 @@ M.cdescribe = with_revset(function(id)
     local queued_msg = total > 1
         and string.format('Queued: %s (%d/%d)', current_id, index, total)
       or string.format('Queued: %s', current_id)
-    local progress_handle = fidget_ok and fidget.progress.handle.create({
-      title = 'Jujutsu',
-      message = queued_msg,
-      lsp_client = { name = 'cdescribe' },
-    }) or nil
+    local progress_handle = fidget_ok
+        and fidget.progress.handle.create {
+          title = 'Jujutsu',
+          message = queued_msg,
+          lsp_client = { name = 'cdescribe' },
+        }
+      or nil
 
     utils.enqueue(function(on_done)
       local running_msg = total > 1
-          and string.format('Generating description for %s (%d/%d)...', current_id, index, total)
+          and string.format(
+            'Generating description for %s (%d/%d)...',
+            current_id,
+            index,
+            total
+          )
         or string.format('Generating description for %s...', current_id)
 
       if progress_handle then
@@ -711,7 +732,11 @@ M.cdescribe = with_revset(function(id)
           end
           if obj.code == 0 then
             if total == 1 then
-              vim.notify('Generated description for ' .. current_id, vim.log.levels.INFO, { title = 'Jujutsu' })
+              vim.notify(
+                'Generated description for ' .. current_id,
+                vim.log.levels.INFO,
+                { title = 'Jujutsu' }
+              )
             end
           else
             local err = (obj.stderr ~= '' and obj.stderr or obj.stdout) or 'unknown error'
@@ -797,7 +822,7 @@ end
 
 function M.push()
   local utils = get_utils()
-  utils.run_jj_cmd('git push --tracked', '')
+  utils.run_jj_cmd('pall', '')
   utils.refresh_log()
 end
 
@@ -834,7 +859,7 @@ local function move_bookmark_impl(opts)
           args = args .. ' --allow-backwards'
         end
         utils.run_jj_cmd('bookmark move', args)
-        utils.run_jj_cmd 'rdev'
+        utils.run_jj_cmd 'rstaging'
         utils.refresh_log()
       end
     end)
@@ -881,7 +906,7 @@ end)
 M.move_trunk_bookmark = with_revset(function(id)
   local utils = get_utils()
   utils.run_jj_cmd('bookmark move', '--from "trunk()" -t ' .. id)
-  utils.run_jj_cmd 'rdev'
+  utils.run_jj_cmd 'rstaging'
   utils.refresh_log()
 end, { refresh = false })
 

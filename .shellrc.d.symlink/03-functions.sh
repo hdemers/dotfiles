@@ -540,6 +540,12 @@ gplans() {
             --bind='tab:execute-silent(echo -n {2} | wl-copy)+abort'
 }
 
+jjup() {
+    jj git fetch || return 1
+    jj rebase-my-arms && jj rebase-octopus
+    jj push-my-shared-branches
+}
+
 zellij_orphans() {
     # List possibly orphaned Zellij client processes.
     # A client is considered orphaned if its parent process is systemd (PID 1)

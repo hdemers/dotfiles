@@ -58,9 +58,8 @@ vim.api.nvim_set_hl(0, 'JJConflictHeader', { link = 'DiagnosticError', default =
 vim.api.nvim_set_hl(0, 'JJConflictFile', { link = 'DiagnosticWarn', default = true })
 vim.api.nvim_set_hl(0, 'JJHeaderKey', { link = 'Normal', default = true })
 vim.api.nvim_set_hl(0, 'JJCommitId', { link = 'Function', default = true })
-vim.api.nvim_set_hl(0, 'JJChangeId', { link = 'Conditional', default = true })
+vim.api.nvim_set_hl(0, 'JJChangeId', { link = 'Exception', default = true })
 vim.api.nvim_set_hl(0, 'JJAuthorName', { link = 'Constant', default = true })
-vim.api.nvim_set_hl(0, 'JJTimestamp', { link = 'Operator', default = true })
 vim.api.nvim_set_hl(0, 'JJBookmark', { link = 'JJChangeId', default = true })
 
 -- Log view highlight groups
@@ -80,8 +79,8 @@ vim.api.nvim_set_hl(0, 'JJDescription', { link = 'Normal', default = true })
 -- Groups that prefer a treesitter/semantic link but need a fallback for colorschemes
 -- that don't define them. Each entry: { custom_group, preferred_link, fallback_link }
 local hl_with_fallback = {
-  { 'JJAuthorEmail', '@variable.parameter', '@module' },
-  { 'JJTimestamp', 'Operator', 'Function' },
+  { 'JJAuthorEmail', '@string.documentation', 'String' },
+  { 'JJTimestamp', '@module', 'Function' },
 }
 
 local function setup_fallback_highlights()

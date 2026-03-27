@@ -47,7 +47,7 @@ return {
 
       vim.keymap.set(
         'n',
-        '<localleader>ap',
+        '<localleader>sp',
         ':AgentsPlans<CR>',
         { desc = 'Search Agent Plans', silent = true }
       )

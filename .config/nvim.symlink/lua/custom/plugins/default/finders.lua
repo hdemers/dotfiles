@@ -464,7 +464,7 @@ return {
       end
       vim.keymap.set(
         'n',
-        '<leader>sp',
+        '<leader>sy',
         pip_list,
         { desc = 'Search python packages', silent = true }
       )

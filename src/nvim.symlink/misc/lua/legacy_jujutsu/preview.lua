@@ -5,15 +5,15 @@ local M = {}
 
 -- Lazy require to avoid circular dependency at load time
 local function get_state()
-  return require('jujutsu').state
+  return require('legacy_jujutsu').state
 end
 
 local function get_const()
-  return require('jujutsu').CONST
+  return require('legacy_jujutsu').CONST
 end
 
 local function get_utils()
-  return require('jujutsu').utils
+  return require('legacy_jujutsu').utils
 end
 
 local cursorline_ns = vim.api.nvim_create_namespace 'jujutsu_cursorline'
@@ -329,7 +329,7 @@ function M.open_file_history()
     return
   end
   local cid = state.preview.change_id
-  require('jujutsu.init').jujutsu_file_history(file_path, cid)
+  require('legacy_jujutsu.init').jujutsu_file_history(file_path, cid)
 end
 
 function M.view_file_at_revision()
@@ -480,17 +480,17 @@ local function setup_preview_keymaps(buf)
 
   -- Close entire jj-log from preview buffer
   vim.keymap.set('n', 'gq', function()
-    require('jujutsu').close()
+    require('legacy_jujutsu').close()
   end, { buffer = buf, nowait = true })
 
   -- Intercept :tabclose to use proper cleanup (prevents crashes)
   vim.cmd.cnoreabbrev '<buffer> tabclose JJClose'
   vim.api.nvim_buf_create_user_command(buf, 'JJClose', function()
-    require('jujutsu').close()
+    require('legacy_jujutsu').close()
   end, { bang = true })
   -- Override <leader>w if user has it mapped to :tabclose
   vim.keymap.set('n', '<leader>w', function()
-    require('jujutsu').close()
+    require('legacy_jujutsu').close()
   end, { buffer = buf, nowait = true })
 end
 

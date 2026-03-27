@@ -124,18 +124,6 @@ return {
     'rbong/vim-flog',
     lazy = true,
     cmd = { 'Flog', 'Flogsplit', 'Floggit' },
-    keys = {
-      {
-        '<leader>gl',
-        ':Flog<CR>',
-        desc = 'Flog: show git log',
-      },
-      -- {
-      --   '<leader>gL',
-      --   ':Flog -path=%<CR>',
-      --   desc = 'Flog: show git log of current file',
-      -- },
-    },
   },
   -- Fugitive is the premier Vim plugin for Git. Or maybe it's the premier Git
   -- plugin for Vim? Either way, it's "so awesome, it should be illegal".
@@ -238,28 +226,6 @@ return {
         '<leader>gM',
         ':DiffviewOpen dev<CR>',
         desc = 'Diffview: diff dev',
-      },
-      {
-        '<leader>gh',
-        function()
-          local is_jj = false
-          local path = vim.fn.getcwd()
-          while path ~= '/' and path ~= '' do
-            if vim.fn.isdirectory(path .. '/.jj') == 1 then
-              is_jj = true
-              break
-            end
-            path = vim.fn.fnamemodify(path, ':h')
-          end
-
-          if is_jj then
-            require('jujutsu.init').jujutsu_file_history()
-          else
-            vim.cmd 'DiffviewFileHistory %'
-          end
-        end,
-        desc = 'Smart file history (JJ / Diffview)',
-        mode = { 'n', 'v' },
       },
       {
         '<leader>gs',

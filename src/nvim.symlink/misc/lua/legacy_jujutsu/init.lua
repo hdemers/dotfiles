@@ -881,7 +881,7 @@ local function refresh_preview_after_log(id)
   if not M.state.cwd or not id then
     return
   end
-  local preview = require 'jujutsu.preview'
+  local preview = require 'legacy_jujutsu.preview'
   if not is_win_valid(M.state.preview.win) then
     return
   end
@@ -945,7 +945,7 @@ end
 --------------------------------------------------------------------------------
 
 local function close_flog()
-  local preview = require 'jujutsu.preview'
+  local preview = require 'legacy_jujutsu.preview'
 
   M.utils.cancel_debounce()
   stop_watcher()
@@ -970,8 +970,8 @@ M.close = close_flog
 --------------------------------------------------------------------------------
 
 setup_keymaps = function(buf)
-  local actions = require 'jujutsu.actions'
-  local preview = require 'jujutsu.preview'
+  local actions = require 'legacy_jujutsu.actions'
+  local preview = require 'legacy_jujutsu.preview'
 
   -- Navigation (2 lines per commit) - table-driven for DRYness
   local nav_keys = {
@@ -1089,8 +1089,8 @@ end
 --------------------------------------------------------------------------------
 
 function M.jujutsu_flog()
-  local preview = require 'jujutsu.preview'
-  local actions = require 'jujutsu.actions'
+  local preview = require 'legacy_jujutsu.preview'
+  local actions = require 'legacy_jujutsu.actions'
 
   if state_is_valid() then
     vim.api.nvim_set_current_win(M.state.win)
@@ -1104,7 +1104,7 @@ function M.jujutsu_flog()
     pcall(vim.api.nvim_clear_autocmds, { buffer = existing, event = 'BufWipeout' })
     vim.api.nvim_buf_delete(existing, { force = true })
   end
-  require('jujutsu.preview').close()
+  require('legacy_jujutsu.preview').close()
 
   M.state.cwd = vim.fn.getcwd()
 
@@ -1305,7 +1305,7 @@ function M.jujutsu_file_history(file_path, target_cid)
 
     vim.bo[popup_buf].modifiable = true
     vim.api.nvim_buf_set_lines(popup_buf, 0, -1, false, show_lines)
-    require('jujutsu.preview').apply_highlights(popup_buf, show_lines)
+    require('legacy_jujutsu.preview').apply_highlights(popup_buf, show_lines)
     vim.bo[popup_buf].modifiable = false
 
     vim.keymap.set(
@@ -1350,7 +1350,7 @@ function M.jujutsu_file_history(file_path, target_cid)
       local log_buf = vim.fn.bufnr 'JJ-log'
       local lines = log_buf ~= -1 and vim.api.nvim_buf_get_lines(log_buf, 0, -1, false) or {}
 
-      local preview = require 'jujutsu.preview'
+      local preview = require 'legacy_jujutsu.preview'
       for i, l in ipairs(lines) do
         local id = M.utils.get_change_id_from_line(l)
         if id and (vim.startswith(change_id, id) or vim.startswith(id, change_id)) then

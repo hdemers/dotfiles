@@ -38,8 +38,10 @@ return {
       )
 
       -- Jujutsu setup
-      local jujutsu = require 'jujutsu'
-      jujutsu.setup()
+      if vim.g.use_legacy_jj then
+        local jujutsu = require 'legacy_jujutsu'
+        jujutsu.setup()
+      end
 
       -- Agents setup
       local agents = require 'agents'

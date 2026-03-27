@@ -93,6 +93,8 @@ vim.opt.fillchars = {
   foldopen = '',
 }
 
+vim.g.use_legacy_jj = false
+
 -- Sets the Python executable to be used by Neovim. This requires the existence
 -- of a virtualenv named `nvim` with packages `pynvim` and `jupyter_client`
 -- installed.

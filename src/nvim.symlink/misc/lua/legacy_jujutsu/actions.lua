@@ -5,19 +5,19 @@ local M = {}
 
 -- Lazy require to avoid circular dependency at load time
 local function get_state()
-  return require('jujutsu').state
+  return require('legacy_jujutsu').state
 end
 
 local function get_const()
-  return require('jujutsu').CONST
+  return require('legacy_jujutsu').CONST
 end
 
 local function get_utils()
-  return require('jujutsu').utils
+  return require('legacy_jujutsu').utils
 end
 
 local function get_preview()
-  return require 'jujutsu.preview'
+  return require 'legacy_jujutsu.preview'
 end
 
 --------------------------------------------------------------------------------

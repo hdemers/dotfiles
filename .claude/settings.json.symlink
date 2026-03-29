@@ -7,21 +7,19 @@
   "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
-      "Edit(/var/home/hdemers/Dropbox/Documents/Obsidian/Grubhub/Repositories/**)",
-      "Edit(/home/hdemers/Dropbox/Documents/Obsidian/Grubhub/Repositories/**)",
+      "Edit(/home/hdemers/Dropbox/Agents/**)",
       "Edit(/home/hdemers/.cache/jira/**)",
-      "Edit(/var/home/hdemers/.cache/jira/**)",
-      "Edit(/var/home/hdemers/.distrobox/homes/grubhub-dev/.cache/jira/**)",
+      "Edit(/home/hdemers/.distrobox/homes/grubhub-dev/.cache/jira/**)",
       "Edit(/tmp/**)",
-      "WebFetch(domain:dev-jenkins.gdp.data.grubhub.com)",
-      "WebFetch(domain:dev-azkaban-dr.gdp.data.grubhub.com)",
       "Edit(/home/hdemers/.cache/uv/**)",
       "Edit(/home/hdemers/.distrobox/homes/grubhub-dev/.cache/uv/**)",
-      "Edit(/var/home/hdemers/.cache/uv/**)",
-      "Edit(/var/home/hdemers/.distrobox/homes/grubhub-dev/.cache/uv/**)",
+      "WebFetch(domain:dev-jenkins.gdp.data.grubhub.com)",
+      "WebFetch(domain:dev-azkaban-dr.gdp.data.grubhub.com)",
       "Bash(jira:*)"
     ],
-    "deny": []
+    "deny": [
+      "Edit(/.jj/**)"
+    ]
   },
   "hooks": {},
   "statusLine": {
@@ -35,6 +33,14 @@
     "pyright-lsp@claude-plugins-official": true,
     "misc@gdp-cli-marketplace": true
   },
+  "extraKnownMarketplaces": {
+    "openai-codex": {
+      "source": {
+        "source": "github",
+        "repo": "openai/codex-plugin-cc"
+      }
+    }
+  },
   "sandbox": {
     "enabled": false,
     "autoAllowBashIfSandboxed": true,
@@ -47,10 +53,10 @@
       "trino:*",
       "pr-discussions:*",
       "jenkins:*",
-      "jj git push:*",
       "notify:*"
     ]
   },
+  "effortLevel": "medium",
   "voiceEnabled": false,
   "skipDangerousModePermissionPrompt": true
 }

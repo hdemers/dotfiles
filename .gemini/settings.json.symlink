@@ -35,7 +35,16 @@
     "theme": "ANSI",
     "showLineNumbers": false,
     "useBackgroundColor": true,
-    "inlineThinkingMode": "off"
+    "inlineThinkingMode": "off",
+    "footer": {
+      "items": [
+        "workspace",
+        "git-branch",
+        "sandbox",
+        "model-name",
+        "quota"
+      ]
+    }
   },
   "model": {
     "name": "gemini-3.1-pro-preview"

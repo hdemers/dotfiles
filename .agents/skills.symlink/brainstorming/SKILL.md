@@ -7,7 +7,7 @@ description: Proactively use when brainstorming potential solutions to difficult
 
 MANDATORY: Use the report-writing skill.
 
-### Phase 1: Low-Handing Fruits
+### Phase 1: Low-Hanging Fruits
 
 1. Generate 4-5 solutions
 2. Do not assume backward compatibility, we want to explore the full space of

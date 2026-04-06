@@ -1,5 +1,6 @@
 return {
   {
+    -- 'hdemers/jj-log.nvim',
     dir = '/home/hdemers/Projets/nvim/jj-log',
     cond = function()
       return not vim.g.use_legacy_jj
@@ -26,9 +27,19 @@ return {
         end
       end
 
-      vim.keymap.set('n', '<leader>ji', jj.jujutsu_new, { desc = 'Insert new Jujutsu change' })
+      vim.keymap.set(
+        'n',
+        '<leader>ji',
+        jj.jujutsu_new,
+        { desc = 'Insert new Jujutsu change' }
+      )
       vim.keymap.set('n', '<leader>gl', smart_log, { desc = 'Git/Jujutsu log (smart)' })
-      vim.keymap.set('n', '<leader>gh', smart_history, { desc = 'Diffview/Jujutsu file history (smart)' })
+      vim.keymap.set(
+        'n',
+        '<leader>gh',
+        smart_history,
+        { desc = 'Diffview/Jujutsu file history (smart)' }
+      )
 
       jj.setup {
         debug = false,

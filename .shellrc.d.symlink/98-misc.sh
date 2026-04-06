@@ -50,3 +50,16 @@ if [[ "$CURRENT_SHELL" = "zsh" && -n "$ZELLIJ" ]]; then
 
     add-zsh-hook precmd set_tab_to_working_dir
 fi
+
+#################################################################################
+# Google Cloud SDK
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f "${HOME}/src/google-cloud-sdk/path.${CURRENT_SHELL}.inc" ]; then
+    . "${HOME}/src/google-cloud-sdk/path.${CURRENT_SHELL}.inc";
+fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f "${HOME}/src/google-cloud-sdk/completion.${CURRENT_SHELL}.inc" ]; then
+    . "${HOME}/src/google-cloud-sdk/completion.${CURRENT_SHELL}.inc";
+fi

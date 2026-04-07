@@ -1,5 +1,5 @@
 ---
-name: jujutsu-planning
+name: jujutsu-planning-complex
 description: Proactively use when planning a complex/long multi-step implementation. DO NOT use for simple sequential tasks.
 ---
 
@@ -22,7 +22,7 @@ Determine the phase you're in
 
 1. For each step of the plan, create a new commit describing the plan:
    ```
-   jj new -m "☐ <ticket>: <summary>\n\n<description>"
+   jj new -m "<ticket>: <summary>\n\n<description>"
    ```
 2. The description must be as detailed as possible.
 3. Once you're done move to the Review Phase.
@@ -30,7 +30,7 @@ Determine the phase you're in
 ## Review phase
 
 1. Make sure tasks are in the right order.
-2. Work that can be done in parallel should be set as such. Use the
+2. Work that can be done in parallel should be set up as such. Use the
    following command to parallelize revisions:
    ```
    jj parallelize <revset>
@@ -55,7 +55,7 @@ Determine the phase you're in
    3. Validate: lint, type check, tests, etc.
    4. Update the description:
       ```
-      jj describe -m "☑ <ticket>: <summary>\n\n<append your implementation notes to the original description>"
+      jj describe -m "✅ <ticket>: <summary>\n\n<append your implementation notes to the original description>"
       ```
       CRITICAL: a jj revision's summary must contain a checkmark when work
       has been completed.

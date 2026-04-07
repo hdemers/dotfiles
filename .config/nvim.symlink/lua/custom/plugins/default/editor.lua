@@ -574,7 +574,7 @@ return {
       { '<leader>sf', function() Snacks.picker.files() end, desc = 'Search files', },
       { '<leader>sF', function() Snacks.picker.files { hidden = true } end, desc = 'Search files including hidden', },
       { '<leader>si', function() Snacks.picker.git_files() end, desc = 'Search git files', },
-      { '<leader>sc', function() Snacks.picker.files { cwd = vim.fn.stdpath 'config' } end, desc = 'Search config files', },
+      { '<leader>sC', function() Snacks.picker.files { cwd = vim.fn.stdpath 'config' } end, desc = 'Search config files', },
       { '<leader>ss', function() Snacks.picker.smart() end, desc = 'Search smart', },
       { '<leader>s.', function() Snacks.picker.recent() end, desc = 'Search recent files ("." for repeat)', },
       { '<leader>sg', function() Snacks.picker.grep() end, desc = 'Search with grep', },
@@ -602,6 +602,67 @@ return {
       { "<leader>gR", function() Snacks.picker.gh_pr({ state = "all" }) end, desc = "GitHub Pull Requests (all)" },
       { "]r",         function() Snacks.words.jump(vim.v.count1) end, desc = "Next Reference", mode = { "n", "t" } },
       { "[r",         function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev Reference", mode = { "n", "t" } },
+      {
+        '<leader>sc',
+        function()
+          Snacks.picker.files {
+            cwd = 'openspec/changes',
+            exclude = { 'archive' },
+            title = 'OpenSpec Changes',
+            format = function(item, picker)
+              local ret = Snacks.picker.format.file(item, picker)
+              for _, hl in ipairs(ret) do
+                if type(hl.resolve) == 'function' then
+                  local old_resolve = hl.resolve
+                  hl.resolve = function(max_width)
+                    local resolved = old_resolve(max_width)
+                    for _, r in ipairs(resolved) do
+                      if r[2] == 'SnacksPickerFile' then
+                        r[2] = 'SnacksPickerDir'
+                      elseif r[2] == 'SnacksPickerDir' then
+                        r[2] = 'SnacksPickerFile'
+                      end
+                    end
+                    return resolved
+                  end
+                end
+              end
+              return ret
+            end,
+          }
+        end,
+        desc = 'Search changes',
+      },
+      {
+        '<leader>sS',
+        function()
+          Snacks.picker.files {
+            cwd = 'openspec/specs',
+            title = 'OpenSpec Specs',
+            format = function(item, picker)
+              local ret = Snacks.picker.format.file(item, picker)
+              for _, hl in ipairs(ret) do
+                if type(hl.resolve) == 'function' then
+                  local old_resolve = hl.resolve
+                  hl.resolve = function(max_width)
+                    local resolved = old_resolve(max_width)
+                    for _, r in ipairs(resolved) do
+                      if r[2] == 'SnacksPickerFile' then
+                        r[2] = 'SnacksPickerDir'
+                      elseif r[2] == 'SnacksPickerDir' then
+                        r[2] = 'SnacksPickerFile'
+                      end
+                    end
+                    return resolved
+                  end
+                end
+              end
+              return ret
+            end,
+          }
+        end,
+        desc = 'Search specs',
+      },
     },
     init = function()
       vim.api.nvim_create_autocmd('User', {

@@ -201,20 +201,6 @@ M.simple_tabline = function()
   local tab_line_colors = get_hl_colors 'TabLine'
   local tab_fill_colors = get_hl_colors 'TabLineFill'
 
-  -- Dynamically create the highlight groups each time
-  vim.cmd(
-    'highlight TabLineSelSymbol guifg='
-      .. tab_sel_colors.bg
-      .. ' guibg='
-      .. tab_fill_colors.bg
-  )
-  vim.cmd(
-    'highlight TabLineSymbol guifg='
-      .. tab_line_colors.bg
-      .. ' guibg='
-      .. tab_fill_colors.bg
-  )
-
   -- Function to count unique normal buffers in a tab
   local function count_normal_buffers(tab_idx)
     local buflist = vim.fn.tabpagebuflist(tab_idx)
@@ -239,15 +225,23 @@ M.simple_tabline = function()
   end
 
   for i = 1, num_tabs do
-    -- Set highlight groups
     local is_selected = i == current_tab
     local tab_hl = is_selected and 'TabLineSel' or 'TabLine'
-    local symbol_hl = is_selected and 'TabLineSelSymbol' or 'TabLineSymbol'
+    local bg = is_selected and tab_sel_colors.bg or tab_line_colors.bg
 
-    -- Add left symbol with appropriate highlight
-    s = s .. '%#' .. symbol_hl .. '#'
-    -- s = s .. ' '
-    s = s .. ' '
+    local next_is_selected = (i + 1) == current_tab
+    local next_bg = tab_fill_colors.bg
+    if i < num_tabs then
+      next_bg = next_is_selected and tab_sel_colors.bg or tab_line_colors.bg
+    end
+
+    -- Leading arrow only for the first tab
+    if i == 1 then
+      vim.cmd(
+        'highlight TabLineSepFirst guifg=' .. tab_fill_colors.bg .. ' guibg=' .. bg
+      )
+      s = s .. '%#TabLineFill# %#TabLineSepFirst#'
+    end
 
     -- Add tab content with normal tab highlight
     s = s .. '%#' .. tab_hl .. '#'
@@ -291,10 +285,11 @@ M.simple_tabline = function()
     end
 
     -- Add right symbol with appropriate highlight
-    s = s .. '%#' .. symbol_hl .. '#'
-    -- s = s .. ' '
-    s = s .. ' '
-    -- s = s .. ' '
+    local sep_hl = 'TabLineSep' .. i
+    vim.cmd(
+      'highlight ' .. sep_hl .. ' guifg=' .. bg .. ' guibg=' .. next_bg
+    )
+    s = s .. '%#' .. sep_hl .. '#'
   end
 
   -- Fill the rest of the line

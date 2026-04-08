@@ -5,6 +5,8 @@ description: Use this skill when you need to perform a code review with a statem
 
 If no statement of work (SoW) was provided, stop and ask, do not proceed.
 
+MANDATORY: Your task is to report only, you do not make any chode change.
+
 # Standard Operating Procedure
 
 1. Determine changes to analyze:

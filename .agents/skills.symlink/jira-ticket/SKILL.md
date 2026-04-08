@@ -124,14 +124,6 @@ NOTE: do not mention code reviews, these always happen.
 
 If you are provided with a plan, copy it here, as is.
 
-### Specs
-
-Include these instructions verbatim:
-<instructions>
-Instructions for agents: if a set of openspec files are attached, copy them as
-a new change, use the skill `openspec-propose`.
-</instructions>
-
 </template>
 
 **CLI Usage Patterns**:

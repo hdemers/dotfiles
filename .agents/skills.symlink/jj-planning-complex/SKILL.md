@@ -1,5 +1,5 @@
 ---
-name: jujutsu-planning-complex
+name: jj-planning-complex
 description: Proactively use when planning a complex/long multi-step implementation. DO NOT use for simple sequential tasks.
 ---
 

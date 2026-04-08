@@ -17,7 +17,8 @@
     },
     "enableNotifications": true,
     "plan": {
-      "directory": ""
+      "directory": "",
+      "enabled": true
     }
   },
   "tools": {
@@ -27,7 +28,6 @@
     }
   },
   "experimental": {
-    "plan": true,
     "enableAgents": true,
     "modelSteering": true
   },
@@ -54,5 +54,16 @@
       "AGENTS.md",
       "AGENTS.local.md"
     ]
+  },
+  "agents": {
+    "overrides": {
+      "generalist": {
+        "runConfig": {
+          "maxTimeMinutes": 60,
+          "maxTurns": -1
+        },
+        "enabled": true
+      }
+    }
   }
 }

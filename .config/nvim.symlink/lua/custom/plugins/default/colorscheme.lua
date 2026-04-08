@@ -18,7 +18,6 @@ return {
     },
     config = function(_, opts)
       require('catppuccin').setup(opts)
-      -- vim.o.background = 'dark'
       vim.cmd.colorscheme 'catppuccin'
     end,
   },
@@ -62,40 +61,8 @@ return {
     opts = {
       style = 'moon',
       on_highlights = function(hl, c)
-        local prompt = '#2d3149'
-
-        hl.TelescopeMatching = { link = 'Title' }
-        hl.TelescopeSelection = { bg = c.bg_visual }
-        hl.TelescopeSelectionCaret = { fg = c.orange }
         hl.MiniStatuslineFilename = { link = 'MiniStatuslineInactive' }
-        -- The following are highlights to make Telescope borderless.
-        hl.TelescopeNormal = {
-          bg = c.bg_dark,
-          fg = c.fg_dark,
-        }
-        hl.TelescopeBorder = {
-          bg = c.bg_dark,
-          fg = c.bg_dark,
-        }
-        hl.TelescopePromptNormal = {
-          bg = prompt,
-        }
-        hl.TelescopePromptBorder = {
-          bg = prompt,
-          fg = prompt,
-        }
-        hl.TelescopePromptTitle = {
-          bg = prompt,
-          fg = prompt,
-        }
-        hl.TelescopePreviewTitle = {
-          bg = c.bg_dark,
-          fg = c.bg_dark,
-        }
-        hl.TelescopeResultsTitle = {
-          bg = c.bg_dark,
-          fg = c.bg_dark,
-        }
+        hl['@markup.raw.markdown_inline'] = { link = 'Function' }
       end,
     },
   },

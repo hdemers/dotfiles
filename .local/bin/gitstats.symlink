@@ -1,0 +1,93 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.14"
+# dependencies = ["termgraph"]
+# ///
+
+import subprocess
+import sys
+from termgraph.data import Data
+from termgraph.args import Args
+from termgraph.chart import BarChart
+
+def run_command(cmd):
+    try:
+        result = subprocess.run(cmd, shell=True, text=True, capture_output=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        return ""
+
+def parse_uniq_c_output(output, max_items=20):
+    labels = []
+    data = []
+    lines = output.strip().split('\n')
+    if max_items:
+        lines = lines[:max_items]
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        parts = line.split(maxsplit=1)
+        if len(parts) == 2:
+            try:
+                count = int(parts[0])
+                label = parts[1]
+                data.append(count)
+                labels.append(label)
+            except ValueError:
+                pass
+    return labels, data
+
+def draw_chart(title, labels, data, color_code=None):
+    print(f"\n\033[1;36m=== {title} ===\033[0m")
+    if not data:
+        print("No data found.\n")
+        return
+    
+    # Initialize the termgraph arguments
+    args_dict = {"format": "{:<.0f}", "width": 50}
+    if color_code is not None:
+        args_dict["colors"] = [color_code]
+    args = Args(**args_dict)
+    
+    # Instantiate Data
+    d = Data(data, labels)
+    
+    # Render BarChart
+    BarChart(d, args).draw()
+
+def main():
+    # 1. Identify High-Churn Files
+    cmd1 = 'git log --format=format: --name-only --since="1 year ago" | grep -v "^$" | sort | uniq -c | sort -nr | head -20'
+    out1 = run_command(cmd1)
+    labels1, data1 = parse_uniq_c_output(out1, max_items=20)
+    draw_chart("1. High-Churn Files (Last Year)", labels1, data1, color_code=94) # Blue
+
+    # 2. Assess the "Bus Factor"
+    cmd2 = 'git shortlog -sn --no-merges | head -20'
+    out2 = run_command(cmd2)
+    labels2, data2 = parse_uniq_c_output(out2, max_items=20)
+    draw_chart("2. Bus Factor (Commit Counts)", labels2, data2, color_code=92) # Green
+
+    # 3. Locate Bug Clusters
+    cmd3 = 'git log -i -E --grep="fix|bug|broken" --name-only --format=format: | grep -v "^$" | sort | uniq -c | sort -nr | head -20'
+    out3 = run_command(cmd3)
+    labels3, data3 = parse_uniq_c_output(out3, max_items=20)
+    draw_chart("3. Bug Clusters (Files in fix/bug commits)", labels3, data3, color_code=91) # Red
+
+    # 4. Track Project Momentum
+    cmd4 = 'git log --format="%ad" --date=format:"%Y-%m" | grep -v "^$" | sort | uniq -c'
+    out4 = run_command(cmd4)
+    # Get all lines, then take the last 24 (most recent 24 months)
+    labels4_all, data4_all = parse_uniq_c_output(out4, max_items=0)
+    draw_chart("4. Project Momentum (Commits per Month)", labels4_all[-24:], data4_all[-24:], color_code=96) # Cyan
+
+    # 5. Detect "Firefighting" Patterns
+    cmd5 = 'git log --format="%ad" --date=format:"%Y-%m" --since="1 year ago" -i -E --grep="revert|hotfix|emergency|rollback" | grep -v "^$" | sort | uniq -c'
+    out5 = run_command(cmd5)
+    labels5_all, data5_all = parse_uniq_c_output(out5, max_items=0)
+    draw_chart("5. Firefighting Patterns (Hotfixes/Reverts per Month Last Year)", labels5_all, data5_all, color_code=95) # Magenta
+
+if __name__ == "__main__":
+    main()

@@ -51,7 +51,6 @@
       "notify:*"
     ]
   },
-  "effortLevel": "medium",
   "voiceEnabled": false,
   "skipDangerousModePermissionPrompt": true
 }

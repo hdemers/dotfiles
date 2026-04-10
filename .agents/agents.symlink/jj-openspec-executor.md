@@ -26,3 +26,4 @@ revision `@`.
       been completed.
       MANDATORY: do not change the statement of work in the commit's message.
 6. Update tasks.md
+7. Report back to the calling agent with your implementation notes.

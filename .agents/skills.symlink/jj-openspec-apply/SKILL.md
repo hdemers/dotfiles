@@ -18,8 +18,14 @@ CRITICAL: you do no write code, subagents do.
 
 Determine the phase you're in
 
-1. If the user has provided a revset: Working Phase, jump to that phase.
-2. If not: Planning Phase.
+1. If you planned the revisions earlier in this same session: you already
+   know which revisions you created. Proceed directly from Planning → Review →
+   Working → Testing without needing a revset.
+2. If the user provides a revset: the planning phase was done in a
+   previous session. Skip directly to the Working Phase using that revset
+   as the range of revisions to implement.
+3. Otherwise (fresh session, no revset, no prior planning): start at the
+   Planning Phase.
 
 ## Planning phase
 
@@ -32,7 +38,8 @@ Determine the phase you're in
 3. CRITICAL & MANDATORY: run each of the above command individually
    DO NOT use a script, or `wait_for_previous: false` in your tool call.
    Otherwise, this will create a non-linear history.
-4. Once you're done move to the Review Phase.
+4. Once you're done, move directly to the Review Phase. Do NOT stop and ask
+   for a revset — you created the revisions, you already know the range.
 
 ## Review phase
 
@@ -46,9 +53,15 @@ Determine the phase you're in
 
 1. One by one, launch a `jj-openspec-executor` subagent to implement a revision:
    1. Run `jj edit <revision>`
-   2. Launch subagent providing it with the name of the change.
+   2. Launch subagent providing it with the name of the change and instructing
+      it to look up the Statement of Work in the jj revision's description (no
+      need to provide it with the same SoW):
+      ```
+      jj show <revision> -T description
+      ```
 2. After each completed unit of work, review the implementation notes left in
-   the revision's message. Adjust the next statement of work if needed.
+   the revision's message. Adjust the next statement of work if needed by
+   amending the next revision's SoW.
 3. The implementation is complete when all revisions' descriptions have a
    checkmark.
 4. Move to the Testing Phase.

@@ -161,6 +161,7 @@ return {
         jdtls = {},
         jsonls = {},
         kotlin_lsp = {},
+        ts_ls = {},
         lua_ls = {
           settings = {
             Lua = {

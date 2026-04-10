@@ -602,6 +602,7 @@ return {
       { "<leader>gR", function() Snacks.picker.gh_pr({ state = "all" }) end, desc = "GitHub Pull Requests (all)" },
       { "]r",         function() Snacks.words.jump(vim.v.count1) end, desc = "Next Reference", mode = { "n", "t" } },
       { "[r",         function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev Reference", mode = { "n", "t" } },
+      { '<leader>sb', function() Snacks.picker.files { cwd = ',reports/brainstorming', sort = { fields = { 'file:desc' } }, matcher = { sort_empty = true } } end, desc = 'Search brainstorming reports', },
       {
         '<leader>sc',
         function()

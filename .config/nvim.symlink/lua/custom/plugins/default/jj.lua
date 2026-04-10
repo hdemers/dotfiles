@@ -59,6 +59,15 @@ return {
             opts = { target = 'dev' },
             desc = 'New commit after dev',
           },
+          ['S'] = {
+            fn = function(state, ctx)
+              require('jujutsu.utils').run_jj_cmd(
+                string.format('rebase -r %s -B dev', ctx.item),
+                nil
+              )
+            end,
+            desc = 'Stage revset',
+          },
           ['gp'] = {
             fn = function(_, _)
               require('jujutsu.utils').run_jj_cmd('push-my-shared-branches', nil)

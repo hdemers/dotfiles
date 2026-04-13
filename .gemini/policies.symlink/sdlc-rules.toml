@@ -42,7 +42,7 @@ priority = 200
 
 [[rule]]
 toolName = "run_shell_command"
-commandRegex = "jj\\s+(log|status|describe|new|edit|show)\\b.*"
+commandRegex = "jj\\s+(log|status|describe|new|edit|show|diff)\\b.*"
 decision = "allow"
 priority = 200
 

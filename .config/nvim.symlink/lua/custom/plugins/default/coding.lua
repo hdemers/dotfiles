@@ -106,21 +106,4 @@ return {
       },
     },
   },
-  {
-    'andythigpen/nvim-coverage',
-    dependencies = 'nvim-lua/plenary.nvim',
-    config = function()
-      require('coverage').setup()
-    end,
-  },
-  {
-    'https://codeberg.org/esensar/nvim-dev-container',
-    dependencies = 'nvim-treesitter/nvim-treesitter',
-    config = function()
-      require('devcontainer').setup {
-        container_runtime = 'podman',
-        cache_image = false,
-      }
-    end,
-  },
 }

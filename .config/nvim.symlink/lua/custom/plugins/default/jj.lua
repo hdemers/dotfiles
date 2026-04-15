@@ -49,6 +49,7 @@ return {
             ['staging'] = 'JjLogDev',
           },
         },
+        use_render_markdown = true,
         hooks = {
           post_rebase_applied = rebase_octopus,
           post_bookmark_moved = rebase_octopus,

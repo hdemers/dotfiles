@@ -41,6 +41,36 @@ return {
         { desc = 'Diffview/Jujutsu file history (smart)' }
       )
 
+      -- <leader>gb: in a jj repo, route to JujutsuBlame; otherwise leave
+      -- gitsigns' buffer-local <leader>gb (set in its on_attach) untouched.
+      -- Needs a buffer-local override because gitsigns' buffer-local map
+      -- would otherwise beat any global one we set. Reinstall on
+      -- GitSignsUpdate so a colocated git+jj repo doesn't lose the override
+      -- after gitsigns attaches.
+      local function install_jj_blame_key(buf)
+        if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
+        if not jj.is_jujutsu_repo() then return end
+        vim.keymap.set('n', '<leader>gb', function()
+          require('jujutsu.blame').blame()
+        end, { buffer = buf, desc = 'JujutsuBlame' })
+      end
+
+      local jj_blame_grp =
+        vim.api.nvim_create_augroup('JujutsuBlameKey', { clear = true })
+      vim.api.nvim_create_autocmd({ 'BufEnter', 'BufReadPost' }, {
+        group = jj_blame_grp,
+        callback = function(args)
+          install_jj_blame_key(args.buf)
+        end,
+      })
+      vim.api.nvim_create_autocmd('User', {
+        group = jj_blame_grp,
+        pattern = 'GitSignsUpdate',
+        callback = function()
+          install_jj_blame_key(vim.api.nvim_get_current_buf())
+        end,
+      })
+
       jj.setup {
         debug = false,
         highlights = {

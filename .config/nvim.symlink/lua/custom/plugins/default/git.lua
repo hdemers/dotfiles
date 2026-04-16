@@ -54,6 +54,7 @@ return {
         end, { desc = 'Gitsigns: reset hunk' })
         map('n', '<leader>gA', gs.stage_buffer, { desc = 'Gitsigns: add (stage) buffer' })
         map('n', '<leader>gn', gs.undo_stage_hunk, { desc = 'Gitsigns: undo stage hunk' })
+        map('n', '<leader>gb', gs.blame, { desc = 'Gitsigns: blame' })
         map('n', '<leader>gX', gs.reset_buffer, { desc = 'Gitsigns: reset buffer' })
         map('n', '<leader>gv', gs.preview_hunk, { desc = 'Gitsigns: view hunk' })
         map('n', '<leader>gn', function()
@@ -154,16 +155,6 @@ return {
         '<leader>gp',
         ':Git push',
         desc = 'Fugitive: git push',
-      },
-      -- {
-      --   '<leader>gr',
-      --   ':Git rebase -i master<CR>',
-      --   desc = 'Fugitive: git rebase -i master',
-      -- },
-      {
-        '<leader>gb',
-        ':Git blame<CR>',
-        desc = 'Fugitive: git blame',
       },
     },
     init = function()

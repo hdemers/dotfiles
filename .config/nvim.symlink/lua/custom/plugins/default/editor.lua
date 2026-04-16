@@ -363,6 +363,7 @@ return {
       resession.setup(opts)
 
       vim.keymap.set('n', '<leader>Sd', resession.delete)
+      vim.keymap.set('n', '<leader>Sg', resession.list)
 
       -- Load a dir-specific session when we open Neovim, save it when we exit.
       vim.api.nvim_create_autocmd('VimEnter', {

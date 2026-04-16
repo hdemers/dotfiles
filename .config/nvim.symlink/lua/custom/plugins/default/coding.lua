@@ -106,4 +106,13 @@ return {
       },
     },
   },
+  {
+    dir = '/home/hdemers/Projets/nvim/jj-review.nvim',
+    event = { 'BufReadPost', 'BufNewFile' },
+    keys = {
+      { '<leader>cc', '<cmd>JJReviewComment<CR>', desc = 'JJ Review Comment' },
+      { '<leader>cl', '<cmd>JJReviewList<CR>', desc = 'JJ Review List' },
+      { '<leader>cg', '<cmd>JJReviewGH<CR>', desc = 'Load GitHub PR Comments' },
+    },
+  },
 }

@@ -43,10 +43,10 @@ merge-tool-edits-conflict-markers = true
 # 'remote-branch(x)' = 'fork_point(x | trunk())+::x'
 
 [remotes.origin]
-auto-track-bookmarks = "glob:*~staging"
+auto-track-bookmarks = "glob:* ~ staging"
 
 [git]
-private-commits = "bookmarks('dev')"
+private-commits = "bookmarks(exact:'dev')"
 
 [aliases]
 # Create the octopus commit, i.e. mega merge commit.

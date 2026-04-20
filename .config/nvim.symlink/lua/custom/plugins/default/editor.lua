@@ -412,73 +412,6 @@ return {
     },
   },
   {
-    'OXY2DEV/markview.nvim',
-    enabled = false,
-    lazy = false, -- Recommended
-    dependencies = {
-      -- You will not need this if you installed the
-      -- parsers manually
-      -- Or if the parsers are in your $RUNTIMEPATH
-      {
-        'nvim-treesitter/nvim-treesitter',
-        -- Treesitter thought it was a good idea to remove the registration of quarto.
-        -- This broke markview, otter and probably a bunch of other plugins.
-        -- commit = 'ef52e44bb24161e5138b3de5beadab3f3fcff233',
-      },
-      'nvim-tree/nvim-web-devicons',
-    },
-    opts = {
-      preview = {
-        filetypes = { 'markdown', 'quarto', 'rmd', 'Avante', 'codecompanion' },
-        modes = { 'n', 'i', 'no', 'c' },
-        callbacks = {
-          on_enable = function(_, win)
-            vim.wo[win].conceallevel = 2
-            vim.wo[win].concealcursor = 'nc'
-          end,
-        },
-        hybrid_modes = { 'i', 'v' },
-      },
-      code_blocks = {
-        style = 'simple',
-        sign = false,
-        -- icons = '',
-      },
-      checkboxes = {
-        enable = false,
-      },
-      markdown = {
-        list_items = {
-          enable = true,
-          marker_minus = {
-            text = '•',
-          },
-        },
-        headings = {
-          heading_1 = {
-            sign = ' ',
-            icon = '█ ',
-          },
-          heading_2 = {
-            sign = ' ',
-            icon = '▊ ',
-          },
-          heading_3 = {
-            sign = ' ',
-            icon = '▌ ',
-          },
-          heading_4 = {
-            sign = ' ',
-            icon = '▎ ',
-          },
-        },
-      },
-    },
-    config = function(_, opts)
-      require('markview').setup(opts)
-    end,
-  },
-  {
     'MeanderingProgrammer/render-markdown.nvim',
     dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
     config = function()
@@ -516,6 +449,9 @@ return {
       ---@module 'render-markdown'
       ---@type render.md.UserConfig
       require('render-markdown').setup {
+        heading = {
+          signs = { '§' },
+        },
         file_types = {
           'markdown',
           'quarto',
@@ -597,10 +533,10 @@ return {
       { '<leader>snh', function() Snacks.notifier.show_history() end, desc = 'Show notification history', },
       { 'grr', function() Snacks.picker.lsp_references() end, nowait = true, desc = 'Go to references', },
       { 'gd', function() Snacks.picker.lsp_definitions() end, desc = 'Go to definition', },
-      { "<leader>bs",  function() Snacks.scratch.open({ft='markdown'}) end, desc = "Open Markdown Scratch Buffer" },
+      { "<leader>bsn",  function() Snacks.scratch.open({ft='markdown'}) end, desc = "Open Markdown Scratch Buffer" },
       { "<leader>bss",  function() Snacks.scratch.select() end, desc = "Select Scratch Buffer" },
-      { "<leader>gr", function() Snacks.picker.gh_pr() end, desc = "GitHub Pull Requests (open)" },
-      { "<leader>gR", function() Snacks.picker.gh_pr({ state = "all" }) end, desc = "GitHub Pull Requests (all)" },
+      -- { "<leader>gr", function() Snacks.picker.gh_pr() end, desc = "GitHub Pull Requests (open)" },
+      -- { "<leader>gR", function() Snacks.picker.gh_pr({ state = "all" }) end, desc = "GitHub Pull Requests (all)" },
       { "]r",         function() Snacks.words.jump(vim.v.count1) end, desc = "Next Reference", mode = { "n", "t" } },
       { "[r",         function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev Reference", mode = { "n", "t" } },
       { '<leader>sb', function() Snacks.picker.files { cwd = ',reports/brainstorming', sort = { fields = { 'file:desc' } }, matcher = { sort_empty = true } } end, desc = 'Search brainstorming reports', },

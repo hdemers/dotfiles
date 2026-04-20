@@ -240,9 +240,9 @@ return {
           },
         })
       end
-      vim.keymap.set('n', '<leader>gw', function()
-        show_git_branch(false)
-      end, { desc = 'Git: switch branch', silent = true })
+      -- vim.keymap.set('n', '<leader>gw', function()
+      --   show_git_branch(false)
+      -- end, { desc = 'Git: switch branch', silent = true })
 
       -- Show Jira issues.
 

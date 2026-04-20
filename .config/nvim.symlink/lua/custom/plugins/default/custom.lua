@@ -16,32 +16,12 @@ return {
       local misc = require 'misc'
       misc.setup()
 
-      vim.keymap.set(
-        'n',
-        '<localleader>js',
-        misc.start_ipython,
-        { desc = 'Start IPython', silent = true }
-      )
-
       _G.MySimpleTabline = misc.simple_tabline
       vim.opt.tabline = '%!v:lua.MySimpleTabline()'
 
       vim.api.nvim_create_user_command('RsyncFile', function(opts)
         misc.rsync_current_file(opts.args, {})
       end, { nargs = '?', desc = 'Rsync current file to destination' })
-
-      vim.keymap.set(
-        'n',
-        '<localleader>bi',
-        ':tabnew scratch/scratch.qmd | <CR>',
-        { desc = 'Open interactive Quarto notebook', silent = true }
-      )
-
-      -- Jujutsu setup
-      if vim.g.use_legacy_jj then
-        local jujutsu = require 'legacy_jujutsu'
-        jujutsu.setup()
-      end
 
       -- Agents setup
       local agents = require 'agents'
@@ -53,16 +33,45 @@ return {
         ':AgentsPlans<CR>',
         { desc = 'Search Agent Plans', silent = true }
       )
+
+      -- Custom keymaps
+      local wk = require 'which-key'
+      wk.add {
+        { '<leader>y', group = 'Yank' },
+        { '<leader>yf', group = 'Yank File Paths' },
+      }
+      vim.keymap.set(
+        'n',
+        '<leader>yfa',
+        ':let @+ = expand("%:p")<CR>',
+        { desc = 'Copy absolute path' }
+      )
+
+      -- Yank relative path
+      vim.keymap.set(
+        'n',
+        '<leader>yfr',
+        ':let @+ = expand("%")<CR>',
+        { desc = 'Copy relative path' }
+      )
+
+      -- Yank filename only
+      vim.keymap.set(
+        'n',
+        '<leader>yfn',
+        ':let @+ = expand("%:t")<CR>',
+        { desc = 'Copy filename' }
+      )
     end,
     init = function()
-      vim.keymap.set('n', '<leader>go', function()
-        local Terminal = require('toggleterm.terminal').Terminal
-        Terminal:new({
-          direction = 'vertical',
-          cmd = 'gh pr create',
-          hidden = false,
-        }):open()
-      end, { desc = 'Open PR' })
+      -- vim.keymap.set('n', '<leader>go', function()
+      --   local Terminal = require('toggleterm.terminal').Terminal
+      --   Terminal:new({
+      --     direction = 'vertical',
+      --     cmd = 'gh pr create',
+      --     hidden = false,
+      --   }):open()
+      -- end, { desc = 'Open PR' })
 
       -- Function to rename zellij tab based on current directory
       local function rename_zellij_tab()

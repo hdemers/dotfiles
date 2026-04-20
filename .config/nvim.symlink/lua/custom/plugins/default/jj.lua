@@ -48,8 +48,12 @@ return {
       -- GitSignsUpdate so a colocated git+jj repo doesn't lose the override
       -- after gitsigns attaches.
       local function install_jj_blame_key(buf)
-        if not buf or not vim.api.nvim_buf_is_valid(buf) then return end
-        if not jj.is_jujutsu_repo() then return end
+        if not buf or not vim.api.nvim_buf_is_valid(buf) then
+          return
+        end
+        if not jj.is_jujutsu_repo() then
+          return
+        end
         vim.keymap.set('n', '<leader>gb', function()
           require('jujutsu.blame').blame()
         end, { buffer = buf, desc = 'JujutsuBlame' })
@@ -169,8 +173,28 @@ return {
             end,
             desc = 'AI describe commit',
           },
+          ['rc'] = {
+            fn = function(state, ctx)
+              require('jujutsu.utils').run_jj_cmd(
+                string.format('rebase-octopus -d %s', ctx.item),
+                nil
+              )
+            end,
+            desc = 'Rebase colleague bookmark',
+          },
         },
       }
+    end,
+  },
+  {
+    dir = '/home/hdemers/Projets/nvim/jj-review.nvim',
+    event = { 'BufReadPost', 'BufNewFile' },
+    keys = {
+      { '<leader>gr', '<cmd>JJReview<CR>', desc = 'GitHub PR Reviews' },
+      { '<leader>gR', '<cmd>JJReviewAll<CR>', desc = 'GitHub All PR Reviews' },
+    },
+    config = function()
+      require('jj-review').setup {}
     end,
   },
   {

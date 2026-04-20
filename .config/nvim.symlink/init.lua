@@ -41,6 +41,9 @@ vim.opt.breakindent = true
 -- Save undo history
 vim.opt.undofile = true
 
+-- No swap files
+vim.opt.swapfile = false
+
 -- Case-insensitive searching UNLESS \C or capital in search
 vim.opt.ignorecase = true
 vim.opt.smartcase = true
@@ -180,6 +183,9 @@ vim.keymap.set('n', '<leader>w', ':tabclose <CR>', { desc = 'Close tab' })
 vim.keymap.set({ 'n', 'v' }, '<C-s>', '<C-a>', { noremap = true, silent = true })
 vim.keymap.set({ 'n', 'v' }, 'g<C-s>', 'g<C-a>', { noremap = true, silent = true })
 
+-- Ergonomic shortcuts
+vim.keymap.set({ 'n', 'v' }, 'gl', '$', { desc = 'Go to end of line' })
+vim.keymap.set({ 'n', 'v' }, 'gh', '^', { desc = 'Go to start of line' })
 -- ─────────────────────────────────────────────────────────────────────────────
 --  Basic Autocommands
 --  See `:help lua-guide-autocommands`

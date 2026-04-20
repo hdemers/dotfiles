@@ -44,18 +44,18 @@ return {
         require('which-key').add {
           { '<leader>gu', group = 'Diff hunk' },
         }
-        map('n', '<leader>ga', gs.stage_hunk, { desc = 'Gitsigns: add (stage) hunk' })
-        map('v', '<leader>ga', function()
-          gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'Gitsigns: add (stage) hunk' })
-        map('n', '<leader>gx', gs.reset_hunk, { desc = 'Gitsigns: reset hunk' })
-        map('v', '<leader>gx', function()
-          gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
-        end, { desc = 'Gitsigns: reset hunk' })
-        map('n', '<leader>gA', gs.stage_buffer, { desc = 'Gitsigns: add (stage) buffer' })
-        map('n', '<leader>gn', gs.undo_stage_hunk, { desc = 'Gitsigns: undo stage hunk' })
+        -- map('n', '<leader>ga', gs.stage_hunk, { desc = 'Gitsigns: add (stage) hunk' })
+        -- map('v', '<leader>ga', function()
+        --   gs.stage_hunk { vim.fn.line '.', vim.fn.line 'v' }
+        -- end, { desc = 'Gitsigns: add (stage) hunk' })
+        -- map('n', '<leader>gx', gs.reset_hunk, { desc = 'Gitsigns: reset hunk' })
+        -- map('v', '<leader>gx', function()
+        --   gs.reset_hunk { vim.fn.line '.', vim.fn.line 'v' }
+        -- end, { desc = 'Gitsigns: reset hunk' })
+        -- map('n', '<leader>gA', gs.stage_buffer, { desc = 'Gitsigns: add (stage) buffer' })
+        -- map('n', '<leader>gn', gs.undo_stage_hunk, { desc = 'Gitsigns: undo stage hunk' })
         map('n', '<leader>gb', gs.blame, { desc = 'Gitsigns: blame' })
-        map('n', '<leader>gX', gs.reset_buffer, { desc = 'Gitsigns: reset buffer' })
+        -- map('n', '<leader>gX', gs.reset_buffer, { desc = 'Gitsigns: reset buffer' })
         map('n', '<leader>gv', gs.preview_hunk, { desc = 'Gitsigns: view hunk' })
         map('n', '<leader>gn', function()
           gs.blame_line { full = true }
@@ -146,16 +146,16 @@ return {
       --   ':Gtabedit :<CR>:set previewwindow <CR>',
       --   desc = 'Fugitive: git status',
       -- },
-      {
-        '<leader>gc',
-        ':vertical rightb :Git commit<CR>',
-        desc = 'Fugitive: git commit',
-      },
-      {
-        '<leader>gp',
-        ':Git push',
-        desc = 'Fugitive: git push',
-      },
+      -- {
+      --   '<leader>gc',
+      --   ':vertical rightb :Git commit<CR>',
+      --   desc = 'Fugitive: git commit',
+      -- },
+      -- {
+      --   '<leader>gp',
+      --   ':Git push',
+      --   desc = 'Fugitive: git push',
+      -- },
     },
     init = function()
       local wk = require 'which-key'
@@ -218,11 +218,11 @@ return {
         ':DiffviewOpen dev<CR>',
         desc = 'Diffview: diff dev',
       },
-      {
-        '<leader>gs',
-        ':DiffviewOpen<CR>',
-        desc = 'Diffview: git status',
-      },
+      -- {
+      --   '<leader>gs',
+      --   ':DiffviewOpen<CR>',
+      --   desc = 'Diffview: git status',
+      -- },
       {
         '<leader>gL',
         ':DiffviewFileHistory<CR>',

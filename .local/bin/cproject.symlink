@@ -28,6 +28,8 @@ fi
 if [ -n "$dir" ]; then
     # Get the tab name from directory basename
     tab_name=$(basename "$dir")
+    lock_dir="${XDG_CACHE_HOME:-$HOME/.cache}/zellij-tab-title-locks"
+    lock_file="$lock_dir/${ZELLIJ_SESSION_NAME:-default}"
 
     # Query existing tab names and check if our tab exists
     existing_tabs=$(zellij action query-tab-names)
@@ -38,6 +40,14 @@ if [ -n "$dir" ]; then
     else
         # Tab doesn't exist, create new one
         zellij action new-tab --name "$tab_name" --layout project --cwd "$dir"
+
+        mkdir -p "$lock_dir"
+        tab_id=$(zellij action current-tab-info | awk '/^id:/ { print $2; exit }')
+        if [ -n "$tab_id" ]; then
+            touch "$lock_file"
+            grep -qx "$tab_id" "$lock_file" || echo "$tab_id" >> "$lock_file"
+        fi
+
         sleep 2
         zellij action move-focus right
         zellij action move-focus up

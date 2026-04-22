@@ -92,7 +92,7 @@ if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
         fi
         # If command contains one of the following substrings, do not send notifications.
         local ignore_list=("ssh" "vim" "nvim" "lsemr" "js" "claude" "jb" "jj"
-            "rplans" "gplans" "cpr" "cticket" "s3view" "gemini" "opencode" "geminy")
+            "rplans" "gplans" "cpr" "cticket" "s3view" "gemini" "opencode" "geminy" "pi")
 
         for ignore in "${ignore_list[@]}"; do
             if [[ "$cmd" == *"$ignore"* ]]; then

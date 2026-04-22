@@ -73,8 +73,52 @@ return {
       --   }):open()
       -- end, { desc = 'Open PR' })
 
+      local function zellij_tab_title_is_locked()
+        if vim.env.ZELLIJ == nil then
+          return false
+        end
+
+        local session_name = vim.env.ZELLIJ_SESSION_NAME or 'default'
+        local cache_dir = vim.env.XDG_CACHE_HOME or (vim.env.HOME .. '/.cache')
+        local lock_file = cache_dir .. '/zellij-tab-title-locks/' .. session_name
+
+        if vim.fn.filereadable(lock_file) == 0 then
+          return false
+        end
+
+        local tab_info = vim.fn.systemlist('zellij action current-tab-info 2>/dev/null')
+        if vim.v.shell_error ~= 0 then
+          return false
+        end
+
+        local tab_id = nil
+        for _, line in ipairs(tab_info) do
+          tab_id = line:match('^id:%s*(%S+)$')
+          if tab_id ~= nil then
+            break
+          end
+        end
+
+        if tab_id == nil then
+          return false
+        end
+
+        local locks = vim.fn.readfile(lock_file)
+        for _, line in ipairs(locks) do
+          if line == tab_id then
+            return true
+          end
+        end
+
+        return false
+      end
+
       -- Function to rename zellij tab based on current directory
       local function rename_zellij_tab()
+        if zellij_tab_title_is_locked() then
+          return
+        end
+
         local cwd = vim.fn.getcwd()
         local title = vim.fn.fnamemodify(cwd, ':t') -- Get just the directory name
         local cmd = string.format(

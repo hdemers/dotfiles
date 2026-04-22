@@ -36,7 +36,21 @@ fi
 # Zellij Zsh hook
 #
 if [[ "$CURRENT_SHELL" = "zsh" && -n "$ZELLIJ" ]]; then
+    function zellij_tab_title_is_locked() {
+        local lock_file="${XDG_CACHE_HOME:-$HOME/.cache}/zellij-tab-title-locks/${ZELLIJ_SESSION_NAME:-default}"
+        local tab_id
+
+        [[ -f "$lock_file" ]] || return 1
+
+        tab_id=$(zellij action current-tab-info 2>/dev/null | awk '/^id:/ { print $2; exit }')
+        [[ -n "$tab_id" ]] || return 1
+
+        grep -qx "$tab_id" "$lock_file"
+    }
+
     function set_tab_to_working_dir() {
+        zellij_tab_title_is_locked && return
+
         local title=$PWD
 
         if [[ $title == $HOME ]]; then
@@ -45,7 +59,7 @@ if [[ "$CURRENT_SHELL" = "zsh" && -n "$ZELLIJ" ]]; then
             title=${title##*/}
         fi
 
-        command nohup zellij action rename-tab $title >/dev/null 2>&1
+        command nohup zellij action rename-tab "$title" >/dev/null 2>&1
     }
 
     add-zsh-hook precmd set_tab_to_working_dir

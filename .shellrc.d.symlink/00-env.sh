@@ -91,3 +91,15 @@ export UV_CACHE_DIR=/home/hdemers/.cache/uv
 if [[ "$(hostname)" == "neptune" ]]; then
     export XDG_RUNTIME_DIR=/run/user/$(id -u)
 fi
+
+export PI_TODO_PATH=,todos
+
+# If running inside a distrobox container, set the BROWSER environment variable
+# to use xdg-open on the host system. This allows opening links in the host's
+# default browser from within the container.
+[ -n "$CONTAINER_ID" ] && export BROWSER='distrobox-host-exec xdg-open %s'
+
+# ROCm library path
+if [ -d "/home/linuxbrew/.linuxbrew/opt/rocm-smi-lib/lib" ]; then
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/linuxbrew/.linuxbrew/opt/rocm-smi-lib/lib
+fi

@@ -540,6 +540,20 @@ gplans() {
             --bind='tab:execute-silent(echo -n {2} | wl-copy)+abort'
 }
 
+obsidian() {
+    if [[ -n "$CONTAINER_ID" ]]; then
+        distrobox-host-exec sh -c '
+            ln -sf /run/user/$(id -u)/.flatpak/md.obsidian.Obsidian/xdg-run/.obsidian-cli.sock \
+                   /run/user/$(id -u)/.obsidian-cli.sock 2>/dev/null
+            "$HOME/.local/bin/obsidian" "$@"
+        ' -- "$@"
+        return
+    fi
+    ln -sf /run/user/$(id -u)/.flatpak/md.obsidian.Obsidian/xdg-run/.obsidian-cli.sock \
+           /run/user/$(id -u)/.obsidian-cli.sock 2>/dev/null
+    command obsidian "$@"
+}
+
 jjup() {
     jj git fetch || return 1
     jj rebase-my-arms && jj rebase-octopus

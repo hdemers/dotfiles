@@ -100,3 +100,8 @@ digest.txt
 
 # Gemini related files
 .gemini/tmp/
+
+# Pi OpenSpec Workflow tracking file
+.pi-openspec-workflow.json
+
+.pi/todos

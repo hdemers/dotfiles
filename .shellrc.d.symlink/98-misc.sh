@@ -27,6 +27,8 @@ if [ -x "$(command -v atuin)" ]; then
     # Normally the below arguments --disable-up-arrow --disable-ctrl-r should work, but they don't anymore.
     # I now need to set the environment variable ATUIN_NOBIND to true.
     export ATUIN_NOBIND="true"
+    # Override hostname inside distrobox containers so history is distinguishable from the host.
+    [ -n "$CONTAINER_ID" ] && export ATUIN_HOST_NAME="${CONTAINER_ID}.$(hostname)"
     eval "$(atuin init $CURRENT_SHELL --disable-up-arrow --disable-ctrl-r)"
 else
     echo "Atuin is not installed, shell history won't be captured."

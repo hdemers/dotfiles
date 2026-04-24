@@ -158,3 +158,7 @@ alias gmore=" glow --pager -w 110"
 alias geminy="gemini \
     --yolo \
     --include-directories /home/hdemers/Dropbox/Agents/"
+
+alias gemini="env GEMINI_SYSTEM_MD=${HOME}/.gemini/system.md gemini"
+alias caveman-full="env GEMINI_SYSTEM_MD=${HOME}/.gemini/caveman-full-system.md gemini"
+alias caveman="env GEMINI_SYSTEM_MD=${HOME}/.gemini/caveman-lite-system.md gemini"

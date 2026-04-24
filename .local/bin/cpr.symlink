@@ -25,6 +25,7 @@ OPTIONS:
     --no-verify      Skip precommit checks
     --no-push        Do not push the bookmark before creating the PR
     --stacked        Create a stacked PR (prompts for base bookmark)
+    --draft          Create the PR as a draft
     --agent <name>   AI agent CLI to use (default: claude)
     --model <model>  Model to use (default: claude-sonnet-4-6)
     --help           Display this help message and exit
@@ -153,13 +154,14 @@ main() {
     local no_verify=false
     local no_push=false
     local stacked=false
+    local draft=false
     local jj_base="trunk()"
     local pr_base
     local empty_change_ids
     local ticket
     local reviewers
     local agent="gemini"
-    local model="gemini-3.1-pro-preview"
+    local model=""
 
     pr_base=$(jj log -r "trunk()" --no-graph -T 'bookmarks' | tr ' ' '\n' | sed 's/\*//' | grep -E '^(main|master)$' | head -1)
 
@@ -180,6 +182,10 @@ main() {
                 stacked=true
                 shift
                 ;;
+            --draft)
+                draft=true
+                shift
+                ;;
             --agent)
                 agent="$2"
                 shift 2
@@ -198,6 +204,14 @@ main() {
                 ;;
         esac
     done
+
+    if [[ -z "$model" ]]; then
+        if [[ "$agent" == "claude" ]]; then
+            model="sonnet"
+        else
+            model="gemini-3.1-pro-preview"
+        fi
+    fi
 
     bookmark=$(_select_bookmark "${bookmark}")
     if [ -z "$bookmark" ]; then
@@ -295,6 +309,7 @@ main() {
         echo "- Bookmark (--head): ${bookmark}"
         echo "- Base (--base): ${pr_base}"
         echo "- Reviewers: ${reviewers}"
+        echo "- Draft: ${draft}"
     } > "$context_file"
 
     gum log --level info "Using agent: ${agent} (${model})${ANTHROPIC_API_KEY:+" with API key"}"

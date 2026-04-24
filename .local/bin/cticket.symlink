@@ -88,7 +88,7 @@ main() {
     local assignee
     local revset
     local agent="gemini"
-    local model="gemini-3.1-pro-preview"
+    local model=""
     local project="DSSO"
     local context_file=""
 
@@ -129,6 +129,14 @@ main() {
                 ;;
         esac
     done
+
+    if [[ -z "$model" ]]; then
+        if [[ "$agent" == "claude" ]]; then
+            model="sonnet"
+        else
+            model="gemini-3.1-pro-preview"
+        fi
+    fi
 
     # Prompt for bug context when --bug is given
     if [ "${bug}" = true ]; then

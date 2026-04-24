@@ -182,6 +182,12 @@ return {
             end,
             desc = 'Rebase colleague bookmark',
           },
+          ['rm'] = {
+            fn = function(state, ctx)
+              require('jujutsu.utils').run_jj_cmd 'rebase-octopus'
+            end,
+            desc = 'Rebase colleague bookmark',
+          },
         },
       }
     end,
@@ -192,6 +198,7 @@ return {
     keys = {
       { '<leader>gr', '<cmd>JJReview<CR>', desc = 'GitHub PR Reviews' },
       { '<leader>gR', '<cmd>JJReviewAll<CR>', desc = 'GitHub All PR Reviews' },
+      { '<leader>cr', '<cmd>JJReviewLocal<CR>', desc = 'Local Reviews Reviews' },
     },
     config = function()
       require('jj-review').setup {}
@@ -201,7 +208,13 @@ return {
     'julienvincent/hunk.nvim',
     cmd = { 'DiffEditor' },
     config = function()
-      require('hunk').setup()
+      require('hunk').setup {
+        ui = {
+          tree = {
+            width = 55,
+          },
+        },
+      }
     end,
   },
   {

@@ -180,6 +180,14 @@ return {
           },
         },
         bashls = {},
+        -- rumdl = {
+        --   cmd = {
+        --     'rumdl',
+        --     'server',
+        --   },
+        --   filetypes = { 'markdown' },
+        --   root_markers = { '.git' },
+        -- },
       }
 
       local ensure_installed = vim.tbl_keys(servers or {})

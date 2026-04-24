@@ -311,6 +311,9 @@ return {
             runner = 'pytest',
           },
         },
+        summary = {
+          open = 'botright vsplit | vertical resize 50 | set nowrap',
+        },
         -- Example for loading neotest-go with a custom config
         -- adapters = {
         --   ["neotest-go"] = {
@@ -329,11 +332,11 @@ return {
         --   end,
         -- },
         icons = {
-          failed = '',
-          passed = '',
+          failed = '',
+          passed = '󰄭',
           pending = '⧗',
           error = '!',
-          running = '↯',
+          running = '',
           unknown = '?',
         },
       }

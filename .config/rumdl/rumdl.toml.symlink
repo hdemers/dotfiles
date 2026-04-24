@@ -1,0 +1,20 @@
+[global]
+extend-enable = ["MD060", "MD063", "MD072"]
+
+
+[MD013]
+line-length = 88  # Maximum characters per line (default: 80)
+tables = true  # Don't check tables (default: false)
+strict = false  # Disables exceptions for URLs, etc. (default: false)
+reflow = true  # Enable automatic text reflow/wrapping (default: false)
+reflow-mode = "normalize"  # Reflow mode: "default", "normalize", "sentence-per-line", or "semantic-line-breaks" (default: "default")
+length-mode = "visual"  # How to count line length: "visual", "chars", or "bytes" (default: "visual")
+
+[MD060]
+enabled = true              # Default: opt-in for conservative adoption
+style = "aligned"            # Options: "aligned", "aligned-no-space", "compact", "tight", "any"
+max-width = 1000                # Default: inherit from MD013's line-length
+column-align = "auto"        # Options: "auto", "left", "center", "right"
+column-align-header = "auto" # Override alignment for header row only
+column-align-body = "auto"   # Override alignment for body rows only
+loose-last-column = false    # Cap last column at header width when true

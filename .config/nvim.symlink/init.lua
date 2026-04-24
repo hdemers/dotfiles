@@ -85,11 +85,14 @@ vim.opt.termguicolors = true
 -- See `:help 'confirm'`
 vim.opt.confirm = true
 
--- Treesitter-based folding.
+-- Folding.
 -- Don't enable folding by default
 vim.opt.foldenable = false
 vim.opt.foldmethod = 'expr'
-vim.opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+-- Treesitter folding.
+-- vim.opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+-- LSP folding.
+vim.opt.foldexpr = 'v:lua.vim.lsp.foldexpr()'
 vim.opt.foldtext = ''
 vim.opt.fillchars = {
   foldclose = '>',

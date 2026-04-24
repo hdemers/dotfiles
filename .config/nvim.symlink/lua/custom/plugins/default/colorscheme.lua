@@ -267,4 +267,6 @@ return {
       }
     end,
   },
+  { 'smit4k/shale.nvim' },
+  { 'mhartington/oceanic-next' },
 }

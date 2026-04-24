@@ -15,6 +15,9 @@ return {
     opts = {
       notify_on_error = false,
       format_on_save = function(bufnr)
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return
+        end
         -- Disable "format_on_save lsp_fallback" for languages that don't
         -- have a well standardized coding style. You can add additional
         -- languages here or re-enable it for the disabled ones.
@@ -28,6 +31,9 @@ return {
           }
         end
       end,
+      formatters = {
+        rumdl = {},
+      },
       formatters_by_ft = {
         lua = { 'stylua' },
         -- Conform can also run multiple formatters sequentially
@@ -35,7 +41,8 @@ return {
         quarto = { 'injected' },
         json = { 'jq' },
         sql = { 'sqlfluff' },
-        markdown = { 'prettier' },
+        markdown = { 'rumdl' },
+        typescript = { 'deno_fmt' },
         --
         -- You can use a sub-list to tell conform to run *until* a formatter
         -- is found.
@@ -91,6 +98,16 @@ return {
       end, {
         desc = 'Re-enable autoformat-on-save',
       })
+
+      Snacks.toggle({
+        name = 'Autoformat',
+        get = function()
+          return not vim.g.disable_autoformat
+        end,
+        set = function(state)
+          vim.g.disable_autoformat = not state
+        end,
+      }):map '<leader>uf'
     end,
   },
 }

@@ -62,14 +62,7 @@ lll = ["log", "--stat", "-T", "builtin_log_detailed"]
 wip = ['bookmark', 'move', 'hdemers-wip', '--to', '@']
 hist = ["log", "--stat", "-T", "builtin_log_detailed", "-r", "::trunk()"]
 d = ["log", "-T", 'bookmarks ++ ":\n" ++ description', "--no-graph"]
-precommit = [
-  "util",
-  "exec",
-  "--",
-  "bash",
-  "-c",
-  "jj diff $1 $2 --name-only --no-pager | xargs pre-commit run --files", ""
-]
+# precommit = ["util", "exec", "--", "jj-precommit"]
 push-my-shared-branches = ["git", "push", "-r", "my-shared-branches"]
 push = ["git", "push", "-r", "my-shared-branches"]
 

@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Run pre-commit hooks on each commit in a jj revset using isolated jj workspaces.
+# Each commit is checked out in its own workspace so pre-commit sees the exact
+# file state of that commit, not the current working copy.
+#
+# Usage: jj-precommit [-r] REVSET
+#
+# On success: workspace is torn down.
+# On failure: workspace is kept for inspection.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+    set -o xtrace
+fi
+
+revset=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -r) revset="$2"; shift 2 ;;
+        *)  revset="$1"; shift ;;
+    esac
+done
+
+if [[ -z "$revset" ]]; then
+    echo "Usage: jj-precommit [-r] REVSET" >&2
+    exit 1
+fi
+
+passed=0
+failed=0
+declare -a failed_paths=()
+declare -a failed_names=()
+
+mapfile -t changes < <(
+    jj log -r "$revset" --reversed --no-graph --template 'change_id.short(8) ++ "\n"'
+)
+
+if [[ ${#changes[@]} -eq 0 ]]; then
+    echo "No commits in revset: $revset"
+    exit 0
+fi
+
+for change in "${changes[@]}"; do
+    [[ -z "$change" ]] && continue
+
+    ws_name="precommit-${change}-$$"
+    ws_path="/tmp/${ws_name}"
+
+    to_sha=$(jj log -r "$change" --no-graph --template 'commit_id')
+    from_sha=$(jj log -r "parents($change)" --no-graph --template 'commit_id' | head -1)
+    desc=$(jj log -r "$change" --no-graph --template 'description.first_line()')
+
+    printf '\n=== %s %s ===\n' "$change" "$desc"
+
+    jj workspace add "$ws_path" --name "$ws_name" --revision "$change"
+
+    if (cd "$ws_path" && pre-commit run --from-ref "$from_sha" --to-ref "$to_sha"); then
+        printf 'passed\n'
+        passed=$((passed + 1))
+        jj workspace forget "$ws_name"
+        rm -rf "$ws_path"
+    else
+        printf 'failed — workspace kept at %s\n' "$ws_path"
+        failed=$((failed + 1))
+        failed_paths+=("$ws_path")
+        failed_names+=("$ws_name")
+    fi
+done
+
+printf '\n%d passed, %d failed\n' "$passed" "$failed"
+
+if [[ ${#failed_paths[@]} -gt 0 ]]; then
+    printf '\nFailed workspaces (kept for inspection):\n'
+    for i in "${!failed_paths[@]}"; do
+        printf '  %-40s  (%s)\n' "${failed_paths[$i]}" "${failed_names[$i]}"
+    done
+    printf '\nTo clean up: jj workspace forget NAME && rm -rf PATH\n'
+fi
+
+exit $((failed > 0 ? 1 : 0))

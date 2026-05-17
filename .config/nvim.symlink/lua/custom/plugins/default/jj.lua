@@ -1,7 +1,10 @@
+local jj_log_dir = '/home/hdemers/Projets/nvim/jj-log'
+local jj_review_dir = '/home/hdemers/Projets/nvim/jj-review.nvim'
+
 return {
   {
-    -- 'hdemers/jj-log.nvim',
-    dir = '/home/hdemers/Projets/nvim/jj-log',
+    'hdemers/jj-log.nvim',
+    dir = vim.uv.fs_stat(jj_log_dir) and jj_log_dir or nil,
     cond = function()
       return not vim.g.use_legacy_jj
     end,
@@ -193,7 +196,8 @@ return {
     end,
   },
   {
-    dir = '/home/hdemers/Projets/nvim/jj-review.nvim',
+    'hdemers/jj-review.nvim',
+    dir = vim.uv.fs_stat(jj_review_dir) and jj_review_dir or nil,
     event = { 'BufReadPost', 'BufNewFile' },
     keys = {
       { '<leader>gr', '<cmd>JJReview<CR>', desc = 'GitHub PR Reviews' },

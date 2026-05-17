@@ -26,6 +26,9 @@ export PATH=$HOME/local/bin:$PATH
 # export LIBRARY_PATH=$LIBRARY_PATH:$HOME/.local/lib
 # export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
 
+export LANG=C.UTF-8
+export LC_CTYPE=C.UTF-8
+
 ### rbenv path
 # export RBENV_ROOT="$HOME/.rbenv"
 # if [ -d "$RBENV_ROOT" ]; then

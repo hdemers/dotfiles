@@ -53,12 +53,13 @@ return {
           --  See `:help K` for why this keymap
           map('K', vim.lsp.buf.hover, 'Hover Documentation')
 
+          local client = vim.lsp.get_client_by_id(event.data.client_id)
+
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          local client = vim.lsp.get_client_by_id(event.data.client_id)
           if
             client
             and client:supports_method(
@@ -180,20 +181,21 @@ return {
           },
         },
         bashls = {},
-        -- rumdl = {
-        --   cmd = {
-        --     'rumdl',
-        --     'server',
-        --   },
-        --   filetypes = { 'markdown' },
-        --   root_markers = { '.git' },
-        -- },
+        rumdl = {
+          cmd = {
+            'rumdl',
+            'server',
+          },
+          filetypes = { 'markdown' },
+          root_markers = { '.git' },
+          -- exclude patterns are CLI-only; filter here for LSP attach
+        },
       }
 
       local ensure_installed = vim.tbl_keys(servers or {})
       -- Replace LSP name with correct Mason package name where they differ
       ensure_installed = vim.tbl_filter(function(v)
-        return v ~= 'beancount'
+        return v ~= 'beancount' and v ~= 'rumdl'
       end, ensure_installed)
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code

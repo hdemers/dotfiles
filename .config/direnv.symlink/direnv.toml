@@ -1,2 +1,7 @@
+[global]
+hide_env_diff = true
+log_format = "\u001B[3;38;5;238mdirenv %s\u001B[0m"
+
 [whitelist]
 prefix = ['/workspaces/']
+

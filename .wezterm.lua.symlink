@@ -7,23 +7,27 @@ local wezterm = require 'wezterm'
 local config = wezterm.config_builder()
 
 config.color_scheme = 'Kanagawa (Gogh)'
-config.window_decorations = 'TITLE|RESIZE'
+if wezterm.hostname() == 'neptune' then
+  config.window_decorations = 'TITLE|RESIZE'
+else
+  config.window_decorations = 'TITLE'
+end
 config.status_update_interval = 100
 config.use_fancy_tab_bar = false
 config.tab_max_width = 32
-config.enable_kitty_keyboard = true
+-- config.enable_kitty_keyboard = true
 
 -- Default font
-local font_family = 'Sudo'
+local font_family = 'Sudo Var'
 
-local mux = wezterm.mux
-wezterm.on('gui-startup', function(cmd)
-  local _, _, window = mux.spawn_window(cmd or {})
-  window:gui_window():maximize()
-end)
+-- local mux = wezterm.mux
+-- wezterm.on('gui-startup', function(cmd)
+--   local _, _, window = mux.spawn_window(cmd or {})
+--   window:gui_window():maximize()
+-- end)
 
 if os.getenv 'ZELLIJ_NVIM' == 'true' then
-  font_family = 'Sudo'
+  font_family = 'Sudo Var'
 
   config.window_decorations = 'NONE'
   config.window_padding = {
@@ -41,7 +45,7 @@ if os.getenv 'ZELLIJ_NVIM' == 'true' then
 end
 
 config.font = wezterm.font { family = font_family }
-if font_family == 'Sudo' then
+if font_family == 'Sudo Var' then
   config.font_size = 12.5
 elseif font_family == 'Hack' then
   config.font_size = 12
@@ -76,8 +80,23 @@ end
 -- However, there's this this project that does something similar:
 -- https://github.com/danielcopper/wezterm-session-manager
 
--- By default we launch zsh
-config.default_prog = { '/usr/bin/zsh' }
+-- By default we launch zsh if available, otherwise fall back to bash
+local function file_exists(path)
+  local file = io.open(path, 'r')
+  if file then
+    file:close()
+    return true
+  end
+  return false
+end
+
+if file_exists '/usr/bin/zsh' then
+  config.default_prog = { '/usr/bin/zsh' }
+elseif file_exists '/home/linuxbrew/.linuxbrew/bin/zsh' then
+  config.default_prog = { '/home/linuxbrew/.linuxbrew/bin/zsh' }
+else
+  config.default_prog = { 'bash' }
+end
 
 -- Distrobox configurations: name -> color scheme
 local distroboxes = {
@@ -133,7 +152,7 @@ wezterm.on('format-window-title', function(tab, pane, tabs, panes, cfg)
   if os.getenv 'ZELLIJ_NVIM' == 'true' then
     return nil -- use default behavior
   end
-  return 'Wezterm'
+  return ''
 end)
 
 -- Instant color change when user var is set (on spawn)

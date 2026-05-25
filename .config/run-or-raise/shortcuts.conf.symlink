@@ -32,12 +32,9 @@
 
 
 # GMail
-<Super>r,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@gmail.com.*/
+<Super>r,flatpak run io.github.hkdb.Aerion,,/Aerion/
 # Grubhub mail
-<Super>e,gtk-launch grubhub-dev-chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@grubhub.com.*/
-
-# Tmux-vim
-# <Super>j,gtk-launch zellij-nvim.desktop,,/.*nvim.*/
+<Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
 
 # KeePassXC
 <Super>p,flatpak run org.keepassxc.KeePassXC,KeePassXC,KeePassXC
@@ -45,24 +42,21 @@
 # Google-Chrome - Grubhub
 <Super>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*/
 
-# Google-Chrome
-#<Super><Shift>c,gtk-launch com.google.Chrome.desktop,,/.*Google Chrome$/
-
 # Messages
 <Super>i,gtk-launch com.google.Chrome.flextop.chrome-hpfldicfbfomlpcikngkocigghgafkph-Default.desktop,,Messages for web
 
 # Google Calendar
-<Super>a,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Week of
+<Super>a,flatpak run org.gnome.Calendar,org.gnome.Calendar,
 # Wonder Calendar
-<Super>x,gtk-launch grubhub-dev-chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Wonder - Calendar
+<Super>x,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Profile_3.desktop,,Google Calendar - Wonder - Calendar
 # Google Meet
-<Super>y,gtk-launch grubhub-dev-chrome-kjgfgldnnfoeklkmfkjfagphfepbbdan-Default.desktop,,Google Meet
+<Super>y,gtk-launch com.google.Chrome.flextop.chrome-kjgfgldnnfoeklkmfkjfagphfepbbdan-Profile_3.desktop,,Google Meet
 
 # Firefox
 <Super>f,gtk-launch org.mozilla.firefox.desktop,org.mozilla.firefox,
 
 # Terminal
-<Super>l,gtk-launch wezterm.desktop,,/Wezterm/,
+<Super>l,gtk-launch wezterm.desktop,org.wezfurlong.wezterm,
 
 # Todoist
 <Super>t,flatpak run com.todoist.Todoist,Todoist,,

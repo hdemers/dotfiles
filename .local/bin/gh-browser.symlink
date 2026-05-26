@@ -1,0 +1,13 @@
+#!/bin/sh
+# xdg-open-compatible URL opener for Flatpak apps.
+# Opens URLs with Google Chrome inside the grubhub-dev distrobox.
+# Intended to be exposed as `xdg-open` by prepending a small shim directory to
+# an individual Flatpak app's PATH.
+
+app_id="${FLATPAK_ID:-unknown-flatpak-app}"
+log="$HOME/xdg-open-gh-browser.log"
+printf '%s [%s] ' "$(date -Is)" "$app_id" >> "$log"
+printf '%s ' "$@" >> "$log"
+printf '\n' >> "$log"
+
+exec flatpak-spawn --host /usr/bin/distrobox-enter -n grubhub-dev -- /usr/bin/google-chrome-stable "$@"

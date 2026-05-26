@@ -1,0 +1,8 @@
+[Context]
+filesystems=/home/hdemers/.local/bin/gh-browser:ro;/home/hdemers/.local/bin/xdg-open:ro
+
+[Environment]
+PATH=/home/hdemers/.local/bin:/app/bin:/usr/bin
+
+[Session Bus Policy]
+org.freedesktop.Flatpak=talk

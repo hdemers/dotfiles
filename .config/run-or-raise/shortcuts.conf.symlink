@@ -34,7 +34,7 @@
 # GMail
 <Super>r,flatpak run io.github.hkdb.Aerion,,/Aerion/
 # Grubhub mail
-<Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Profile_3.desktop,,/.*hdemers@grubhub.com.*/
+<Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@grubhub.com.*/
 
 # KeePassXC
 <Super>p,flatpak run org.keepassxc.KeePassXC,KeePassXC,KeePassXC
@@ -59,7 +59,7 @@
 <Super>l,gtk-launch wezterm.desktop,org.wezfurlong.wezterm,
 
 # Todoist
-<Super>t,flatpak run com.todoist.Todoist,Todoist,,
+<Super>t,gtk-launch com.google.Chrome.flextop.chrome-okhfeehhillipaleckndoboggdkcebmo-Profile_3.desktop,,Google Tasks,
 
 # Slack
 <Super>u,flatpak run com.slack.Slack,Slack,,

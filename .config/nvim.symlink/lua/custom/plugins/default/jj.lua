@@ -4,6 +4,7 @@ local jj_review_dir = '/home/hdemers/Projets/nvim/jj-review.nvim'
 return {
   {
     'hdemers/jj-log.nvim',
+    url = 'git@github.com:hdemers/jj-log.nvim.git',
     dir = vim.uv.fs_stat(jj_log_dir) and jj_log_dir or nil,
     cond = function()
       return not vim.g.use_legacy_jj
@@ -197,6 +198,7 @@ return {
   },
   {
     'hdemers/jj-review.nvim',
+    url = 'git@github.com:hdemers/jj-review.nvim.git',
     dir = vim.uv.fs_stat(jj_review_dir) and jj_review_dir or nil,
     event = { 'BufReadPost', 'BufNewFile' },
     keys = {

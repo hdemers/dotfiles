@@ -6,7 +6,7 @@ local wezterm = require 'wezterm'
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
-config.window_decorations = 'TITLE | RESIZE'
+config.window_decorations = 'NONE'
 config.status_update_interval = 100
 config.use_fancy_tab_bar = false
 config.tab_max_width = 32

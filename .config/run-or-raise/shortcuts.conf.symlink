@@ -34,13 +34,13 @@
 # GMail
 <Super>r,flatpak run io.github.hkdb.Aerion,,/Aerion/
 # Grubhub mail
-<Super>e,gtk-launch com.google.Chrome.flextop.chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@grubhub.com.*/
+<Super>e,distrobox enter work-dev -- gtk-launch chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop,,/.*hdemers@grubhub.com.*/
 
 # KeePassXC
 <Super>p,flatpak run org.keepassxc.KeePassXC,KeePassXC,KeePassXC
 
 # Google-Chrome - Grubhub
-<Super>c,gtk-launch grubhub-dev-google-chrome.desktop,,/.*Google Chrome.*/
+<Super>c,work-dev-google-chrome.desktop,,/.*Google Chrome.*/
 
 # Messages
 <Super>i,gtk-launch com.google.Chrome.flextop.chrome-hpfldicfbfomlpcikngkocigghgafkph-Default.desktop,,Messages for web
@@ -48,9 +48,9 @@
 # Google Calendar
 <Super>a,flatpak run org.gnome.Calendar,org.gnome.Calendar,
 # Wonder Calendar
-<Super>x,gtk-launch com.google.Chrome.flextop.chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Profile_3.desktop,,Google Calendar - Wonder - Calendar
+<Super>x,distrobox enter work-dev -- gtk-launch chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop,,Google Calendar - Wonder - Calendar
 # Google Meet
-<Super>y,gtk-launch com.google.Chrome.flextop.chrome-kjgfgldnnfoeklkmfkjfagphfepbbdan-Profile_3.desktop,,Google Meet
+<Super>y,distrobox enter work-dev -- gtk-launch chrome-kjgfgldnnfoeklkmfkjfagphfepbbdan-Default.desktop,,Google Meet
 
 # Firefox
 <Super>f,gtk-launch org.mozilla.firefox.desktop,org.mozilla.firefox,

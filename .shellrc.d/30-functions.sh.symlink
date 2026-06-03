@@ -55,6 +55,71 @@ ntfy() {
         > /dev/null
 }
 
+gpu-display-mode() {
+    local amd_display_gpu_id_path="pci-0000:08:00.0"
+    local rule_path="/etc/udev/rules.d/61-mutter-primary-gpu.rules"
+    local disabled_rule_path="${rule_path}.disabled"
+    local rule="ACTION==\"add|change\", SUBSYSTEM==\"drm\", KERNEL==\"card*\", ENV{ID_PATH}==\"${amd_display_gpu_id_path}\", TAG+=\"mutter-device-preferred-primary\""
+    local mode="${1:-toggle}"
+
+    case "${mode}" in
+        amd|compute|on)
+            if [[ ! -e "/dev/dri/by-path/${amd_display_gpu_id_path}-card" ]]; then
+                echo "AMD display GPU not found: /dev/dri/by-path/${amd_display_gpu_id_path}-card"
+                return 1
+            fi
+            printf '%s\n' "${rule}" | sudo tee "${rule_path}" > /dev/null
+            sudo rm -f "${disabled_rule_path}"
+            ;;
+        nvidia|gaming|off)
+            if [[ -f "${rule_path}" ]]; then
+                sudo mv "${rule_path}" "${disabled_rule_path}"
+            elif [[ ! -f "${disabled_rule_path}" ]]; then
+                echo "Mutter primary GPU rule is already absent. NVIDIA/gaming mode is effectively enabled."
+            fi
+            ;;
+        toggle)
+            if [[ -f "${rule_path}" ]]; then
+                gpu-display-mode nvidia
+                return $?
+            else
+                gpu-display-mode amd
+                return $?
+            fi
+            ;;
+        status)
+            if [[ -f "${rule_path}" ]]; then
+                echo "AMD/compute mode: Mutter prefers AMD (${amd_display_gpu_id_path})."
+            elif [[ -f "${disabled_rule_path}" ]]; then
+                echo "NVIDIA/gaming mode: AMD-preference udev rule is disabled."
+            else
+                echo "NVIDIA/gaming mode: AMD-preference udev rule is absent."
+            fi
+            echo
+            echo "Active renderers:"
+            glxinfo -B 2>/dev/null | grep -E 'OpenGL (vendor|renderer) string' || true
+            echo
+            echo "NVIDIA users:"
+            nvidia-smi 2>/dev/null | sed -n '/Processes:/,$p' || true
+            return 0
+            ;;
+        *)
+            echo "Usage: gpu-display-mode [amd|compute|nvidia|gaming|toggle|status]"
+            return 2
+            ;;
+    esac
+
+    sudo udevadm control --reload-rules
+    # Clear stale udev tag files so mutter doesn't see old tags from a previous mode.
+    # udevadm trigger does NOT remove old tags — they linger in /run/udev/tags/.
+    sudo rm -rf "/run/udev/tags/mutter-device-preferred-primary/"
+    # Re-process with current rules (adds tags back for amd mode, stays clean for nvidia).
+    sudo udevadm trigger --subsystem-match=drm --action=change
+
+    echo "Requested ${mode} mode. Log out and back in for GNOME/Mutter to pick the primary GPU."
+    echo "A full reboot should not be necessary unless changing the BIOS/firmware boot display GPU."
+}
+
 # If either CURRENT_SHELL or SHELL is zsh, then...
 if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
     NOTIFY_THRESHOLD=120

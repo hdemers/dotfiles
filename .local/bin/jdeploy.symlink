@@ -84,7 +84,7 @@ main() {
     done
 
     # Source the helper function for bookmark selection
-    . "$HOME"/.shellrc.d/05-jj-functions.sh
+    . "$HOME"/.shellrc.d/05-jj.sh
     export CURRENT_SHELL='bash'
     . "$HOME"/.shellrc.d/03-functions.sh
 

@@ -55,7 +55,7 @@ if [[ "$CURRENT_SHELL" = "zsh" && -n "$ZELLIJ" ]]; then
 
         local title=$PWD
 
-        if [[ $title == $HOME ]]; then
+        if [[ $title == "$HOME" ]]; then
             title="~"
         else
             title=${title##*/}

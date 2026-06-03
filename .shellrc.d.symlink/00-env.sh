@@ -86,8 +86,7 @@ export DISTROBOX_NAME=$DBX_CONTAINER_NAME
 export MQTTUI_USERNAME=mqtt-user
 export PLAID_USER=hdemers
 
-export UV_LINK_MODE=symlink
-
+export UV_LINK_MODE=hardlink
 export UV_CACHE_DIR=/home/hdemers/.cache/uv
 
 # Workaround for zellij to access sessions when connecting from ssh, but only when on host neptune

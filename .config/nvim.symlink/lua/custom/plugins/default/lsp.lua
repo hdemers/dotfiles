@@ -228,8 +228,8 @@ return {
     cmd = 'Trouble',
     -- stylua: ignore
     keys = {
-      { '<leader>cx', '<cmd>Trouble diagnostics toggle focus = true win = {size = 0.5}<cr>', desc = 'Trouble: toggle all diagnostics', },
-      { '<leader>cX', '<cmd>Trouble diagnostics toggle filter.buf=0 <cr>', desc = 'Trouble: toggle buffer diagnostics', },
+      { '<leader>cX', '<cmd>Trouble diagnostics toggle focus = true win = {size = 0.5}<cr>', desc = 'Trouble: toggle all diagnostics', },
+      { '<leader>cx', '<cmd>Trouble diagnostics toggle filter.buf=0 <cr>', desc = 'Trouble: toggle buffer diagnostics', },
       { '<leader>cs', '<cmd>Trouble symbols toggle focus=false win.size.width=70<cr>', desc = 'Trouble: show symbols', },
       { '<leader>cd', '<cmd>Trouble lsp toggle focus=false win.position=right win.size.width=120<cr>', desc = 'Trouble: lsp definitions/references/etc.', },
       { '<leader>cL', '<cmd>Trouble loclist toggle<cr>', desc = 'Trouble: toggle location list', },

@@ -145,7 +145,7 @@ return {
                         )
                       or string.format('Generating description for %s...', id)
                   end
-                  vim.system({ 'cdescribe', id }, { cwd = state.cwd }, function(obj)
+                  vim.system({ 'cdescribe', id }, { cwd = state.cwd, env = vim.env }, function(obj)
                     vim.schedule(function()
                       if progress then
                         progress:finish()

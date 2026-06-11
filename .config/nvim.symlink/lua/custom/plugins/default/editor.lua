@@ -510,7 +510,32 @@ return {
       { "<leader>se", function() Snacks.explorer() end, desc = "File Explorer" },
       { '<leader>sf', function() Snacks.picker.files() end, desc = 'Search files', },
       { '<leader>sF', function() Snacks.picker.files { hidden = true } end, desc = 'Search files including hidden', },
-      { '<leader>si', function() Snacks.picker.git_files() end, desc = 'Search git files', },
+      { '<leader>si', function()
+          local jj_root = vim.fn.system('jj root 2>/dev/null'):gsub('\n$', '')
+          if vim.v.shell_error == 0 then
+            Snacks.picker.pick({
+              title = 'JJ Files',
+              finder = function(opts, ctx)
+                return require('snacks.picker.source.proc').proc(
+                  ctx:opts({
+                    cmd = 'jj',
+                    args = { 'file', 'list' },
+                    cwd = jj_root,
+                    transform = function(item)
+                      item.cwd = jj_root
+                      item.file = item.text
+                    end,
+                  }),
+                  ctx
+                )
+              end,
+              format = 'file',
+              cwd = jj_root,
+            })
+          else
+            Snacks.picker.git_files()
+          end
+        end, desc = 'Search index files' },
       { '<leader>sC', function() Snacks.picker.files { cwd = vim.fn.stdpath 'config' } end, desc = 'Search config files', },
       { '<leader>ss', function() Snacks.picker.smart() end, desc = 'Search smart', },
       { '<leader>s.', function() Snacks.picker.recent() end, desc = 'Search recent files ("." for repeat)', },
@@ -707,11 +732,5 @@ return {
       { '<leader>in', ':Nerdy list<CR>', desc = 'Browse nerd icons' },
       { '<leader>iN', ':Nerdy recents<CR>', desc = 'Browse recent nerd icons' },
     },
-  },
-  {
-    'brenoprata10/nvim-highlight-colors',
-    config = function(_, _)
-      require('nvim-highlight-colors').setup {}
-    end,
   },
 }

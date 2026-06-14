@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Ghostty
+Comment=Fast, native, feature-rich terminal emulator
+Exec=/home/hdemers/.local/bin/ghostty
+Icon=/home/hdemers/.local/share/icons/ghostty.png
+Type=Application
+Categories=System;TerminalEmulator;
+Keywords=terminal;shell;prompt;command;commandline;
+Terminal=false
+StartupNotify=true

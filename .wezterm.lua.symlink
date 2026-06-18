@@ -6,10 +6,44 @@ local wezterm = require 'wezterm'
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
+local function file_exists(path)
+  local file = io.open(path, 'r')
+  if file then
+    file:close()
+    return true
+  end
+  return false
+end
+
+local function env_bool(name)
+  local value = os.getenv(name)
+  if value == nil or value == '' then
+    return nil
+  end
+  value = string.lower(value)
+  if value == '1' or value == 'true' or value == 'yes' or value == 'on' then
+    return true
+  elseif value == '0' or value == 'false' or value == 'no' or value == 'off' then
+    return false
+  end
+  return nil
+end
+
 config.window_decorations = 'NONE'
 config.status_update_interval = 100
 config.use_fancy_tab_bar = false
 config.tab_max_width = 32
+
+-- Daily AMD-display mode keeps Mutter on AMD and WezTerm can use Wayland.
+-- Gaming/NVIDIA-display mode disables the Mutter AMD-primary udev rule, and
+-- WezTerm should use X11 because Wayland is unreliable in that profile.
+-- Override manually with WEZTERM_ENABLE_WAYLAND=1 or 0 if needed.
+local wayland_override = env_bool 'WEZTERM_ENABLE_WAYLAND'
+if wayland_override ~= nil then
+  config.enable_wayland = wayland_override
+else
+  config.enable_wayland = file_exists '/etc/udev/rules.d/61-mutter-primary-gpu.rules'
+end
 -- config.enable_kitty_keyboard = true
 
 -- ═══════════════════════════════════════════════════════════════════════════════════════
@@ -19,11 +53,11 @@ config.tab_max_width = 32
 -- Default font
 local font_family = 'Sudo Var'
 
--- local mux = wezterm.mux
--- wezterm.on('gui-startup', function(cmd)
---   local _, _, window = mux.spawn_window(cmd or {})
---   window:gui_window():maximize()
--- end)
+local mux = wezterm.mux
+wezterm.on('gui-startup', function(cmd)
+  local _, _, window = mux.spawn_window(cmd or {})
+  window:gui_window():maximize()
+end)
 
 config.font = wezterm.font { family = font_family }
 if font_family == 'Sudo Var' then
@@ -63,15 +97,6 @@ end
 -- ═══════════════════════════════════════════════════════════════════════════════════════
 
 -- By default we launch zsh if available, otherwise fall back to bash
-local function file_exists(path)
-  local file = io.open(path, 'r')
-  if file then
-    file:close()
-    return true
-  end
-  return false
-end
-
 if file_exists '/usr/bin/zsh' then
   config.default_prog = { '/usr/bin/zsh' }
 elseif file_exists '/home/linuxbrew/.linuxbrew/bin/zsh' then
@@ -89,6 +114,7 @@ config.color_scheme = 'Kanagawa (Gogh)'
 -- Distrobox configurations: name -> color scheme
 local distroboxes = {
   ['grubhub-dev'] = 'Tokyo Night Storm',
+  ['work-dev'] = 'Tokyo Night Storm',
   ['ubuntu'] = 'Catppuccin Mocha',
 }
 
@@ -122,7 +148,7 @@ local function distrobox_tab_action(name)
             .. ' | base64 -w0)"; '
             .. 'exec /usr/bin/distrobox enter '
             .. name
-            .. ' -- /home/linuxbrew/.linuxbrew/bin/zellij attach -c '
+            .. ' -- /home/linuxbrew/.linuxbrew/bin/zellij attach --forget -c '
             .. name,
         },
       },
@@ -267,6 +293,7 @@ config.keys = {
   { key = 'n', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
   { key = 'p', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
   { key = 'g', mods = 'CTRL|ALT', action = distrobox_tab_action 'grubhub-dev' },
+  { key = 'w', mods = 'CTRL|ALT', action = distrobox_tab_action 'work-dev' },
   { key = 'u', mods = 'CTRL|ALT', action = distrobox_tab_action 'ubuntu' },
   -- Tab navigation
   {

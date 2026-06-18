@@ -2,5 +2,8 @@ layout {
     pane size=1 borderless=true {
         plugin location="compact-bar"
     }
-    pane
+    pane split_direction="vertical" {
+        pane size="50%"
+        pane
+    }
 }

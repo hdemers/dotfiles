@@ -140,7 +140,7 @@ _jpreview() {
         printf "\033[38;5;242m"
         printf "%*s" "${COLUMNS:-$(tput cols)}" "" | sed "s/ /─/g"
         printf "\033[0m\n"
-        env GH_FORCE_TTY=1 gh pr view --comments "${pr_number}"
+        env GH_FORCE_TTY=120 gh pr view --comments "${pr_number}"
     else
         jira --format human view "$(_extract_ticket "${change_id}")"
     fi
@@ -226,6 +226,49 @@ jintegrate() {
         && zellij run -n "${name}" -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
 }
 
+# Embedded awk formatter — written to a temp file at runtime.
+# Input: tab-separated PR data (number, title, headRefName, baseRefName,
+#         updatedAt, author.name, reviewDecision)
+# Output: formatted colored lines for fzf display.
+_jb_awk_script() {
+    cat << 'AWKEOF'
+BEGIN { FS = "\t" }
+{
+    n++
+    num[n] = $1; title[n] = $2; head[n] = $3; base[n] = $4
+    time[n] = $5; author[n] = $6; review[n] = $7
+}
+END {
+    max_bb = 0; max_b = 0
+    for (i = 1; i <= n; i++) {
+        bb = length(base[i])
+        if (bb > max_bb) max_bb = bb
+        b = length(base[i]) + 3 + length(head[i])
+        if (b > max_b) max_b = b
+    }
+    tw = 60; aw = 20; timew = 15
+    for (i = 1; i <= n; i++) {
+        reset = "\033[0m"; pr_color = "\033[1;36m"; title_color = "\033[1;37m"
+        branch_color = "\033[1;33m"; time_color = "\033[0;32m"; author_color = "\033[0;35m"
+        green = "\033[0;32m"; red = "\033[0;31m"; yellow = "\033[0;33m"
+        if (review[i] == "APPROVED") status = green "\xe2\x9c\x93" reset
+        else if (review[i] == "CHANGES_REQUESTED") status = red "\xe2\x9c\x97" reset
+        else status = yellow "\xe2\x97\x8f" reset
+        t = title[i]; gsub(/[^\x00-\x7F]/, "", t)
+        title_str = (length(t) > tw) ? substr(t, 1, tw-1) "\xe2\x80\xa6" : t
+        author_str = (length(author[i]) > aw) ? substr(author[i], 1, aw-1) "\xe2\x80\xa6" : author[i]
+        if (base[i] == "master" || base[i] == "main") base_color = green
+        else base_color = "\033[0;35m"
+        printf "%s\t%s%-3s%s\t%s%-*s%s\t%s\t%s%-*s%s\t%s%-*s%s\t%s\n",
+               status, pr_color, num[i], reset, title_color, tw, title_str, reset,
+               base_color base[i] reset pad(max_bb - length(base[i])) " \xe2\x86\x90 " branch_color head[i] reset pad(max_b - length(base[i]) - 3 - length(head[i])),
+               time_color, timew, time[i], reset, author_color, aw, author_str, reset, head[i]
+    }
+}
+function pad(c) { if (c <= 0) return ""; s = ""; for (j = 0; j < c; j++) s = s " "; return s }
+AWKEOF
+}
+
 main() {
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do
@@ -251,92 +294,19 @@ main() {
     export -f _rebase_dependent_prs
     export -f jintegrate
 
-    # Fetch PR data once and store it
-    local pr_data
-    pr_data=$(env GH_FORCE_TTY="100%" gh pr list \
-        --json number,title,headRefName,baseRefName,updatedAt,author,reviewDecision \
-        --template '{{range .}}{{printf "%v\t%s\t%s\t%s\t%s\t%s\t%s\n" .number .title .headRefName .baseRefName (timeago .updatedAt) .author.name .reviewDecision}}{{end}}')
+    # Write the embedded awk script to a temp file (cleaned up on exit)
+    local _jb_awk_tmp
+    _jb_awk_tmp=$(mktemp)
+    trap "rm -f '${_jb_awk_tmp}'" EXIT
+    _jb_awk_script > "${_jb_awk_tmp}"
 
-    if [ -z "$pr_data" ]; then
-        gum log --level info "No open pull requests found."
-        return 0
-    fi
+    # Build the reload command: fetch PRs and format them.
+    local _jb_reload_cmd
+    _jb_reload_cmd="env GH_FORCE_TTY='100%' gh pr list --json number,title,headRefName,baseRefName,updatedAt,author,reviewDecision --template '{{range .}}{{printf \"%v\\t%s\\t%s\\t%s\\t%s\\t%s\\t%s\\n\" .number .title .headRefName .baseRefName (timeago .updatedAt) .author.name .reviewDecision}}{{end}}' | awk -f '${_jb_awk_tmp}'"
 
-    # Calculate maximum base and branch name lengths (dynamic width)
-    local max_base_width
-    max_base_width=$(echo "$pr_data" | awk -F'\t' 'BEGIN {max=0} {len=length($4); if (len > max) max=len} END {print max}')
-
-    local max_branch_width
-    max_branch_width=$(echo "$pr_data" | awk -F'\t' -v mbw="$max_base_width" 'BEGIN {max=0} {len=mbw + length(" ← " $3); if (len > max) max=len} END {print max}')
-
-    # Set fixed column widths
-    local branch_width=$max_branch_width  # Dynamic: never truncate
-    local base_width=$max_base_width      # Dynamic: base branch width
-    local title_width=60                  # Fixed: truncate if longer
-    local time_width=15                   # Fixed: truncate if longer
-    local author_width=20                 # Fixed: truncate if longer
-
-    echo "$pr_data" | awk -F'\t' -v tw="$title_width" -v bw="$branch_width" -v bbw="$base_width" -v timew="$time_width" -v aw="$author_width" '{
-        # Color codes
-        reset = "\033[0m"
-        pr_color = "\033[1;36m"      # Bright cyan for PR numbers
-        title_color = "\033[1;37m"   # Bright white for titles
-        branch_color = "\033[1;33m"  # Bright yellow for branches
-        time_color = "\033[0;32m"    # Green for timestamps
-        author_color = "\033[0;35m"  # Magenta for authors
-        green = "\033[0;32m"
-        red = "\033[0;31m"
-        yellow = "\033[0;33m"
-
-        # Review status indicator
-        review = $7
-        if (review == "APPROVED") {
-            status = green "✓" reset
-        } else if (review == "CHANGES_REQUESTED") {
-            status = red "✗" reset
-        } else {
-            status = yellow "○" reset
-        }
-
-        # Strip emojis and non-ASCII characters from title for proper alignment
-        gsub(/[^\x00-\x7F]/, "", $2)
-
-        # Truncate title and author if needed, but never truncate branch
-        title = (length($2) > tw) ? substr($2, 1, tw-1) "…" : $2
-        
-        base_branch = $4
-        if (base_branch == "master" || base_branch == "main") {
-            base_color = green
-        } else {
-            base_color = "\033[0;35m" # magenta
-        }
-        
-        base_padding = bbw - length(base_branch)
-        if (base_padding < 0) base_padding = 0
-        base_pad_spaces = sprintf("%*s", base_padding, "")
-        
-        visible_branch_len = bbw + length(" ← " $3)
-        padding = bw - visible_branch_len
-        if (padding < 0) padding = 0
-        pad_spaces = sprintf("%*s", padding, "")
-        
-        branch_formatted = base_color $4 reset base_pad_spaces " ← " branch_color $3 reset pad_spaces
-
-        author = (length($6) > aw) ? substr($6, 1, aw-1) "…" : $6
-        headRefName = $3
-
-        # Format with fixed widths and preserve tabs
-        # Status at the front as first column
-        printf "%s\t%s%-3s%s\t%s%-*s%s\t%s\t%s%-*s%s\t%s%-*s%s\t%s\n",
-               status,
-               pr_color, $1, reset,
-               title_color, tw, title, reset,
-               branch_formatted,
-               time_color, timew, $5, reset,
-               author_color, aw, author, reset,
-               headRefName
-    }' \
-    | fzf \
+    # --bind start:reload loads initial data; every(60) re-fetches every minute.
+    fzf \
+        --bind "start,every(60):reload:${_jb_reload_cmd}" \
         --ansi \
         --with-nth=1..6 \
         --preview-window 'top,90%' \
@@ -348,7 +318,7 @@ main() {
         --bind "ctrl-b:become(jdeploy {7})" \
         --bind 'ctrl-w:execute-silent(gh pr view --web {2})' \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
-        --bind 'ctrl-m:become(pr-discussions {2} --human)' \
+        --bind 'ctrl-m:become(pr-discussions {2})' \
         --prompt 'Pull Request> ' \
         --border-label-pos 5:bottom \
         --border 'rounded' \

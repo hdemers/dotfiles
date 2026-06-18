@@ -179,6 +179,17 @@ keybinds clear-defaults=true {
               name "Project Launcher"
           }
         }
+        bind "Alt d" {
+          Run "bash" "-ic" "source /home/hdemers/Projets/grubhub/.envrc && ~/.local/bin/jb" {
+              floating true
+              x "25%"
+              y "5%"
+              width "50%"
+              height "95%"
+              close_on_exit true
+              name "Open PRs"
+          }
+        }
         bind "Alt ;" {
           Run "bash" "-ic" "source /home/hdemers/Projets/grubhub/.envrc && jira tui" {
               floating true

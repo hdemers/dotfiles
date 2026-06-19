@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PROJET_DIR="/home/hdemers/Projets"
+CUSTOM_DIRS=("$HOME/.dotfiles" "$HOME/.dotagents" "$HOME/.private")
 FORCE=0
 
 # Parse arguments
@@ -20,9 +21,9 @@ export FZF_DEFAULT_OPTS=$FZF_DEFAULT_OPTS'
 if [ -n "$TARGET" ] && [ -d "$TARGET" ]; then
     dir=$(realpath "$TARGET")
 elif [ -n "$TARGET" ]; then
-    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | grep -F "$TARGET" | head -1)
+    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" "${CUSTOM_DIRS[@]}" -x echo {//} | sort -u | grep -F "$TARGET" | head -1)
 else
-    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" -x echo {//} | sort -u | fzf --height 100%)
+    dir=$(fd -H -d 4 -t d '^(\.git|\.jj)$' "${PROJET_DIR}" "${CUSTOM_DIRS[@]}" -x echo {//} | sort -u | fzf --height 100%)
 fi
 
 if [ -n "$dir" ]; then

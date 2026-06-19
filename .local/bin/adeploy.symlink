@@ -52,6 +52,11 @@ DEPENDENCIES:
 EOF
 }
 
+zellij_float_cmd() {
+    local cmd="$1"
+    zellij run -x 10% -y 10% -f -- bash -ic "eval \"\$(direnv export bash)\"; $cmd"
+}
+
 main() {
     local bookmark=""
     local unit_tests=""

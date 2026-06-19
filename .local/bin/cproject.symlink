@@ -50,10 +50,6 @@ if [ -n "$dir" ]; then
         fi
 
         sleep 2
-        zellij action move-focus right
-        zellij action move-focus up
-        zellij action write-chars "/home/linuxbrew/.linuxbrew/bin/nvim"
-        zellij action write 13
     fi
 fi
 

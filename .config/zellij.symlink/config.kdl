@@ -190,6 +190,28 @@ keybinds clear-defaults=true {
               name "Open PRs"
           }
         }
+        bind "Alt t" {
+          Run "bash" "-ic" "btop" {
+              floating true
+              x "25%"
+              y "5%"
+              width "50%"
+              height "95%"
+              close_on_exit true
+              name "btop"
+          }
+        }
+        bind "Alt v" {
+          Run "bash" "-ic" "nvtop" {
+              floating true
+              x "25%"
+              y "5%"
+              width "50%"
+              height "95%"
+              close_on_exit true
+              name "nvtop"
+          }
+        }
         bind "Alt ;" {
           Run "bash" "-ic" "source /home/hdemers/Projets/grubhub/.envrc && jira tui" {
               floating true

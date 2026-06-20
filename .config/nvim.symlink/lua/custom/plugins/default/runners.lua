@@ -17,7 +17,7 @@ return {
         '<leader>bd',
         function()
           local Terminal = require('toggleterm.terminal').Terminal
-          local box_name = os.getenv 'DBX_CONTAINER_NAME'
+          local box_name = os.getenv 'CONTAINER_ID'
           Terminal:new({
             direction = 'vertical',
             cmd = 'distrobox enter ' .. box_name .. ' -- zsh',

@@ -3,7 +3,7 @@ layout {
         plugin location="compact-bar"
     }
     pane split_direction="vertical" {
-        pane size="33%" name="pi agen" command="zsh" {
+        pane size="33%" name="agent" command="zsh" {
             args "-ic" "eval \"$(direnv export zsh)\"; pi; exec zsh -i"
         }
         pane stacked=true {

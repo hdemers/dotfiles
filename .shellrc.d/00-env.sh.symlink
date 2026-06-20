@@ -80,9 +80,6 @@ if [[ -x "$(command -v google-chrome)" ]]; then
     export BROWSER=$(which google-chrome)
 fi
 
-export DBX_CONTAINER_NAME=ubuntu
-export DISTROBOX_NAME=$DBX_CONTAINER_NAME
-
 export MQTTUI_USERNAME=mqtt-user
 export PLAID_USER=hdemers
 

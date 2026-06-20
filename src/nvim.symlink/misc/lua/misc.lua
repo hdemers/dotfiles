@@ -170,7 +170,7 @@ M.rsync_current_file = function(destination, opts)
 end
 
 M.open_url = function(url)
-  local container_name = os.getenv 'DBX_CONTAINER_NAME'
+  local container_name = os.getenv 'CONTAINER_ID'
   local cmd = string.format('xdg-open %s', url)
 
   if container_name then

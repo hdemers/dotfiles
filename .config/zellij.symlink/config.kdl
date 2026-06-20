@@ -193,9 +193,9 @@ keybinds clear-defaults=true {
         bind "Alt t" {
           Run "bash" "-ic" "btop" {
               floating true
-              x "25%"
+              x "18%"
               y "5%"
-              width "50%"
+              width "65%"
               height "95%"
               close_on_exit true
               name "btop"

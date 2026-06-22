@@ -1,1 +1,32 @@
-./gh-browser.symlink
+#!/bin/sh
+# App-aware xdg-open shim.
+# Routes URLs based on context: Flatpak app, distrobox, or host.
+# Deploy to ~/.local/bin/xdg-open. Works via PATH priority (shared home
+# in distroboxes, Flatpak override for sandboxed apps).
+# Requires: distrobox (sets CONTAINER_ID), flatpak (sets FLATPAK_ID)
+
+log="/tmp/xdg-open-gh-browser.log"
+app_id="${FLATPAK_ID:-host}"
+printf '%s [%s/%s] %s\n' "$(date -Is)" "$app_id" "${CONTAINER_ID:-host}" "$*" >> "$log"
+
+case "$FLATPAK_ID" in
+  com.slack.Slack)
+    exec flatpak-spawn --host \
+      timeout 10 /usr/bin/distrobox-enter -n work-dev -- \
+      /usr/bin/google-chrome-stable "$@"
+    ;;
+  *)
+    case "${CONTAINER_ID-}" in
+      ubuntu)
+        if [ -n "${BROWSER:-}" ]; then
+          exec /usr/bin/xdg-open "$@"
+        else
+          exec distrobox-host-exec xdg-open "$@"
+        fi
+        ;;
+      *)
+        exec /usr/bin/xdg-open "$@"
+        ;;
+    esac
+    ;;
+esac

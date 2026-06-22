@@ -75,11 +75,6 @@ if [[ -f "$HOME/.secrets-conf.yaml" && -x "$(command -v secret-tool)" && -z "$DE
         "$HOME/.secrets-conf.yaml")
 fi
 
-# Check we have google-chrome installed and set the BROWSER environment variable
-if [[ -x "$(command -v google-chrome)" ]]; then
-    export BROWSER=$(which google-chrome)
-fi
-
 export MQTTUI_USERNAME=mqtt-user
 export PLAID_USER=hdemers
 
@@ -91,10 +86,17 @@ if [[ "$(hostname)" == "neptune" ]]; then
     export XDG_RUNTIME_DIR=/run/user/$(id -u)
 fi
 
+export WORK_DISTROBOX_NAME="work-dev"
+
+# Check we have google-chrome installed and set the BROWSER environment variable
+# if [[ -x "$(command -v google-chrome)" ]]; then
+#     export BROWSER=$(which google-chrome)
+# fi
+
 # If running inside a distrobox container, set the BROWSER environment variable
 # to use xdg-open on the host system. This allows opening links in the host's
 # default browser from within the container.
-[ -n "$CONTAINER_ID" ] && export BROWSER='distrobox-host-exec xdg-open %s'
+[ -n "$CONTAINER_ID" ] && export BROWSER='distrobox-host-exec xdg-open'
 
 # ROCm library path
 if [ -d "/home/linuxbrew/.linuxbrew/opt/rocm-smi-lib/lib" ]; then

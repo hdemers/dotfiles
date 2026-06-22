@@ -1,0 +1,165 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+if [[ "${TRACE-0}" == "1" ]]; then
+	set -o xtrace
+fi
+
+# ── App registry ──────────────────────────────────────────────────────
+# Format: name|command|description|default?
+#   name       — identifier used with --only
+#   command    — shell command to execute
+#   description — shown in --help
+#   default    — "yes" = launches with bare `deskup`, "no" = only with --all
+#
+# Add new apps by appending a line. Reorder to control launch sequence.
+
+read -r -d '' APP_REGISTRY << 'EOF' || true
+aerion|flatpak run io.github.hkdb.Aerion|GMail (Aerion)|yes
+grubhub_mail|distrobox enter work-dev -- gtk-launch chrome-fmgjjmmmlfnkbppncabfkddbjimcfncm-Default.desktop|Grubhub Gmail (Chrome)|yes
+chrome|gtk-launch work-dev-google-chrome.desktop|Google Chrome (Grubhub)|yes
+messages|gtk-launch com.google.Chrome.flextop.chrome-hpfldicfbfomlpcikngkocigghgafkph-Default.desktop|Messages (Chrome)|yes
+calendar|flatpak run org.gnome.Calendar|Google Calendar (GNOME)|yes
+wonder_calendar|distrobox enter work-dev -- gtk-launch chrome-kjbdgfilnfhdoflbpgamdcdgpehopbep-Default.desktop|Wonder Calendar (Chrome)|yes
+firefox|gtk-launch org.mozilla.firefox.desktop|Firefox|yes
+todoist|gtk-launch com.google.Chrome.flextop.chrome-okhfeehhillipaleckndoboggdkcebmo-Profile_3.desktop|Google Tasks / Todoist (Chrome)|yes
+slack|flatpak run com.slack.Slack|Slack|yes
+EOF
+
+# ── Helpers ───────────────────────────────────────────────────────────
+
+# Parse registry into parallel arrays. Call once at startup.
+declare -a APP_NAMES=()
+declare -A APP_COMMANDS=()
+declare -A APP_DESCRIPTIONS=()
+declare -A APP_DEFAULT=()
+
+load_registry() {
+	while IFS='|' read -r name command description is_default; do
+		[[ -z "$name" || "$name" == \#* ]] && continue
+		APP_NAMES+=("$name")
+		APP_COMMANDS["$name"]="$command"
+		APP_DESCRIPTIONS["$name"]="$description"
+		APP_DEFAULT["$name"]="$is_default"
+	done <<< "$APP_REGISTRY"
+}
+
+show_help() {
+	cat << EOF
+Usage: deskup [OPTIONS]
+
+Launch desktop workspace applications.
+
+With no arguments, launches the default set of workspace apps.
+
+OPTIONS:
+    --help          Display this help message and exit
+    --dry-run       Print commands without executing them
+    --all           Launch ALL apps including non-default ones
+    --only APP...   Launch only the specified app(s)
+
+AVAILABLE APPS:
+EOF
+	for name in "${APP_NAMES[@]}"; do
+		local flag=""
+		[[ "${APP_DEFAULT[$name]}" != "yes" ]] && flag=" (all only)"
+		printf "    %-20s %s%s\n" "$name" "${APP_DESCRIPTIONS[$name]}" "$flag"
+	done
+}
+
+# Launch a single app by name.
+launch_app() {
+	local app="$1"
+	local dry_run="$2"
+
+	if [[ -z "${APP_COMMANDS[$app]+set}" ]]; then
+		gum log --level error "Unknown app: $app"
+		return 1
+	fi
+
+	if [[ "$dry_run" == "true" ]]; then
+		echo "[dry-run] $app: ${APP_COMMANDS[$app]}"
+		return 0
+	fi
+
+	echo "Launching ${app}..."
+	nohup bash -c "${APP_COMMANDS[$app]}" > /dev/null 2>&1 &
+	disown
+}
+
+# ── Main ──────────────────────────────────────────────────────────────
+
+main() {
+	load_registry
+
+	local dry_run=false
+	local mode="default"   # "default" | "all" | "only"
+	local -a selected_apps=()
+
+	# Parse command-line arguments
+	while [[ $# -gt 0 ]]; do
+		case "$1" in
+			--help|-h)
+				show_help
+				return 0
+				;;
+			--dry-run)
+				dry_run=true
+				shift
+				;;
+			--all)
+				mode="all"
+				shift
+				;;
+			--only)
+				mode="only"
+				shift
+				if [[ $# -eq 0 ]]; then
+					gum log --level error "--only requires one or more app names"
+					return 1
+				fi
+				while [[ $# -gt 0 && "$1" != --* ]]; do
+					selected_apps+=("$1")
+					shift
+				done
+				;;
+			*)
+				gum log --level error "Unknown option: $1"
+				show_help
+				return 1
+				;;
+		esac
+	done
+
+	# Determine which apps to launch
+	local -a apps_to_launch=()
+	case "$mode" in
+		default)
+			for name in "${APP_NAMES[@]}"; do
+				[[ "${APP_DEFAULT[$name]}" == "yes" ]] && apps_to_launch+=("$name")
+			done
+			;;
+		all)
+			apps_to_launch=("${APP_NAMES[@]}")
+			;;
+		only)
+			apps_to_launch=("${selected_apps[@]}")
+			;;
+	esac
+
+	if [[ ${#apps_to_launch[@]} -eq 0 ]]; then
+		gum log --level error "No apps selected"
+		return 1
+	fi
+
+	# Launch each app
+	for app in "${apps_to_launch[@]}"; do
+		launch_app "$app" "$dry_run"
+	done
+}
+
+main "$@"
+
+# vim: set ft=sh

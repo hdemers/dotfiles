@@ -145,33 +145,37 @@ return {
                         )
                       or string.format('Generating description for %s...', id)
                   end
-                  vim.system({ 'cdescribe', id }, { cwd = state.cwd, env = vim.env }, function(obj)
-                    vim.schedule(function()
-                      if progress then
-                        progress:finish()
-                      end
-                      if obj.code ~= 0 then
-                        local err = (obj.stderr ~= '' and obj.stderr)
-                          or obj.stdout
-                          or 'unknown error'
-                        vim.notify(
-                          'cdescribe failed for ' .. id .. ': ' .. err,
-                          vim.log.levels.ERROR
-                        )
-                      end
-                      completed = completed + 1
-                      if completed == total then
-                        utils.refresh_log()
-                        if total > 1 then
+                  vim.system(
+                    { 'cdescribe', id },
+                    { cwd = state.cwd, env = vim.env },
+                    function(obj)
+                      vim.schedule(function()
+                        if progress then
+                          progress:finish()
+                        end
+                        if obj.code ~= 0 then
+                          local err = (obj.stderr ~= '' and obj.stderr)
+                            or obj.stdout
+                            or 'unknown error'
                           vim.notify(
-                            string.format('Finished %d descriptions.', total),
-                            vim.log.levels.INFO
+                            'cdescribe failed for ' .. id .. ': ' .. err,
+                            vim.log.levels.ERROR
                           )
                         end
-                      end
-                      on_done()
-                    end)
-                  end)
+                        completed = completed + 1
+                        if completed == total then
+                          utils.refresh_log()
+                          if total > 1 then
+                            vim.notify(
+                              string.format('Finished %d descriptions.', total),
+                              vim.log.levels.INFO
+                            )
+                          end
+                        end
+                        on_done()
+                      end)
+                    end
+                  )
                 end)
               end
             end,
@@ -190,7 +194,7 @@ return {
             fn = function(state, ctx)
               require('jujutsu.utils').run_jj_cmd 'rebase-octopus'
             end,
-            desc = 'Rebase colleague bookmark',
+            desc = 'Rebase colleague bookmark (default target)',
           },
         },
       }

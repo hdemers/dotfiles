@@ -314,11 +314,11 @@ main() {
         --height 100% \
         --delimiter '\t' \
         --preview "_jpreview {2} {7}" \
-        --bind "ctrl-i:become(jintegrate {2} {7})" \
-        --bind "ctrl-b:become(jdeploy {7})" \
+        --bind "ctrl-i:execute(jintegrate {2} {7})" \
+        --bind "ctrl-b:execute(jdeploy {7})" \
         --bind 'ctrl-w:execute-silent(gh pr view --web {2})' \
         --bind 'ctrl-s:transform:if echo "$FZF_PROMPT" | grep -q "Pull"; then echo "change-prompt(Ticket> )+refresh-preview"; else echo "change-prompt(Pull Request> )+refresh-preview"; fi' \
-        --bind 'ctrl-m:become(pr-discussions {2})' \
+        --bind 'ctrl-m:execute(pr-discussions {2})' \
         --prompt 'Pull Request> ' \
         --border-label-pos 5:bottom \
         --border 'rounded' \

@@ -2,8 +2,8 @@
 
 export CURRENT_SHELL="bash"
 
-source "$HOME"/.shellrc.d/03-functions.sh
-source "$HOME"/.shellrc.d/05-jj.sh
+source "$HOME"/.shellrc.d/30-functions.sh
+source "$HOME"/.shellrc.d/40-jj.sh
 eval "$@"
 
 # :vim: set ft=sh

@@ -1,4 +1,3 @@
-# vim: filetype=bash
 
 ###############################################################################
 # Linux Brew
@@ -103,3 +102,4 @@ if [ -d "/home/linuxbrew/.linuxbrew/opt/rocm-smi-lib/lib" ]; then
     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/linuxbrew/.linuxbrew/opt/rocm-smi-lib/lib
 fi
 
+# vim: filetype=sh

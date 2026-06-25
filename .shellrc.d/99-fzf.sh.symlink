@@ -27,3 +27,5 @@ export FZF_CTRL_T_OPTS="
 
 # Set the default command to use ripgrep, as it's faster than find.
 export FZF_DEFAULT_COMMAND='rg --files --no-ignore-vcs --hidden'
+
+# vim: filetype=sh

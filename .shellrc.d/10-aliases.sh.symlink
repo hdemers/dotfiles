@@ -1,5 +1,3 @@
-# vim: filetype=bash
-
 # Support of ls and also add handy aliases
 # Dircolors from https://github.com/seebi/dircolors-solarized
 if [ -x /usr/bin/dircolors ]; then
@@ -162,3 +160,5 @@ alias geminy="gemini \
 alias gemini="env GEMINI_SYSTEM_MD=${HOME}/.gemini/system.md gemini"
 alias caveman-full="env GEMINI_SYSTEM_MD=${HOME}/.gemini/caveman-full-system.md gemini"
 alias caveman="env GEMINI_SYSTEM_MD=${HOME}/.gemini/caveman-lite-system.md gemini"
+
+# vim: filetype=sh

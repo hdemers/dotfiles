@@ -79,3 +79,5 @@ start_ec2() {
     aws ec2 start-instances --instance-ids $ec2_instance_id
     #slack_remind_me 'to stop the EC2 machine' 'today at 17:00'
 }
+
+# vim: filetype=sh

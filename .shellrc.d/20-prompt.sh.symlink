@@ -1,5 +1,3 @@
-# vim: filetype=bash
-
 # Activate startship. In case starship is not available, the previous prompt
 # setting code will be used instead.
 if command -v starship &> /dev/null; then
@@ -68,3 +66,5 @@ else
         fi
     fi
 fi
+
+# vim: filetype=sh

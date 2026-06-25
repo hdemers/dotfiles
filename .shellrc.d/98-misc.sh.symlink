@@ -79,3 +79,19 @@ fi
 if [ -f "${HOME}/src/google-cloud-sdk/completion.${CURRENT_SHELL}.inc" ]; then
     . "${HOME}/src/google-cloud-sdk/completion.${CURRENT_SHELL}.inc";
 fi
+
+# Flyline - enhanced Bash experience
+if [[ -f /var/home/hdemers/.distrobox/homes/ubuntu/.local/lib/libflyline.so ]] && [[ "$CURRENT_SHELL" == "bash" ]]; then
+    echo "Enabling Flyline for enhanced Bash experience..."
+    enable -f /var/home/hdemers/.distrobox/homes/ubuntu/.local/lib/libflyline.so flyline
+
+    flyline_prompt="Be concise. Answer with a JSON array of at most 3 items with objects containing: command and description. Command will be a Bash command."
+
+    # Set up agent mode
+    flyline set-agent-mode \
+        --system-prompt "$flyline_prompt" \
+        --trigger-prefix ': ' \
+        --command 'pi --model unsloth/Qwen3.6-27B-GGUF/Qwen3.6-27B-UD-Q6_K_XL.gguf:off --print'
+fi
+
+# vim: filetype=sh

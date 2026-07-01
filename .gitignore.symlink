@@ -107,3 +107,11 @@ digest.txt
 .pi/todos
 
 .antigravitycli/
+
+**/.claude/.cc-writes/
+
+.pi-subagents/
+
+.commitlintrc.yml
+
+graphify-out

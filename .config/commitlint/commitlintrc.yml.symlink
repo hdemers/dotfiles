@@ -1,0 +1,87 @@
+# vim: ft=yaml
+parserPreset:
+  parserOpts:
+    headerPattern: "^(.+?\\s+)?(\\w[\\w-]*)?(?:\\(([\\w$@.\\-*/ ]*)\\))?:\\s*(.*)$"
+    headerCorrespondence:
+      - prefix
+      - type
+      - scope
+      - subject
+
+rules:
+  # ── Header (line 1) ────────────────────────────────────────────────
+  header-max-length:
+    - 2   # Error
+    - always
+    - 50
+
+  header-trim:
+    - 2
+    - always
+
+  # ── Body (lines after the first blank line) ────────────────────────
+  body-max-line-length:
+    - 2
+    - always
+    - 79
+
+  body-leading-blank:
+    - 2
+    - always
+
+  footer-leading-blank:
+    - 2
+    - always
+
+  # ── Subject / Type ─────────────────────────────────────────────────
+  subject-empty:
+    - 2
+    - never
+
+  subject-full-stop:
+    - 2
+    - never
+    - .
+
+  type-empty:
+    - 2
+    - never
+
+  type-case:
+    - 2
+    - always
+    - lower-case
+
+  type-enum:
+    - 2
+    - always
+    - - add
+      - build
+      - chore
+      - ci
+      - clean
+      - config
+      - docs
+      - feat
+      - fix
+      - format
+      - hotfix
+      - improve
+      - move
+      - perf
+      - pin
+      - refactor
+      - release
+      - remove
+      - rename
+      - revert
+      - style
+      - test
+      - update
+
+  # ── Footer (trailer lines like "Signed-off-by") ────────────────────
+  footer-max-line-length:
+    - 2
+    - always
+    - 79
+

@@ -115,3 +115,7 @@ digest.txt
 .commitlintrc.yml
 
 graphify-out
+
+.ci.toml
+
+.pi/subagents.json

@@ -9,6 +9,7 @@ return {
   },
   {
     name = 'misc',
+    dependencies = { 'folke/snacks.nvim' },
     lazy = false,
     dir = '~/src/nvim/misc',
     config = function()
@@ -33,6 +34,41 @@ return {
         ':AgentsPlans<CR>',
         { desc = 'Search Agent Plans', silent = true }
       )
+
+      -- CI Hold toggle
+      local function get_ci_path()
+        return vim.fs.normalize(vim.fn.getcwd() .. '/../.ci/,ci-hold')
+      end
+      local function get_ci_dir()
+        return vim.fs.normalize(vim.fn.getcwd() .. '/../.ci')
+      end
+      Snacks.toggle
+        :new({
+          name = 'CI Hold',
+          src = 'custom',
+          get = function()
+            return vim.uv.fs_stat(get_ci_path()) ~= nil
+          end,
+          set = function(on)
+            if not vim.uv.fs_stat(get_ci_dir()) then
+              return
+            end
+            if on then
+              local f = io.open(get_ci_path(), 'w')
+              if f then
+                f:close()
+              end
+            else
+              vim.uv.fs_unlink(get_ci_path())
+            end
+          end,
+          callback = function(on)
+            Snacks.notify(string.format('CI Hold: %s', on and 'ON' or 'OFF'), {
+              dim = true,
+            })
+          end,
+        })
+        :map '<leader>ui'
 
       -- Custom keymaps
       local wk = require 'which-key'
@@ -86,14 +122,14 @@ return {
           return false
         end
 
-        local tab_info = vim.fn.systemlist('zellij action current-tab-info 2>/dev/null')
+        local tab_info = vim.fn.systemlist 'zellij action current-tab-info 2>/dev/null'
         if vim.v.shell_error ~= 0 then
           return false
         end
 
         local tab_id = nil
         for _, line in ipairs(tab_info) do
-          tab_id = line:match('^id:%s*(%S+)$')
+          tab_id = line:match '^id:%s*(%S+)$'
           if tab_id ~= nil then
             break
           end

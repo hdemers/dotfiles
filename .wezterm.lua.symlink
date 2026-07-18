@@ -107,20 +107,34 @@ end
 
 -- ═══════════════════════════════════════════════════════════════════════════════════════
 --  Color scheme
---  Scheme based on distrobox name, with tab bar color matching
+--  Scheme based on distrobox name, with tab bar color matching.
+--  Light/dark toggle via Ctrl+Alt+T.
 -- ═══════════════════════════════════════════════════════════════════════════════════════
-config.color_scheme = 'Kanagawa (Gogh)'
 
--- Distrobox configurations: name -> color scheme
+-- Distrobox configurations: name -> { dark = scheme, light = scheme }
 local distroboxes = {
-  ['grubhub-dev'] = 'Tokyo Night Storm',
-  ['work-dev'] = 'Tokyo Night Storm',
-  ['ubuntu'] = 'Catppuccin Mocha',
+  ['work-dev'] = { dark = 'Tokyo Night Storm', light = 'Tokyo Night Day' },
+  ['ubuntu'] = { dark = 'Catppuccin Mocha', light = 'Catppuccin Latte' },
 }
 
--- Returns the color scheme for a distrobox name (or nil for default)
-local function get_distrobox_scheme(name)
-  return distroboxes[name]
+-- Default scheme (no distrobox active)
+local DEFAULT_DARK = 'Kanagawa (Gogh)'
+local DEFAULT_LIGHT = 'Kanagawa (Gogh) Light'
+
+-- Returns the color scheme for a distrobox name + theme mode (or default)
+local function get_distrobox_scheme(name, is_dark)
+  local entry = distroboxes[name]
+  if entry then
+    return is_dark and entry.dark or entry.light
+  end
+  return is_dark and DEFAULT_DARK or DEFAULT_LIGHT
+end
+
+-- Initialize global theme state (only on first load; preserves state across config reloads)
+if wezterm.GLOBAL.is_dark == nil then
+  wezterm.GLOBAL.is_dark = true
+  wezterm.GLOBAL.desired_scheme = DEFAULT_DARK
+  config.color_scheme = DEFAULT_DARK
 end
 
 -- Creates a keybinding action to switch to or spawn a distrobox tab
@@ -162,40 +176,85 @@ wezterm.on('format-window-title', function(tab, pane, tabs, panes, cfg)
   return ''
 end)
 
+-- Tab bar palettes are defined further down; forward-declared here so that
+-- apply_scheme_for_state can reference them (a Lua local is only in scope after
+-- its declaration, so without this the override would silently resolve to nil).
+local DARK_TAB_BAR, LIGHT_TAB_BAR
+
+-- Push a color-scheme report to the active pane's program over its stdin.
+-- WezTerm doesn't implement DEC mode 2031 natively (wezterm/wezterm#6454), so
+-- we emulate the terminal's push ourselves: send_text writes to the pane's pty
+-- input, which zellij forwards to its active pane. TUIs that subscribed with
+-- `CSI ? 2031 h` (e.g. the Pi agent with theme=auto) parse
+-- `CSI ? 997 ; Ps n` (Ps=1 dark, Ps=2 light) and switch theme live.
+local function notify_theme_to_active_pane(window, is_dark)
+  local pane = window:active_pane()
+  if pane then
+    pane:send_text(string.format('\027[?997;%sn', is_dark and '1' or '2'))
+  end
+end
+
+-- Apply scheme + tab bar for the current container + theme. When the resolved
+-- scheme actually changes (toggle or tab switch), also notify the active TUI.
+local function apply_scheme_for_state(window)
+  local distrobox = window:active_pane():get_user_vars().DISTROBOX
+  local is_dark = wezterm.GLOBAL.is_dark
+  local scheme = get_distrobox_scheme(distrobox, is_dark)
+  wezterm.GLOBAL.desired_scheme = scheme
+  local overrides = window:get_config_overrides() or {}
+  overrides.color_scheme = scheme
+  overrides.colors = { tab_bar = is_dark and DARK_TAB_BAR or LIGHT_TAB_BAR }
+  window:set_config_overrides(overrides)
+  if changed then
+    notify_theme_to_active_pane(window, is_dark)
+  end
+end
+
 -- Instant color change when user var is set (on spawn)
 wezterm.on('user-var-changed', function(window, pane, name, value)
   if name == 'DISTROBOX' then
-    local overrides = window:get_config_overrides() or {}
-    local desired = get_distrobox_scheme(value)
-    overrides.color_scheme = desired
-    window:set_config_overrides(overrides)
-    wezterm.GLOBAL.desired_scheme = desired
+    apply_scheme_for_state(window)
   end
 end)
+
+-- Toggle light/dark theme
+local function toggle_theme_action()
+  return wezterm.action_callback(function(win, pane)
+    wezterm.GLOBAL.is_dark = not wezterm.GLOBAL.is_dark
+    -- Flipping is_dark changes the resolved scheme, so apply_scheme_for_state
+    -- both recolors WezTerm and pushes a CSI ? 997 report to the active pane,
+    -- letting TUIs on DEC mode 2031 follow the toggle live.
+    apply_scheme_for_state(win)
+  end)
+end
 
 -- ═══════════════════════════════════════════════════════════════════════════════════════
 --  Tab bar formatting: colors based on active/inactive/hover and seamless
 --  arrows between tabs
 -- ═══════════════════════════════════════════════════════════════════════════════════════
 
--- Kanagawa tab bar colors
-local TAB_BAR_BG = '#1F1F28'
-local ACTIVE_BG = '#2D4F67'
-local ACTIVE_FG = '#DCD7BA'
-local INACTIVE_BG = '#2A2A37'
-local INACTIVE_FG = '#727169'
-local HOVER_BG = '#363646'
-local HOVER_FG = '#C8C093'
+-- Dark tab bar colors (Kanagawa)
+DARK_TAB_BAR = {
+  background = '#1F1F28',
+  active_tab = { bg_color = '#A6DA95', fg_color = '#282828' },
+  inactive_tab = { bg_color = '#CAD3F5', fg_color = '#282828' },
+  inactive_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
+  new_tab = { bg_color = '#8BD5CA', fg_color = '#282828' },
+  new_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
+}
+
+-- Light tab bar colors (Everforest Light)
+LIGHT_TAB_BAR = {
+  background = '#1F1F28',
+  active_tab = { bg_color = '#A6DA95', fg_color = '#282828' },
+  inactive_tab = { bg_color = '#CAD3F5', fg_color = '#282828' },
+  inactive_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
+  new_tab = { bg_color = '#B4F0BD', fg_color = '#282828' },
+  new_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
+}
 
 config.colors = {
-  tab_bar = {
-    background = TAB_BAR_BG,
-    active_tab = { bg_color = ACTIVE_BG, fg_color = ACTIVE_FG },
-    inactive_tab = { bg_color = INACTIVE_BG, fg_color = INACTIVE_FG },
-    inactive_tab_hover = { bg_color = HOVER_BG, fg_color = HOVER_FG },
-    new_tab = { bg_color = INACTIVE_BG, fg_color = INACTIVE_FG },
-    new_tab_hover = { bg_color = HOVER_BG, fg_color = HOVER_FG },
-  },
+  tab_bar = DARK_TAB_BAR,
 }
 
 -- Resolve tab title from distrobox name, SSH hostname, or system hostname
@@ -224,29 +283,25 @@ end
 
 local SOLID_RIGHT = wezterm.nerdfonts.pl_left_hard_divider
 
-local function tab_bg(t)
-  return t.is_active and ACTIVE_BG or INACTIVE_BG
+-- Pick the active tab bar palette based on current theme
+local function tab_bar_colors()
+  return wezterm.GLOBAL.is_dark and DARK_TAB_BAR or LIGHT_TAB_BAR
 end
 
--- Dynamic color scheme: format-tab-title detects changes, update-status applies them
--- Also prevents applications from overriding the tab title
-wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
-  -- Track desired color scheme per distrobox
-  if tab.is_active then
-    local distrobox = tab.active_pane.user_vars.DISTROBOX
-    local desired = get_distrobox_scheme(distrobox)
-    if wezterm.GLOBAL.desired_scheme ~= desired then
-      wezterm.GLOBAL.desired_scheme = desired
-      wezterm.GLOBAL.scheme_dirty = true
-    end
-  end
+local function tab_bg(t)
+  local tb = tab_bar_colors()
+  return t.is_active and tb.active_tab.bg_color or tb.inactive_tab.bg_color
+end
 
+-- Dynamic tab title formatting (scheme changes handled by explicit events)
+wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
+  local tb = tab_bar_colors()
   local title = get_tab_title(tab)
-  local bg = tab.is_active and ACTIVE_BG or INACTIVE_BG
-  local fg = tab.is_active and ACTIVE_FG or INACTIVE_FG
+  local bg = tab.is_active and tb.active_tab.bg_color or tb.inactive_tab.bg_color
+  local fg = tab.is_active and tb.active_tab.fg_color or tb.inactive_tab.fg_color
 
   -- Find the next tab's background color (or bar bg if last tab)
-  local next_bg = TAB_BAR_BG
+  local next_bg = tb.background
   for _, t in ipairs(tabs) do
     if t.tab_index == tab.tab_index + 1 then
       next_bg = tab_bg(t)
@@ -259,7 +314,7 @@ wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
   -- Leading arrow only for the first tab (bar bg → this tab)
   if tab.tab_index == 0 then
     table.insert(elements, { Background = { Color = bg } })
-    table.insert(elements, { Foreground = { Color = TAB_BAR_BG } })
+    table.insert(elements, { Foreground = { Color = tb.background } })
     table.insert(elements, { Text = SOLID_RIGHT })
   end
 
@@ -276,13 +331,9 @@ wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
   return elements
 end)
 
-wezterm.on('update-status', function(window, pane)
-  if wezterm.GLOBAL.scheme_dirty then
-    wezterm.GLOBAL.scheme_dirty = false
-    local overrides = window:get_config_overrides() or {}
-    overrides.color_scheme = wezterm.GLOBAL.desired_scheme
-    window:set_config_overrides(overrides)
-  end
+-- Re-apply scheme on window focus/reload (ensures overrides survive config reloads)
+wezterm.on('window-config-reloaded', function(window, pane)
+  apply_scheme_for_state(window)
 end)
 
 -- ═══════════════════════════════════════════════════════════════════════════════════════
@@ -295,6 +346,7 @@ config.keys = {
   { key = 'g', mods = 'CTRL|ALT', action = distrobox_tab_action 'grubhub-dev' },
   { key = 'w', mods = 'CTRL|ALT', action = distrobox_tab_action 'work-dev' },
   { key = 'u', mods = 'CTRL|ALT', action = distrobox_tab_action 'ubuntu' },
+  { key = 't', mods = 'CTRL|ALT', action = toggle_theme_action() },
   -- Tab navigation
   {
     key = 'h',

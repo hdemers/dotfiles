@@ -119,3 +119,6 @@ graphify-out
 .ci.toml
 
 .pi/subagents.json
+
+.pi-sdlc.toml
+.pi-sdlc.json

@@ -733,4 +733,25 @@ return {
       { '<leader>iN', ':Nerdy recents<CR>', desc = 'Browse recent nerd icons' },
     },
   },
+  {
+    'f-person/auto-dark-mode.nvim',
+    opts = {
+      -- your configuration comes here
+      -- or leave it empty to use the default settings
+      -- refer to the configuration section below
+    },
+  },
+  {
+    'afonsofrancof/OSC11.nvim',
+    opts = {
+      -- Function to call when switching to dark theme
+      on_dark = function()
+        vim.opt.background = 'dark'
+      end,
+      -- Function to call when switching to light theme
+      on_light = function()
+        vim.opt.background = 'light'
+      end,
+    },
+  },
 }

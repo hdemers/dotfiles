@@ -251,24 +251,22 @@ end
 --  arrows between tabs
 -- ═══════════════════════════════════════════════════════════════════════════════════════
 
--- Dark tab bar colors (Kanagawa)
 DARK_TAB_BAR = {
-  background = '#1F1F28',
-  active_tab = { bg_color = '#A6DA95', fg_color = '#282828' },
-  inactive_tab = { bg_color = '#CAD3F5', fg_color = '#282828' },
-  inactive_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
-  new_tab = { bg_color = '#8BD5CA', fg_color = '#282828' },
-  new_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
+  background = '#24283b',
+  active_tab = { bg_color = '#9ECE6A', fg_color = '#282828' },
+  inactive_tab = { bg_color = '#C0CAF5', fg_color = '#282828' },
+  inactive_tab_hover = { bg_color = '#7AA2F7', fg_color = '#282828' },
+  new_tab = { bg_color = '#BB9AF7', fg_color = '#282828' },
+  new_tab_hover = { bg_color = '#7AA2F7', fg_color = '#282828' },
 }
 
--- Light tab bar colors (Everforest Light)
 LIGHT_TAB_BAR = {
-  background = '#1F1F28',
-  active_tab = { bg_color = '#A6DA95', fg_color = '#282828' },
-  inactive_tab = { bg_color = '#CAD3F5', fg_color = '#282828' },
-  inactive_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
-  new_tab = { bg_color = '#B4F0BD', fg_color = '#282828' },
-  new_tab_hover = { bg_color = '#DBBC7F', fg_color = '#282828' },
+  background = '#e1e2e7',
+  active_tab = { bg_color = '#9ECE6A', fg_color = '#282828' },
+  inactive_tab = { bg_color = '#C0CAF5', fg_color = '#282828' },
+  inactive_tab_hover = { bg_color = '#7AA2F7', fg_color = '#282828' },
+  new_tab = { bg_color = '#BB9AF7', fg_color = '#282828' },
+  new_tab_hover = { bg_color = '#7AA2F7', fg_color = '#282828' },
 }
 
 config.colors = {
@@ -344,7 +342,7 @@ wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
   -- Trailing arrow (this tab → next tab or bar bg). Seamless transition.
   table.insert(elements, { Background = { Color = next_bg } })
   table.insert(elements, { Foreground = { Color = bg } })
-  table.insert(elements, { Background = { Color = fg } })
+  table.insert(elements, { Background = { Color = tb.background } })
   table.insert(elements, { Text = SOLID_RIGHT })
   table.insert(elements, { Foreground = { Color = tb.background } })
   table.insert(elements, { Background = { Color = next_bg } })

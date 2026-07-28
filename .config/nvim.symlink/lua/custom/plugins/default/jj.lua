@@ -86,6 +86,16 @@ return {
             ['dev'] = 'JjLogDev',
             ['staging'] = 'JjLogDev',
           },
+          revsets = {
+            {
+              revset = 'present(staging)..present(dev) ~ present(dev)',
+              hl_group = 'JjLogDev',
+            },
+            {
+              revset = 'present(master)..present(staging) ~ present(staging)',
+              hl_group = 'JJTrunk',
+            },
+          },
         },
         use_render_markdown = true,
         hooks = {

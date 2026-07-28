@@ -77,10 +77,12 @@ log_node = '''
   if(!self, label("elided_node", "~"),
   if(bookmarks.filter(|x| x.name() == "staging"), label("staging_node", "◆"),
   if(bookmarks.filter(|x| x.name() == "dev"), label("dev_node", "◇"),
+  if(self.contained_in("trunk()..present(staging)"), label("main_node", "◇"),
+  if(self.contained_in("present(staging)..present(dev)"), label("staging_node", "◇"),
   if(bookmarks.filter(|x| x.name() == "master" || x.name() == "main"), label("main_node", "◆"),
   if(self && !current_working_copy && !immutable && !conflict && in_branch(self),
     "◇",
     builtin_log_node
-  )))))
+  )))))))
   '''
 # vim: set filetype=toml:

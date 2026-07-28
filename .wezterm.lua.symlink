@@ -363,7 +363,7 @@ end)
 config.keys = {
   { key = 'n', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
   { key = 'p', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
-  { key = 'g', mods = 'CTRL|ALT', action = distrobox_tab_action 'grubhub-dev' },
+  { key = 'Enter', mods = 'ALT', action = wezterm.action.DisableDefaultAssignment },
   { key = 'w', mods = 'CTRL|ALT', action = distrobox_tab_action 'work-dev' },
   { key = 'u', mods = 'CTRL|ALT', action = distrobox_tab_action 'ubuntu' },
   { key = 't', mods = 'CTRL|ALT', action = toggle_theme_action() },

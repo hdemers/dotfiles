@@ -95,7 +95,6 @@ return {
       })
     end,
   },
-  { 'nyoom-engineering/oxocarbon.nvim' },
   {
     'AlexvZyl/nordic.nvim',
     config = function()

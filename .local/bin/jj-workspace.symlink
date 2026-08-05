@@ -1,0 +1,515 @@
+#!/usr/bin/env bash
+
+set -e
+
+VERSION="0.1.0"
+QUIET=0
+NO_INPUT=0
+IS_TTY=0
+[ -t 0 ] && IS_TTY=1
+
+HAS_GUM=0
+command -v gum &>/dev/null && HAS_GUM=1
+
+log() {
+    local level="$1"
+    local message="$2"
+    if [ "$QUIET" -eq 1 ] && [ "$level" != "error" ]; then
+        return 0
+    fi
+    if [ "$HAS_GUM" -eq 1 ]; then
+        gum log -sl "${level}" "${message}" >&2
+    else
+        echo "[${level}] ${message}" >&2
+    fi
+}
+
+validate_workspace_name() {
+    local name="$1"
+    if [ -z "$name" ]; then
+        log error "Workspace name cannot be empty."
+        return 1
+    fi
+    if [[ "$name" =~ ^- ]]; then
+        log error "Workspace name '${name}' cannot start with a hyphen."
+        return 1
+    fi
+    if [[ ! "$name" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
+        log error "Invalid workspace name '${name}'. Use only letters, numbers, hyphens, underscores, and dots."
+        return 1
+    fi
+    if [ "$name" = "." ] || [ "$name" = ".." ]; then
+        log error "Workspace name '${name}' is invalid."
+        return 1
+    fi
+    return 0
+}
+
+usage() {
+    cat << 'EOF'
+Usage: jj-workspace <command> [options] [args]
+
+A CLI to manage Jujutsu (jj) workspaces based on branches/bookmarks.
+
+Examples:
+  jj-workspace add                         # Pick bookmark interactively
+  jj-workspace add --name feat-login       # Create workspace '../ws-feat-login'
+  jj-workspace list                        # List all workspaces
+  jj-workspace forget feat-login           # Forget workspace 'feat-login'
+
+Commands:
+  add [options]
+      Add a new jj workspace from '@'.
+      Options:
+            --name <name>   Workspace name; disables interactive mode.
+            --no-install    Do not run 'make install' after creation.
+            --no-input      Disable interactive prompts.
+        -i, --interactive   Prompt interactively using 'gum'.
+        -h, --help          Show help for add.
+
+  forget [options] [workspace]
+      Forget an existing jj workspace.
+      Options:
+        -f, --force         Skip confirmation prompt.
+            --no-input      Disable interactive prompts.
+        -i, --interactive   Prompt interactively using 'gum'.
+        -h, --help          Show help for forget.
+
+  list [options]
+      List all jj workspaces.
+      Options:
+            --json          Output list in JSON format.
+            --plain         Output list in plain text format (default).
+        -h, --help          Show help for list.
+
+Global Options:
+  -q, --quiet     Suppress non-essential output.
+      --version   Show version and exit.
+      --no-input  Disable interactive prompts.
+  -h, --help      Show this help message and exit.
+EOF
+}
+
+cmd_add() {
+    local name=""
+    local run_install=1
+    local explicit_interactive=-1
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --name)
+                name="$2"
+                shift 2
+                ;;
+            --no-install)
+                run_install=0
+                shift
+                ;;
+            --no-input)
+                NO_INPUT=1
+                shift
+                ;;
+            -q|--quiet)
+                QUIET=1
+                shift
+                ;;
+            -i|--interactive)
+                explicit_interactive=1
+                shift
+                ;;
+            -h|--help)
+                cat << 'EOF'
+Usage: jj-workspace add [options]
+
+Add a new jj workspace from '@'.
+It creates a workspace at '../ws-<name>' and automatically copies:
+  - .envrc
+  - CLAUDE.local.md
+  - .claude/ directory
+
+Examples:
+  jj-workspace add                     # Select bookmark interactively
+  jj-workspace add --name feat-auth    # Create workspace '../ws-feat-auth'
+  jj-workspace add --name fix-bug --no-install # Skip running 'make install'
+
+Options:
+      --name <name>   Workspace name; disables interactive mode.
+      --no-install    Do not run 'make install' after creating workspace.
+      --no-input      Disable interactive prompts.
+  -i, --interactive   Force interactive mode using 'gum'.
+  -q, --quiet         Suppress non-essential output.
+  -h, --help          Show this help message and exit.
+EOF
+                return 0
+                ;;
+            -*)
+                echo "Unknown option: $1" >&2
+                return 1
+                ;;
+            *)
+                echo "Too many arguments: $1" >&2
+                return 1
+                ;;
+        esac
+    done
+
+    local interactive=0
+    if [ "$explicit_interactive" -eq 1 ]; then
+        interactive=1
+    elif [ -z "$name" ] && [ "$IS_TTY" -eq 1 ] && [ "$NO_INPUT" -eq 0 ]; then
+        interactive=1
+    fi
+
+    if [ -z "$name" ] && [ "$interactive" -eq 0 ]; then
+        log error "Workspace name is required in non-interactive mode. Use --name <name>."
+        return 1
+    fi
+
+    # Interactive: use gum to pick a name
+    if [ "$interactive" -eq 1 ]; then
+        if [ "$IS_TTY" -eq 0 ] || [ "$NO_INPUT" -eq 1 ]; then
+            log error "Cannot run interactively: terminal is not a TTY or --no-input specified."
+            log error "Please provide workspace name with --name <name>."
+            return 1
+        fi
+
+        if [ "$HAS_GUM" -eq 0 ]; then
+            log error "gum is not installed. Please provide a name with --name <name>."
+            return 1
+        fi
+
+        # List bookmarks after 'dev' if it exists, else all bookmarks
+        local bookmarks
+        if jj log -r "dev" --no-graph -T "" &>/dev/null 2>&1; then
+            bookmarks=$(jj bookmark list -r "dev..@" -T 'if(!self.remote(), self.name() ++ "\n")' 2>/dev/null \
+                | grep -v '^[[:space:]]*$' | sort -u || true)
+        else
+            bookmarks=$(jj bookmark list -T 'if(!self.remote(), self.name() ++ "\n")' 2>/dev/null \
+                | grep -v '^[[:space:]]*$' | sort -u || true)
+        fi
+
+        local choice
+        choice=$(printf "%s\n(type a custom name)" "${bookmarks}" \
+            | gum choose --header="Select workspace name:")
+
+        if [ -z "${choice}" ]; then
+            log info "No name selected."
+            return 1
+        fi
+
+        if [ "${choice}" = "(type a custom name)" ]; then
+            name=$(gum input --placeholder="workspace name")
+            if [ -z "${name}" ]; then
+                log error "No name entered."
+                return 1
+            fi
+        else
+            name="${choice}"
+        fi
+    fi
+
+    if ! validate_workspace_name "${name}"; then
+        return 1
+    fi
+
+    local workspace_path="../ws-${name}"
+
+    if [ -d "${workspace_path}" ]; then
+        log error "Workspace directory '${workspace_path}' already exists. Skipping creation."
+        return 1
+    fi
+
+    if ! jj workspace add -r @ "${workspace_path}"; then
+        log error "Failed to create workspace '${workspace_path}'."
+        return 1
+    fi
+
+    log info "Workspace ${name} created at ${workspace_path}"
+
+    local main_workspace="$PWD"
+    cd "${workspace_path}" || return 1
+
+    if [ -f "${main_workspace}/.envrc" ]; then
+        cp "${main_workspace}/.envrc" .
+        log info "file '.envrc' copied to new workspace."
+        direnv allow . || true
+    fi
+
+    if [ -f "${main_workspace}/CLAUDE.local.md" ]; then
+        cp "${main_workspace}/CLAUDE.local.md" .
+        log info "file 'CLAUDE.local.md' copied to new workspace."
+    fi
+
+    if [ -d "${main_workspace}/.claude" ]; then
+        cp -r "${main_workspace}/.claude" .
+        log info "'.claude' directory copied to new workspace."
+    fi
+
+    # Determine which make target to use, if any
+    local make_target=""
+    if [ -f Makefile ]; then
+        if grep -q '^install-locked[[:space:]]*:' Makefile; then
+            make_target="install-locked"
+        elif grep -q '^install[[:space:]]*:' Makefile; then
+            make_target="install"
+        fi
+    fi
+
+    if [ "$run_install" -eq 1 ]; then
+        if [ "$interactive" -eq 1 ] && [ "$HAS_GUM" -eq 1 ]; then
+            if gum confirm "Do you want to run 'make ${make_target}' in the new workspace?"; then
+                make "${make_target}"
+            else
+                log warn "'make ${make_target}' skipped."
+            fi
+        else
+            log info "Running 'make ${make_target}'..."
+            make "${make_target}" || true
+        fi
+    fi
+}
+
+cmd_forget() {
+    local workspace_to_remove=""
+    local explicit_interactive=-1
+    local force=0
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            -f|--force|-y|--yes)
+                force=1
+                shift
+                ;;
+            -i|--interactive)
+                explicit_interactive=1
+                shift
+                ;;
+            --no-input)
+                NO_INPUT=1
+                shift
+                ;;
+            -q|--quiet)
+                QUIET=1
+                shift
+                ;;
+            -h|--help)
+                cat << 'EOF'
+Usage: jj-workspace forget [options] [workspace]
+
+Forget an existing jj workspace.
+
+It uses 'jj workspace forget' under the hood. Note that this command does
+NOT delete the actual physical directory at '../<workspace>'.
+
+Examples:
+  jj-workspace forget                     # Select workspace interactively
+  jj-workspace forget feat-auth           # Prompt for confirmation before removal
+  jj-workspace forget feat-auth --force   # Remove workspace without confirmation
+
+Options:
+  -f, --force         Skip confirmation prompt.
+      --no-input      Disable interactive prompts.
+  -q, --quiet         Suppress non-essential output.
+  -i, --interactive   Prompt interactively using 'gum' to select a workspace.
+  -h, --help          Show this help message and exit.
+EOF
+                return 0
+                ;;
+            -*)
+                echo "Unknown option: $1" >&2
+                return 1
+                ;;
+            *)
+                if [ -z "$workspace_to_remove" ]; then
+                    workspace_to_remove="$1"
+                else
+                    echo "Too many arguments: $1" >&2
+                    return 1
+                fi
+                shift
+                ;;
+        esac
+    done
+
+    local interactive=0
+    if [ "$explicit_interactive" -eq 1 ]; then
+        interactive=1
+    elif [ -z "$workspace_to_remove" ] && [ "$IS_TTY" -eq 1 ] && [ "$NO_INPUT" -eq 0 ]; then
+        interactive=1
+    fi
+
+    if [ -z "${workspace_to_remove}" ]; then
+        if [ "$interactive" -eq 1 ]; then
+            if [ "$IS_TTY" -eq 0 ] || [ "$NO_INPUT" -eq 1 ]; then
+                log error "Cannot run interactively: terminal is not a TTY or --no-input specified."
+                log error "Please provide a workspace name."
+                return 1
+            fi
+
+            if [ "$HAS_GUM" -eq 0 ]; then
+                log error "gum is not installed. Please provide a workspace name."
+                return 1
+            fi
+
+            workspace_to_remove=$(jj workspace list \
+                | awk -F: '{print $1}' \
+                | grep -v '^default$' \
+                | grep -v '^[[:space:]]*$' \
+                | tr -d ' ' \
+                | sort -u \
+                | gum choose --header="Select a workspace to remove:")
+
+            if [ -z "${workspace_to_remove}" ]; then
+                log info "No workspace selected."
+                return 1
+            fi
+        else
+            echo "Error: Workspace name is required in non-interactive mode." >&2
+            echo "Usage: jj-workspace forget [options] <workspace_path>" >&2
+            return 1
+        fi
+    fi
+
+    if ! validate_workspace_name "${workspace_to_remove}"; then
+        return 1
+    fi
+
+    local workspace_path="../${workspace_to_remove}"
+
+    if [ ! -d "${workspace_path}" ]; then
+        log error "Workspace directory '${workspace_path}' does not exist."
+        return 1
+    fi
+
+    if [ "$force" -eq 0 ]; then
+        if [ "$IS_TTY" -eq 1 ]; then
+            if [ "$HAS_GUM" -eq 1 ]; then
+                if ! gum confirm "Are you sure you want to forget workspace '${workspace_to_remove}'?"; then
+                    log info "Workspace removal cancelled."
+                    return 0
+                fi
+            else
+                read -r -p "Are you sure you want to forget workspace '${workspace_to_remove}'? [y/N] " reply
+                case "$reply" in
+                    [yY][eE][sS]|[yY]) ;;
+                    *)
+                        log info "Workspace removal cancelled."
+                        return 0
+                        ;;
+                esac
+            fi
+        else
+            log error "Removing a workspace requires confirmation. Pass -f/--force to confirm in non-interactive scripts."
+            return 1
+        fi
+    fi
+
+    jj workspace forget "${workspace_to_remove}"
+    log info "Workspace '${workspace_to_remove}' removed."
+    log info "Directory '${workspace_path}' was not deleted."
+}
+
+cmd_list() {
+    local format="text"
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --json)
+                format="json"
+                shift
+                ;;
+            --plain)
+                format="text"
+                shift
+                ;;
+            -h|--help)
+                cat << 'EOF'
+Usage: jj-workspace list [options]
+
+List all jj workspaces.
+
+Options:
+      --json     Output workspace list in JSON format.
+      --plain    Output workspace list in plain text format (default).
+  -h, --help     Show this help message and exit.
+EOF
+                return 0
+                ;;
+            -*)
+                echo "Unknown option: $1" >&2
+                return 1
+                ;;
+            *)
+                echo "Too many arguments: $1" >&2
+                return 1
+                ;;
+        esac
+    done
+
+    if [ "$format" = "json" ]; then
+        jj workspace list | python3 -c '
+import sys, json
+workspaces = []
+for line in sys.stdin:
+    line = line.strip()
+    if not line:
+        continue
+    parts = line.split(":", 1)
+    name = parts[0].strip()
+    rest = parts[1].strip() if len(parts) > 1 else ""
+    workspaces.append({"name": name, "details": rest})
+print(json.dumps(workspaces, indent=2))
+'
+    else
+        jj workspace list
+    fi
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -q|--quiet)
+            QUIET=1
+            shift
+            ;;
+        --no-input)
+            NO_INPUT=1
+            shift
+            ;;
+        --version)
+            echo "jj-workspace version ${VERSION}"
+            exit 0
+            ;;
+        add|create)
+            shift
+            cmd_add "$@"
+            exit $?
+            ;;
+        forget|remove)
+            shift
+            cmd_forget "$@"
+            exit $?
+            ;;
+        list)
+            shift
+            cmd_list "$@"
+            exit $?
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            usage
+            exit 1
+            ;;
+        *)
+            echo "Unknown command: $1" >&2
+            usage
+            exit 1
+            ;;
+    esac
+done
+
+usage
+exit 0

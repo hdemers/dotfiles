@@ -26,6 +26,8 @@ wonder_calendar|distrobox enter work-dev -- gtk-launch chrome-kjbdgfilnfhdoflbpg
 firefox|gtk-launch org.mozilla.firefox.desktop|Firefox|yes
 todoist|gtk-launch com.google.Chrome.flextop.chrome-okhfeehhillipaleckndoboggdkcebmo-Profile_3.desktop|Google Tasks / Todoist (Chrome)|yes
 slack|flatpak run com.slack.Slack|Slack|yes
+wezterm|wezterm|WezTerm (terminal)|yes
+zapzap|flatpak run com.rtosta.zapzap|ZapZap (WhatsApp)|yes
 EOF
 
 # ── Helpers ───────────────────────────────────────────────────────────

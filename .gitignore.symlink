@@ -104,6 +104,8 @@ digest.txt
 # Pi OpenSpec Workflow tracking file
 .pi-openspec-workflow.json
 
+openspec/changes/*/*.html
+
 .pi/todos
 
 .antigravitycli/

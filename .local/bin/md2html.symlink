@@ -127,6 +127,28 @@ h1 {
   margin-bottom: 0.6em;
   border-bottom: 2px solid var(--rule);
   padding-bottom: 0.3em;
+  position: sticky;
+  top: 0;
+  z-index: 90;
+  background: var(--paper);
+  transition: font-size 0.2s ease, padding 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+h1.is-stuck {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100vw !important;
+  font-size: 1.25rem !important;
+  line-height: 1.3 !important;
+  margin: 0 !important;
+  padding: 0.75rem 2rem !important;
+  background: var(--paper-raised) !important;
+  border-bottom: 1px solid var(--rule) !important;
+  box-shadow: var(--shadow) !important;
+  border-radius: 0 !important;
+  z-index: 9999 !important;
 }
 
 h2 {
@@ -391,8 +413,8 @@ hr {
   }
 }
 
-/* Theme Toggle Widget Styling */
-.theme-toggle-wrapper {
+/* Hamburger Reader Settings Menu Styling */
+.theme-menu-wrapper {
   position: fixed;
   top: 16px;
   right: 16px;
@@ -400,57 +422,189 @@ hr {
   font-family: var(--sans);
 }
 
-.theme-toggle-card {
+.theme-menu-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   background: var(--paper-raised);
   border: 1px solid var(--rule);
-  padding: 6px 14px;
-  border-radius: 20px;
+  border-radius: 50%;
+  color: var(--ink);
+  cursor: pointer;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, transform 0.15s ease;
 }
 
-.theme-toggle-label {
+.theme-menu-btn:hover {
+  background: var(--paper-deep);
+  transform: scale(1.05);
+}
+
+.theme-menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 190px;
+  background: var(--paper-raised);
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 12px;
+  backdrop-filter: blur(12px);
+}
+
+.theme-menu-dropdown.is-open {
+  display: block;
+}
+
+.menu-section-header {
   font-size: 11px;
   font-weight: 800;
   color: var(--rust-deep);
   letter-spacing: 0.8px;
+  padding: 2px 4px 6px 4px;
 }
 
-.theme-toggle-select {
+.font-size-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--paper-deep);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 4px 6px;
+}
+
+.stepper-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 28px;
   background: var(--paper-raised);
   border: 1px solid var(--rule);
-  border-radius: 12px;
+  border-radius: 6px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.stepper-btn:hover {
+  background: var(--paper);
+  color: var(--rust-deep);
+  transform: scale(1.05);
+}
+
+.stepper-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.theme-menu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.theme-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
   color: var(--ink);
   font-family: var(--sans);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
+  text-align: left;
   cursor: pointer;
-  outline: none;
-  padding: 4px 8px;
+  transition: background-color 0.15s ease;
 }
 
-.theme-toggle-select option {
-  background-color: var(--paper-raised);
-  color: var(--ink);
-  font-weight: 600;
-  padding: 6px 10px;
+.theme-menu-item:hover,
+.theme-menu-item.is-selected {
+  background: var(--paper-deep);
+  color: var(--rust-deep);
+  font-weight: 700;
+}
+
+.theme-menu-item .theme-icon {
+  font-size: 14px;
 }
 """
 
-TOGGLE_HTML = """<div class="theme-toggle-wrapper">
-  <div class="theme-toggle-card">
-    <span class="theme-toggle-label">THEME</span>
-    <select id="theme-selector" class="theme-toggle-select" onchange="switchTheme(this.value)">
-      <option value="auto">💻 Auto</option>
-      <option value="light">📜 Paper Light</option>
-      <option value="dark">🌙 Paper Dark</option>
-    </select>
+TOGGLE_HTML = """<div class="theme-menu-wrapper">
+  <button id="theme-menu-button" class="theme-menu-btn" onclick="toggleThemeMenu(event)" aria-label="Toggle Reader Settings" title="Reader Settings">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </button>
+  <div id="theme-menu-dropdown" class="theme-menu-dropdown">
+    <!-- Font Size Section -->
+    <div class="menu-section">
+      <div class="menu-section-header">FONT SIZE</div>
+      <div class="font-size-stepper">
+        <button class="stepper-btn" onclick="adjustFontSize(-5)" title="Decrease Font Size" aria-label="Decrease Font Size">
+          <span style="font-size: 11px; font-weight: 800;">A⁻</span>
+        </button>
+        <span id="font-size-label" class="stepper-value">100%</span>
+        <button class="stepper-btn" onclick="adjustFontSize(5)" title="Increase Font Size" aria-label="Increase Font Size">
+          <span style="font-size: 15px; font-weight: 800;">A⁺</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Theme Section -->
+    <div class="menu-section" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--rule);">
+      <div class="menu-section-header">THEME</div>
+      <div class="theme-menu-options">
+        <button class="theme-menu-item" data-theme-val="auto" onclick="switchTheme('auto')">
+          <span class="theme-icon">💻</span> Auto
+        </button>
+        <button class="theme-menu-item" data-theme-val="light" onclick="switchTheme('light')">
+          <span class="theme-icon">📜</span> Paper Light
+        </button>
+        <button class="theme-menu-item" data-theme-val="dark" onclick="switchTheme('dark')">
+          <span class="theme-icon">🌙</span> Paper Dark
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 <script>
+  var currentFontSize = 100;
+
+  function toggleThemeMenu(event) {
+    event.stopPropagation();
+    var menu = document.getElementById('theme-menu-dropdown');
+    if (menu) menu.classList.toggle('is-open');
+  }
+
+  function adjustFontSize(delta) {
+    var newSize = Math.min(145, Math.max(75, currentFontSize + delta));
+    applyFontSize(newSize);
+  }
+
+  function applyFontSize(size) {
+    currentFontSize = size;
+    document.documentElement.style.fontSize = size + '%';
+    var label = document.getElementById('font-size-label');
+    if (label) label.textContent = size + '%';
+    localStorage.setItem('gh-mlops-font-size', size);
+  }
+
   function switchTheme(theme) {
     if (theme === 'auto') {
       delete document.documentElement.dataset.theme;
@@ -459,16 +613,50 @@ TOGGLE_HTML = """<div class="theme-toggle-wrapper">
       document.documentElement.dataset.theme = theme;
       localStorage.setItem('gh-mlops-user-theme', theme);
     }
+    updateSelectedThemeItem(theme);
+    var menu = document.getElementById('theme-menu-dropdown');
+    if (menu) menu.classList.remove('is-open');
   }
-  (function() {
-    var saved = localStorage.getItem('gh-mlops-user-theme');
-    if (saved) {
-      document.documentElement.dataset.theme = saved;
-      window.addEventListener('DOMContentLoaded', function() {
-        var select = document.getElementById('theme-selector');
-        if (select) select.value = saved;
-      });
+
+  function updateSelectedThemeItem(theme) {
+    var items = document.querySelectorAll('.theme-menu-item');
+    items.forEach(function(item) {
+      if (item.getAttribute('data-theme-val') === theme) {
+        item.classList.add('is-selected');
+      } else {
+        item.classList.remove('is-selected');
+      }
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    var wrapper = document.querySelector('.theme-menu-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+      var menu = document.getElementById('theme-menu-dropdown');
+      if (menu) menu.classList.remove('is-open');
     }
+  });
+
+  (function() {
+    var savedTheme = localStorage.getItem('gh-mlops-user-theme') || 'auto';
+    if (savedTheme !== 'auto') {
+      document.documentElement.dataset.theme = savedTheme;
+    }
+
+    var savedFontSize = localStorage.getItem('gh-mlops-font-size');
+    if (savedFontSize) {
+      var parsedSize = parseInt(savedFontSize, 10);
+      if (!isNaN(parsedSize)) {
+        currentFontSize = parsedSize;
+        document.documentElement.style.fontSize = parsedSize + '%';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', function() {
+      updateSelectedThemeItem(savedTheme);
+      var label = document.getElementById('font-size-label');
+      if (label) label.textContent = currentFontSize + '%';
+    });
 
     // ScrollSpy: highlight active TOC item as headings cross the viewport
     window.addEventListener('DOMContentLoaded', function() {
@@ -498,9 +686,54 @@ TOGGLE_HTML = """<div class="theme-toggle-wrapper">
         observer.observe(h);
       });
     });
+
+    // Sticky Title Sentinel Observer: shrink title when stuck at top
+    window.addEventListener('DOMContentLoaded', function() {
+      var h1 = document.querySelector('body > h1, header > h1, main > h1, #title-block-header h1');
+      if (!h1) return;
+
+      var sentinel = document.createElement('div');
+      sentinel.className = 'sticky-title-sentinel';
+      sentinel.style.height = '1px';
+      sentinel.style.marginBottom = '-1px';
+      h1.parentNode.insertBefore(sentinel, h1);
+
+      var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+          if (!entry.isIntersecting) {
+            h1.classList.add('is-stuck');
+          } else {
+            h1.classList.remove('is-stuck');
+          }
+        });
+      }, { threshold: [0] });
+
+      observer.observe(sentinel);
+    });
   })();
 </script>
 """
+
+
+def has_top_title(content: str) -> bool:
+    """Check if markdown content has YAML title metadata or a # top-level heading."""
+    lines = content.splitlines()
+    in_yaml = False
+    for i, line in enumerate(lines):
+        line_strip = line.strip()
+        if i == 0 and line_strip == "---":
+            in_yaml = True
+            continue
+        if in_yaml:
+            if line_strip == "---" or line_strip == "...":
+                in_yaml = False
+                continue
+            if line_strip.startswith("title:"):
+                return True
+        else:
+            if line_strip.startswith("# ") and not line_strip.startswith("##"):
+                return True
+    return False
 
 
 def get_output_path(input_path: Path) -> Path:
@@ -520,6 +753,13 @@ def convert_file(input_file: str, toc_depth: int = 2) -> None:
         sys.exit(1)
 
     output_path = get_output_path(input_path)
+
+    content = input_path.read_text(encoding="utf-8", errors="replace")
+    if has_top_title(content):
+        fallback_title = None
+    else:
+        parent_dir = input_path.resolve().parent.name
+        fallback_title = f"{parent_dir}/{input_path.stem}" if parent_dir else input_path.stem
 
     with (
         tempfile.NamedTemporaryFile("w", suffix=".css", delete=False) as css_tmp,
@@ -545,6 +785,9 @@ def convert_file(input_file: str, toc_depth: int = 2) -> None:
             "-B",
             toggle_path,
         ]
+        if fallback_title:
+            cmd.extend(["--metadata", f"title={fallback_title}"])
+
         res = subprocess.run(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             print(f"Error converting '{input_file}':\n{res.stderr}", file=sys.stderr)

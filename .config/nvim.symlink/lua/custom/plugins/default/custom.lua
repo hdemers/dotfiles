@@ -73,12 +73,12 @@ return {
       -- Custom keymaps
       local wk = require 'which-key'
       wk.add {
-        { '<leader>y', group = 'Yank' },
-        { '<leader>yf', group = 'Yank File Paths' },
+        { '<leader>f', group = 'Yank' },
+        { '<leader>fy', group = 'Yank File Paths' },
       }
       vim.keymap.set(
         'n',
-        '<leader>yfa',
+        '<leader>fya',
         ':let @+ = expand("%:p")<CR>',
         { desc = 'Copy absolute path' }
       )
@@ -86,7 +86,7 @@ return {
       -- Yank relative path
       vim.keymap.set(
         'n',
-        '<leader>yfr',
+        '<leader>fyr',
         ':let @+ = expand("%")<CR>',
         { desc = 'Copy relative path' }
       )
@@ -94,9 +94,24 @@ return {
       -- Yank filename only
       vim.keymap.set(
         'n',
-        '<leader>yfn',
+        '<leader>fyn',
         ':let @+ = expand("%:t")<CR>',
         { desc = 'Copy filename' }
+      )
+
+      -- Convert markdown to HTML
+      vim.keymap.set(
+        'n',
+        '<leader>fc',
+        function()
+          local filepath = vim.fn.expand('%:p')
+          if filepath == '' then
+            Snacks.notify('No file in current buffer', { level = 'warn' })
+            return
+          end
+          vim.fn.system(vim.fn.expand('~/.local/bin/md2html') .. ' ' .. vim.fn.shellescape(filepath))
+        end,
+        { desc = 'Convert markdown to HTML' }
       )
     end,
     init = function()

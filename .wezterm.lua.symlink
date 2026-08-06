@@ -275,6 +275,9 @@ config.colors = {
 
 -- Resolve tab title from distrobox name, SSH hostname, or system hostname
 local function get_tab_title(tab)
+  if tab.tab_title and tab.tab_title ~= '' then
+    return '  ' .. tab.tab_title .. '  '
+  end
   local container_id = tab.active_pane.user_vars.CONTAINER_ID
   if container_id and container_id ~= '' then
     return '  󰕈  ' .. container_id .. '  '

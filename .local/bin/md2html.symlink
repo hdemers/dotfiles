@@ -6,6 +6,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import webbrowser
 from pathlib import Path
 
 CSS_CONTENT = """/* Editorial Paper Theme extracted & adapted from explainer.css for Pandoc */
@@ -716,14 +717,22 @@ TOGGLE_HTML = """<div class="theme-menu-wrapper">
 
 
 def has_top_title(content: str) -> bool:
-    """Check if markdown content has YAML title metadata or a # top-level heading."""
+    """Check if markdown content has YAML title metadata or starts with a # top-level heading."""
     lines = content.splitlines()
     in_yaml = False
-    for i, line in enumerate(lines):
+    seen_first_line = False
+
+    for line in lines:
         line_strip = line.strip()
-        if i == 0 and line_strip == "---":
-            in_yaml = True
+        if not line_strip:
             continue
+
+        if not seen_first_line:
+            seen_first_line = True
+            if line_strip == "---":
+                in_yaml = True
+                continue
+
         if in_yaml:
             if line_strip == "---" or line_strip == "...":
                 in_yaml = False
@@ -731,28 +740,46 @@ def has_top_title(content: str) -> bool:
             if line_strip.startswith("title:"):
                 return True
         else:
-            if line_strip.startswith("# ") and not line_strip.startswith("##"):
-                return True
+            return line_strip.startswith("# ") and not line_strip.startswith("##")
+
     return False
 
 
-def get_output_path(input_path: Path) -> Path:
-    """Return output HTML path replacing .md with .html in the same directory."""
-    filename = input_path.name
-    if filename.endswith(".md"):
-        out_name = filename[:-3] + ".html"
-    else:
-        out_name = input_path.stem + ".html"
-    return input_path.parent / out_name
+def get_output_path(
+    input_path: Path, output_arg: str | None = None, multiple_files: bool = False
+) -> Path:
+    """Return output HTML path. Default to /tmp/<filename_stem>.html if output_arg is None."""
+    if not output_arg:
+        return Path("/tmp") / f"{input_path.stem}.html"
+
+    out_path = Path(output_arg)
+    is_dir_target = (
+        multiple_files
+        or out_path.is_dir()
+        or output_arg.endswith(("/", "\\"))
+    )
+
+    if is_dir_target:
+        return out_path / f"{input_path.stem}.html"
+    return out_path
 
 
-def convert_file(input_file: str, toc_depth: int = 2) -> None:
+def convert_file(
+    input_file: str,
+    output_arg: str | None = None,
+    multiple_files: bool = False,
+    toc_depth: int = 2,
+    open_browser: bool = True,
+) -> None:
     input_path = Path(input_file)
     if not input_path.exists():
         print(f"Error: File '{input_file}' not found.", file=sys.stderr)
         sys.exit(1)
 
-    output_path = get_output_path(input_path)
+    output_path = get_output_path(
+        input_path, output_arg=output_arg, multiple_files=multiple_files
+    )
+    output_path.parent.mkdir(parents=True, exist_ok=True)
 
     content = input_path.read_text(encoding="utf-8", errors="replace")
     if has_top_title(content):
@@ -795,6 +822,9 @@ def convert_file(input_file: str, toc_depth: int = 2) -> None:
 
         file_size_kb = output_path.stat().st_size // 1024
         print(f"Converted: {input_path} -> {output_path} ({file_size_kb} KB)")
+
+        if open_browser:
+            webbrowser.open(output_path.resolve().as_uri())
     finally:
         if os.path.exists(css_path):
             os.remove(css_path)
@@ -813,12 +843,30 @@ def main():
         help="Markdown file(s) to convert (.md -> .html)",
     )
     parser.add_argument(
+        "-o",
+        "--output",
+        help="Output HTML file or directory path (default: /tmp/<filename_stem>.html)",
+    )
+    parser.add_argument(
+        "--no-open",
+        action="store_false",
+        dest="open_browser",
+        help="Do not open HTML file in default browser after conversion",
+    )
+    parser.add_argument(
         "--toc-depth", type=int, default=2, help="Table of contents depth (default: 2)"
     )
     args = parser.parse_args()
 
+    multiple = len(args.files) > 1
     for file_path in args.files:
-        convert_file(file_path, toc_depth=args.toc_depth)
+        convert_file(
+            file_path,
+            output_arg=args.output,
+            multiple_files=multiple,
+            toc_depth=args.toc_depth,
+            open_browser=args.open_browser,
+        )
 
 
 if __name__ == "__main__":

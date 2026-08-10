@@ -231,23 +231,33 @@ custom-atuin-history-widget() {
   local selected
   setopt localoptions noglobsubst noposixbuiltins pipefail no_aliases 2> /dev/null
   selected=$(atuin search --exit 0 --reverse --format "{relativetime}\t{time}\t{host}\t{exit}\t{command}" \
-      | awk -F'\t' -v cols="$(tput cols)" '{
-          reltime=sprintf("%-5s", $1);
-          datetime=sprintf("%-16s", $2);
-          host=sprintf("%-20s", $3);
-          exit_code=sprintf("%-3s", $4);
-          # Calculate remaining space: total width - reltime(5) - datetime(16) - host(20) - exit(3) - tabs(4) - margin(2)
-          remaining = cols - 52;
-          if (remaining < 10) remaining = 10;  # Minimum width for command
-
-          cmd = $5;
-          if (length(cmd) > remaining) {
-              cmd = substr(cmd, 1, remaining - 3) "...";
-          }
-
-          printf "\033[36m%s\t\033[36m%s\t\033[33m%s\t\033[32m%s\t\033[35m%s\033[0m\n", reltime, datetime, host, exit_code, cmd
-        }' \
+      | awk -F'\t' -v cols="$(tput cols)" '
+        function emit(    r, d, h, e, c, remaining) {
+            r = sprintf("%-5s",  p_rel);
+            d = sprintf("%-16s", p_dt);
+            h = sprintf("%-20s", p_host);
+            e = sprintf("%-3s",  p_exit);
+            remaining = cols - 52;
+            if (remaining < 10) remaining = 10;
+            c = p_cmd;
+            if (length(c) > remaining) c = substr(c, 1, remaining - 3) "...";
+            printf "\033[36m%s\t\033[36m%s\t\033[33m%s\t\033[32m%s\t\033[35m%s\033[0m\n",
+                   r, d, h, e, c;
+        }
+        NF >= 5 {
+            if (pending) emit();
+            pending = 1;
+            p_rel = $1; p_dt = $2; p_host = $3; p_exit = $4;
+            p_cmd = $5;
+            for (i = 6; i <= NF; i++) p_cmd = p_cmd "\t" $i;
+            next;
+        }
+        pending { p_cmd = p_cmd " " $0 }
+        END { if (pending) emit() }
+      ' \
       | fzf --ansi --delimiter='\t' \
+          --layout=reverse \
+          --height=40% \
           --bind 'tab:execute-silent(echo paste)+abort' \
           --bind 'enter:execute-silent(echo execute)+abort' \
           --expect=tab,enter \

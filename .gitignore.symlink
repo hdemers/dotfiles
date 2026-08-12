@@ -113,6 +113,7 @@ openspec/changes/*/*.html
 **/.claude/.cc-writes/
 
 .pi-subagents/
+.pi/subagents/
 
 .commitlintrc.yml
 
@@ -125,3 +126,4 @@ graphify-out
 
 .pi-sdlc.toml
 .pi-sdlc.json
+.pi/sdlc/

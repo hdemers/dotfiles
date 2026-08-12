@@ -1,0 +1,234 @@
+#!/usr/bin/env bash
+#
+# ring-bell — terminal attention hook for pi-bell.
+#
+# Implements the pi-bell hook command API (see extensions/pi-bell/README.md):
+#
+#   ring-bell attention   Show attention indicators on the WezTerm and/or
+#                         Zellij tabs that contain this Pi pane, then fork a
+#                         poller that clears the WezTerm title when its tab
+#                         regains focus.
+#   ring-bell resume      Restore the original tab titles and stop the poller.
+#   ring-bell <other>     Ignored; exit 0 (forward compatibility).
+#
+# The script inherits Pi's environment (ZELLIJ_*, WEZTERM_*) and is spawned
+# detached by the extension, so it has no TTY on stdin and its stdout/stderr
+# are discarded. It is idempotent: `attention` may be called repeatedly, and
+# `resume` is safe when nothing is showing.
+#
+# State is keyed per pane under $XDG_RUNTIME_DIR/ring-bell/ so concurrent Pi
+# sessions do not clobber each other.
+
+set -u
+
+VERB="${1:-}"
+
+RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp}"
+STATE_DIR="$RUNTIME_DIR/ring-bell"
+PANE_KEY="${ZELLIJ_PANE_ID:-${WEZTERM_PANE:-$$}}"
+STATE_FILE="$STATE_DIR/$PANE_KEY.json"
+POLL_PID_FILE="$STATE_DIR/$PANE_KEY.pid"
+
+# ✋ (U+270B) encoded as UTF-8 bytes, so the default works regardless of locale.
+# Overridable by the extension via the PI_BELL_INDICATOR environment variable.
+DEFAULT_HAND=$'\xe2\x9c\x8b'
+HAND="${PI_BELL_INDICATOR:-$DEFAULT_HAND}"
+# Indicator plus its separating space, used to strip a stale prefix on re-attention.
+HAND_PREFIX="${HAND} "
+
+mkdir -p "$STATE_DIR"
+
+# ─── helpers ─────────────────────────────────────────────────────────────────
+
+have() { command -v "$1" >/dev/null 2>&1; }
+
+in_zellij() { [[ -n "${ZELLIJ:-}" || -n "${ZELLIJ_SESSION_NAME:-}" ]]; }
+in_wezterm() {
+  [[ -n "${WEZTERM_PANE:-}" || -n "${WEZTERM_UNIX_SOCKET:-}" || -n "${WEZTERM_EXECUTABLE:-}" ]]
+}
+
+session_name() { printf '%s' "${ZELLIJ_SESSION_NAME:-pi}"; }
+
+# Echo the current tab state for this pane: "<tabId>\t<name>\t<active>".
+# Returns non-zero (and prints nothing) when Zellij/pane info is unavailable.
+# A leading indicator prefix is stripped from an existing tab name so that
+# re-attention is stable (no double prefix).
+zellij_tab_info() {
+  local pane_id="${ZELLIJ_PANE_ID:-}"
+  [[ -z "$pane_id" ]] && return 1
+  have zellij || return 1
+  local panes tabs tab_id tab_name tab_active
+  panes=$(zellij action list-panes --json 2>/dev/null) || return 1
+  tabs=$(zellij action list-tabs --json 2>/dev/null) || return 1
+  tab_id=$(printf '%s' "$panes" \
+    | jq -r --arg pid "$pane_id" \
+      '.[] | select((.id | tostring) == $pid and (.is_plugin | not)) | .tab_id' 2>/dev/null \
+    | head -n1)
+  [[ -z "$tab_id" ]] && return 1
+  tab_name=$(printf '%s' "$panes" \
+    | jq -r --arg pid "$pane_id" --arg hp "$HAND_PREFIX" \
+      '.[] | select((.id | tostring) == $pid) | (.tab_name // "pi") | ltrimstr($hp)' 2>/dev/null \
+    | head -n1)
+  tab_active=$(printf '%s' "$tabs" \
+    | jq -r --arg tid "$tab_id" \
+      '.[] | select((.tab_id | tostring) == $tid) | (.active // false)' 2>/dev/null \
+    | head -n1)
+  printf '%s\t%s\t%s' "$tab_id" "${tab_name:-pi}" "${tab_active:-true}"
+}
+
+zellij_rename() { # <tabId> <name>
+  have zellij || return 0
+  zellij action rename-tab-by-id "$1" "$2" >/dev/null 2>&1 || true
+}
+
+# Return 0 when our WezTerm pane is the focused one, 1 otherwise.
+# Without a pane id we cannot tell, so assume focused.
+wezterm_is_focused() {
+  local pane="${WEZTERM_PANE:-}"
+  [[ -z "$pane" ]] && return 0
+  have wezterm || return 0
+  local match
+  match=$(wezterm cli list-clients --format json 2>/dev/null \
+    | jq -r --arg p "$pane" 'any(.[]; (.focused_pane_id | tostring) == $p)' 2>/dev/null)
+  [[ "$match" == "true" ]]
+}
+
+wezterm_set_title() { # <title>
+  in_wezterm || return 0
+  have wezterm || return 0
+  local args=(cli set-tab-title)
+  [[ -n "${WEZTERM_PANE:-}" ]] && args+=(--pane-id "$WEZTERM_PANE")
+  args+=("$1")
+  wezterm "${args[@]}" >/dev/null 2>&1 || true
+}
+
+# ─── poller (background) ─────────────────────────────────────────────────────
+#
+# Zellij does not forward WezTerm-level focus events to its panes, so a user
+# returning to Pi's WezTerm tab while on a different Zellij tab produces no
+# focus-in byte on stdin. This poller watches `wezterm cli list-clients` and
+# clears the WezTerm title as soon as the pane regains focus. The Zellij name
+# is restored separately, by `resume` (called by the extension on focus-in or
+# on the next Pi event).
+
+poll_wezterm() {
+  local pane="${WEZTERM_PANE:-}"
+  [[ -z "$pane" ]] && return 0
+  while true; do
+    sleep 0.3
+    if wezterm_is_focused; then
+      wezterm_set_title ""
+      break
+    fi
+  done
+}
+
+start_poller() {
+  # Detached subshell with stdio redirected so it survives this process exit.
+  (
+    poll_wezterm >/dev/null 2>&1
+  ) &
+  local pid=$!
+  printf '%s' "$pid" >"$POLL_PID_FILE"
+  disown "$pid" 2>/dev/null || true
+}
+
+stop_poller() {
+  [[ -f "$POLL_PID_FILE" ]] || return 0
+  local pid
+  pid=$(cat "$POLL_PID_FILE" 2>/dev/null || true)
+  if [[ -n "${pid:-}" ]] && kill -0 "$pid" >/dev/null 2>&1; then
+    kill "$pid" >/dev/null 2>&1 || true
+  fi
+  rm -f "$POLL_PID_FILE"
+}
+
+# ─── verbs ───────────────────────────────────────────────────────────────────
+
+cmd_attention() {
+  local base zinfo zid zname zactive wfocused zellij_set wezterm_set save_zname
+  base=$(session_name)
+
+  # Resolve Zellij state for this pane.
+  zid=""; zname=""; zactive="true"
+  if in_zellij; then
+    if zinfo=$(zellij_tab_info); then
+      zid=$(printf '%s' "$zinfo" | cut -f1)
+      zname=$(printf '%s' "$zinfo" | cut -f2)
+      zactive=$(printf '%s' "$zinfo" | cut -f3)
+      [[ -z "$zactive" ]] && zactive="true"
+    fi
+  fi
+
+  # Resolve WezTerm focus (defaults to focused when not inside WezTerm).
+  wfocused="true"
+  if in_wezterm && ! wezterm_is_focused; then wfocused="false"; fi
+
+  # Nothing to signal when the user is already looking at this pane.
+  if [[ "$zactive" == "true" && "$wfocused" == "true" ]]; then
+    rm -f "$STATE_FILE"
+    stop_poller
+    return 0
+  fi
+
+  # Re-attention: stop any poller left from a previous attention call.
+  stop_poller
+
+  # Gate each surface independently: only touch the one(s) the user left.
+  zellij_set="false"
+  wezterm_set="false"
+  [[ -n "$zid" && "$zactive" == "false" ]] && zellij_set="true"
+  [[ "$wfocused" == "false" ]] && wezterm_set="true"
+
+  save_zname="$zname"
+  [[ "$zellij_set" == "false" ]] && save_zname=""
+
+  jq -n \
+    --arg zset "$zellij_set" \
+    --arg zid "$zid" \
+    --arg zname "$save_zname" \
+    --arg wset "$wezterm_set" \
+    '{zellijSet: ($zset == "true"), zellijTabId: $zid, zellijName: $zname, weztermSet: ($wset == "true")}' \
+    >"$STATE_FILE"
+
+  # Show attention indicators.
+  if [[ "$zellij_set" == "true" ]]; then
+    zellij_rename "$zid" "$HAND ${zname:-$base}"
+  fi
+  if [[ "$wezterm_set" == "true" ]]; then
+    wezterm_set_title "$HAND $base"
+    start_poller
+  fi
+}
+
+cmd_resume() {
+  if [[ ! -f "$STATE_FILE" ]]; then
+    stop_poller
+    return 0
+  fi
+
+  local zset zid zname wset
+  zset=$(jq -r '.zellijSet // false' "$STATE_FILE" 2>/dev/null || true)
+  zid=$(jq -r '.zellijTabId // ""' "$STATE_FILE" 2>/dev/null || true)
+  zname=$(jq -r '.zellijName // ""' "$STATE_FILE" 2>/dev/null || true)
+  wset=$(jq -r '.weztermSet // false' "$STATE_FILE" 2>/dev/null || true)
+
+  stop_poller
+
+  if [[ "$zset" == "true" && -n "$zid" && "$zid" != "null" ]]; then
+    zellij_rename "$zid" "${zname:-pi}"
+  fi
+  if [[ "$wset" == "true" ]]; then
+    wezterm_set_title ""
+  fi
+
+  rm -f "$STATE_FILE"
+}
+
+# ─── dispatch ────────────────────────────────────────────────────────────────
+
+case "$VERB" in
+  attention) cmd_attention ;;
+  resume) cmd_resume ;;
+  *) exit 0 ;;
+esac

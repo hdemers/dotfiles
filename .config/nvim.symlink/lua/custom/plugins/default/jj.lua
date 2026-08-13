@@ -131,62 +131,54 @@ return {
                 vim.notify('No revisions found for ' .. ctx.item, vim.log.levels.WARN)
                 return
               end
-              utils.cancel_debounce()
               local total, completed = #ids, 0
               local fidget_ok, fidget = pcall(require, 'fidget')
               for index, id in ipairs(ids) do
+                local message = total > 1
+                    and string.format(
+                      'Generating description for %s (%d/%d)...',
+                      id,
+                      index,
+                      total
+                    )
+                  or string.format('Generating description for %s...', id)
                 local progress = fidget_ok
                     and fidget.progress.handle.create {
                       title = 'Jujutsu',
-                      message = total > 1
-                          and string.format('Queued: %s (%d/%d)', id, index, total)
-                        or string.format('Queued: %s', id),
+                      message = message,
                       lsp_client = { name = 'cdescribe' },
                     }
                   or nil
-                utils.enqueue(function(on_done)
-                  if progress then
-                    progress.message = total > 1
-                        and string.format(
-                          'Generating description for %s (%d/%d)...',
-                          id,
-                          index,
-                          total
+                vim.system(
+                  { 'cdescribe', id },
+                  { cwd = state.cwd, env = vim.env },
+                  function(obj)
+                    vim.schedule(function()
+                      if progress then
+                        progress:finish()
+                      end
+                      if obj.code ~= 0 then
+                        local err = (obj.stderr ~= '' and obj.stderr)
+                          or obj.stdout
+                          or 'unknown error'
+                        vim.notify(
+                          'cdescribe failed for ' .. id .. ': ' .. err,
+                          vim.log.levels.ERROR
                         )
-                      or string.format('Generating description for %s...', id)
-                  end
-                  vim.system(
-                    { 'cdescribe', id },
-                    { cwd = state.cwd, env = vim.env },
-                    function(obj)
-                      vim.schedule(function()
-                        if progress then
-                          progress:finish()
-                        end
-                        if obj.code ~= 0 then
-                          local err = (obj.stderr ~= '' and obj.stderr)
-                            or obj.stdout
-                            or 'unknown error'
+                      end
+                      completed = completed + 1
+                      if completed == total then
+                        utils.refresh_log()
+                        if total > 1 then
                           vim.notify(
-                            'cdescribe failed for ' .. id .. ': ' .. err,
-                            vim.log.levels.ERROR
+                            string.format('Finished %d descriptions.', total),
+                            vim.log.levels.INFO
                           )
                         end
-                        completed = completed + 1
-                        if completed == total then
-                          utils.refresh_log()
-                          if total > 1 then
-                            vim.notify(
-                              string.format('Finished %d descriptions.', total),
-                              vim.log.levels.INFO
-                            )
-                          end
-                        end
-                        on_done()
-                      end)
-                    end
-                  )
-                end)
+                      end
+                    end)
+                  end
+                )
               end
             end,
             desc = 'AI describe commit',

@@ -127,3 +127,5 @@ graphify-out
 .pi-sdlc.toml
 .pi-sdlc.json
 .pi/sdlc/
+
+cocosearch.yaml

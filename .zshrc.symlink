@@ -20,7 +20,8 @@ setopt hist_no_store         # Don't store history commands
 setopt hist_reduce_blanks    # Remove superfluous blanks from each command line being added to the history.
 
 setopt autocd extendedglob nomatch notify
-bindkey -v
+# Vi mode handled by zsh-vi-mode plugin
+# bindkey -v
 export KEYTIMEOUT=1
 
 # Vim mode yank/put copies to/from Wayland clipboard
@@ -44,6 +45,12 @@ bindkey "^[[B" down-line-or-beginning-search # Down
 
 bindkey "^[OA" up-line-or-beginning-search # Up
 bindkey "^[OB" down-line-or-beginning-search # Up
+
+# Same bindings for vi insert mode (zsh-vi-mode)
+bindkey -M viins "^[[A" up-line-or-beginning-search
+bindkey -M viins "^[[B" down-line-or-beginning-search
+bindkey -M viins "^[OA" up-line-or-beginning-search
+bindkey -M viins "^[OB" down-line-or-beginning-search
 
 # Set preexec hook to mark command start and output with OSC 133 sequences
 preexec() {
@@ -102,6 +109,12 @@ zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath'
 zstyle ':fzf-tab:*' switch-group ',' '.'
 # zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
 # zstyle ':completion:*' menu no
+
+# zsh-vi-mode: vi(vim) mode plugin with cursor shape support
+ZVM_CURSOR_STYLE_BLOCK="block"
+ZVM_CURSOR_STYLE_INSERT="bar"
+ZVM_CURSOR_STYLE_REPLACE="underline"
+zinit light jeffreytse/zsh-vi-mode
 
 # General ZSH syntax highlighting, completions, and suggestions.
 zinit wait lucid for \

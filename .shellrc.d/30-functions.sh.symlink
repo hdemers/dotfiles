@@ -279,6 +279,7 @@ custom-atuin-history-widget() {
 if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
   zle -N custom-atuin-history-widget
   bindkey '^R' custom-atuin-history-widget
+  bindkey -M viins '^R' custom-atuin-history-widget
 fi
 
 

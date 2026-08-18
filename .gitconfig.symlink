@@ -81,7 +81,6 @@
     unmerge = reset --merge ORIG_HEAD
 
 [core]
-    excludesfile = /home/hdemers/.gitignore
     ;autocrlf = true
 
 [branch]

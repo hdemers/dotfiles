@@ -101,19 +101,11 @@ digest.txt
 # Gemini related files
 .gemini/tmp/
 
-# Pi OpenSpec Workflow tracking file
-.pi-openspec-workflow.json
-
 openspec/changes/*/*.html
-
-.pi/todos
 
 .antigravitycli/
 
 **/.claude/.cc-writes/
-
-.pi-subagents/
-.pi/subagents/
 
 .commitlintrc.yml
 
@@ -121,11 +113,12 @@ graphify-out
 
 .ci.toml
 
-.pi/subagents.json
-.pi/settings.json
-
+# Pi Agent exclude directives
+.pi/
+.pi-subagents/
 .pi-sdlc.toml
 .pi-sdlc.json
-.pi/sdlc/
+.pi-openspec-workflow.json
 
 cocosearch.yaml
+index.scip

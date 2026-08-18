@@ -278,8 +278,8 @@ custom-atuin-history-widget() {
 # Only works in Zsh
 if [[ "$CURRENT_SHELL" == "zsh" || "$SHELL" == *zsh* ]]; then
   zle -N custom-atuin-history-widget
-  bindkey '^R' custom-atuin-history-widget
-  bindkey -M viins '^R' custom-atuin-history-widget
+  # ^R is bound inside zvm_after_init() in .zshrc, after zsh-vi-mode
+  # reinitializes keymaps, so it is not overwritten by that plugin.
 fi
 
 

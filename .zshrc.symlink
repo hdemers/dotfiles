@@ -24,14 +24,6 @@ setopt autocd extendedglob nomatch notify
 # bindkey -v
 export KEYTIMEOUT=1
 
-# Vim mode yank/put copies to/from Wayland clipboard
-function vi-yank-wl {
-  zle vi-yank
-  print -rn -- "$CUTBUFFER" | wl-copy
-}
-zle -N vi-yank-wl
-bindkey -M vicmd 'y' vi-yank-wl
-
 # End of lines configured by zsh-newuser-install
 
 # Autocompletion using arrow keys (based on history)
@@ -39,18 +31,7 @@ autoload -U up-line-or-beginning-search
 autoload -U down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-
-bindkey "^[[A" up-line-or-beginning-search # Up
-bindkey "^[[B" down-line-or-beginning-search # Down
-
-bindkey "^[OA" up-line-or-beginning-search # Up
-bindkey "^[OB" down-line-or-beginning-search # Up
-
-# Same bindings for vi insert mode (zsh-vi-mode)
-bindkey -M viins "^[[A" up-line-or-beginning-search
-bindkey -M viins "^[[B" down-line-or-beginning-search
-bindkey -M viins "^[OA" up-line-or-beginning-search
-bindkey -M viins "^[OB" down-line-or-beginning-search
+# Key bindings are set in zvm_after_init() below, after zsh-vi-mode initializes.
 
 # Set preexec hook to mark command start and output with OSC 133 sequences
 preexec() {
@@ -114,6 +95,25 @@ zstyle ':fzf-tab:*' switch-group ',' '.'
 ZVM_CURSOR_STYLE_BLOCK="block"
 ZVM_CURSOR_STYLE_INSERT="bar"
 ZVM_CURSOR_STYLE_REPLACE="underline"
+# Enable built-in clipboard integration (auto-detects wl-copy on Wayland).
+ZVM_SYSTEM_CLIPBOARD_ENABLED=true
+
+# zvm_after_init is called by zsh-vi-mode at the end of its initialization.
+# Define key bindings here so they are not overridden by the plugin.
+function zvm_after_init() {
+  bindkey "^[[A" up-line-or-beginning-search # Up
+  bindkey "^[[B" down-line-or-beginning-search # Down
+  bindkey "^[OA" up-line-or-beginning-search # Up
+  bindkey "^[OB" down-line-or-beginning-search # Down
+  bindkey -M viins "^[[A" up-line-or-beginning-search
+  bindkey -M viins "^[[B" down-line-or-beginning-search
+  bindkey -M viins "^[OA" up-line-or-beginning-search
+  bindkey -M viins "^[OB" down-line-or-beginning-search
+  # Bind after zsh-vi-mode so it is not overwritten by that plugin.
+  bindkey '^R' custom-atuin-history-widget
+  bindkey -M viins '^R' custom-atuin-history-widget
+}
+
 zinit light jeffreytse/zsh-vi-mode
 
 # General ZSH syntax highlighting, completions, and suggestions.

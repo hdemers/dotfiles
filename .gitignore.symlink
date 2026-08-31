@@ -120,5 +120,6 @@ graphify-out
 .pi-sdlc.json
 .pi-openspec-workflow.json
 
-cocosearch.yaml
-index.scip
+.jj-workspace/
+
+.zvec-grep

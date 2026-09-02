@@ -1,515 +1,1084 @@
-#!/usr/bin/env bash
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.11"
+# ///
+"""jj-workspace: manage Jujutsu (jj) workspaces, including a lease pool.
 
-set -e
+See 'jj-workspace --help' and 'jj-workspace <command> --help'.
+"""
 
-VERSION="0.1.0"
-QUIET=0
-NO_INPUT=0
-IS_TTY=0
-[ -t 0 ] && IS_TTY=1
+from __future__ import annotations
 
-HAS_GUM=0
-command -v gum &>/dev/null && HAS_GUM=1
+import argparse
+import contextlib
+import dataclasses
+import difflib
+import fcntl
+import json
+import os
+import re
+import shutil
+import socket
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import NoReturn
 
-log() {
-    local level="$1"
-    local message="$2"
-    if [ "$QUIET" -eq 1 ] && [ "$level" != "error" ]; then
-        return 0
-    fi
-    if [ "$HAS_GUM" -eq 1 ]; then
-        gum log -sl "${level}" "${message}" >&2
-    else
-        echo "[${level}] ${message}" >&2
-    fi
-}
+import tomllib
 
-validate_workspace_name() {
-    local name="$1"
-    if [ -z "$name" ]; then
-        log error "Workspace name cannot be empty."
-        return 1
-    fi
-    if [[ "$name" =~ ^- ]]; then
-        log error "Workspace name '${name}' cannot start with a hyphen."
-        return 1
-    fi
-    if [[ ! "$name" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
-        log error "Invalid workspace name '${name}'. Use only letters, numbers, hyphens, underscores, and dots."
-        return 1
-    fi
-    if [ "$name" = "." ] || [ "$name" = ".." ]; then
-        log error "Workspace name '${name}' is invalid."
-        return 1
-    fi
-    return 0
-}
+VERSION = "0.2.0"
 
-usage() {
-    cat << 'EOF'
-Usage: jj-workspace <command> [options] [args]
+CONFIG_PATH = Path.home() / ".config" / "jj-workspace" / "config.toml"
+STATE_DIR = Path.home() / ".local" / "state" / "jj-workspace"
+STATE_PATH = STATE_DIR / "pool.json"
+LOCK_PATH = STATE_DIR / "pool.lock"
 
-A CLI to manage Jujutsu (jj) workspaces based on branches/bookmarks.
+HOOK_RELATIVE_PATH = Path(".jj-workspace") / "post_create"
 
+DEFAULT_POOL_SIZE = 10
+SLOT_PREFIX = "ws-pool-"
+SLOT_RE = re.compile(r"^ws-pool-(\d+)$")
+RESERVED_ADD_NAME_RE = re.compile(r"^pool-\d+$")
+NAME_RE = re.compile(r"^[a-zA-Z0-9_.-]+$")
+
+EXIT_OK = 0
+EXIT_ERROR = 1
+EXIT_USAGE = 2
+EXIT_POOL_EXHAUSTED = 3
+
+IS_TTY = sys.stdin.isatty()
+HAS_GUM = shutil.which("gum") is not None
+
+
+# --------------------------------------------------------------------------
+# Logging
+# --------------------------------------------------------------------------
+
+
+class Log:
+    """Writes status messages to stderr. Uses 'gum' for colour if present."""
+
+    def __init__(self, quiet: bool = False) -> None:
+        self.quiet = quiet
+
+    def _emit(self, level: str, message: str) -> None:
+        if self.quiet and level != "error":
+            return
+        if HAS_GUM:
+            subprocess.run(["gum", "log", "-sl", level, message], stdout=sys.stderr, check=False)
+        else:
+            print(f"[{level}] {message}", file=sys.stderr)
+
+    def info(self, message: str) -> None:
+        self._emit("info", message)
+
+    def warning(self, message: str) -> None:
+        self._emit("warn", message)
+
+    def error(self, message: str) -> None:
+        self._emit("error", message)
+
+
+def confirm_or_fail(prompt: str, force: bool, log: Log) -> tuple[bool, int]:
+    """Gate a dangerous action behind a prompt, or --force.
+
+    Returns (proceed, exit_code_to_use_if_not_proceeding).
+    """
+    if force:
+        return True, EXIT_OK
+    if not IS_TTY:
+        log.error("This action needs confirmation. Pass -f/--force to confirm in a script.")
+        return False, EXIT_ERROR
+    if HAS_GUM:
+        ok = subprocess.run(["gum", "confirm", prompt], check=False).returncode == 0
+    else:
+        reply = input(f"{prompt} [y/N] ")
+        ok = reply.strip().lower() in ("y", "yes")
+    if not ok:
+        log.info("Cancelled.")
+        return False, EXIT_OK
+    return True, EXIT_OK
+
+
+def gum_choose(options: list[str], header: str) -> str:
+    result = subprocess.run(
+        ["gum", "choose", f"--header={header}"],
+        input="\n".join(options) + "\n",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip()
+
+
+def gum_input(placeholder: str) -> str:
+    result = subprocess.run(
+        ["gum", "input", f"--placeholder={placeholder}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip()
+
+
+# --------------------------------------------------------------------------
+# Validation
+# --------------------------------------------------------------------------
+
+
+def validate_workspace_name(name: str, log: Log) -> bool:
+    if not name:
+        log.error("Workspace name cannot be empty.")
+        return False
+    if name.startswith("-"):
+        log.error(f"Workspace name '{name}' cannot start with a hyphen.")
+        return False
+    if not NAME_RE.match(name):
+        log.error(
+            f"Invalid workspace name '{name}'. "
+            "Use only letters, numbers, hyphens, underscores, and dots."
+        )
+        return False
+    if name in (".", ".."):
+        log.error(f"Workspace name '{name}' is invalid.")
+        return False
+    return True
+
+
+def slot_index(name: str) -> int | None:
+    m = SLOT_RE.fullmatch(name)
+    return int(m.group(1)) if m else None
+
+
+def is_reserved_add_name(name: str) -> bool:
+    return bool(RESERVED_ADD_NAME_RE.fullmatch(name))
+
+
+# --------------------------------------------------------------------------
+# Config (~/.config/jj-workspace/config.toml)
+# --------------------------------------------------------------------------
+
+
+@dataclasses.dataclass
+class Config:
+    pool_size: int = DEFAULT_POOL_SIZE
+
+
+def load_config(log: Log) -> Config:
+    if not CONFIG_PATH.exists():
+        return Config()
+    try:
+        with open(CONFIG_PATH, "rb") as f:
+            data = tomllib.load(f)
+    except tomllib.TOMLDecodeError as exc:
+        log.error(f"Could not parse '{CONFIG_PATH}': {exc}")
+        raise SystemExit(EXIT_ERROR)
+    pool_size = data.get("pool_size", DEFAULT_POOL_SIZE)
+    if isinstance(pool_size, bool) or not isinstance(pool_size, int) or pool_size < 1:
+        log.error(
+            f"'pool_size' in '{CONFIG_PATH}' must be a positive integer, got: {pool_size!r}"
+        )
+        raise SystemExit(EXIT_ERROR)
+    return Config(pool_size=pool_size)
+
+
+# --------------------------------------------------------------------------
+# State (~/.local/state/jj-workspace/pool.json)
+# --------------------------------------------------------------------------
+
+
+def iso_now() -> str:
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def load_state() -> dict:
+    if not STATE_PATH.exists():
+        return {"version": 1, "repos": {}}
+    with open(STATE_PATH) as f:
+        data = json.load(f)
+    data.setdefault("version", 1)
+    data.setdefault("repos", {})
+    return data
+
+
+def save_state(data: dict) -> None:
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    tmp = STATE_PATH.with_name(STATE_PATH.name + ".tmp")
+    with open(tmp, "w") as f:
+        json.dump(data, f, indent=2, sort_keys=True)
+        f.write("\n")
+    os.replace(tmp, STATE_PATH)
+
+
+@contextlib.contextmanager
+def state_lock(log: Log | None = None):
+    """Exclusive lock across all jj-workspace processes on this machine."""
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+    fd = os.open(LOCK_PATH, os.O_CREAT | os.O_RDWR, 0o600)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            if log is not None:
+                log.info("Waiting for another jj-workspace process to finish...")
+            fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
+def repo_slots(state: dict, repo_key: str) -> dict:
+    return state["repos"].setdefault(repo_key, {}).setdefault("slots", {})
+
+
+def discover_slots(root: Path) -> set[str]:
+    if not root.is_dir():
+        return set()
+    return {p.name for p in root.iterdir() if p.is_dir() and slot_index(p.name) is not None}
+
+
+# --------------------------------------------------------------------------
+# Path resolution
+# --------------------------------------------------------------------------
+
+
+def abs_root(workspace_dir: str) -> Path:
+    return Path(workspace_dir).expanduser().resolve()
+
+
+# --------------------------------------------------------------------------
+# Post-create hook, shared by 'add' and a first-time 'lease'
+# --------------------------------------------------------------------------
+
+
+def run_post_create_hook(
+    workspace_path: Path,
+    main_workspace: Path,
+    workspace_root: Path,
+    name: str,
+    kind: str,
+    run_hook: bool,
+    log: Log,
+    confirm_hook=None,
+) -> None:
+    """Run the repo's post-create hook ('.jj-workspace/post_create'), if any.
+
+    A missing hook is not an error, most repos don't have one. A failing
+    hook is a warning, the workspace is kept either way.
+    """
+    if not run_hook:
+        return
+
+    hook_path = main_workspace / HOOK_RELATIVE_PATH
+    if not hook_path.is_file():
+        return
+
+    if not os.access(hook_path, os.X_OK):
+        log.warning(f"Hook '{hook_path}' is not executable. Skipping.")
+        log.warning(f"Run 'chmod +x {hook_path}' to enable it.")
+        return
+
+    do_run = confirm_hook(hook_path) if confirm_hook is not None else True
+    if not do_run:
+        log.warning(f"Post-create hook '{hook_path}' skipped.")
+        return
+
+    log.info(f"Running post-create hook '{hook_path}'...")
+    env = os.environ.copy()
+    env["JJ_WORKSPACE_REPO"] = str(main_workspace)
+    env["JJ_WORKSPACE_PATH"] = str(workspace_path.resolve())
+    env["JJ_WORKSPACE_NAME"] = name
+    env["JJ_WORKSPACE_ROOT"] = str(workspace_root)
+    env["JJ_WORKSPACE_KIND"] = kind
+
+    result = subprocess.run([str(hook_path)], cwd=workspace_path, env=env, check=False)
+    if result.returncode != 0:
+        log.warning(f"Post-create hook '{hook_path}' failed (exit {result.returncode}).")
+
+
+# --------------------------------------------------------------------------
+# add
+# --------------------------------------------------------------------------
+
+
+def list_bookmarks() -> list[str]:
+    has_dev = (
+        subprocess.run(
+            ["jj", "log", "-r", "dev", "--no-graph", "-T", ""],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        ).returncode
+        == 0
+    )
+    cmd = ["jj", "bookmark", "list"]
+    if has_dev:
+        cmd += ["-r", "dev..@"]
+    cmd += ["-T", 'if(!self.remote(), self.name() ++ "\\n")']
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    return sorted({line.strip() for line in result.stdout.splitlines() if line.strip()})
+
+
+def cmd_add(args: argparse.Namespace) -> int:
+    log = Log(args.quiet)
+    name = args.name or ""
+    run_hook = not args.no_hook
+
+    interactive = args.interactive or (not name and IS_TTY and not args.no_input)
+
+    if not name and not interactive:
+        log.error("Workspace name is required in non-interactive mode. Use --name <name>.")
+        return EXIT_ERROR
+
+    if interactive:
+        if not IS_TTY or args.no_input:
+            log.error("Cannot run interactively: terminal is not a TTY or --no-input specified.")
+            log.error("Please provide workspace name with --name <name>.")
+            return EXIT_ERROR
+        if not HAS_GUM:
+            log.error("gum is not installed. Please provide a name with --name <name>.")
+            return EXIT_ERROR
+
+        bookmarks = list_bookmarks()
+        choice = gum_choose(bookmarks + ["(type a custom name)"], "Select workspace name:")
+        if not choice:
+            log.info("No name selected.")
+            return EXIT_ERROR
+        if choice == "(type a custom name)":
+            name = gum_input("workspace name")
+            if not name:
+                log.error("No name entered.")
+                return EXIT_ERROR
+        else:
+            name = choice
+
+    if not validate_workspace_name(name, log):
+        return EXIT_ERROR
+
+    if is_reserved_add_name(name):
+        log.error(f"Name '{name}' is reserved for the lease pool. Choose a different name.")
+        return EXIT_ERROR
+
+    root = Path(args.workspace_dir)
+    workspace_path = root / f"ws-{name}"
+
+    if workspace_path.is_dir():
+        log.error(f"Workspace directory '{workspace_path}' already exists. Skipping creation.")
+        return EXIT_ERROR
+
+    try:
+        root.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        log.error(f"Failed to create workspace root directory '{root}': {exc}")
+        return EXIT_ERROR
+
+    result = subprocess.run(["jj", "workspace", "add", "-r", "@", str(workspace_path)], check=False)
+    if result.returncode != 0:
+        log.error(f"Failed to create workspace '{workspace_path}'.")
+        return EXIT_ERROR
+
+    log.info(f"Workspace {name} created at {workspace_path}")
+
+    def confirm_hook(hook_path: Path) -> bool:
+        if interactive and HAS_GUM:
+            return (
+                subprocess.run(
+                    ["gum", "confirm", f"Run post-create hook '{hook_path.name}'?"],
+                    check=False,
+                ).returncode
+                == 0
+            )
+        return True
+
+    run_post_create_hook(
+        workspace_path, Path.cwd(), root, f"ws-{name}", "add", run_hook, log, confirm_hook
+    )
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# forget
+# --------------------------------------------------------------------------
+
+
+def cmd_forget(args: argparse.Namespace) -> int:
+    log = Log(args.quiet)
+    workspace_to_remove = args.workspace or ""
+    delete_dir = not args.no_delete
+    root = Path(args.workspace_dir)
+    repo_key = str(abs_root(args.workspace_dir))
+
+    try:
+        state = load_state()
+        tracked_slots = set(state.get("repos", {}).get(repo_key, {}).get("slots", {}).keys())
+    except (OSError, json.JSONDecodeError):
+        tracked_slots = set()
+
+    interactive = args.interactive or (
+        not workspace_to_remove and IS_TTY and not args.no_input
+    )
+
+    if not workspace_to_remove:
+        if interactive:
+            if not IS_TTY or args.no_input:
+                log.error("Cannot run interactively: terminal is not a TTY or --no-input specified.")
+                log.error("Please provide a workspace name.")
+                return EXIT_ERROR
+            if not HAS_GUM:
+                log.error("gum is not installed. Please provide a workspace name.")
+                return EXIT_ERROR
+
+            result = subprocess.run(["jj", "workspace", "list"], capture_output=True, text=True, check=False)
+            names = set()
+            for line in result.stdout.splitlines():
+                candidate = line.split(":", 1)[0].strip()
+                if candidate and candidate != "default" and candidate not in tracked_slots:
+                    names.add(candidate)
+            if not names:
+                log.info("No workspace available to forget.")
+                return EXIT_ERROR
+            workspace_to_remove = gum_choose(sorted(names), "Select a workspace to remove:")
+            if not workspace_to_remove:
+                log.info("No workspace selected.")
+                return EXIT_ERROR
+        else:
+            print("Error: Workspace name is required in non-interactive mode.", file=sys.stderr)
+            print("Usage: jj-workspace forget [options] <workspace_path>", file=sys.stderr)
+            return EXIT_ERROR
+
+    if not validate_workspace_name(workspace_to_remove, log):
+        return EXIT_ERROR
+
+    if workspace_to_remove in tracked_slots:
+        log.error(f"'{workspace_to_remove}' is managed by the lease pool.")
+        log.error(f"Use 'jj-workspace return {workspace_to_remove}' instead.")
+        return EXIT_ERROR
+
+    workspace_path = root / workspace_to_remove
+
+    if not workspace_path.is_dir():
+        log.error(f"Workspace directory '{workspace_path}' does not exist.")
+        return EXIT_ERROR
+
+    prompt = f"Are you sure you want to forget workspace '{workspace_to_remove}'?"
+    if delete_dir:
+        prompt = (
+            f"Are you sure you want to forget workspace '{workspace_to_remove}' "
+            f"and delete '{workspace_path}'?"
+        )
+    proceed, code = confirm_or_fail(prompt, args.force, log)
+    if not proceed:
+        return code
+
+    result = subprocess.run(["jj", "workspace", "forget", workspace_to_remove], check=False)
+    if result.returncode != 0:
+        log.warning(f"'jj workspace forget {workspace_to_remove}' reported a problem. Continuing.")
+    log.info(f"Workspace '{workspace_to_remove}' removed.")
+
+    if delete_dir:
+        shutil.rmtree(workspace_path, ignore_errors=True)
+        log.info(f"Directory '{workspace_path}' deleted.")
+    else:
+        log.info(f"Directory '{workspace_path}' was not deleted.")
+
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# list
+# --------------------------------------------------------------------------
+
+
+def cmd_list(args: argparse.Namespace) -> int:
+    result = subprocess.run(["jj", "workspace", "list"], capture_output=True, text=True, check=False)
+    if args.json:
+        workspaces = []
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            name, _, rest = line.partition(":")
+            workspaces.append({"name": name.strip(), "details": rest.strip()})
+        print(json.dumps(workspaces, indent=2))
+    else:
+        sys.stdout.write(result.stdout)
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# lease
+# --------------------------------------------------------------------------
+
+
+def cmd_lease(args: argparse.Namespace) -> int:
+    log = Log(args.quiet)
+    config = load_config(log)
+    root = abs_root(args.workspace_dir)
+    repo_key = str(root)
+
+    tenant = args.tenant.strip() if args.tenant else None
+    if args.tenant is not None and not tenant:
+        log.error("Tenant cannot be empty.")
+        return EXIT_ERROR
+
+    with state_lock(log):
+        state = load_state()
+        slots = repo_slots(state, repo_key)
+
+        candidates = []
+        for i in range(config.pool_size):
+            name = f"{SLOT_PREFIX}{i}"
+            entry = slots.get(name)
+            path = root / name
+            if entry is None:
+                candidates.append((i, name, path, "new"))
+            elif entry.get("status") == "free":
+                candidates.append((i, name, path, "reuse" if path.is_dir() else "recreate"))
+        candidates.sort(key=lambda c: c[0])
+
+        if not candidates:
+            log.error(f"The lease pool at '{root}' is full (size {config.pool_size}).")
+            log.error(
+                "Return a workspace with 'jj-workspace return <name>', "
+                "or raise 'pool_size' in the config file."
+            )
+            return EXIT_POOL_EXHAUSTED
+
+        _index, reserved_name, workspace_path, mode = candidates[0]
+        slots[reserved_name] = {
+            "status": "leased",
+            "updated_at": iso_now(),
+            "pid": os.getpid(),
+            "host": socket.gethostname(),
+            "tenant": tenant,
+        }
+        save_state(state)
+
+    created = False
+    try:
+        if mode == "recreate":
+            subprocess.run(
+                ["jj", "workspace", "forget", reserved_name],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+        if mode in ("new", "recreate"):
+            root.mkdir(parents=True, exist_ok=True)
+            result = subprocess.run(["jj", "workspace", "add", "-r", "@", str(workspace_path)], check=False)
+            if result.returncode != 0:
+                raise RuntimeError(f"'jj workspace add' failed for '{workspace_path}'.")
+            run_post_create_hook(
+                workspace_path, Path.cwd(), root, reserved_name, "lease", not args.no_hook, log
+            )
+            created = True
+    except Exception as exc:  # noqa: BLE001 - roll back on any provisioning failure
+        with state_lock(log):
+            state = load_state()
+            slots = repo_slots(state, repo_key)
+            slots[reserved_name] = {"status": "free", "updated_at": iso_now()}
+            save_state(state)
+        log.error(f"Could not prepare workspace '{reserved_name}': {exc}")
+        return EXIT_ERROR
+
+    abspath = str(workspace_path.resolve())
+    if args.json:
+        print(json.dumps({"name": reserved_name, "path": abspath, "created": created}))
+    else:
+        print(abspath)
+    suffix = " (new)" if created else ""
+    log.info(f"Workspace '{reserved_name}' leased at '{abspath}'{suffix}.")
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# return
+# --------------------------------------------------------------------------
+
+
+def cmd_return(args: argparse.Namespace) -> int:
+    log = Log(args.quiet)
+    root = abs_root(args.workspace_dir)
+    repo_key = str(root)
+
+    name = Path(args.workspace).name
+    if slot_index(name) is None:
+        log.error(f"'{args.workspace}' is not a pool-managed workspace.")
+        log.error(
+            f"Pool workspace names look like '{SLOT_PREFIX}N'. "
+            "Use 'jj-workspace forget' for other workspaces."
+        )
+        return EXIT_ERROR
+
+    workspace_path = root / name
+
+    with state_lock(log):
+        state = load_state()
+        slots = repo_slots(state, repo_key)
+        entry = slots.get(name)
+
+        if entry is None:
+            log.error(f"'{name}' is not tracked in the pool at '{root}'.")
+            return EXIT_ERROR
+        if entry.get("status") == "free":
+            log.error(f"Workspace '{name}' is already free.")
+            return EXIT_ERROR
+        if not workspace_path.is_dir():
+            log.error(f"Workspace directory '{workspace_path}' does not exist.")
+            log.error("The lease stays open. Investigate, then run 'return' again.")
+            return EXIT_ERROR
+
+        result = subprocess.run(["jj", "new", "default@"], cwd=workspace_path, check=False)
+        if result.returncode != 0:
+            log.error(f"Could not reset workspace '{name}' to 'default@'.")
+            log.error("The lease stays open. Fix the problem, then run 'return' again.")
+            return EXIT_ERROR
+
+        slots[name] = {"status": "free", "updated_at": iso_now()}
+        save_state(state)
+
+    log.info(f"Workspace '{name}' returned to the pool.")
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# pool status / pool shrink
+# --------------------------------------------------------------------------
+
+
+def cmd_pool_status(args: argparse.Namespace) -> int:
+    log = Log(args.quiet)
+    config = load_config(log)
+    root = abs_root(args.workspace_dir)
+    repo_key = str(root)
+
+    state = load_state()
+    slots = dict(state.get("repos", {}).get(repo_key, {}).get("slots", {}))
+    names = set(slots.keys()) | discover_slots(root)
+
+    rows = []
+    for name in names:
+        idx = slot_index(name)
+        entry = slots.get(name, {})
+        path = root / name
+        rows.append(
+            {
+                "name": name,
+                "index": idx,
+                "status": entry.get("status", "free"),
+                "created": path.is_dir(),
+                "pid": entry.get("pid"),
+                "host": entry.get("host"),
+                "tenant": entry.get("tenant"),
+                "updated_at": entry.get("updated_at"),
+                "orphaned": idx is not None and idx >= config.pool_size,
+            }
+        )
+    rows.sort(key=lambda r: r["index"] if r["index"] is not None else -1)
+
+    free = sum(1 for r in rows if r["status"] == "free")
+    leased = sum(1 for r in rows if r["status"] == "leased")
+
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "workspace_dir": str(root),
+                    "pool_size": config.pool_size,
+                    "slots": rows,
+                    "summary": {
+                        "free": free,
+                        "leased": leased,
+                        "total": len(rows),
+                        "pool_size": config.pool_size,
+                    },
+                },
+                indent=2,
+            )
+        )
+        return EXIT_OK
+
+    print(f"Pool at '{root}' (configured size: {config.pool_size})")
+    if not rows:
+        print("  (no workspaces leased yet)")
+    for r in rows:
+        line = f"  {r['name']:<14} {r['status']}"
+        if r["status"] == "leased":
+            line += f"  pid={r['pid']} host={r['host']}"
+            if r.get("tenant"):
+                line += f" tenant={r['tenant']}"
+            line += f" since {r['updated_at']}"
+        if not r["created"]:
+            line += "  (not created yet)"
+        if r["orphaned"]:
+            line += "  (beyond pool_size, run 'pool shrink')"
+        print(line)
+    print(f"{free} free, {leased} leased, {len(rows)} tracked, pool_size {config.pool_size}")
+    return EXIT_OK
+
+
+def cmd_pool_shrink(args: argparse.Namespace) -> int:
+    log = Log(args.quiet)
+    config = load_config(log)
+    root = abs_root(args.workspace_dir)
+    repo_key = str(root)
+
+    with state_lock(log):
+        state = load_state()
+        slots = repo_slots(state, repo_key)
+        names = set(slots.keys()) | discover_slots(root)
+
+        to_remove = []
+        for name in names:
+            idx = slot_index(name)
+            if idx is None or idx < config.pool_size:
+                continue
+            entry = slots.get(name, {})
+            if entry.get("status") == "leased":
+                log.warning(f"'{name}' is leased. Skipping. Return it, then run 'pool shrink' again.")
+            else:
+                to_remove.append(name)
+
+        if not to_remove:
+            log.info("Nothing to shrink.")
+            return EXIT_OK
+
+        to_remove.sort(key=lambda n: slot_index(n) or 0, reverse=True)
+        prompt = f"Delete {len(to_remove)} workspace(s): {', '.join(to_remove)}?"
+        proceed, code = confirm_or_fail(prompt, args.force, log)
+        if not proceed:
+            return code
+
+        for name in to_remove:
+            path = root / name
+            subprocess.run(
+                ["jj", "workspace", "forget", name],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
+            shutil.rmtree(path, ignore_errors=True)
+            slots.pop(name, None)
+            log.info(f"Removed '{name}'.")
+
+        save_state(state)
+
+    return EXIT_OK
+
+
+# --------------------------------------------------------------------------
+# Argument parsing
+# --------------------------------------------------------------------------
+
+CHOICE_ERROR_RE = re.compile(r"invalid choice: '([^']+)' \(choose from ([^)]+)\)")
+
+
+class Parser(argparse.ArgumentParser):
+    """Suggests the closest valid command name on a typo."""
+
+    def error(self, message: str) -> NoReturn:
+        m = CHOICE_ERROR_RE.search(message)
+        if m:
+            bad, raw_choices = m.groups()
+            choices = [c.strip().strip("'\"") for c in raw_choices.split(",")]
+            match = difflib.get_close_matches(bad, choices, n=1)
+            if match:
+                sys.stderr.write(f"jj-workspace: '{bad}' is not a command. Did you mean '{match[0]}'?\n\n")
+        super().error(message)
+
+
+TOP_EPILOG = """\
 Examples:
   jj-workspace add                         # Pick bookmark interactively
   jj-workspace add --name feat-login       # Create workspace '../ws-feat-login'
+  jj-workspace lease                       # Lease a pool workspace, print its path
+  jj-workspace return ws-pool-0            # Return it to the pool
   jj-workspace list                        # List all workspaces
   jj-workspace forget feat-login           # Forget workspace 'feat-login'
 
 Commands:
-  add [options]
-      Add a new jj workspace from '@'.
-      Options:
-            --name <name>   Workspace name; disables interactive mode.
-            --no-install    Do not run 'make install' after creation.
-            --no-input      Disable interactive prompts.
-        -i, --interactive   Prompt interactively using 'gum'.
-        -h, --help          Show help for add.
+  add [options]              Add a new jj workspace from '@'.
+  forget [options] [name]    Forget a jj workspace and delete its directory.
+  list [options]             List all jj workspaces.
+  lease [options]            Lease a workspace from the pool. Prints its path.
+  return <name>              Return a leased workspace to the pool.
+  pool status|shrink         Inspect or shrink the lease pool.
 
-  forget [options] [workspace]
-      Forget an existing jj workspace.
-      Options:
-        -f, --force         Skip confirmation prompt.
-            --no-input      Disable interactive prompts.
-        -i, --interactive   Prompt interactively using 'gum'.
-        -h, --help          Show help for forget.
+Run 'jj-workspace <command> --help' for the options of a command.
 
-  list [options]
-      List all jj workspaces.
-      Options:
-            --json          Output list in JSON format.
-            --plain         Output list in plain text format (default).
-        -h, --help          Show help for list.
+Environment:
+  JJ_WORKSPACE_DIR   Root directory for workspaces (default '..').
 
-Global Options:
-  -q, --quiet     Suppress non-essential output.
-      --version   Show version and exit.
-      --no-input  Disable interactive prompts.
-  -h, --help      Show this help message and exit.
-EOF
-}
+Files:
+  ~/.config/jj-workspace/config.toml     Pool size ('pool_size', default 10).
+  ~/.local/state/jj-workspace/pool.json  Pool state. Do not edit by hand.
+"""
 
-cmd_add() {
-    local name=""
-    local run_install=1
-    local explicit_interactive=-1
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --name)
-                name="$2"
-                shift 2
-                ;;
-            --no-install)
-                run_install=0
-                shift
-                ;;
-            --no-input)
-                NO_INPUT=1
-                shift
-                ;;
-            -q|--quiet)
-                QUIET=1
-                shift
-                ;;
-            -i|--interactive)
-                explicit_interactive=1
-                shift
-                ;;
-            -h|--help)
-                cat << 'EOF'
-Usage: jj-workspace add [options]
-
+ADD_EPILOG = """\
 Add a new jj workspace from '@'.
-It creates a workspace at '../ws-<name>' and automatically copies:
-  - .envrc
-  - CLAUDE.local.md
-  - .claude/ directory
+It creates a workspace at '<workspace-dir>/ws-<name>', then runs the
+repo's post-create hook at '.jj-workspace/post_create', if it exists
+and is executable. Pass --no-hook to skip it.
+
+The workspace root directory defaults to '..'. Set it with --workspace-dir
+or the JJ_WORKSPACE_DIR environment variable. Names like 'pool-N' are
+reserved for the lease pool and refused.
 
 Examples:
   jj-workspace add                     # Select bookmark interactively
   jj-workspace add --name feat-auth    # Create workspace '../ws-feat-auth'
-  jj-workspace add --name fix-bug --no-install # Skip running 'make install'
+  jj-workspace add --name fix-bug --no-hook
+  jj-workspace add --name feat-auth --workspace-dir ../.workspaces
+"""
 
-Options:
-      --name <name>   Workspace name; disables interactive mode.
-      --no-install    Do not run 'make install' after creating workspace.
-      --no-input      Disable interactive prompts.
-  -i, --interactive   Force interactive mode using 'gum'.
-  -q, --quiet         Suppress non-essential output.
-  -h, --help          Show this help message and exit.
-EOF
-                return 0
-                ;;
-            -*)
-                echo "Unknown option: $1" >&2
-                return 1
-                ;;
-            *)
-                echo "Too many arguments: $1" >&2
-                return 1
-                ;;
-        esac
-    done
-
-    local interactive=0
-    if [ "$explicit_interactive" -eq 1 ]; then
-        interactive=1
-    elif [ -z "$name" ] && [ "$IS_TTY" -eq 1 ] && [ "$NO_INPUT" -eq 0 ]; then
-        interactive=1
-    fi
-
-    if [ -z "$name" ] && [ "$interactive" -eq 0 ]; then
-        log error "Workspace name is required in non-interactive mode. Use --name <name>."
-        return 1
-    fi
-
-    # Interactive: use gum to pick a name
-    if [ "$interactive" -eq 1 ]; then
-        if [ "$IS_TTY" -eq 0 ] || [ "$NO_INPUT" -eq 1 ]; then
-            log error "Cannot run interactively: terminal is not a TTY or --no-input specified."
-            log error "Please provide workspace name with --name <name>."
-            return 1
-        fi
-
-        if [ "$HAS_GUM" -eq 0 ]; then
-            log error "gum is not installed. Please provide a name with --name <name>."
-            return 1
-        fi
-
-        # List bookmarks after 'dev' if it exists, else all bookmarks
-        local bookmarks
-        if jj log -r "dev" --no-graph -T "" &>/dev/null 2>&1; then
-            bookmarks=$(jj bookmark list -r "dev..@" -T 'if(!self.remote(), self.name() ++ "\n")' 2>/dev/null \
-                | grep -v '^[[:space:]]*$' | sort -u || true)
-        else
-            bookmarks=$(jj bookmark list -T 'if(!self.remote(), self.name() ++ "\n")' 2>/dev/null \
-                | grep -v '^[[:space:]]*$' | sort -u || true)
-        fi
-
-        local choice
-        choice=$(printf "%s\n(type a custom name)" "${bookmarks}" \
-            | gum choose --header="Select workspace name:")
-
-        if [ -z "${choice}" ]; then
-            log info "No name selected."
-            return 1
-        fi
-
-        if [ "${choice}" = "(type a custom name)" ]; then
-            name=$(gum input --placeholder="workspace name")
-            if [ -z "${name}" ]; then
-                log error "No name entered."
-                return 1
-            fi
-        else
-            name="${choice}"
-        fi
-    fi
-
-    if ! validate_workspace_name "${name}"; then
-        return 1
-    fi
-
-    local workspace_path="../ws-${name}"
-
-    if [ -d "${workspace_path}" ]; then
-        log error "Workspace directory '${workspace_path}' already exists. Skipping creation."
-        return 1
-    fi
-
-    if ! jj workspace add -r @ "${workspace_path}"; then
-        log error "Failed to create workspace '${workspace_path}'."
-        return 1
-    fi
-
-    log info "Workspace ${name} created at ${workspace_path}"
-
-    local main_workspace="$PWD"
-    cd "${workspace_path}" || return 1
-
-    if [ -f "${main_workspace}/.envrc" ]; then
-        cp "${main_workspace}/.envrc" .
-        log info "file '.envrc' copied to new workspace."
-        direnv allow . || true
-    fi
-
-    if [ -f "${main_workspace}/CLAUDE.local.md" ]; then
-        cp "${main_workspace}/CLAUDE.local.md" .
-        log info "file 'CLAUDE.local.md' copied to new workspace."
-    fi
-
-    if [ -d "${main_workspace}/.claude" ]; then
-        cp -r "${main_workspace}/.claude" .
-        log info "'.claude' directory copied to new workspace."
-    fi
-
-    # Determine which make target to use, if any
-    local make_target=""
-    if [ -f Makefile ]; then
-        if grep -q '^install-locked[[:space:]]*:' Makefile; then
-            make_target="install-locked"
-        elif grep -q '^install[[:space:]]*:' Makefile; then
-            make_target="install"
-        fi
-    fi
-
-    if [ "$run_install" -eq 1 ]; then
-        if [ "$interactive" -eq 1 ] && [ "$HAS_GUM" -eq 1 ]; then
-            if gum confirm "Do you want to run 'make ${make_target}' in the new workspace?"; then
-                make "${make_target}"
-            else
-                log warn "'make ${make_target}' skipped."
-            fi
-        else
-            log info "Running 'make ${make_target}'..."
-            make "${make_target}" || true
-        fi
-    fi
-}
-
-cmd_forget() {
-    local workspace_to_remove=""
-    local explicit_interactive=-1
-    local force=0
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            -f|--force|-y|--yes)
-                force=1
-                shift
-                ;;
-            -i|--interactive)
-                explicit_interactive=1
-                shift
-                ;;
-            --no-input)
-                NO_INPUT=1
-                shift
-                ;;
-            -q|--quiet)
-                QUIET=1
-                shift
-                ;;
-            -h|--help)
-                cat << 'EOF'
-Usage: jj-workspace forget [options] [workspace]
-
+FORGET_EPILOG = """\
 Forget an existing jj workspace.
 
-It uses 'jj workspace forget' under the hood. Note that this command does
-NOT delete the actual physical directory at '../<workspace>'.
+It uses 'jj workspace forget' under the hood, then deletes the directory
+at '<workspace-dir>/<workspace>'. Pass --no-delete to keep the directory.
+
+Workspaces managed by the lease pool ('ws-pool-N') are refused here; use
+'jj-workspace return' for those.
 
 Examples:
   jj-workspace forget                     # Select workspace interactively
-  jj-workspace forget feat-auth           # Prompt for confirmation before removal
-  jj-workspace forget feat-auth --force   # Remove workspace without confirmation
+  jj-workspace forget feat-auth
+  jj-workspace forget feat-auth --force
+  jj-workspace forget feat-auth --no-delete
+  jj-workspace forget feat-auth --workspace-dir ../.workspaces
+"""
 
-Options:
-  -f, --force         Skip confirmation prompt.
-      --no-input      Disable interactive prompts.
-  -q, --quiet         Suppress non-essential output.
-  -i, --interactive   Prompt interactively using 'gum' to select a workspace.
-  -h, --help          Show this help message and exit.
-EOF
-                return 0
-                ;;
-            -*)
-                echo "Unknown option: $1" >&2
-                return 1
-                ;;
-            *)
-                if [ -z "$workspace_to_remove" ]; then
-                    workspace_to_remove="$1"
-                else
-                    echo "Too many arguments: $1" >&2
-                    return 1
-                fi
-                shift
-                ;;
-        esac
-    done
-
-    local interactive=0
-    if [ "$explicit_interactive" -eq 1 ]; then
-        interactive=1
-    elif [ -z "$workspace_to_remove" ] && [ "$IS_TTY" -eq 1 ] && [ "$NO_INPUT" -eq 0 ]; then
-        interactive=1
-    fi
-
-    if [ -z "${workspace_to_remove}" ]; then
-        if [ "$interactive" -eq 1 ]; then
-            if [ "$IS_TTY" -eq 0 ] || [ "$NO_INPUT" -eq 1 ]; then
-                log error "Cannot run interactively: terminal is not a TTY or --no-input specified."
-                log error "Please provide a workspace name."
-                return 1
-            fi
-
-            if [ "$HAS_GUM" -eq 0 ]; then
-                log error "gum is not installed. Please provide a workspace name."
-                return 1
-            fi
-
-            workspace_to_remove=$(jj workspace list \
-                | awk -F: '{print $1}' \
-                | grep -v '^default$' \
-                | grep -v '^[[:space:]]*$' \
-                | tr -d ' ' \
-                | sort -u \
-                | gum choose --header="Select a workspace to remove:")
-
-            if [ -z "${workspace_to_remove}" ]; then
-                log info "No workspace selected."
-                return 1
-            fi
-        else
-            echo "Error: Workspace name is required in non-interactive mode." >&2
-            echo "Usage: jj-workspace forget [options] <workspace_path>" >&2
-            return 1
-        fi
-    fi
-
-    if ! validate_workspace_name "${workspace_to_remove}"; then
-        return 1
-    fi
-
-    local workspace_path="../${workspace_to_remove}"
-
-    if [ ! -d "${workspace_path}" ]; then
-        log error "Workspace directory '${workspace_path}' does not exist."
-        return 1
-    fi
-
-    if [ "$force" -eq 0 ]; then
-        if [ "$IS_TTY" -eq 1 ]; then
-            if [ "$HAS_GUM" -eq 1 ]; then
-                if ! gum confirm "Are you sure you want to forget workspace '${workspace_to_remove}'?"; then
-                    log info "Workspace removal cancelled."
-                    return 0
-                fi
-            else
-                read -r -p "Are you sure you want to forget workspace '${workspace_to_remove}'? [y/N] " reply
-                case "$reply" in
-                    [yY][eE][sS]|[yY]) ;;
-                    *)
-                        log info "Workspace removal cancelled."
-                        return 0
-                        ;;
-                esac
-            fi
-        else
-            log error "Removing a workspace requires confirmation. Pass -f/--force to confirm in non-interactive scripts."
-            return 1
-        fi
-    fi
-
-    jj workspace forget "${workspace_to_remove}"
-    log info "Workspace '${workspace_to_remove}' removed."
-    log info "Directory '${workspace_path}' was not deleted."
-}
-
-cmd_list() {
-    local format="text"
-
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --json)
-                format="json"
-                shift
-                ;;
-            --plain)
-                format="text"
-                shift
-                ;;
-            -h|--help)
-                cat << 'EOF'
-Usage: jj-workspace list [options]
-
+LIST_EPILOG = """\
 List all jj workspaces.
 
-Options:
-      --json     Output workspace list in JSON format.
-      --plain    Output workspace list in plain text format (default).
-  -h, --help     Show this help message and exit.
-EOF
-                return 0
-                ;;
-            -*)
-                echo "Unknown option: $1" >&2
-                return 1
-                ;;
-            *)
-                echo "Too many arguments: $1" >&2
-                return 1
-                ;;
-        esac
-    done
+Examples:
+  jj-workspace list
+  jj-workspace list --json
+"""
 
-    if [ "$format" = "json" ]; then
-        jj workspace list | python3 -c '
-import sys, json
-workspaces = []
-for line in sys.stdin:
-    line = line.strip()
-    if not line:
-        continue
-    parts = line.split(":", 1)
-    name = parts[0].strip()
-    rest = parts[1].strip() if len(parts) > 1 else ""
-    workspaces.append({"name": name, "details": rest})
-print(json.dumps(workspaces, indent=2))
-'
-    else
-        jj workspace list
-    fi
-}
+LEASE_EPILOG = """\
+Lease a workspace from the pool at '<workspace-dir>' and print its
+absolute path on stdout. Nothing else goes to stdout, so scripts can do:
 
-while [[ $# -gt 0 ]]; do
-    case "$1" in
-        -q|--quiet)
-            QUIET=1
-            shift
-            ;;
-        --no-input)
-            NO_INPUT=1
-            shift
-            ;;
-        --version)
-            echo "jj-workspace version ${VERSION}"
-            exit 0
-            ;;
-        add|create)
-            shift
-            cmd_add "$@"
-            exit $?
-            ;;
-        forget|remove)
-            shift
-            cmd_forget "$@"
-            exit $?
-            ;;
-        list)
-            shift
-            cmd_list "$@"
-            exit $?
-            ;;
-        -h|--help)
-            usage
-            exit 0
-            ;;
-        -*)
-            echo "Unknown option: $1" >&2
-            usage
-            exit 1
-            ;;
-        *)
-            echo "Unknown command: $1" >&2
-            usage
-            exit 1
-            ;;
-    esac
-done
+  path=$(jj-workspace lease)
 
-usage
-exit 0
+The pool holds 'pool_size' workspaces (from
+~/.config/jj-workspace/config.toml, default 10), named 'ws-pool-0' and up.
+Leasing a slot for the first time creates it with 'jj workspace add' and
+runs the repo's post-create hook at '.jj-workspace/post_create', if it
+exists and is executable, unless --no-hook is given. Leasing a slot that
+was returned before reuses it as it is; a 'return' already reset it.
+
+Pass --tenant to record who is leasing the workspace (a user, a CI job,
+any label you choose). It shows up in 'pool status'. It is not enforced;
+anyone can 'return' a leased workspace.
+
+If every slot is leased, this command fails at once, with exit code 3.
+
+Examples:
+  jj-workspace lease                     # Lease a workspace, print its path
+  jj-workspace lease --tenant ci-42      # Record who is leasing it
+  jj-workspace lease --json              # {"name": ..., "path": ..., "created": ...}
+  cd "$(jj-workspace lease)"             # Lease and enter it
+"""
+
+RETURN_EPILOG = """\
+Return a workspace leased with 'lease' back to the pool.
+
+This resets the workspace with 'jj new default@', which discards its
+working-copy changes and moves it to the tip of the main workspace ('@').
+The directory is kept on disk for reuse by the next 'lease'.
+
+Examples:
+  jj-workspace return ws-pool-0
+  jj-workspace return "$path"            # Path printed by 'lease'
+"""
+
+POOL_EPILOG = """\
+Inspect or shrink the lease pool used by 'lease' and 'return'.
+
+Commands:
+  status    Show each slot: free or leased, and by whom.
+  shrink    Remove slots at or beyond the configured pool size.
+
+The pool grows on its own: raise 'pool_size' in
+~/.config/jj-workspace/config.toml, and the next 'lease' creates a new
+slot as it is needed. Shrinking is explicit, since it deletes
+directories; run 'jj-workspace pool shrink' after you lower 'pool_size'.
+
+Examples:
+  jj-workspace pool status
+  jj-workspace pool status --json
+  jj-workspace pool shrink
+"""
+
+POOL_STATUS_EPILOG = """\
+Show each pool slot: its status (free or leased), and by whom.
+
+Examples:
+  jj-workspace pool status
+  jj-workspace pool status --json
+  jj-workspace pool status --workspace-dir ../.workspaces
+"""
+
+POOL_SHRINK_EPILOG = """\
+Remove pool slots at or beyond the configured 'pool_size'.
+
+A leased slot in that range is left alone, with a warning; return it,
+then run this command again.
+
+Examples:
+  jj-workspace pool shrink
+  jj-workspace pool shrink --force
+"""
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = Parser(
+        prog="jj-workspace",
+        description=(
+            "A CLI to manage Jujutsu (jj) workspaces based on branches and bookmarks, "
+            "with a pool of leasable workspaces."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=TOP_EPILOG,
+    )
+    parser.add_argument("--version", action="store_true", help="Show version and exit.")
+
+    common = Parser(add_help=False)
+    common.add_argument("-q", "--quiet", action="store_true", help="Suppress non-essential output.")
+    common.add_argument("--no-input", action="store_true", help="Disable interactive prompts.")
+
+    with_dir = Parser(add_help=False)
+    with_dir.add_argument(
+        "--workspace-dir",
+        default=os.environ.get("JJ_WORKSPACE_DIR", ".."),
+        metavar="<dir>",
+        help="Root directory for workspaces (env: JJ_WORKSPACE_DIR, default '..').",
+    )
+
+    sub = parser.add_subparsers(dest="command", parser_class=Parser)
+
+    add_p = sub.add_parser(
+        "add",
+        parents=[common, with_dir],
+        help="Add a new jj workspace from '@'.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=ADD_EPILOG,
+    )
+    add_p.add_argument("--name", metavar="<name>", help="Workspace name; disables interactive mode.")
+    add_p.add_argument("--no-hook", action="store_true", help="Do not run the repo's post-create hook.")
+    add_p.add_argument("-i", "--interactive", action="store_true", help="Force interactive mode using 'gum'.")
+
+    forget_p = sub.add_parser(
+        "forget",
+        parents=[common, with_dir],
+        help="Forget a jj workspace and delete its directory.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=FORGET_EPILOG,
+    )
+    forget_p.add_argument("workspace", nargs="?", default="", help="Workspace to forget.")
+    forget_p.add_argument("-f", "--force", action="store_true", help="Skip confirmation prompt.")
+    forget_p.add_argument("--no-delete", action="store_true", help="Keep the workspace directory.")
+    forget_p.add_argument("-i", "--interactive", action="store_true", help="Prompt interactively using 'gum'.")
+
+    list_p = sub.add_parser(
+        "list",
+        parents=[common],
+        help="List all jj workspaces.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=LIST_EPILOG,
+    )
+    list_p.add_argument("--json", action="store_true", help="Output list in JSON format.")
+    list_p.add_argument("--plain", action="store_true", help="Output list in plain text format (default).")
+
+    lease_p = sub.add_parser(
+        "lease",
+        parents=[common, with_dir],
+        help="Lease a workspace from the pool.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=LEASE_EPILOG,
+    )
+    lease_p.add_argument(
+        "--no-hook", action="store_true", help="Do not run the repo's post-create hook on a newly created slot."
+    )
+    lease_p.add_argument("--tenant", metavar="<name>", help="Record who is leasing this workspace.")
+    lease_p.add_argument("--json", action="store_true", help="Output the lease result as JSON.")
+
+    return_p = sub.add_parser(
+        "return",
+        parents=[common, with_dir],
+        help="Return a leased workspace to the pool.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=RETURN_EPILOG,
+    )
+    return_p.add_argument("workspace", help="Leased workspace name or path.")
+
+    pool_p = sub.add_parser(
+        "pool",
+        help="Inspect and manage the lease pool.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=POOL_EPILOG,
+    )
+    pool_sub = pool_p.add_subparsers(dest="pool_command", parser_class=Parser)
+
+    status_p = pool_sub.add_parser(
+        "status",
+        parents=[common, with_dir],
+        help="Show the pool's slots.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=POOL_STATUS_EPILOG,
+    )
+    status_p.add_argument("--json", action="store_true", help="Output status as JSON.")
+
+    shrink_p = pool_sub.add_parser(
+        "shrink",
+        parents=[common, with_dir],
+        help="Remove slots beyond the configured pool size.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=POOL_SHRINK_EPILOG,
+    )
+    shrink_p.add_argument("-f", "--force", action="store_true", help="Skip confirmation prompt.")
+
+    parser.set_defaults(_pool_parser=pool_p)
+    return parser
+
+
+# --------------------------------------------------------------------------
+# Entry point
+# --------------------------------------------------------------------------
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    if args.version:
+        print(f"jj-workspace version {VERSION}")
+        return EXIT_OK
+
+    if args.command is None:
+        parser.print_help()
+        return EXIT_OK
+
+    if args.command == "pool" and getattr(args, "pool_command", None) is None:
+        args._pool_parser.print_help()
+        return EXIT_OK
+
+    dispatch = {
+        "add": cmd_add,
+        "forget": cmd_forget,
+        "list": cmd_list,
+        "lease": cmd_lease,
+        "return": cmd_return,
+    }
+    if args.command == "pool":
+        pool_dispatch = {"status": cmd_pool_status, "shrink": cmd_pool_shrink}
+        return pool_dispatch[args.pool_command](args)
+    return dispatch[args.command](args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

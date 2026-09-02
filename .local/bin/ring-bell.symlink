@@ -42,6 +42,33 @@ mkdir -p "$STATE_DIR"
 
 have() { command -v "$1" >/dev/null 2>&1; }
 
+in_distrobox() {
+  [[ -n "${DISTROBOX_ENTER_PATH:-}" ]] || {
+    [[ -n "${CONTAINER_ID:-}" && -f /run/.containerenv ]]
+  }
+}
+
+# Run the WezTerm CLI on the host when this hook runs inside Distrobox. The
+# guest normally has no `wezterm` binary and cannot control the host GUI.
+HOST_WEZTERM="/home/linuxbrew/.linuxbrew/bin/wezterm"
+wezterm_cli() {
+  if in_distrobox && have distrobox-host-exec; then
+    distrobox-host-exec "$HOST_WEZTERM" "$@"
+  elif have wezterm; then
+    wezterm "$@"
+  else
+    return 127
+  fi
+}
+
+have_wezterm_cli() {
+  if in_distrobox && have distrobox-host-exec; then
+    distrobox-host-exec test -x "$HOST_WEZTERM"
+    return
+  fi
+  have wezterm
+}
+
 in_zellij() { [[ -n "${ZELLIJ:-}" || -n "${ZELLIJ_SESSION_NAME:-}" ]]; }
 in_wezterm() {
   [[ -n "${WEZTERM_PANE:-}" || -n "${WEZTERM_UNIX_SOCKET:-}" || -n "${WEZTERM_EXECUTABLE:-}" ]]
@@ -81,25 +108,53 @@ zellij_rename() { # <tabId> <name>
   zellij action rename-tab-by-id "$1" "$2" >/dev/null 2>&1 || true
 }
 
+# Return the current WezTerm pane for this Pi process. A WezTerm restart can
+# invalidate WEZTERM_PANE and WEZTERM_UNIX_SOCKET while Pi remains alive. The
+# extension passes PI_BELL_TTY before redirecting this hook's standard streams,
+# so the TTY is the stable identity used to recover the replacement pane.
+wezterm_pane_id() {
+  have_wezterm_cli || return 1
+
+  local panes pane tty="${PI_BELL_TTY:-}" inherited="${WEZTERM_PANE:-}"
+  panes=$(wezterm_cli cli list --format json 2>/dev/null) || return 1
+
+  if [[ -n "$tty" ]]; then
+    pane=$(printf '%s' "$panes" \
+      | jq -r --arg tty "$tty" '.[] | select(.tty_name == $tty) | .pane_id' 2>/dev/null \
+      | head -n1)
+    if [[ -n "$pane" && "$pane" != "null" ]]; then
+      printf '%s' "$pane"
+      return 0
+    fi
+    # PI_BELL_TTY identifies this Pi process. Never use a pane ID that may now
+    # refer to a different terminal after WezTerm has restarted.
+    return 1
+  fi
+
+  [[ -n "$inherited" ]] || return 1
+  pane=$(printf '%s' "$panes" \
+    | jq -r --arg pane "$inherited" '.[] | select((.pane_id | tostring) == $pane) | .pane_id' 2>/dev/null \
+    | head -n1)
+  [[ -n "$pane" && "$pane" != "null" ]] || return 1
+  printf '%s' "$pane"
+}
+
 # Return 0 when our WezTerm pane is the focused one, 1 otherwise.
-# Without a pane id we cannot tell, so assume focused.
+# When the pane cannot be found, assume focus and do not change another tab.
 wezterm_is_focused() {
-  local pane="${WEZTERM_PANE:-}"
-  [[ -z "$pane" ]] && return 0
-  have wezterm || return 0
+  local pane
+  pane=$(wezterm_pane_id) || return 0
   local match
-  match=$(wezterm cli list-clients --format json 2>/dev/null \
+  match=$(wezterm_cli cli list-clients --format json 2>/dev/null \
     | jq -r --arg p "$pane" 'any(.[]; (.focused_pane_id | tostring) == $p)' 2>/dev/null)
   [[ "$match" == "true" ]]
 }
 
 wezterm_set_title() { # <title>
   in_wezterm || return 0
-  have wezterm || return 0
-  local args=(cli set-tab-title)
-  [[ -n "${WEZTERM_PANE:-}" ]] && args+=(--pane-id "$WEZTERM_PANE")
-  args+=("$1")
-  wezterm "${args[@]}" >/dev/null 2>&1 || true
+  local pane
+  pane=$(wezterm_pane_id) || return 0
+  wezterm_cli cli set-tab-title --pane-id "$pane" "$1" >/dev/null 2>&1 || true
 }
 
 # ─── poller (background) ─────────────────────────────────────────────────────
@@ -112,8 +167,7 @@ wezterm_set_title() { # <title>
 # on the next Pi event).
 
 poll_wezterm() {
-  local pane="${WEZTERM_PANE:-}"
-  [[ -z "$pane" ]] && return 0
+  wezterm_pane_id >/dev/null || return 0
   while true; do
     sleep 0.3
     if wezterm_is_focused; then

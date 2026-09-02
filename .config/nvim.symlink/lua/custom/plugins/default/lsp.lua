@@ -165,6 +165,7 @@ return {
           },
         },
         clangd = {},
+        rust_analyzer = {},
         jdtls = {},
         jsonls = {},
         kotlin_lsp = {},

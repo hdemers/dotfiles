@@ -1,0 +1,50 @@
+prSections:
+  - title: Review Requested (hdemers)
+    filters: >-
+      repo:GrubhubProd/bundling_gdp repo:GrubhubProd/courier_supply_gdp
+      repo:GrubhubProd/decision_model_data_preparation_gdp repo:GrubhubProd/dispatch_courier_acc_gdp
+      repo:GrubhubProd/dynamic_handoff_feasibility_gdp repo:GrubhubProd/egg_timer_gdp
+      repo:GrubhubProd/experiment_readouts repo:GrubhubProd/fulfillment_feature_engineering_gdp
+      repo:GrubhubProd/fulfillment_ml_monitoring_gdp repo:GrubhubProd/gh-mlops
+      repo:GrubhubProd/homepage_merchant_ranker_gdp repo:GrubhubProd/image_scoring_gdp
+      repo:GrubhubProd/ovforecast_gdp repo:GrubhubProd/pickup_departed_feasibility_gdp
+      repo:GrubhubProd/recurrent_pickup_arrival_gdp repo:GrubhubProd/time_estimators_gdp
+      is:open
+      user-review-requested:hdemers
+
+  - title: My PRs
+    filters: >-
+      repo:GrubhubProd/bundling_gdp repo:GrubhubProd/courier_supply_gdp
+      repo:GrubhubProd/decision_model_data_preparation_gdp repo:GrubhubProd/dispatch_courier_acc_gdp
+      repo:GrubhubProd/dynamic_handoff_feasibility_gdp repo:GrubhubProd/egg_timer_gdp
+      repo:GrubhubProd/experiment_readouts repo:GrubhubProd/fulfillment_feature_engineering_gdp
+      repo:GrubhubProd/fulfillment_ml_monitoring_gdp repo:GrubhubProd/gh-mlops
+      repo:GrubhubProd/homepage_merchant_ranker_gdp repo:GrubhubProd/image_scoring_gdp
+      repo:GrubhubProd/ovforecast_gdp repo:GrubhubProd/pickup_departed_feasibility_gdp
+      repo:GrubhubProd/recurrent_pickup_arrival_gdp repo:GrubhubProd/time_estimators_gdp
+      is:open
+      author:@me
+
+defaults:
+  prsLimit: 30
+  view: prs
+  refetchIntervalMinutes: 30
+
+theme:
+  colors:
+    text:
+      primary: "#c0caf5"
+      secondary: "#7aa2f7"
+      inverted: "#1d202f"
+      faint: "#565f89"
+      warning: "#e0af68"
+      success: "#9ece6a"
+      error: "#f7768e"
+      actor: "#bb9af7"
+    background:
+      selected: "#2e3c64"
+    border:
+      primary: "#7aa2f7"
+      secondary: "#3b4261"
+      faint: "#292e42"
+

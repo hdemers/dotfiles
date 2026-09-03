@@ -500,6 +500,25 @@ return {
             },
           },
         },
+        sources = {
+          undo = {
+            win = {
+              input = {
+                keys = {
+                  ['<a-y>'] = { 'yank_del', mode = { 'n', 'i' }, desc = 'Yank deleted lines' },
+                },
+              },
+              list = {
+                keys = {
+                  ['yd'] = { 'yank_del', desc = 'Yank deleted lines' },
+                  ['ya'] = { 'yank_add', desc = 'Yank added lines' },
+                  ['<a-y>'] = { 'yank_del', desc = 'Yank deleted lines' },
+                  ['<c-y>'] = { 'yank_add', desc = 'Yank added lines' },
+                },
+              },
+            },
+          },
+        },
       },
       indent = { enabled = false },
       dashboard = { enabled = true },
@@ -564,8 +583,7 @@ return {
       -- { "<leader>gR", function() Snacks.picker.gh_pr({ state = "all" }) end, desc = "GitHub Pull Requests (all)" },
       { "]r",         function() Snacks.words.jump(vim.v.count1) end, desc = "Next Reference", mode = { "n", "t" } },
       { "[r",         function() Snacks.words.jump(-vim.v.count1) end, desc = "Prev Reference", mode = { "n", "t" } },
-      { '<leader>sb', function() Snacks.picker.files { cwd = ',reports/brainstorming', sort = { fields = { 'file:desc' } }, matcher = { sort_empty = true } } end, desc = 'Search brainstorming reports', },
-      { '<leader>sB', function() Snacks.picker.files { cwd = 'openspec/explorations', sort = { fields = { 'file:desc' } }, matcher = { sort_empty = true } } end, desc = 'Search exploration reports', },
+      { '<leader>sb', function() Snacks.picker.files { cwd = ',reports', sort = { fields = { 'file:desc' } }, matcher = { sort_empty = true } } end, desc = 'Search reports', },
       {
         '<leader>sc',
         function()

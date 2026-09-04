@@ -248,6 +248,31 @@ def abs_root(workspace_dir: str) -> Path:
     return Path(workspace_dir).expanduser().resolve()
 
 
+def find_repo_root() -> Path | None:
+    """Return the root directory of the current jj repository, or None.
+
+    Uses 'jj root'. Returns None if the command fails, for example when
+    the current directory is not inside a jj repository.
+    """
+    result = subprocess.run(["jj", "root"], capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        return None
+    root = result.stdout.strip()
+    return Path(root) if root else None
+
+
+def default_workspace_dir() -> str:
+    """Default workspace root: '.<repo_name>-ws', next to the jj repo root.
+
+    Falls back to '..' if the repo root cannot be found.
+    """
+    repo_root = find_repo_root()
+    if repo_root is None:
+        return ".."
+    repo_name = repo_root.name.lstrip(".")
+    return str(repo_root.parent / f".{repo_name}-ws")
+
+
 # --------------------------------------------------------------------------
 # Post-create hook, shared by 'add' and a first-time 'lease'
 # --------------------------------------------------------------------------
@@ -809,7 +834,8 @@ Commands:
 Run 'jj-workspace <command> --help' for the options of a command.
 
 Environment:
-  JJ_WORKSPACE_DIR   Root directory for workspaces (default '..').
+  JJ_WORKSPACE_DIR   Root directory for workspaces (default:
+                     '.<repo_name>-ws', next to the jj repo root).
 
 Files:
   ~/.config/jj-workspace/config.toml     Pool size ('pool_size', default 10).
@@ -822,9 +848,10 @@ It creates a workspace at '<workspace-dir>/ws-<name>', then runs the
 repo's post-create hook at '.jj-workspace/post_create', if it exists
 and is executable. Pass --no-hook to skip it.
 
-The workspace root directory defaults to '..'. Set it with --workspace-dir
-or the JJ_WORKSPACE_DIR environment variable. Names like 'pool-N' are
-reserved for the lease pool and refused.
+The workspace root directory defaults to '.<repo_name>-ws', next to the
+jj repo root. Set it with --workspace-dir or the JJ_WORKSPACE_DIR
+environment variable. Names like 'pool-N' are reserved for the lease
+pool and refused.
 
 Examples:
   jj-workspace add                     # Select bookmark interactively
@@ -954,9 +981,12 @@ def build_parser() -> argparse.ArgumentParser:
     with_dir = Parser(add_help=False)
     with_dir.add_argument(
         "--workspace-dir",
-        default=os.environ.get("JJ_WORKSPACE_DIR", ".."),
+        default=os.environ.get("JJ_WORKSPACE_DIR"),
         metavar="<dir>",
-        help="Root directory for workspaces (env: JJ_WORKSPACE_DIR, default '..').",
+        help=(
+            "Root directory for workspaces (env: JJ_WORKSPACE_DIR, "
+            "default: '.<repo_name>-ws', next to the jj repo root)."
+        ),
     )
 
     sub = parser.add_subparsers(dest="command", parser_class=Parser)
@@ -1063,6 +1093,9 @@ def main(argv: list[str] | None = None) -> int:
         parser.print_help()
         return EXIT_OK
 
+    if getattr(args, "workspace_dir", None) is None and hasattr(args, "workspace_dir"):
+        args.workspace_dir = default_workspace_dir()
+
     if args.command == "pool" and getattr(args, "pool_command", None) is None:
         args._pool_parser.print_help()
         return EXIT_OK
@@ -1082,3 +1115,5 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+# vim: ft=python

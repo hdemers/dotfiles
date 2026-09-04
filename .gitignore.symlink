@@ -123,3 +123,5 @@ graphify-out
 .jj-workspace/
 
 .zvec-grep
+
+.pyscn/

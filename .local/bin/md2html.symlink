@@ -122,7 +122,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 h1 {
-  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-size: clamp(2.4rem, 5vw, 3.6rem);
   line-height: 1.1;
   margin-top: 1.2em;
   margin-bottom: 0.6em;
@@ -153,7 +153,7 @@ h1.is-stuck {
 }
 
 h2 {
-  font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+  font-size: clamp(1.75rem, 3.5vw, 2.3rem);
   margin-top: 1.8em;
   margin-bottom: 0.5em;
   border-bottom: 1px solid var(--rule);
@@ -162,15 +162,30 @@ h2 {
 }
 
 h3 {
-  font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+  font-size: clamp(1.4rem, 2.5vw, 1.75rem);
   margin-top: 1.5em;
   margin-bottom: 0.4em;
 }
 
 h4 {
+  font-size: 1.28rem;
+  margin-top: 1.3em;
+  margin-bottom: 0.3em;
+}
+
+h5 {
   font-size: 1.15rem;
   margin-top: 1.2em;
-  margin-bottom: 0.3em;
+  margin-bottom: 0.25em;
+  color: var(--ink);
+}
+
+h6 {
+  font-size: 1.05rem;
+  margin-top: 1.1em;
+  margin-bottom: 0.2em;
+  color: var(--ink-soft);
+  font-style: italic;
 }
 
 p {
@@ -661,7 +676,7 @@ TOGGLE_HTML = """<div class="theme-menu-wrapper">
 
     // ScrollSpy: highlight active TOC item as headings cross the viewport
     window.addEventListener('DOMContentLoaded', function() {
-      var headings = document.querySelectorAll('h1[id], h2[id], h3[id], h4[id]');
+      var headings = document.querySelectorAll('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]');
       if (!headings.length) return;
 
       var observer = new IntersectionObserver(function(entries) {

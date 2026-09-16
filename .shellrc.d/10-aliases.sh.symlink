@@ -149,17 +149,7 @@ alias dtr="env FORCE_COLOR=true budget latest | \
 alias gjust="/usr/bin/just --justfile $HOME/src/containers/devpod/gh-ai-sandbox.Justfile"
 alias djust="/usr/bin/just --justfile $HOME/src/containers/devpod/ai-sandbox.Justfile"
 
-alias ccgh="env ANTHROPIC_MODEL=${GH_ANTHROPIC_MODEL} ANTHROPIC_SMALL_FAST_MODEL=${GH_ANTHROPIC_SMALL_FAST_MODEL} ANTHROPIC_USE_BEDROCK=1 claude"
-
 alias gmore=" glow --pager -w 110"
-
-alias geminy="gemini \
-    --yolo \
-    --include-directories /home/hdemers/Dropbox/Agents/"
-
-alias gemini="env GEMINI_SYSTEM_MD=${HOME}/.gemini/system.md gemini"
-alias caveman-full="env GEMINI_SYSTEM_MD=${HOME}/.gemini/caveman-full-system.md gemini"
-alias caveman="env GEMINI_SYSTEM_MD=${HOME}/.gemini/caveman-lite-system.md gemini"
 
 alias marimo-edit="uv run --no-sync --with marimo marimo edit --no-token"
 

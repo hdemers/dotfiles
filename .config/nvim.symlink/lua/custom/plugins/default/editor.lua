@@ -449,6 +449,7 @@ return {
       ---@module 'render-markdown'
       ---@type render.md.UserConfig
       require('render-markdown').setup {
+        anti_conceal = { ignore = { table_border = true } },
         heading = {
           signs = { '§' },
         },
@@ -505,7 +506,11 @@ return {
             win = {
               input = {
                 keys = {
-                  ['<a-y>'] = { 'yank_del', mode = { 'n', 'i' }, desc = 'Yank deleted lines' },
+                  ['<a-y>'] = {
+                    'yank_del',
+                    mode = { 'n', 'i' },
+                    desc = 'Yank deleted lines',
+                  },
                 },
               },
               list = {

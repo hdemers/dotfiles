@@ -11,7 +11,7 @@ return {
     end,
     config = function()
       local function rebase_octopus(state, _ctx)
-        require('jujutsu.utils').run_jj_cmd('rebase-octopus', nil, { notify = false })
+        require('jujutsu.jj').run('rebase-octopus', { cwd = state.cwd, notify = false })
       end
       local jj = require 'jujutsu'
 
@@ -110,16 +110,16 @@ return {
           },
           ['S'] = {
             fn = function(state, ctx)
-              require('jujutsu.utils').run_jj_cmd(
+              require('jujutsu.jj').run(
                 string.format('rebase -r %s -B dev', ctx.item),
-                nil
+                { cwd = state.cwd }
               )
             end,
             desc = 'Stage revset',
           },
           ['gp'] = {
-            fn = function(_, _)
-              require('jujutsu.utils').run_jj_cmd('push-my-shared-branches', nil)
+            fn = function(state, _)
+              require('jujutsu.jj').run('push-my-shared-branches', { cwd = state.cwd })
             end,
             desc = 'Push my shared branches',
           },
@@ -185,16 +185,16 @@ return {
           },
           ['rc'] = {
             fn = function(state, ctx)
-              require('jujutsu.utils').run_jj_cmd(
+              require('jujutsu.jj').run(
                 string.format('rebase-octopus -d %s', ctx.item),
-                nil
+                { cwd = state.cwd }
               )
             end,
             desc = 'Rebase colleague bookmark',
           },
           ['rm'] = {
             fn = function(state, ctx)
-              require('jujutsu.utils').run_jj_cmd 'rebase-octopus'
+              require('jujutsu.jj').run('rebase-octopus', { cwd = state.cwd })
             end,
             desc = 'Rebase colleague bookmark (default target)',
           },

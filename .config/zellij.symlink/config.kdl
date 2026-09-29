@@ -162,7 +162,7 @@ keybinds clear-defaults=true {
         bind "Alt f" { ToggleFloatingPanes; }
         // bind "Alt j" { MoveFocus "down"; }
         // bind "Alt k" { MoveFocus "up"; }
-        bind "Alt s" { MovePane "left"; }
+        // bind "Alt s" { MovePane "left"; }
         bind "Alt p" { GoToPreviousTab; }
         bind "Alt n" { GoToNextTab; }
         bind "Alt a" { NewTab; }
@@ -233,6 +233,15 @@ keybinds clear-defaults=true {
               close_on_exit true
               name "S3 Browser"
           }
+        }
+        bind "Alt s" {
+            MoveFocus "left";
+            Run "bash" "-ic" "direnv exec . pi" {
+                close_on_exit true;
+                stacked true;
+                name "π";
+            };
+            SwitchToMode "locked";
         }
     }
     shared_except "locked" "renametab" "renamepane" {

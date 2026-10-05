@@ -1,1 +1,128 @@
-../../.gitignore.symlink
+*~
+*.swp
+*.pyc
+*.log
+.env
+*.class
+.netrwhist
+
+# Notebook checkpoints directories
+.ipynb_checkpoints
+
+# R stuff
+.RData
+.Rhistory
+
+dask-worker-space
+
+# dotenv run configuration files
+.envrc
+
+# Jedi project configuration file
+.jedi
+
+# Vim session files
+Session.vim
+
+# projectionist files
+.projections.json
+
+# Tags files
+TAGS
+tags
+
+# Jetbrains' config directory
+.idea
+
+# Vim ARSync plugin config file
+.vim-arsync
+
+# vimspector config files
+.vimspector.json
+
+# gutentags config file
+.gutctags
+
+.vscode
+
+__pycache__
+
+# Ignore worktrees
+worktrees
+
+.nvim/
+
+pyrightconfig.json
+
+.cast
+
+examples/
+
+.coverage.*
+coverage.xml
+
+.null-ls_*
+
+lightning_logs
+
+.tox
+
+.aider/
+.aider*history*
+.aider*tags*
+
+.neoconf.json
+
+# Code Index MCP cache directory
+.code_indexer/
+
+scratch*
+
+.analyses
+
+# Ignore everything that starts with a comma
+,*
+
+# Claude Code related files
+CLAUDE.local.md
+AGENTS.local.md
+GEMINI.local.md
+settings.local.json
+*claude.json
+
+token.json
+
+.venv
+
+digest.txt
+
+*.cast
+
+# Gemini related files
+.gemini/tmp/
+
+openspec/changes/*/*.html
+
+.antigravitycli/
+
+**/.claude/.cc-writes/
+
+.commitlintrc.yml
+
+graphify-out
+
+.ci.toml
+
+# Pi Agent exclude directives
+.pi
+.pi-subagents/
+.pi-sdlc.toml
+.pi-sdlc.json
+.pi-openspec-workflow.json
+
+.jj-workspace/
+
+.zvec-grep
+
+.pyscn/
+

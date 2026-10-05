@@ -224,14 +224,14 @@ keybinds clear-defaults=true {
           }
         }
         bind "Alt '" {
-          Run "bash" "-ic" "s3view" {
+          Run "bash" "-ic" "cloudview" {
               floating true
               x "15%"
               y "5%"
               width "70%"
               height "90%"
               close_on_exit true
-              name "S3 Browser"
+              name "Cloud Bucket Browser"
           }
         }
         bind "Alt s" {

@@ -1,5 +1,4 @@
 local jj_log_dir = '/home/hdemers/Projets/nvim/jj-log'
-local jj_review_dir = '/home/hdemers/Projets/nvim/jj-review.nvim'
 
 return {
   {
@@ -200,20 +199,6 @@ return {
           },
         },
       }
-    end,
-  },
-  {
-    'hdemers/jj-review.nvim',
-    url = 'git@github.com:hdemers/jj-review.nvim.git',
-    dir = vim.uv.fs_stat(jj_review_dir) and jj_review_dir or nil,
-    event = { 'BufReadPost', 'BufNewFile' },
-    keys = {
-      { '<leader>gr', '<cmd>JJReview<CR>', desc = 'GitHub PR Reviews' },
-      { '<leader>gR', '<cmd>JJReviewAll<CR>', desc = 'GitHub All PR Reviews' },
-      { '<leader>cr', '<cmd>JJReviewLocal<CR>', desc = 'Local Reviews Reviews' },
-    },
-    config = function()
-      require('jj-review').setup {}
     end,
   },
   {

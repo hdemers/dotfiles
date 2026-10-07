@@ -1,5 +1,20 @@
 return {
   {
+    name = 'pr_comments',
+    dir = '~/src/nvim/pr_comments',
+    cmd = { 'PRComment', 'PRCommentAdd', 'PRCommentEdit', 'PRCommentRefresh', 'PRSelect' },
+    keys = {
+      { '<leader>gr', '<cmd>PRSelect<CR>', desc = 'Select PR under review' },
+      { '<leader>gR', '<cmd>PRSelect!<CR>', desc = 'Select PR under review (all)' },
+      { '<leader>gc', '<cmd>PRComment<CR>', desc = 'PR comment (edit or add)' },
+      { '<leader>gc', ':PRComment<CR>', mode = 'x', desc = 'PR comment (range)' },
+      { '<leader>gC', '<cmd>PRComment!<CR>', desc = 'PR comment (file)' },
+    },
+    config = function()
+      require('pr_comments').setup()
+    end,
+  },
+  {
     name = 'ntfy',
     dir = '~/src/nvim/ntfy',
     config = function()

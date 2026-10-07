@@ -64,8 +64,9 @@
 # Slack
 <Super>u,flatpak run com.slack.Slack,Slack,,
 
-# Btop
+# Btop siltide
 <Super>b,gtk-launch btop.desktop,,/.*btop.*/
+<Super>s,gtk-launch siltide.desktop,,/.*siltide.*/
 
 # Obsidian
 <Super>k,flatpak run md.obsidian.Obsidian,obsidian,

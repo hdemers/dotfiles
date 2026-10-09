@@ -119,6 +119,7 @@ graphify-out
 .pi-sdlc.toml
 .pi-sdlc.json
 .pi-openspec-workflow.json
+,plans/
 
 .jj-workspace/
 

@@ -109,6 +109,16 @@ keybinds clear-defaults=true {
         bind "Alt k" { MoveFocus "up"; SwitchToMode "locked"; }
         bind "Alt l" { MoveFocusOrTab "right"; SwitchToMode "locked"; }
         bind "s" { SwitchToMode "normal"; }
+        bind "[" { ScrollToPreviousPrompt; }
+        bind "]" { ScrollToNextPrompt; }
+        bind "b" { SelectCommandAtScrollPosition; }
+        // Block browsing entered by J/K in Zsh vi-command mode (.zshrc.symlink).
+        // Navigation is viewport-relative, just like [ and ].
+        bind "K" { ScrollToPreviousPrompt; SelectCommandAtScrollPosition; }
+        bind "J" { ScrollToNextPrompt; SelectCommandAtScrollPosition; }
+        bind "y" { Copy; ScrollToBottom; SwitchToMode "locked"; }
+        bind "q" { ScrollToBottom; SwitchToMode "locked"; }
+        bind "c" { CopyLastCommandOutput; }
     }
     search {
         bind "c" { SearchToggleOption "CaseSensitivity"; }
@@ -165,7 +175,19 @@ keybinds clear-defaults=true {
         // bind "Alt s" { MovePane "left"; }
         bind "Alt p" { GoToPreviousTab; }
         bind "Alt n" { GoToNextTab; }
-        bind "Alt a" { NewTab; }
+        // Copy the latest command output without entering scroll mode.
+        bind "Alt y" { CopyLastCommandOutput; }
+        bind "Alt a" {
+           Run "bash" "-ic" "exec zsh" {
+               floating true
+               x "15%"
+               y "10%"
+               width "50%"
+               height "50%"
+               close_on_exit true
+               name "zsh"
+           }
+         }
         bind "Alt i" { MoveTab "left"; }
         bind "Alt o" { MoveTab "right"; }
         bind "Alt z" { ToggleFocusFullscreen;}
@@ -583,6 +605,7 @@ session_serialization false
 // Default: true
 // 
 // show_release_notes false
+stacked_pane_list false
 
 web_server false
 web_server_ip "0.0.0.0"

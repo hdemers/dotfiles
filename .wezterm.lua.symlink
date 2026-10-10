@@ -6,6 +6,13 @@ local wezterm = require 'wezterm'
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
+-- Attention is a decoration, never a replacement for the normal tab label.
+local pi_bell_path = wezterm.home_dir
+  .. '/Projets/pi-extensions/extensions/pi-bell/wezterm/pi-bell.lua'
+wezterm.add_to_config_reload_watch_list(pi_bell_path)
+local pi_bell = dofile(pi_bell_path)
+pi_bell.setup()
+
 local function file_exists(path)
   local file = io.open(path, 'r')
   if file then
@@ -315,7 +322,7 @@ end
 -- Dynamic tab title formatting (scheme changes handled by explicit events)
 wezterm.on('format-tab-title', function(tab, tabs, panes, cfg, hover, max_width)
   local tb = tab_bar_colors()
-  local title = get_tab_title(tab)
+  local title = pi_bell.decorate_title(tab, get_tab_title(tab))
   local bg = tab.is_active and tb.active_tab.bg_color or tb.inactive_tab.bg_color
   local fg = tab.is_active and tb.active_tab.fg_color or tb.inactive_tab.fg_color
 
@@ -373,6 +380,8 @@ config.keys = {
   { key = 'w', mods = 'CTRL|ALT', action = distrobox_tab_action 'work-dev' },
   { key = 'u', mods = 'CTRL|ALT', action = distrobox_tab_action 'ubuntu' },
   { key = 't', mods = 'CTRL|ALT', action = toggle_theme_action() },
+  { key = 'UpArrow', mods = 'SHIFT', action = wezterm.action.ScrollToPrompt(-1) },
+  { key = 'DownArrow', mods = 'SHIFT', action = wezterm.action.ScrollToPrompt(1) },
   -- Tab navigation
   {
     key = 'h',

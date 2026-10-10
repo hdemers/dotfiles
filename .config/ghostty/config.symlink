@@ -56,3 +56,5 @@ keybind = alt+l=goto_split:right
 
 window-height = 60
 window-width = 200
+
+unfocused-split-opacity = 1

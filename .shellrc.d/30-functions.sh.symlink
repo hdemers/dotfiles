@@ -258,6 +258,7 @@ custom-atuin-history-widget() {
       | fzf --ansi --delimiter='\t' \
           --layout=reverse \
           --height=40% \
+          --tiebreak=index \
           --bind 'tab:execute-silent(echo paste)+abort' \
           --bind 'enter:execute-silent(echo execute)+abort' \
           --expect=tab,enter \

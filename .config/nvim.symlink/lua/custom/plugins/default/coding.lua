@@ -87,11 +87,16 @@ return {
     },
     opts = {
       outline_window = {
-        width = 50,
+        width = 40,
         relative_width = false,
         auto_close = true,
         auto_jump = true,
+        show_cursorline = true,
+        hide_cursor = true,
       },
+      -- preview_window = {
+      --   winhl = 'NormalFloat:',
+      -- },
       providers = {
         priority = { 'markdown', 'lsp', 'coc', 'norg' },
         -- Configuration for each provider (3rd party providers are supported)

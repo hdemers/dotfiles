@@ -463,6 +463,13 @@ local function range_comment(report, entry_key)
   end
 end
 
+local function showme_text_width(window)
+  return math.max(
+    1,
+    vim.api.nvim_win_get_width(window) - vim.fn.getwininfo(window)[1].textoff
+  )
+end
+
 local function render_showme_annotation(annotation)
   if
     not vim.api.nvim_buf_is_valid(annotation.buffer)
@@ -478,9 +485,7 @@ local function render_showme_annotation(annotation)
 
   vim.api.nvim__ns_set(annotation.namespace, { wins = { annotation.window } })
   vim.api.nvim_buf_clear_namespace(annotation.buffer, annotation.namespace, 0, -1)
-  local window_info = vim.fn.getwininfo(annotation.window)[1]
-  local width =
-    math.max(1, vim.api.nvim_win_get_width(annotation.window) - window_info.textoff)
+  local width = showme_text_width(annotation.window)
   for line = annotation.first, annotation.last do
     vim.api.nvim_buf_set_extmark(annotation.buffer, annotation.namespace, line - 1, 0, {
       line_hl_group = 'MiscShowMeBackground',
@@ -510,6 +515,7 @@ local function render_showme_annotation(annotation)
     0,
     { virt_lines = virtual_lines }
   )
+  annotation.text_width = width
   return true
 end
 
@@ -521,6 +527,44 @@ local function configure_showme_autocommands()
   end
 
   showme_augroup = vim.api.nvim_create_augroup('misc-showme', { clear = true })
+  local function needs_reflow(annotation)
+    return vim.api.nvim_win_is_valid(annotation.window)
+      and vim.api.nvim_win_get_tabpage(annotation.window) == vim.api.nvim_get_current_tabpage()
+      and vim.api.nvim_win_get_buf(annotation.window) == annotation.buffer
+      and annotation.text_width ~= showme_text_width(annotation.window)
+  end
+  local reflow_pending = false
+  vim.api.nvim_set_decoration_provider(
+    vim.api.nvim_create_namespace 'misc-showme-layout',
+    {
+      on_end = function()
+        if reflow_pending then
+          return
+        end
+        for _, annotation in pairs(showme_annotations) do
+          if needs_reflow(annotation) then
+            reflow_pending = true
+            -- Gutters settle during redraw; change persistent marks outside that redraw.
+            vim.schedule(function()
+              reflow_pending = false
+              for side, current in pairs(showme_annotations) do
+                if needs_reflow(current) then
+                  local first, last = live_showme_range(current)
+                  if first then
+                    current.first, current.last = first, last
+                  end
+                  if not render_showme_annotation(current) then
+                    showme_annotations[side] = nil
+                  end
+                end
+              end
+            end)
+            return
+          end
+        end
+      end,
+    }
+  )
   vim.api.nvim_create_autocmd({ 'VimResized', 'WinResized' }, {
     group = showme_augroup,
     callback = function()

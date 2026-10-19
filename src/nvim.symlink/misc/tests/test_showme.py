@@ -1277,6 +1277,123 @@ class ShowMeBehaviorTest(unittest.TestCase):
       self.nvim.flush()
       self.assertIn('thirteen fourteen', self.nvim.text())
 
+  def test_message_rewraps_when_sign_gutter_appears_without_a_resize(self) -> None:
+    with tempfile.TemporaryDirectory() as directory:
+      filename = Path(directory) / 'initial-layout.lua'
+      filename.write_text('source\n')
+      message = 'start0001 ' + ' '.join(f'word{index:04}' for index in range(2, 25))
+      self.nvim.nvim.command('set number signcolumn=auto')
+      self.nvim.nvim.command('sign define ShowMeTestSign text=!! texthl=ErrorMsg')
+      self.showme(filename, message, 'left')
+      self.nvim.flush()
+      windows = self.nvim.nvim.request('nvim_tabpage_list_wins', 0)
+      window = min(windows, key=lambda win: self.nvim.nvim.request('nvim_win_get_position', win)[1])
+      initial_width = self.nvim.nvim.request('nvim_win_get_width', window)
+      _, initial_text_left, _ = self.nvim.window_text_area_bounds(window)
+      left, right = self.nvim.text_area_bounds(window)
+      self.assertIn(message, ' '.join(''.join(row[left:right]).strip() for row in self.nvim.rows))
+
+      # Diagnostics and other plugins can add signs after the first layout is drawn.
+      buffer = self.nvim.nvim.request('nvim_win_get_buf', window)
+      self.nvim.nvim.call('sign_place', 0, 'showme-test', 'ShowMeTestSign', buffer, {'lnum': 1})
+      self.nvim.flush()
+      self.nvim.flush()
+      _, text_left, _ = self.nvim.window_text_area_bounds(window)
+      self.assertGreater(text_left, initial_text_left)
+      self.assertEqual(initial_width, self.nvim.nvim.request('nvim_win_get_width', window))
+      left, right = self.nvim.text_area_bounds(window)
+      self.assertIn(message, ' '.join(''.join(row[left:right]).strip() for row in self.nvim.rows))
+      self.assertEqual('source\n', filename.read_text())
+
+  def test_tour_scene_panels_reflow_with_gutters_without_losing_comments_or_range(self) -> None:
+    with tempfile.TemporaryDirectory() as directory:
+      first = Path(directory) / 'first.lua'
+      second = Path(directory) / 'second.lua'
+      first.write_text('first source\n')
+      second.write_text('second source\n')
+      words = ' '.join(f'word{index:04}' for index in range(2, 17))
+      messages = ['left00001 ' + words, 'right0001 ' + words]
+      self.nvim.nvim.command('set number signcolumn=auto')
+      self.nvim.nvim.command('sign define ShowMeTestSign text=!! texthl=ErrorMsg')
+      self.nvim.nvim.exec_lua("vim.api.nvim_set_hl(0,'CursorLine',{bg='#123456'}); vim.api.nvim_set_hl(0,'DiagnosticVirtualTextInfo',{bg='#a1b2c3'})")
+      scenes = [
+        {'left': {'filename': str(first), 'range': [1, 1], 'message': 'first scene'}},
+        {side: {'filename': str(second), 'range': [1, 1], 'message': message}
+         for side, message in zip(('left', 'right'), messages)},
+      ]
+      report_id = self.nvim.nvim.exec_lua("return require('misc').Tour(...)", scenes)
+      self.nvim.flush()
+      self.nvim.nvim.exec_lua("require('misc').TourNext()")
+      self.nvim.nvim.command('wincmd h')
+      self.assertTrue(self.nvim.nvim.exec_lua("return require('misc').AnnotateShowMe('saved user comment')"))
+      buffer = self.nvim.nvim.request('nvim_get_current_buf')
+      self.nvim.nvim.request('nvim_buf_set_lines', buffer, 0, 0, False, ['inserted source'])
+      self.nvim.flush()
+      windows = sorted(self.nvim.nvim.request('nvim_tabpage_list_wins', 0),
+                       key=lambda win: self.nvim.nvim.request('nvim_win_get_position', win)[1])
+      widths = [self.nvim.nvim.request('nvim_win_get_width', win) for win in windows]
+      for show_sign in (True, False):
+        if show_sign:
+          self.nvim.nvim.call('sign_place', 0, 'showme-test', 'ShowMeTestSign', buffer, {'lnum': 2})
+        else:
+          self.nvim.nvim.call('sign_unplace', 'showme-test', {'buffer': buffer})
+        self.nvim.flush()
+        self.nvim.flush()
+        self.assertEqual(widths, [self.nvim.nvim.request('nvim_win_get_width', win) for win in windows])
+        for window, message in zip(windows, messages):
+          left, right = self.nvim.text_area_bounds(window)
+          text = ' '.join(''.join(row[left:right]).strip() for row in self.nvim.rows)
+          self.assertIn(message, text)
+          self.assertIn('saved user comment', text)
+          for label in ('left00001' if window == windows[0] else 'right0001', 'saved user comment', 'Step 2/2'):
+            row = self.nvim.row_for_window_text(window, label)
+            self.assertTrue(self.nvim.text_area_has_background(row, window, 0xA1B2C3))
+          row = self.nvim.row_for_window_text(window, 'second source')
+          self.assertTrue(self.nvim.text_area_has_background(row, window, 0x123456))
+      self.nvim.nvim.exec_lua("require('misc').TourStop()")
+      report = self.nvim.nvim.exec_lua("return require('misc').GetTourComments(...)[1]", report_id)
+      self.assertEqual(['saved user comment'], [comment['message'] for comment in report['comments']])
+      self.assertEqual({'first': 1, 'last': 1}, report['comments'][0]['range'])
+      self.assertEqual(['inserted source', 'second source'], self.nvim.nvim.request('nvim_buf_get_lines', buffer, 0, -1, False))
+      self.assertEqual('second source\n', second.read_text())
+
+  def test_pending_reflow_does_not_revive_cleared_closed_or_replaced_annotations(self) -> None:
+    with tempfile.TemporaryDirectory() as directory:
+      filename = Path(directory) / 'pending-layout.lua'
+      filename.write_text('alpha\nbeta\n')
+      self.nvim.nvim.command('set number signcolumn=auto')
+      self.nvim.nvim.command('sign define ShowMeTestSign text=!! texthl=ErrorMsg')
+      for action in ('clear', 'stop', 'replace'):
+        with self.subTest(action=action):
+          self.nvim.nvim.call('sign_unplace', 'showme-test')
+          self.showme(filename, 'obsolete message', 'left')
+          self.nvim.nvim.command('wincmd h')
+          self.nvim.flush()
+          self.nvim.nvim.exec_lua(
+            """
+            local action,filename=...
+            vim.fn.sign_place(0,'showme-test','ShowMeTestSign',0,{lnum=1})
+            vim.cmd('redraw')
+            if action=='clear' then
+              require('misc').ClearShowMe('left')
+            elseif action=='stop' then
+              require('misc').TourStop()
+            else
+              require('misc').ShowMe(filename,{2,2},'replacement message','left')
+            end
+            """, action, str(filename)
+          )
+          window = self.nvim.nvim.request('nvim_get_current_win')
+          self.nvim.flush()
+          self.nvim.flush()
+          self.assertNotIn('obsolete message', self.nvim.text())
+          self.assertEqual(window, self.nvim.nvim.request('nvim_get_current_win'))
+          if action == 'replace':
+            self.assertIn('replacement message', self.nvim.text())
+          self.nvim.nvim.exec_lua("require('misc').TourStop()")
+      self.assertEqual('alpha\nbeta\n', filename.read_text())
+      self.assertEqual([], self.nvim.nvim.exec_lua("return require('misc').GetTourComments()"))
+
   def test_reveals_folded_eof_range_and_places_message_below_it(self) -> None:
     with tempfile.TemporaryDirectory() as directory:
       filename = Path(directory) / 'folded.lua'

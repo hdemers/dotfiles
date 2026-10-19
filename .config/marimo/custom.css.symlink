@@ -1,0 +1,5 @@
+/* Applied to all marimo notebooks via [display].custom_css in marimo.toml */
+.markdown {
+  font-size: 1.15rem;
+}
+

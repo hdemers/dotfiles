@@ -106,26 +106,6 @@ function zvm_after_init() {
   bindkey -M viins '^R' custom-atuin-history-widget
 }
 
-# Hand off from Zsh vi-command mode to Zellij's block browser. The first
-# J/K enters scroll mode; subsequent J/K select newer/older command blocks.
-# Zellij handles y (copy and return) and q (cancel), leaving the ZLE buffer intact.
-function zellij_browse_command_blocks() {
-  [[ -n ${ZELLIJ-} ]] || return 0
-  command zellij action switch-mode scroll
-}
-
-function zellij_bind_command_block_keys() {
-  # Do not replace ordinary vi bindings in shells outside Zellij.
-  [[ -n ${ZELLIJ-} ]] || return 0
-  zvm_define_widget zellij_browse_command_blocks
-  zvm_bindkey vicmd 'J' zellij_browse_command_blocks
-  zvm_bindkey vicmd 'K' zellij_browse_command_blocks
-}
-
-# vi-command bindings are installed lazily by zsh-vi-mode. Append a hook
-# rather than replacing zvm_after_lazy_keybindings or binding too early.
-zvm_after_lazy_keybindings_commands+=(zellij_bind_command_block_keys)
-
 zinit light jeffreytse/zsh-vi-mode
 
 # General ZSH syntax highlighting, completions, and suggestions.

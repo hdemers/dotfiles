@@ -112,10 +112,6 @@ keybinds clear-defaults=true {
         bind "[" { ScrollToPreviousPrompt; }
         bind "]" { ScrollToNextPrompt; }
         bind "b" { SelectCommandAtScrollPosition; }
-        // Block browsing entered by J/K in Zsh vi-command mode (.zshrc.symlink).
-        // Navigation is viewport-relative, just like [ and ].
-        bind "K" { ScrollToPreviousPrompt; SelectCommandAtScrollPosition; }
-        bind "J" { ScrollToNextPrompt; SelectCommandAtScrollPosition; }
         bind "y" { Copy; ScrollToBottom; SwitchToMode "locked"; }
         bind "q" { ScrollToBottom; SwitchToMode "locked"; }
         bind "c" { CopyLastCommandOutput; }

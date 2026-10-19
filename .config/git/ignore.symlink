@@ -51,6 +51,7 @@ __pycache__
 worktrees
 
 .nvim/
+.nvim.server
 
 pyrightconfig.json
 

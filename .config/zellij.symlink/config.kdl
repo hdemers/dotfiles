@@ -109,8 +109,8 @@ keybinds clear-defaults=true {
         bind "Alt k" { MoveFocus "up"; SwitchToMode "locked"; }
         bind "Alt l" { MoveFocusOrTab "right"; SwitchToMode "locked"; }
         bind "s" { SwitchToMode "normal"; }
-        bind "[" { ScrollToPreviousPrompt; }
-        bind "]" { ScrollToNextPrompt; }
+        bind "[" { ScrollToPreviousPrompt; SelectCommandAtScrollPosition; }
+        bind "]" { ScrollToNextPrompt; SelectCommandAtScrollPosition; }
         bind "b" { SelectCommandAtScrollPosition; }
         bind "y" { Copy; ScrollToBottom; SwitchToMode "locked"; }
         bind "q" { ScrollToBottom; SwitchToMode "locked"; }

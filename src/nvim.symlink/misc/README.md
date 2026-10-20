@@ -73,20 +73,47 @@ local accepted = misc.AnnotateShowMe 'First paragraph.\n\nSecond paragraph.'
 `ShowMe` and `Tour` return a string feedback report ID. Repeated standalone `ShowMe`
 calls reuse their active report and frozen keys; a new Tour always starts a report with
 a new ID. A report completes when its presentation ends, is replaced, or an active Tour
-is cleared. Retrieve it only after completion, then explicitly acknowledge it:
+is cleared.
+
+Reports are stored on disk, one JSON file per report, so they survive Neovim restarts
+and crashes and can be read while the tour is still open:
+
+```text
+<stdpath('state')>/misc/reports/<report id>.json      # e.g. ~/.local/state/nvim/misc/reports/
+```
+
+The file is written when the report is created, on every saved comment, when the
+presentation ends, and on acknowledge. Each write goes to a temporary dotfile in the same
+directory and is then renamed over the target, so a reader never sees a partial file.
+Besides the fields below, the file records `acknowledged`, `acknowledged_at`,
+`created_at`, `updated_at` (epoch milliseconds) and the writer's `pid`; these are never
+returned by the API. The disk is the source of truth for the two functions below. Live
+presentation state (annotations, drafts, active report) stays in memory.
 
 ```lua
-local reports = misc.GetTourComments()        -- pending completed reports
+local reports = misc.GetTourComments()        -- pending reports with comments
 local one = misc.GetTourComments(report_id)   -- optional non-destructive filter
 local acknowledged = misc.AcknowledgeTourComments(report_id)
 ```
 
+A report is *pending* when it has at least one saved comment and has not been
+acknowledged. `GetTourComments` reads the directory, so any Neovim instance sees reports
+created by another instance, including one that crashed. Its `status` is `"in_progress"`
+while the tour or ShowMe is open (comments saved so far are included, and more may
+follow) and `"completed"` once it ended. A crashed instance leaves its report
+`"in_progress"` forever.
+
+`AcknowledgeTourComments` works from any instance and after a restart. It **marks** the
+file (`acknowledged = true`) rather than deleting it, so handled feedback stays on disk
+for recovery and audit; acknowledged reports are no longer returned. It returns `true`
+for a completed report (idempotent), and `false` for an unknown ID, a malformed ID, or a
+report that is still `"in_progress"` (its owner may still add comments). Acknowledged
+files are never pruned automatically; delete them by hand if desired.
+
 `GetTourComments` always returns an array (including `[]` when empty), creates or
-focuses no UI, and returns copies: changing its result cannot change the outbox.
-`AcknowledgeTourComments` is idempotent for a completed known report; reads never
-acknowledge or remove feedback. Both retrieval APIs reject a non-string report ID when
-supplied. This is an in-memory v1 outbox only: reports are lost on Neovim/module restart
-and are never pushed automatically.
+focuses no UI, and returns fresh decoded copies. Reads never acknowledge or remove
+feedback. Both APIs reject a non-string report ID when supplied. Nothing is pushed
+automatically.
 
 The stable returned JSON-compatible schema is:
 
@@ -95,8 +122,8 @@ The stable returned JSON-compatible schema is:
   {
     "id": "tour-1234-5678-1",
     "kind": "tour",
-    "status": "completed",
-    "ended_by": "finished",
+    "status": "completed",            // or "in_progress" while the tour is open
+    "ended_by": "finished",           // absent while "in_progress"
     "comments": [
       {
         "report_id": "tour-1234-5678-1",
@@ -114,7 +141,7 @@ The stable returned JSON-compatible schema is:
 ```
 
 Completed reports and their comments are immutable. Reports without comments are not
-returned as pending feedback.
+returned as pending feedback. `ended_by` is only present once the report completed.
 
 ## Tour
 

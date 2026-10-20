@@ -593,38 +593,24 @@ clear_showme_annotation = function(side)
   showme_annotations[side] = nil
 end
 
-local function new_feedback_report(kind)
-  feedback_counter = feedback_counter + 1
-  local clock = (vim.uv or vim.loop).hrtime()
-  local report = {
-    id = string.format('%s-%d-%d-%d', kind, vim.fn.getpid(), clock, feedback_counter),
-    kind = kind,
-    status = 'active',
-    comments = {},
-  }
-  feedback_reports[report.id] = report
-  table.insert(feedback_report_order, report.id)
-  active_report = report
-  return report
+local REPORT_STATUS = { active = 'in_progress', completed = 'completed' }
+
+local function reports_directory()
+  return vim.fn.stdpath 'state' .. '/misc/reports'
 end
 
-finalize_active_report = function(ended_by, report)
-  report = report or active_report
-  if not report or report.status ~= 'active' then
-    return false
-  end
-  if comment_editor and comment_editor.report == report then
-    close_comment_editor(comment_editor)
-  end
-  report.status = 'completed'
-  report.ended_by = ended_by
-  if active_report == report then
-    active_report = nil
-  end
-  return true
+local function valid_report_id(id)
+  return type(id) == 'string' and id:match '^[%w_%-]+$' ~= nil
 end
 
-local function copy_feedback_report(report)
+local function now_ms()
+  local seconds, microseconds = (vim.uv or vim.loop).gettimeofday()
+  return seconds * 1000 + math.floor(microseconds / 1000)
+end
+
+-- Serialise a report to the stable on-disk/returned shape (plus bookkeeping fields
+-- that GetTourComments strips before returning).
+local function serialize_feedback_report(report)
   local comments = {}
   for index, comment in ipairs(report.comments) do
     comments[index] = {
@@ -641,8 +627,141 @@ local function copy_feedback_report(report)
   return {
     id = report.id,
     kind = report.kind,
-    status = report.status,
+    status = REPORT_STATUS[report.status] or report.status,
     ended_by = report.ended_by,
+    comments = comments,
+    acknowledged = report.acknowledged or false,
+    acknowledged_at = report.acknowledged_at,
+    created_at = report.created_at,
+    updated_at = now_ms(),
+    pid = vim.fn.getpid(),
+  }
+end
+
+-- Atomic write: temp file in the same directory, then rename over the target.
+local function write_report_file(data)
+  local directory = reports_directory()
+  vim.fn.mkdir(directory, 'p')
+  local final = string.format('%s/%s.json', directory, data.id)
+  local temporary = string.format('%s/.%s.%d.tmp', directory, data.id, vim.fn.getpid())
+  local ok, encoded = pcall(vim.json.encode, data)
+  local handle = ok and io.open(temporary, 'wb')
+  if not handle then
+    vim.notify('ShowMe: could not write feedback report ' .. data.id, vim.log.levels.ERROR)
+    return false
+  end
+  local written = handle:write(encoded)
+  local closed = handle:close()
+  if not (written and closed) or not (vim.uv or vim.loop).fs_rename(temporary, final) then
+    (vim.uv or vim.loop).fs_unlink(temporary)
+    vim.notify('ShowMe: could not write feedback report ' .. data.id, vim.log.levels.ERROR)
+    return false
+  end
+  return true
+end
+
+local function persist_feedback_report(report)
+  return write_report_file(serialize_feedback_report(report))
+end
+
+local function read_report_file(path)
+  local handle = io.open(path, 'rb')
+  if not handle then
+    return nil
+  end
+  local content = handle:read '*a'
+  handle:close()
+  local ok, data = pcall(vim.json.decode, content)
+  if not ok or type(data) ~= 'table' or not valid_report_id(data.id) then
+    return nil
+  end
+  if type(data.comments) ~= 'table' then
+    data.comments = {}
+  end
+  return data
+end
+
+local function list_stored_reports()
+  local directory = reports_directory()
+  local uv = vim.uv or vim.loop
+  local handle = uv.fs_scandir(directory)
+  local reports = {}
+  while handle do
+    local name, kind = uv.fs_scandir_next(handle)
+    if not name then
+      break
+    end
+    if (kind == nil or kind == 'file') and name:match '%.json$' and name:sub(1, 1) ~= '.' then
+      local data = read_report_file(directory .. '/' .. name)
+      if data then
+        table.insert(reports, data)
+      end
+    end
+  end
+  table.sort(reports, function(a, b)
+    local left, right = a.created_at or 0, b.created_at or 0
+    if left ~= right then
+      return left < right
+    end
+    return a.id < b.id
+  end)
+  return reports
+end
+
+local function new_feedback_report(kind)
+  feedback_counter = feedback_counter + 1
+  local clock = (vim.uv or vim.loop).hrtime()
+  local report = {
+    id = string.format('%s-%d-%d-%d', kind, vim.fn.getpid(), clock, feedback_counter),
+    kind = kind,
+    status = 'active',
+    comments = {},
+    created_at = now_ms(),
+  }
+  feedback_reports[report.id] = report
+  table.insert(feedback_report_order, report.id)
+  active_report = report
+  persist_feedback_report(report)
+  return report
+end
+
+finalize_active_report = function(ended_by, report)
+  report = report or active_report
+  if not report or report.status ~= 'active' then
+    return false
+  end
+  if comment_editor and comment_editor.report == report then
+    close_comment_editor(comment_editor)
+  end
+  report.status = 'completed'
+  report.ended_by = ended_by
+  if active_report == report then
+    active_report = nil
+  end
+  persist_feedback_report(report)
+  return true
+end
+
+-- Shape returned to callers: stable fields only, without storage bookkeeping.
+local function public_feedback_report(data)
+  local comments = {}
+  for index, comment in ipairs(data.comments) do
+    comments[index] = {
+      report_id = comment.report_id,
+      kind = comment.kind,
+      step = comment.step,
+      side = comment.side,
+      filename = comment.filename,
+      range = { first = comment.range.first, last = comment.range.last },
+      message = comment.message,
+      excerpt = comment.excerpt,
+    }
+  end
+  return {
+    id = data.id,
+    kind = data.kind,
+    status = data.status,
+    ended_by = data.ended_by,
     comments = comments,
   }
 end
@@ -659,15 +778,13 @@ M.GetTourComments = function(report_id)
   end
   cleanup_invalid_presentation()
   local reports = {}
-  for _, id in ipairs(feedback_report_order) do
-    local report = feedback_reports[id]
+  for _, data in ipairs(list_stored_reports()) do
     if
-      report.status == 'completed'
-      and not report.acknowledged
-      and #report.comments > 0
-      and (report_id == nil or report.id == report_id)
+      not data.acknowledged
+      and #data.comments > 0
+      and (report_id == nil or data.id == report_id)
     then
-      table.insert(reports, copy_feedback_report(report))
+      table.insert(reports, public_feedback_report(data))
     end
   end
   return reports
@@ -678,11 +795,27 @@ M.AcknowledgeTourComments = function(report_id)
     error 'AcknowledgeTourComments report ID must be a string.'
   end
   cleanup_invalid_presentation()
-  local report = feedback_reports[report_id]
-  if not report or report.status ~= 'completed' then
+  if not valid_report_id(report_id) then
     return false
   end
-  report.acknowledged = true
+  local data = read_report_file(string.format('%s/%s.json', reports_directory(), report_id))
+  if not data or data.id ~= report_id or data.status ~= 'completed' then
+    return false
+  end
+  if data.acknowledged then
+    return true
+  end
+  data.acknowledged = true
+  data.acknowledged_at = now_ms()
+  data.updated_at = data.acknowledged_at
+  if not write_report_file(data) then
+    return false
+  end
+  local live = feedback_reports[report_id]
+  if live then
+    live.acknowledged = true
+    live.acknowledged_at = data.acknowledged_at
+  end
   return true
 end
 
@@ -757,6 +890,7 @@ local function submit_showme_comment(snapshot, message)
     message = message,
     excerpt = snapshot.excerpt,
   }
+  persist_feedback_report(report)
   for _, annotation in pairs(showme_annotations) do
     if annotation.report == report and annotation.entry_key == snapshot.entry_key then
       local first, last = live_showme_range(annotation)

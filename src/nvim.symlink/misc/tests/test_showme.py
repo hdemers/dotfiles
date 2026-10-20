@@ -5,6 +5,9 @@ Run with: uv run --with pynvim python3 src/nvim.symlink/misc/tests/test_showme.p
 
 from __future__ import annotations
 
+import json
+import os
+import signal
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,9 +19,19 @@ MISC_ROOT = Path(__file__).resolve().parents[1]
 
 
 class AttachedNvim:
-  def __init__(self) -> None:
+  def __init__(self, state_home: str | None = None) -> None:
+    # Never touch the user's real state: stdpath('state') follows XDG_STATE_HOME.
+    self._own_state = None
+    if state_home is None:
+      self._own_state = tempfile.TemporaryDirectory()
+      state_home = self._own_state.name
+    self.state_home = state_home
     self.nvim = pynvim.attach(
-      'child', argv=['nvim', '--embed', '--clean', '-u', 'NONE', '-i', 'NONE']
+      'child',
+      argv=[
+        'env', f'XDG_STATE_HOME={state_home}',
+        'nvim', '--embed', '--clean', '-u', 'NONE', '-i', 'NONE',
+      ],
     )
     self.width = 80
     self.height = 20
@@ -141,12 +154,26 @@ class AttachedNvim:
       for attribute in self.attributes[row][left:right]
     )
 
+  def kill(self) -> None:
+    """Simulate a crash: SIGKILL, so no exit handler runs."""
+    pid = self.nvim.eval('getpid()')
+    os.kill(pid, signal.SIGKILL)
+    self.killed = True
+
   def close(self) -> None:
-    try:
-      self.nvim.command('qa!')
-    except EOFError:
-      pass
-    self.nvim.close()
+    if getattr(self, 'killed', False):
+      try:
+        self.nvim.close()
+      except Exception:
+        pass
+    else:
+      try:
+        self.nvim.command('qa!')
+      except EOFError:
+        pass
+      self.nvim.close()
+    if self._own_state is not None:
+      self._own_state.cleanup()
 
 
 class ShowMeBehaviorTest(unittest.TestCase):
@@ -2080,9 +2107,13 @@ class ShowMeBehaviorTest(unittest.TestCase):
           self.assertTrue(self.nvim.nvim.exec_lua(
             "return require('misc').AnnotateShowMe(...)", 'comment ' + ending
           ))
-          self.assertEqual([], self.nvim.nvim.exec_lua(
+          open_reports = self.nvim.nvim.exec_lua(
             "return require('misc').GetTourComments(...)", report_id
-          ))
+          )
+          self.assertEqual(['in_progress'], [report['status'] for report in open_reports])
+          self.assertEqual(
+            ['comment ' + ending], [c['message'] for c in open_reports[0]['comments']]
+          )
           self.assertFalse(self.nvim.nvim.exec_lua(
             "return require('misc').AcknowledgeTourComments(...)", report_id
           ))
@@ -2113,9 +2144,9 @@ class ShowMeBehaviorTest(unittest.TestCase):
             with self.assertRaises(pynvim.NvimError):
               self.nvim.nvim.exec_lua("require('misc').Tour(...)", invalid)
             self.assertEqual(origin, self.nvim.nvim.exec_lua('return vim.api.nvim_get_current_tabpage()'))
-            self.assertEqual([], self.nvim.nvim.exec_lua(
+            self.assertEqual(['in_progress'], [report['status'] for report in self.nvim.nvim.exec_lua(
               "return require('misc').GetTourComments(...)", report_id
-            ))
+            )])
             self.nvim.nvim.exec_lua("require('misc').TourStop()")
 
           current = self.nvim.nvim.exec_lua('return vim.api.nvim_get_current_tabpage()')
@@ -2190,7 +2221,9 @@ class ShowMeBehaviorTest(unittest.TestCase):
           if closing == 'editor':
             self.nvim.nvim.request('nvim_win_close', editor, True)
             self.nvim.flush()
-            self.assertEqual([], self.nvim.nvim.exec_lua("return require('misc').GetTourComments(...)", report_id))
+            open_report = self.nvim.nvim.exec_lua("return require('misc').GetTourComments(...)[1]", report_id)
+            self.assertEqual('in_progress', open_report['status'])
+            self.assertEqual(['keep saved note'], [c['message'] for c in open_report['comments']])
           self.nvim.nvim.exec_lua("require('misc').TourStop()")
           self.nvim.flush()
           self.assertFalse(self.nvim.nvim.request('nvim_win_is_valid', editor))
@@ -2386,6 +2419,138 @@ class ShowMeBehaviorTest(unittest.TestCase):
       comments = self.nvim.nvim.exec_lua("return require('misc').GetTourComments(...)[1].comments", report_id)
       self.assertEqual([str(left), str(right)], [comment['filename'] for comment in comments])
       self.assertEqual(['revised left note', 'right note'], [comment['message'] for comment in comments])
+
+
+class PersistedFeedbackTest(unittest.TestCase):
+  def setUp(self) -> None:
+    state = tempfile.TemporaryDirectory()
+    self.addCleanup(state.cleanup)
+    self.state_home = state.name
+    source_dir = tempfile.TemporaryDirectory()
+    self.addCleanup(source_dir.cleanup)
+    self.source = Path(source_dir.name) / 'source.lua'
+    self.source.write_text('first\nsecond\n')
+
+  def attach(self) -> AttachedNvim:
+    instance = AttachedNvim(self.state_home)
+    self.addCleanup(instance.close)
+    return instance
+
+  def start_tour_with_comment(self, instance: AttachedNvim, message: str) -> str:
+    report_id = instance.nvim.exec_lua(
+      "return require('misc').Tour({{left = {filename = ..., range = {1, 1}, message = 'look'}}})",
+      str(self.source),
+    )
+    instance.flush()
+    saved = instance.nvim.exec_lua(
+      """
+      local windows = vim.api.nvim_tabpage_list_wins(0)
+      table.sort(windows, function(a, b)
+        return vim.api.nvim_win_get_position(a)[2] < vim.api.nvim_win_get_position(b)[2]
+      end)
+      vim.api.nvim_set_current_win(windows[1])
+      return require('misc').AnnotateShowMe(...)
+      """,
+      message,
+    )
+    self.assertTrue(saved)
+    return report_id
+
+  def reports(self, instance: AttachedNvim, report_id: str | None = None):
+    if report_id is None:
+      return instance.nvim.exec_lua("return require('misc').GetTourComments()")
+    return instance.nvim.exec_lua("return require('misc').GetTourComments(...)", report_id)
+
+  def acknowledge(self, instance: AttachedNvim, report_id: str):
+    return instance.nvim.exec_lua("return require('misc').AcknowledgeTourComments(...)", report_id)
+
+  def test_comment_saved_in_open_tour_is_returned_before_the_tour_ends(self) -> None:
+    nvim = self.attach()
+    report_id = self.start_tour_with_comment(nvim, 'early comment')
+
+    reports = self.reports(nvim)
+    self.assertEqual([report_id], [report['id'] for report in reports])
+    self.assertEqual('in_progress', reports[0]['status'])
+    self.assertEqual('tour', reports[0]['kind'])
+    self.assertEqual(['early comment'], [c['message'] for c in reports[0]['comments']])
+    self.assertEqual(str(self.source), reports[0]['comments'][0]['filename'])
+
+    nvim.nvim.exec_lua("require('misc').TourStop()")
+    reports = self.reports(nvim, report_id)
+    self.assertEqual('completed', reports[0]['status'])
+    self.assertEqual('stopped', reports[0]['ended_by'])
+
+  def test_report_is_stored_as_json_under_the_state_directory(self) -> None:
+    nvim = self.attach()
+    report_id = self.start_tour_with_comment(nvim, 'on disk')
+
+    directory = Path(self.state_home) / 'nvim' / 'misc' / 'reports'
+    self.assertEqual([f'{report_id}.json'], sorted(p.name for p in directory.iterdir()))
+    stored = json.loads((directory / f'{report_id}.json').read_text())
+    self.assertEqual(report_id, stored['id'])
+    self.assertEqual('in_progress', stored['status'])
+    self.assertEqual(['on disk'], [c['message'] for c in stored['comments']])
+
+  def test_report_without_comments_is_not_pending(self) -> None:
+    nvim = self.attach()
+    nvim.nvim.exec_lua(
+      "return require('misc').Tour({{left = {filename = ..., range = {1, 1}, message = 'look'}}})",
+      str(self.source),
+    )
+    self.assertEqual([], self.reports(nvim))
+
+  def test_report_survives_kill_and_can_be_acknowledged_from_a_fresh_nvim(self) -> None:
+    first = self.attach()
+    report_id = self.start_tour_with_comment(first, 'survives crash')
+    first.nvim.exec_lua("require('misc').TourStop()")
+    first.kill()
+
+    second = self.attach()
+    reports = self.reports(second)
+    self.assertEqual([report_id], [report['id'] for report in reports])
+    self.assertEqual('completed', reports[0]['status'])
+    self.assertEqual(['survives crash'], [c['message'] for c in reports[0]['comments']])
+    self.assertTrue(self.acknowledge(second, report_id))
+    self.assertEqual([], self.reports(second))
+
+  def test_open_tour_report_of_a_killed_nvim_is_returned_in_progress(self) -> None:
+    first = self.attach()
+    report_id = self.start_tour_with_comment(first, 'never finished')
+    first.kill()
+
+    second = self.attach()
+    reports = self.reports(second)
+    self.assertEqual([report_id], [report['id'] for report in reports])
+    self.assertEqual('in_progress', reports[0]['status'])
+
+  def test_acknowledged_report_is_no_longer_pending_in_any_instance(self) -> None:
+    first = self.attach()
+    report_id = self.start_tour_with_comment(first, 'handled')
+    first.nvim.exec_lua("require('misc').TourStop()")
+    second = self.attach()
+
+    self.assertEqual([report_id], [r['id'] for r in self.reports(second)])
+    self.assertTrue(self.acknowledge(second, report_id))
+    self.assertTrue(self.acknowledge(second, report_id))
+    self.assertEqual([], self.reports(first))
+    self.assertEqual([], self.reports(second))
+    self.assertEqual([], self.reports(second, report_id))
+
+  def test_open_report_cannot_be_acknowledged_and_unknown_ids_are_rejected(self) -> None:
+    nvim = self.attach()
+    report_id = self.start_tour_with_comment(nvim, 'still open')
+    self.assertFalse(self.acknowledge(nvim, report_id))
+    self.assertFalse(self.acknowledge(nvim, 'tour-0-0-0'))
+    self.assertFalse(self.acknowledge(nvim, '../escape'))
+    self.assertEqual([report_id], [r['id'] for r in self.reports(nvim)])
+
+  def test_no_temporary_files_are_left_behind(self) -> None:
+    nvim = self.attach()
+    report_id = self.start_tour_with_comment(nvim, 'atomic')
+    nvim.nvim.exec_lua("require('misc').TourStop()")
+    self.acknowledge(nvim, report_id)
+    directory = Path(self.state_home) / 'nvim' / 'misc' / 'reports'
+    self.assertEqual([f'{report_id}.json'], [p.name for p in directory.iterdir()])
 
 
 if __name__ == '__main__':

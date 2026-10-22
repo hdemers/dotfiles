@@ -1,5 +1,162 @@
-/* Applied to all marimo notebooks via [display].custom_css in marimo.toml */
-.markdown {
-  font-size: 1.15rem;
+/* "nvim" — a neovim-inspired theme for marimo notebooks */
+/* Dark-first, monospace-heavy, minimal and focused */
+
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300..800&family=Inter:wght@300..800&display=swap");
+
+/* Font and Radius Variables */
+:root {
+    --monospace-font: "JetBrains Mono", monospace;
+    --text-font: "JetBrains Mono", monospace;
+    --heading-font: "Inter", sans-serif;
+    --radius: 2px;
 }
 
+/* nvim Theme Colors */
+:root {
+    /* Backgrounds — the classic dark terminal feel */
+    --background: light-dark(#e8e8e0, #1e1e2e);
+    --background-darker: light-dark(#ddddd4, #181825);
+    --foreground: light-dark(#3b3b3b, #cdd6f4);
+    --muted: light-dark(#d4d4cc, #313244);
+    --muted-foreground: light-dark(#6c6c6c, #6c7086);
+
+    /* UI Elements */
+    --card: light-dark(#efefea, #1e1e2e);
+    --card-foreground: light-dark(#3b3b3b, #cdd6f4);
+    --popover: light-dark(#efefea, #181825);
+    --popover-foreground: light-dark(#3b3b3b, #cdd6f4);
+    --border: light-dark(#c8c8c0, #45475a);
+    --input: light-dark(#d4d4cc, #313244);
+
+    /* Primary — statement blue, like keywords in your colorscheme */
+    --primary: light-dark(#5768c4, #89b4fa);
+    --primary-foreground: light-dark(#f0f0ec, #1e1e2e);
+
+    /* Secondary — the subtle surface layer */
+    --secondary: light-dark(#d4d4cc, #313244);
+    --secondary-foreground: light-dark(#3b3b3b, #cdd6f4);
+
+    /* Accent — lavender, like a visual-mode highlight */
+    --accent: light-dark(#ddd8f0, #45475a);
+    --accent-foreground: light-dark(#5c4fa0, #b4befe);
+
+    /* Semantic Colors */
+    --error: light-dark(#d04040, #f38ba8);
+    --error-foreground: light-dark(#f0f0ec, #1e1e2e);
+    --success: light-dark(#40a040, #a6e3a1);
+    --success-foreground: light-dark(#f0f0ec, #1e1e2e);
+    --destructive: light-dark(#d04040, #f38ba8);
+    --destructive-foreground: light-dark(#f0f0ec, #1e1e2e);
+    --action: light-dark(#d4a840, #f9e2af);
+    --action-hover: light-dark(#ddb850, #fae8be);
+    --action-foreground: light-dark(#4a3a10, #3a3018);
+    --link: light-dark(#4a80c0, #89b4fa);
+    --link-visited: light-dark(#8060b0, #cba6f7);
+    --stale: hsl(50deg 50% 50% / 25%);
+    --ring: light-dark(#8888a0, #585b70);
+
+    /* Shadows — nearly flat, terminal style */
+    --base-shadow: light-dark(
+        hsla(0, 0%, 50%, 12%),
+        hsla(240, 10%, 5%, 30%)
+    );
+    --base-shadow-darker: light-dark(
+        hsla(0, 0%, 40%, 20%),
+        hsla(240, 10%, 3%, 45%)
+    );
+    --base-shadow-opacity: 3%;
+}
+
+/* Code cells — make them feel like a terminal buffer */
+.cm-editor {
+    background-color: light-dark(#ddddd4, #181825) !important;
+    border-left: 2px solid light-dark(#5768c4, #89b4fa);
+}
+
+.cm-editor .cm-gutters {
+    background-color: light-dark(#d6d6ce, #181825) !important;
+    color: light-dark(#9a9a90, #585b70);
+    border-right: 1px solid light-dark(#c8c8c0, #313244);
+}
+
+.cm-editor .cm-content {
+    color: light-dark(#3b3b3b, #cdd6f4);
+}
+
+/* =========================================================================
+ * LOCAL OVERRIDES: FONT SIZES  (everything above this line is the nvim theme)
+ * =========================================================================
+ *
+ * >>> EDIT THE SIZES HERE <<<  (all other rules below read these variables)
+ *
+ * Units: px is a fixed size. rem is relative to the browser's default font
+ * size setting (16px by default), so it follows that accessibility setting,
+ * px does not. Ctrl +/- zoom scales both. Use whichever you prefer; they can
+ * be mixed freely.  At the default setting, 1rem = 16px.
+ *
+ * NOT in this file: the CODE CELL font size (the editor where you type code).
+ * That lives in ~/.config/marimo/marimo.toml:
+ *     [display]
+ *     code_editor_font_size = 18      # px
+ */
+:root {
+  /* Markdown cells (mo.md / rendered text). */
+  --my-markdown-font-size: 20px;
+
+  /* Cell output: rendered results shown right under a cell (tables, JSON,
+   * dataframes, repr text such as `StageResult(...)`). */
+  --my-output-font-size: 17px;
+
+  /* Console output: the darker block with stdout / stderr / logging / print()
+   * lines. */
+  --my-console-font-size: 17px;
+
+  /* Line height (unitless multiplier) for output and console text. */
+  --my-output-line-height: 1.6;
+
+  /* Tailwind size steps used by output widgets (tables, JSON, errors...).
+   * Smaller steps appear in dense widgets, so keep xs < sm < base < lg. */
+  --my-output-text-xs: 17px;
+  --my-output-text-sm: 18px;
+  --my-output-text-base: 19px;
+  --my-output-text-lg: 22px;
+}
+
+/* ---- Markdown cells ---------------------------------------------------- */
+.markdown {
+  font-size: var(--my-markdown-font-size);
+}
+
+/* ---- Cell output (under each cell) ------------------------------------- */
+/* Many output widgets (tables, JSON, dataframes, errors) use Tailwind's
+ * text-xs / text-sm classes, which read the --text-* variables. We redefine
+ * them only inside outputs, so the rest of the UI (sidebar, menus) keeps its
+ * normal size. */
+.output-area,
+.console-output-area {
+  --text-xs: var(--my-output-text-xs);
+  --text-sm: var(--my-output-text-sm);
+  --text-base: var(--my-output-text-base);
+  --text-lg: var(--my-output-text-lg);
+}
+
+.output-area {
+  font-size: var(--my-output-font-size);
+  line-height: var(--my-output-line-height);
+}
+
+/* Code inside outputs follows the output size. */
+.output-area code,
+.output-area pre {
+  font-size: 1em;
+}
+
+/* ---- Console output (darker block with stdout / stderr / logs) ---------- */
+/* Its text uses hardcoded sizes marimo doesn't expose as variables, so we
+ * force the size with !important. The absolutely positioned cell-name badge
+ * in the corner (.absolute) is left alone so it keeps its small size. */
+.console-output-area,
+.console-output-area :where(div, span, pre, code):not(.absolute) {
+  font-size: var(--my-console-font-size) !important;
+  line-height: var(--my-output-line-height) !important;
+}

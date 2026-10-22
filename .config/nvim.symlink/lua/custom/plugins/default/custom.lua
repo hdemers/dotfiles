@@ -23,6 +23,13 @@ return {
     end,
   },
   {
+    name = 'show-me',
+    dir = '/home/hdemers/Projets/workbench/projects/nvim/show-me.nvim',
+    -- Modules load on first `require 'show-me'` (e.g. from an agent via nvim_exec_lua).
+    cmd = 'ShowMe',
+    opts = {},
+  },
+  {
     name = 'misc',
     dependencies = { 'folke/snacks.nvim' },
     lazy = false,

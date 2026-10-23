@@ -253,7 +253,7 @@ keybinds clear-defaults=true {
           }
         }
         bind "Alt s" {
-            MoveFocus "left";
+            MoveFocus "right";
             Run "bash" "-ic" "direnv exec . pi" {
                 close_on_exit true;
                 stacked true;

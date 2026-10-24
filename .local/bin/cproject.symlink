@@ -35,21 +35,45 @@ if [ -n "$dir" ]; then
     # Query existing tab names and check if our tab exists
     existing_tabs=$(zellij action query-tab-names)
 
-    if [ "$FORCE" -eq 0 ] && echo "$existing_tabs" | grep -qx "$tab_name"; then
-        # Tab exists, switch to it
-        zellij action go-to-tab-name "$tab_name"
+    if [ "$FORCE" -eq 0 ] && echo "$existing_tabs" | grep -Fxq -- "$tab_name"; then
+        # Resolve the destination independently of client focus and this launcher's pane.
+        tab_id=$(zellij action list-tabs --json | node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const tab = JSON.parse(readFileSync(0, "utf8")).find(tab => tab.name === process.argv[1]);
+            if (!Number.isSafeInteger(tab?.tab_id)) process.exit(1);
+            process.stdout.write(String(tab.tab_id));
+        ' -- "$tab_name") || exit 1
+        zellij action go-to-tab-name "$tab_name" || exit 1
     else
-        # Tab doesn't exist, create new one
-        zellij action new-tab --name "$tab_name" --layout project --cwd "$dir"
+        # new-tab returns the created tab ID; do not infer it from later focus.
+        tab_id=$(zellij action new-tab --name "$tab_name" --layout project --cwd "$dir") || exit 1
 
         mkdir -p "$lock_dir"
-        tab_id=$(zellij action current-tab-info | awk '/^id:/ { print $2; exit }')
         if [ -n "$tab_id" ]; then
             touch "$lock_file"
             grep -qx "$tab_id" "$lock_file" || echo "$tab_id" >> "$lock_file"
         fi
 
         sleep 2
+    fi
+
+    # Show this project's recovery choices in the destination tab, not the tab
+    # where Alt+g was pressed. The picker preselects all recoverable sessions.
+    recovery="$HOME/.local/bin/pi-zellij"
+    picker="$HOME/.local/bin/pi-zellij-pick"
+    if [[ "$tab_id" =~ ^[0-9]+$ ]] && [ -x "$recovery" ] && [ -x "$picker" ]; then
+        # Check before creating a pane, so an empty project does not flash a UI.
+        # Exit 2 (attention needed) still opens the pane to keep failures visible.
+        (cd -- "$dir" || exit 2; "$recovery" --check)
+        recovery_status=$?
+        if [ "$recovery_status" -ne 1 ]; then
+            zellij action new-pane --floating --close-on-exit --tab-id "$tab_id" \
+                --cwd "$dir" --name "Recover Pi sessions" \
+                --x "30%" --y "12%" --width "40%" --height "50%" \
+                -- bash -ic 'exec "$1" --close-on-success' bash "$picker"
+        fi
+    else
+        printf '%s\n' "Project opened, but recovery is unavailable: check the tab ID, $recovery, and $picker"
     fi
 fi
 

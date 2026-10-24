@@ -1,7 +1,7 @@
 keybinds clear-defaults=true {
     locked {
         bind "Ctrl a" { SwitchToMode "normal"; }
-        // bind "Shift Enter" { WriteChars "\\\n"; }
+        bind "F12" { SwitchToMode "Scroll"; }
     }
     normal {
         bind "1" { GoToTab 1; SwitchToMode "locked"; }
@@ -113,6 +113,7 @@ keybinds clear-defaults=true {
         bind "]" { ScrollToNextPrompt; SelectCommandAtScrollPosition; }
         bind "b" { SelectCommandAtScrollPosition; }
         bind "y" { Copy; ScrollToBottom; SwitchToMode "locked"; }
+        bind "Esc" { ScrollToBottom; SwitchToMode "locked"; }
         bind "q" { ScrollToBottom; SwitchToMode "locked"; }
         bind "c" { CopyLastCommandOutput; }
     }
@@ -155,6 +156,16 @@ keybinds clear-defaults=true {
             SwitchToMode "locked"
         }
     }
+    shared_among "locked" "normal" "scroll" {
+        bind "Ctrl PageUp" {
+            SwitchToMode "scroll";
+            HalfPageScrollUp;
+        }
+        bind "Ctrl PageDown" {
+            SwitchToMode "scroll";
+            HalfPageScrollDown;
+        }
+    }
     shared_among "normal" "locked" {
         bind "Alt left" { MoveFocusOrTab "left"; }
         // bind "Alt down" { MoveFocus "down"; }
@@ -173,7 +184,7 @@ keybinds clear-defaults=true {
         bind "Alt n" { GoToNextTab; }
         // Copy the latest command output without entering scroll mode.
         bind "Alt y" { CopyLastCommandOutput; }
-        bind "Alt a" {
+        bind "Alt A" {
            Run "bash" "-ic" "exec zsh" {
                floating true
                x "15%"

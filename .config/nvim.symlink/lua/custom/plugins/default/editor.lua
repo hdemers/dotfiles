@@ -570,7 +570,18 @@ return {
       { '<leader>/', function() Snacks.picker.lines() end, desc = 'Fuzzy search of current buffer', },
       { '<leader>sl', function() Snacks.picker.colorschemes() end, desc = 'Search colorschemes', },
       { '<leader>sa', function() Snacks.picker.highlights() end, desc = 'Search highlights', },
-      { 'gW', function() Snacks.picker.lsp_workspace_symbols() end, desc = 'Search lsp symbols', },
+      { 'gW', function()
+        Snacks.picker.lsp_workspace_symbols {
+          -- Drop symbols living in test files (return false to exclude an item)
+          transform = function(item)
+            local file = item.file or ''
+            if file:match '_test%.[%w]+$' or file:match '%.test%.[%w]+$' or file:match '%.spec%.[%w]+$'
+              or file:match '/test_[^/]+$' or file:match '/tests?/' or file:match '/__tests__/' then
+              return false
+            end
+          end,
+        }
+      end, desc = 'Search lsp symbols (no tests)', },
       { 'gO', function() Snacks.picker.lsp_symbols() end, desc = 'Search lsp document symbols', },
       { '<leader>sk', function() Snacks.picker.keymaps() end, desc = 'Search keymaps', },
       { '<leader>sh', function() Snacks.picker.help() end, desc = 'Search help', },
@@ -618,7 +629,37 @@ return {
             end,
           }
         end,
-        desc = 'Search changes',
+        desc = 'Search Openspec changes',
+      },
+      {
+        '<leader>sA',
+        function()
+          Snacks.picker.files {
+            cwd = 'docs/adr',
+            title = 'ADRs',
+            format = function(item, picker)
+              local ret = Snacks.picker.format.file(item, picker)
+              for _, hl in ipairs(ret) do
+                if type(hl.resolve) == 'function' then
+                  local old_resolve = hl.resolve
+                  hl.resolve = function(max_width)
+                    local resolved = old_resolve(max_width)
+                    for _, r in ipairs(resolved) do
+                      if r[2] == 'SnacksPickerFile' then
+                        r[2] = 'SnacksPickerDir'
+                      elseif r[2] == 'SnacksPickerDir' then
+                        r[2] = 'SnacksPickerFile'
+                      end
+                    end
+                    return resolved
+                  end
+                end
+              end
+              return ret
+            end,
+          }
+        end,
+        desc = 'Search ADRs',
       },
       {
         '<leader>sS',

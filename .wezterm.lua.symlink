@@ -390,6 +390,7 @@ config.keys = {
   { key = 'n', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
   { key = 'p', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
   { key = 't', mods = 'CTRL|SHIFT', action = wezterm.action.DisableDefaultAssignment },
+  { key = 'w', mods = 'SUPER', action = wezterm.action.DisableDefaultAssignment },
   { key = 'PageUp', mods = 'CTRL', action = wezterm.action.DisableDefaultAssignment },
   { key = 'PageDown', mods = 'CTRL', action = wezterm.action.DisableDefaultAssignment },
   { key = 'Enter', mods = 'ALT', action = wezterm.action.DisableDefaultAssignment },

@@ -51,7 +51,9 @@ if wayland_override ~= nil then
 else
   config.enable_wayland = file_exists '/etc/udev/rules.d/61-mutter-primary-gpu.rules'
 end
--- config.enable_kitty_keyboard = true
+-- Preserve modifiers that legacy terminal escape sequences cannot encode (notably Super).
+-- Zellij enables the protocol when its matching setting is enabled below.
+config.enable_kitty_keyboard = true
 
 -- ═══════════════════════════════════════════════════════════════════════════════════════
 -- Font configuration
@@ -401,13 +403,13 @@ config.keys = {
   { key = 'DownArrow', mods = 'SHIFT', action = wezterm.action.ScrollToPrompt(1) },
   -- Tab navigation
   {
-    key = 'h',
-    mods = 'CTRL|SHIFT',
+    key = 'LeftArrow',
+    mods = 'ALT',
     action = wezterm.action.ActivateTabRelative(-1),
   },
   {
-    key = 'l',
-    mods = 'CTRL|SHIFT',
+    key = 'RightArrow',
+    mods = 'ALT',
     action = wezterm.action.ActivateTabRelative(1),
   },
   -- Allow Shift-Enter to send a literal Enter to the terminal. Useful in Claude

@@ -156,16 +156,6 @@ keybinds clear-defaults=true {
             SwitchToMode "locked"
         }
     }
-    shared_among "locked" "normal" "scroll" {
-        bind "Ctrl PageUp" {
-            SwitchToMode "scroll";
-            HalfPageScrollUp;
-        }
-        bind "Ctrl PageDown" {
-            SwitchToMode "scroll";
-            HalfPageScrollDown;
-        }
-    }
     shared_among "normal" "locked" {
         bind "Alt left" { MoveFocusOrTab "left"; }
         // bind "Alt down" { MoveFocus "down"; }
@@ -180,8 +170,8 @@ keybinds clear-defaults=true {
         // bind "Alt j" { MoveFocus "down"; }
         // bind "Alt k" { MoveFocus "up"; }
         // bind "Alt s" { MovePane "left"; }
-        bind "Alt p" { GoToPreviousTab; }
-        bind "Alt n" { GoToNextTab; }
+        bind "Ctrl PageUp" { GoToPreviousTab; }
+        bind "Ctrl PageDown" { GoToNextTab; }
         // Copy the latest command output without entering scroll mode.
         bind "Alt y" { CopyLastCommandOutput; }
         bind "Alt A" {
@@ -596,7 +586,7 @@ session_serialization false
 // (Requires restart)
 // Default: true (if the host terminal supports it)
 // 
-// support_kitty_keyboard_protocol false
+support_kitty_keyboard_protocol true
  
 // Whether to stack panes when resizing beyond a certain size
 // Default: true
